@@ -64,11 +64,32 @@ test("unrelated status, repeated finals and elapsed uptime cannot change frozen 
     mission_finished_at_unix_ms: start + 2000 }), start + 4000);
   assert.equal(c.advanceRoundClock(r, status("navigating", { elapsed_sec: 999999 }), start + 500000), r);
 });
-test("missing, NaN, future or previous-round endpoint cannot fabricate stop", () => {
+test("missing or invalid endpoint still freezes at the local terminal observation", () => {
   const c = context(); const r = record(c);
-  for (const time of [undefined, NaN, start - 1, start + 100000]) {
-    assert.equal(c.advanceRoundClock(r, status("completed", { mission_finished_at_unix_ms: time }), start + 3000).stoppedAt, undefined);
+  for (const time of [undefined, null, NaN]) {
+    const next = c.advanceRoundClock(r, status("completed", { mission_finished_at_unix_ms: time }), start + 3000);
+    assert.equal(next.stoppedAt, start + 3000);
+    assert.equal(next.phase, "completed");
   }
+});
+test("previous-round or behind-clock endpoint falls back to the local observation", () => {
+  const c = context(); const r = record(c);
+  const next = c.advanceRoundClock(r, status("completed", { mission_finished_at_unix_ms: start - 1 }), start + 3000);
+  assert.equal(next.stoppedAt, start + 3000);
+  assert.equal(next.phase, "completed");
+});
+test("future endpoint from an ahead backend clock is clamped, not rejected", () => {
+  const c = context(); const r = record(c);
+  const next = c.advanceRoundClock(r, status("completed", { mission_finished_at_unix_ms: start + 100000 }), start + 3000);
+  assert.equal(next.stoppedAt, start + 3000);
+  assert.equal(next.phase, "completed");
+});
+test("terminal frame without an endpoint freezes exactly once", () => {
+  const c = context(); const r = record(c);
+  const frozen = c.advanceRoundClock(r, status("failed"), start + 3000);
+  assert.equal(frozen.stoppedAt, start + 3000);
+  assert.equal(frozen.phase, "failed");
+  assert.equal(c.advanceRoundClock(frozen, status("failed"), start + 9000), frozen);
 });
 test("parse failure only ends matching submission", () => {
   const c = context(); const r = record(c);

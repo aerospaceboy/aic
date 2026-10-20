@@ -4,10 +4,11 @@ import {
   PanelExtensionContext,
   RenderState,
 } from "@coscene/extension";
-import { ReactElement, useEffect, useLayoutEffect, useState } from "react";
+import { ReactElement, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import { demoEngine } from "./demo";
+import { splitProblemChunks } from "./chunk";
 import { finishRoundSubmission, markRoundStart, observeRoundStatus } from "./roundClock";
 import {
   CompetitionState,
@@ -21,7 +22,6 @@ import {
 const FONT_FAMILY =
   "'Microsoft YaHei', 'Noto Sans CJK SC', 'PingFang SC', Arial, sans-serif";
 const PROBLEM_CHUNK_SUFFIX = "_chunk";
-const PROBLEM_CHUNK_DATA_LENGTH = 48;
 const PROBLEM_CHUNK_INTERVAL_MS = 80;
 
 type TopicAreaConfig = {
@@ -92,15 +92,6 @@ function formatElapsed(seconds: number): string {
   return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(safe % 60).padStart(2, "0")}`;
 }
 
-function encodeUtf8Base64(value: string): string {
-  const bytes = new TextEncoder().encode(value);
-  let binary = "";
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-  return btoa(binary);
-}
-
 async function waitFor(milliseconds: number): Promise<void> {
   await new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
 }
@@ -124,6 +115,9 @@ function TopicArea({
   const [submissionMessage, setSubmissionMessage] = useState("");
   const [submittedQuestion, setSubmittedQuestion] = useState("");
   const [submittedId, setSubmittedId] = useState("");
+  // Only the newest click may keep publishing chunks; editing the form cancels
+  // an in-flight submission instead of letting two rounds interleave on the wire.
+  const activeSubmission = useRef("");
   const [liveMessage, setLiveMessage] = useState<unknown>();
   const [lastLiveAt, setLastLiveAt] = useState<number>(0);
   const [demoState, setDemoState] = useState<CompetitionState>({
@@ -299,6 +293,7 @@ function TopicArea({
     !submissionLocked;
 
   const editQuestion = (value: string): void => {
+    activeSubmission.current = "";
     setQuestionInput(value);
     setSubmissionLocked(false);
     setSubmissionMessage("");
@@ -307,6 +302,7 @@ function TopicArea({
   };
 
   const editMapping = (value: string): void => {
+    activeSubmission.current = "";
     setMappingInput(value);
     setSubmissionLocked(false);
     setSubmissionMessage("");
@@ -328,38 +324,36 @@ function TopicArea({
     const submissionId = `${clickedAt.toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
     markRoundStart(submissionId, clickedAt);
     try {
-      const payload = encodeUtf8Base64(
+      const chunks = splitProblemChunks(
+        submissionId,
         JSON.stringify({
           task_id: submissionId,
           question,
           mapping_rules: mappingRules,
         }),
       );
-      const total = Math.ceil(payload.length / PROBLEM_CHUNK_DATA_LENGTH);
+      activeSubmission.current = submissionId;
       setSubmissionLocked(true);
       setSubmittedQuestion(question);
       setSubmittedId(submissionId);
-      setSubmissionMessage(`正在发送题目分片 1/${total}...`);
+      setSubmissionMessage(`正在发送题目分片 1/${chunks.length}...`);
       // The competition clock starts at submission, not when the base moves:
       // this timestamp therefore also covers the model parsing latency.
-      for (let index = 0; index < total; index += 1) {
-        context.publish?.(problemChunkTopic, {
-          data: JSON.stringify({
-            v: 1,
-            id: submissionId,
-            i: index,
-            n: total,
-            d: payload.slice(
-              index * PROBLEM_CHUNK_DATA_LENGTH,
-              (index + 1) * PROBLEM_CHUNK_DATA_LENGTH,
-            ),
-          }),
-        });
-        if (index + 1 < total) {
+      for (const chunk of chunks) {
+        if (activeSubmission.current !== submissionId) {
+          // The operator edited the form while chunks were in flight. Abandon
+          // this submission instead of mixing two rounds' chunks.
+          finishRoundSubmission(submissionId);
+          return;
+        }
+        context.publish?.(problemChunkTopic, { data: JSON.stringify(chunk) });
+        if (chunk.i + 1 < chunks.length) {
           await waitFor(PROBLEM_CHUNK_INTERVAL_MS);
         }
       }
-      setSubmissionMessage("已发送，正在等待后端接收...");
+      if (activeSubmission.current === submissionId) {
+        setSubmissionMessage("已发送，正在等待后端接收...");
+      }
     } catch {
       finishRoundSubmission(submissionId);
       setSubmissionLocked(false);

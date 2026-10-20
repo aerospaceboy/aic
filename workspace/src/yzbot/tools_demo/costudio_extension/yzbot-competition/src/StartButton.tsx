@@ -8,6 +8,7 @@ import { ReactElement, useEffect, useLayoutEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import { demoEngine } from "./demo";
+import { startButtonView } from "./startButton";
 import {
   CompetitionState,
   DEFAULT_DEMO_STATE,
@@ -148,10 +149,12 @@ function StartButton({
       : liveMessage === undefined
         ? undefined
         : parseCompetitionState(liveMessage, demoState);
-  const running =
-    state?.taskRunning === true || demoEngine.isRunning() || state?.currentAction === "任务运行中";
-  const finished = state?.currentAction === "任务完成";
-  const canStart = !running;
+  const view = startButtonView(
+    effectiveMode,
+    state,
+    demoEngine.isRunning(),
+    canPublish,
+  );
 
   const clickStart = (): void => {
     if (effectiveMode === "DEMO") {
@@ -162,7 +165,7 @@ function StartButton({
       }
       return;
     }
-    if (!canStart || !canPublish) {
+    if (view.disabled) {
       return;
     }
     context.publish?.(config.topic, { data: true });
@@ -171,12 +174,14 @@ function StartButton({
   const hint = !canPublish
     ? "当前数据源不支持任务启动"
     : effectiveMode === "DEMO"
-      ? "演示模式：点击后运行演示任务，不会控制真实机器人"
+      ? view.running
+        ? "演示任务运行中，点击可停止演示"
+        : "演示模式：点击后运行演示任务，不会控制真实机器人"
       : state === undefined
         ? "尚未连接 ROS2 数据源"
-        : running
+        : view.running
           ? "任务运行中"
-          : finished
+          : view.finished
             ? "任务已完成"
             : "任务系统已就绪";
 
@@ -197,14 +202,14 @@ function StartButton({
       }}
     >
       <button
-        disabled={!canStart && canPublish}
+        disabled={view.disabled}
         onClick={clickStart}
         style={{
-          background: running ? "#C1ECCA" : canPublish ? "#FFFFFF" : "#E5E5E5",
+          background: view.disabled && !view.running ? "#E5E5E5" : view.running ? "#C1ECCA" : "#FFFFFF",
           border: "1px solid #D3D3D3",
           borderRadius: 3,
-          color: running ? "#191F1A" : canPublish ? "#191F1A" : "#999999",
-          cursor: running ? "not-allowed" : "pointer",
+          color: view.disabled && !view.running ? "#999999" : "#191F1A",
+          cursor: view.running ? "not-allowed" : view.disabled ? "not-allowed" : "pointer",
           fontFamily: FONT_FAMILY,
           fontSize: 13,
           height: 30,
@@ -214,7 +219,7 @@ function StartButton({
         }}
         type="button"
       >
-        {running ? "任务运行中" : finished ? "重新开始" : "开始任务"}
+        {view.label}
       </button>
       <div
         style={{

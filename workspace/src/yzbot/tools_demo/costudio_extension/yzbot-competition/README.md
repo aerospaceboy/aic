@@ -24,6 +24,11 @@ npm run build            # 开发构建
 npm run build -- --mode production
 ```
 
+> coStudio 通过 `eval` 运行扩展脚本，因此构建工具会把 sourcemap 内联在
+> `dist/extension.js` 里（独立 `.map` 文件不会被 coStudio 使用）。随包发布的
+> `dist/extension.js` 必须用 `--mode production` 重建，以保证 React production
+> 裁剪和压缩；构建工具始终内联 sourcemap 属于预期行为。
+
 把 `dist/extension.js` 覆盖到已安装扩展目录后重启 coStudio：
 
 ```
@@ -32,3 +37,13 @@ npm run build -- --mode production
 
 `displayName` 必须保持 `aerospaceboy.yzbot-competition`，以匹配正式布局中的
 `aerospaceboy.yzbot-competition.<panel>` 面板类型。
+
+## 测试
+
+```bash
+npm ci       # 测试借 ts 转译 src/*.ts，需要 node_modules
+npm test
+```
+
+覆盖：计时冻结/时钟偏差、开始按钮的 AUTO/DEMO 状态、题目分片编解码、
+状态解析与展示格式化。
