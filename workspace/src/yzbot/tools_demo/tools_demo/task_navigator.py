@@ -2044,7 +2044,14 @@ class TaskNavigator(Node):
             near_dock = math.hypot(
                 self.dock_pose.x - start_x, self.dock_pose.y - start_y
             ) <= 1.5
-            if zone == "RED_CUBE_2" and not near_dock:
+            # These fixed gates serve the former south-side red-2 tray.
+            # Binding them only to the entity name sent the relocated tray
+            # at (-0.8, 0.8) through y=-4.7 and back north before docking.
+            south_red2_entry = (
+                zone == "RED_CUBE_2"
+                and self.dock_pose.y < CENTRAL_MOVER_GATE_EAST.y
+            )
+            if south_red2_entry and not near_dock:
                 central_gates = [
                     CENTRAL_MOVER_GATE_WEST, CENTRAL_MOVER_GATE_EAST]
                 # During route construction dock_pose is the tray-clear

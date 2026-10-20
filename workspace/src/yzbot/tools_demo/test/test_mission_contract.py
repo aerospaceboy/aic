@@ -20,7 +20,7 @@ def test_official_world_has_ordered_cubes_and_delivery_zones():
         if "name" in model.attrib
     }
     expected_xy = {
-        'red': [(-7.5, -2.8), (1.0, -5.4), (0.0, 3.8),
+        'red': [(-7.5, -2.8), (-0.8, 0.8), (0.0, 3.8),
                 (11.4, -9.8), (-4.7, -12.4)],
         'blue': [(7.4, 3.6), (-11.0, -5.6), (-2.0, -6.0),
                  (-0.5, -8.8), (11.8, -13.0)],

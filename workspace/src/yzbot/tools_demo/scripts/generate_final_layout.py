@@ -10,8 +10,14 @@ import pathlib
 import re
 import xml.etree.ElementTree as ElementTree
 
+import yaml
+
 REPO = pathlib.Path('.')
 WORLD = REPO / 'mybot_description' / 'worlds' / 'offic_room.world'
+zones_text = (REPO / 'bot_navigation/config/competition_zones.yaml').read_text(
+    encoding='utf-8'
+)
+params = yaml.safe_load(zones_text)['competition_task_navigator']['ros__parameters']
 
 # Geometry constants, each justified by a measurement.
 CUBE_DOCK_STANDOFF = 0.36   # arm reach window [0.285, 0.430] midpoint
@@ -112,7 +118,13 @@ for color in ('red', 'blue'):
         tray = models[tray_by_cube[cube_name]]
         tpose = pose_of(tray)
         tsize = box_size(tray)
-        dock_x = round(cpose[0] - CUBE_DOCK_STANDOFF, 2)
+        dock_x, dock_y, dock_yaw = params[cube_name]
+        dx, dy = cpose[0] - dock_x, cpose[1] - dock_y
+        forward = dx * math.cos(dock_yaw) + dy * math.sin(dock_yaw)
+        lateral = -dx * math.sin(dock_yaw) + dy * math.cos(dock_yaw)
+        if not (math.isclose(forward, CUBE_DOCK_STANDOFF, abs_tol=1e-4)
+                and abs(lateral) <= 1e-4):
+            raise SystemExit('deployed dock does not face the cube: ' + cube_name)
         cube_records.append(
             {
                 'id': cube_name,
@@ -121,7 +133,8 @@ for color in ('red', 'blue'):
                 'y': cpose[1],
                 'z': cpose[2],
                 'dock_x': dock_x,
-                'dock_y': cpose[1],
+                'dock_y': dock_y,
+                'dock_yaw': dock_yaw,
                 'tray': tray_by_cube[cube_name],
                 'tray_pose': tpose,
                 'tray_size': tsize,
@@ -160,11 +173,6 @@ def clearance(px, py):
 # tightest geometrically valid entry and reports it, so a shorter final
 # direct-dock leg stays visible as an optimization without silently changing
 # validated behaviour.
-zones_text = (
-    REPO / 'bot_navigation' / 'config' / 'competition_zones.yaml'
-).read_text(encoding='utf-8')
-
-
 def deployed_entry(cube_id, suffix='entry'):
     key = '%s_%s:' % (cube_id, suffix)
     for line in zones_text.splitlines():
@@ -189,16 +197,18 @@ def tightest_entry(dock_x, dock_y):
 
 for rec in cube_records:
     entry_x, entry_y = deployed_entry(rec['id'])
-    # An entry may sit on the dock's X line (aisle-gap approach) or
-    # 0.30-0.60 m west of it for a straight eastbound approach. Clearance
-    # is evaluated at the actual entry pose.
+    # An entry may sit on the dock's X line (aisle-gap approach), or behind
+    # it along the configured heading for a straight approach from either
+    # side. Clearance is evaluated at the actual entry pose.
     same_x_entry = abs(entry_x - rec['dock_x']) <= 1e-6
-    west_offset = rec['dock_x'] - entry_x
-    straight_west_entry = (
-        0.30 <= west_offset <= 0.60
-        and abs(entry_y - rec['dock_y']) <= 1e-6
+    dx, dy = rec['dock_x'] - entry_x, rec['dock_y'] - entry_y
+    forward = dx * math.cos(rec['dock_yaw']) + dy * math.sin(rec['dock_yaw'])
+    lateral = -dx * math.sin(rec['dock_yaw']) + dy * math.cos(rec['dock_yaw'])
+    straight_entry = (
+        0.30 <= forward <= 0.60
+        and abs(lateral) <= 1e-6
     )
-    if not (same_x_entry or straight_west_entry):
+    if not (same_x_entry or straight_entry):
         raise SystemExit(
             'deployed entry X disagrees with dock X for ' + rec['id']
         )
@@ -231,8 +241,6 @@ for rec in cube_records:
     rec['tightest_y'] = tightest_entry(rec['dock_x'], rec['dock_y'])
     add('  - id: %s' % rec['id'])
     add('    color: %s' % rec['color'])
-    import yaml
-    params = yaml.safe_load(zones_text)['competition_task_navigator']['ros__parameters']
     allow = params.get('cube_approach_allowlist', [])
     if allow:
         sides = [v.split(':', 1)[1] for v in allow if v.startswith(rec['id'] + ':')]
@@ -241,10 +249,14 @@ for rec in cube_records:
     add('    y: %.4f' % rec['y'])
     add('    z: %.4f' % rec['z'])
     add('    tray: %s' % rec['tray'])
-    add('    # West approach, yaw 0: the cube sits cube_dock_standoff ahead.')
-    add('    pickup_approach: [%.2f, %.2f, 0.00]' % (rec['dock_x'], rec['dock_y']))
+    yaw_text = '0.00' if abs(rec['dock_yaw']) < 1e-9 else '%.8f' % rec['dock_yaw']
+    if abs(rec['dock_yaw']) < 1e-9:
+        add('    # West approach, yaw 0: the cube sits cube_dock_standoff ahead.')
+    else:
+        add('    # Configured approach: the cube sits cube_dock_standoff ahead.')
+    add('    pickup_approach: [%.2f, %.2f, %s]' % (rec['dock_x'], rec['dock_y'], yaw_text))
     add('    # Nav2 goal outside every tray inflation footprint.')
-    add('    retreat_pose: [%.2f, %.2f, 0.00]' % (entry_x, entry_y))
+    add('    retreat_pose: [%.2f, %.2f, %s]' % (entry_x, entry_y, yaw_text))
     add('    entry_clearance: %.3f' % got)
     add(
         '    dock_to_entry: %.2f'
@@ -255,8 +267,8 @@ for rec in cube_records:
     )
     if alternate is not None:
         add(
-            '    alternate_retreat_pose: [%.2f, %.2f, 0.00]'
-            % (alternate[0], alternate[1])
+            '    alternate_retreat_pose: [%.2f, %.2f, %s]'
+            % (alternate[0], alternate[1], yaw_text)
         )
         add('    alternate_entry_clearance: %.3f' % alternate[2])
         add(

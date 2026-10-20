@@ -100,8 +100,8 @@ competition_mission_coordinator:
     # Dynamic cube-selection planning poses (map frame).
     pickup_red_dock: [-2.40, -1.00, 0.0]
     pickup_blue_dock: [-0.40, -1.00, 0.0]
-    # Per-cube docks used by cube selection: west approach, yaw 0, cube
-    # 0.36 m ahead of base_link. Must stay identical to the task navigator
+    # Per-cube docks leave the cube 0.36 m ahead of base_link. Relocated
+    # red_cube_2 faces west (yaw pi). Must stay identical to the task navigator
     # docks in bot_navigation/config/competition_zones.yaml.
     red_cube_1_dock: [-7.86, -2.8, 0.0]
     red_cube_2_dock: [-0.44, 0.8, 3.141592653589793]

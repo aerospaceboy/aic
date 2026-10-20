@@ -139,9 +139,9 @@ competition_task_navigator:
     pickup_blue_exit_backoff: [-0.40, -0.60, 0.0]
     pickup_blue_exit_side: [0.40, -1.00, -1.5708]
     pickup_blue_exit_clear: [-0.50, 0.00, 0.0]
-    # Distributed 2026 cubes: approach every cube from the west along +X
-    # (yaw 0) so the cube stops 0.36 m ahead of base_link, centred in the
-    # arm reach window. The *_entry pose is the Nav2 goal in un-inflated
+    # Primary docks leave each cube 0.36 m ahead of base_link, centred in
+    # the arm reach window. Relocated red_cube_2 uses the east side (yaw pi);
+    # the other primary docks face east (yaw 0). The *_entry pose is the Nav2 goal in un-inflated
     # aisle space between two trays; the bounded direct dock then drives
     # the final leg, because the dock itself lies inside the tray costmap
     # inflation and is therefore unreachable for the global planner.

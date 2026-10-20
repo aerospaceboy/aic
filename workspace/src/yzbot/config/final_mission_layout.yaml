@@ -50,17 +50,17 @@ pickup_objects:
   - id: red_cube_2
     color: red
     allowed_sides: ['east']
-    x: 1.0000
-    y: -5.4000
+    x: -0.8000
+    y: 0.8000
     z: 0.1300
     tray: competition_red_pickup_tray_2
-    # West approach, yaw 0: the cube sits cube_dock_standoff ahead.
-    pickup_approach: [0.64, -5.40, 0.00]
+    # Configured approach: the cube sits cube_dock_standoff ahead.
+    pickup_approach: [-0.44, 0.80, 3.14159265]
     # Nav2 goal outside every tray inflation footprint.
-    retreat_pose: [0.10, -5.40, 0.00]
+    retreat_pose: [0.10, 0.80, 3.14159265]
     entry_clearance: 0.780
     dock_to_entry: 0.54
-    alternate_retreat_pose: [0.64, -4.75, 0.00]
+    alternate_retreat_pose: [-0.44, 1.45, 3.14159265]
     alternate_entry_clearance: 0.582
     alternate_dock_to_entry: 0.65
   - id: red_cube_3

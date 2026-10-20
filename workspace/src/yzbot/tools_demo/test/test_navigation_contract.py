@@ -2041,7 +2041,7 @@ def _parse_yaml_xy(config, key):
     raise AssertionError(f"missing navigation key {key}")
 
 
-CUBE_SLOTS = {'red_cube_1': (-7.5, -2.8), 'red_cube_2': (1.0, -5.4), 'red_cube_3': (0.0, 3.8), 'red_cube_4': (11.4, -9.8), 'red_cube_5': (-4.7, -12.4), 'blue_cube_1': (7.4, 3.6), 'blue_cube_2': (-11.0, -5.6), 'blue_cube_3': (-2.0, -6.0), 'blue_cube_4': (-0.5, -8.8), 'blue_cube_5': (11.8, -13.0)}
+CUBE_SLOTS = {'red_cube_1': (-7.5, -2.8), 'red_cube_2': (-0.8, 0.8), 'red_cube_3': (0.0, 3.8), 'red_cube_4': (11.4, -9.8), 'red_cube_5': (-4.7, -12.4), 'blue_cube_1': (7.4, 3.6), 'blue_cube_2': (-11.0, -5.6), 'blue_cube_3': (-2.0, -6.0), 'blue_cube_4': (-0.5, -8.8), 'blue_cube_5': (11.8, -13.0)}
 # Nav2 entries may lie in non-lethal inflation cost, but never inside the
 # physical planning radius.
 ROBOT_RADIUS = 0.28
@@ -2068,11 +2068,12 @@ def test_every_cube_has_its_own_dock_centred_in_the_arm_reach_window():
         dock = _parse_yaml_xy(config, cube)
         # The coordinator plans with the same docks the navigator drives to.
         assert _parse_yaml_xy(mission, f"{cube}_dock") == dock, cube
-        # Approach from the west along +X so the wrist camera and gripper
-        # face the cube without a lateral base correction.
-        assert math.isclose(dock[2], 0.0, abs_tol=1e-9), cube
-        assert math.isclose(dock[1], cube_y, abs_tol=1e-9), cube
-        standoff = cube_x - dock[0]
+        # Check reach in the actual dock frame, including the relocated
+        # red-2 east approach (yaw pi), without relaxing the grasp window.
+        dx, dy = cube_x - dock[0], cube_y - dock[1]
+        lateral = -dx * math.sin(dock[2]) + dy * math.cos(dock[2])
+        assert math.isclose(lateral, 0.0, abs_tol=1e-9), cube
+        standoff = dx * math.cos(dock[2]) + dy * math.sin(dock[2])
         assert REACH_MIN_X < standoff < REACH_MAX_X, (cube, standoff)
 
 
@@ -2141,16 +2142,12 @@ def test_cube_entries_offer_at_least_one_collision_free_approach():
         dx = dock[0] - entry[0]
         dy = dock[1] - entry[1]
         same_x_aisle_entry = math.isclose(dx, 0.0, abs_tol=1e-9)
-        straight_east_entry = (
-            dx > 0.0
-            and math.isclose(dy, 0.0, abs_tol=1e-9)
-            and math.isclose(
-                dock[2],
-                0.0,
-                abs_tol=1e-9,
-            )
+        straight_entry = (
+            dx * math.cos(dock[2]) + dy * math.sin(dock[2]) > 0.0
+            and math.isclose(-dx * math.sin(dock[2]) + dy * math.cos(dock[2]),
+                             0.0, abs_tol=1e-9)
         )
-        assert same_x_aisle_entry or straight_east_entry, cube
+        assert same_x_aisle_entry or straight_entry, cube
         clearance = min(
             _point_to_oriented_box(entry[0], entry[1], box) for box in boxes
         )

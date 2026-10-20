@@ -283,9 +283,13 @@ def test_cube_standoff_stays_inside_the_arm_reach_window():
             float(v)
             for v in obj["pickup_approach"].strip("[]").split(",")
         ]
+        dx, dy = float(obj["x"]) - approach[0], float(obj["y"]) - approach[1]
         assert math.isclose(
-            float(obj["x"]) - approach[0], standoff, abs_tol=1e-6
+            dx * math.cos(approach[2]) + dy * math.sin(approach[2]),
+            standoff, abs_tol=1e-6
         ), obj["id"]
+        assert math.isclose(-dx * math.sin(approach[2]) + dy * math.cos(approach[2]),
+                            0.0, abs_tol=1e-6), obj["id"]
 
 
 def test_zone_centres_match_mission_and_navigation_configs():

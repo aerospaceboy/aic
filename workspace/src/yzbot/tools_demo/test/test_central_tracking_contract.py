@@ -135,10 +135,7 @@ def test_single_pose_scopes_central_tracking_to_gates_and_current_red2_entry(sta
     assert goal.behavior_tree.endswith('navigate_central_to_pose.xml') is expected
 
 
-def test_current_red2_entry_keeps_the_proven_northeast_tray_clearance():
-    # Match command_callback: before navigation dock_pose is the selected
-    # entry, not the later physical grasp pose. This distinction previously
-    # made the new branch pass isolated tests but never activate live.
+def test_former_south_red2_entry_keeps_its_northeast_clearance_route():
     node = SimpleNamespace(use_legacy_layout_routes=False, get_logger=lambda: Mock(),
                            dock_pose=ZonePose('entry_east', 1.9, -5.4, 3.14),
                            next_dock_pose=ZonePose('dock_east', 1.36, -5.4, 3.14))
@@ -146,12 +143,6 @@ def test_current_red2_entry_keeps_the_proven_northeast_tray_clearance():
     assert [p.zone for p in poses[-3:]] == [
         'CENTRAL_MOVER_GATE_WEST', 'CENTRAL_MOVER_GATE_EAST',
         'central_red2_north_entry']
-    model = ET.parse(REPO/'mybot_description/worlds/offic_room.world').find(
-        ".//model[@name='competition_red_pickup_tray_2']")
-    assert list(map(float, model.findtext('pose').split()))[:2] == [1., -5.4]
-    assert list(map(float, model.findtext('link/collision/geometry/box/size').split())) == [.24, .24, .10]
-    # Actual tray remains at (1,-5.4); do not keep the abandoned relocation
-    # branch at x=.9 when the physical cube is back at its original slot.
     import math
     chain = [(1., -4.7), (1.9, -4.7), (1.9, -5.4)]
     for a, b in zip(chain, chain[1:]):
@@ -161,3 +152,26 @@ def test_current_red2_entry_keeps_the_proven_northeast_tray_clearance():
             assert clearance >= .10-1e-9
     unproven = SimpleNamespace(nav_goal_pose=ZonePose('central_red2_north_entry', 1.9, -4.7, 0.), latest_x=1.9, latest_y=-5.)
     assert not TaskNavigator._central_anchor_arrived(unproven)
+
+
+@pytest.mark.parametrize('start', [(0., 0.), (13.2, -.95), (-5., 3.8)])
+def test_relocated_red2_keeps_spawn_protection_without_south_tray_detour(start):
+    node = SimpleNamespace(use_legacy_layout_routes=False, get_logger=lambda: Mock(),
+                           dock_pose=ZonePose('entry_east', .1, .8, 3.141592653589793),
+                           next_dock_pose=ZonePose('dock_east', -.44, .8, 3.141592653589793))
+    poses = TaskNavigator._cube_approach_waypoints(node, 'RED_CUBE_2', *start)
+    assert not any(p.zone.startswith(('CENTRAL_', 'central_patrol_', 'central_red2_'))
+                   for p in poses)
+    if start[0] > 12.:
+        assert {'universal_mover_1_clear', 'universal_mover_2_clear'} <= {p.zone for p in poses}
+    model = ET.parse(REPO/'mybot_description/worlds/offic_room.world').find(
+        ".//model[@name='competition_red_pickup_tray_2']")
+    assert list(map(float, model.findtext('pose').split()))[:2] == [-.8, .8]
+    assert list(map(float, model.findtext('link/collision/geometry/box/size').split())) == [.24, .24, .10]
+    # Keep the existing 0.28 m body plus 0.20 m tracking reserve on the
+    # origin-to-entry leg; direct docking has its separate grasp checks.
+    import math
+    for i in range(201):
+        x, y = .1*i/200, .8*i/200
+        clearance = math.hypot(max(abs(x+.8)-.12, 0.), max(abs(y-.8)-.12, 0.))-.28-.20
+        assert clearance >= .10-1e-9
