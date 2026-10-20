@@ -1,0 +1,68 @@
+competition_acceptance:
+  ros__parameters:
+    use_sim_time: true
+    startup_timeout_sec: 120.0
+    poll_period_sec: 1.0
+    monitor_mission: false
+    mission_timeout_sec: 300.0
+    require_llm_plan: true
+    require_obstacle_avoidance: false
+    dashboard_url: http://127.0.0.1:8080
+    evidence_path: /tmp/competition_acceptance.json
+    mission_topic: /competition/mission/state
+    llm_status_topic: /competition/task/llm_status
+    avoidance_topic: /competition/avoidance/state
+    required_nodes:
+      - /gazebo
+      - /controller_manager
+      - /robot_state_publisher
+      - /move_group
+      - /map_server
+      - /planner_server
+      - /controller_server
+      - /collision_monitor
+      - /bt_navigator
+      - /competition_task_navigator
+      - /competition_dynamic_obstacles
+      - /competition_task_parser
+      - /competition_color_target_detector
+      - /competition_mission_coordinator
+      - /competition_safety_limiter
+      - /competition_dashboard
+      - /competition_slam_cartographer
+      - /competition_slam_occupancy_grid
+    required_topics:
+      - /clock|rosgraph_msgs/msg/Clock
+      - /joint_states|sensor_msgs/msg/JointState
+      - /scan|sensor_msgs/msg/LaserScan
+      - /camera_rgbd/camera_rgbd/image_raw|sensor_msgs/msg/Image
+      - /camera_rgbd/camera_rgbd/depth/image_raw|sensor_msgs/msg/Image
+      - /competition/task/question|std_msgs/msg/String
+      - /competition/task/plan|std_msgs/msg/String
+      - /competition/task/llm_status|std_msgs/msg/String
+      - /competition/mission/state|std_msgs/msg/String
+      - /competition/navigation/state|std_msgs/msg/String
+      - /competition/perception/targets|std_msgs/msg/String
+      - /competition/slam/map|nav_msgs/msg/OccupancyGrid
+      - /plan|nav_msgs/msg/Path
+    required_publishers:
+      - /clock
+      - /joint_states
+      - /scan
+      - /camera_rgbd/camera_rgbd/image_raw
+      - /camera_rgbd/camera_rgbd/depth/image_raw
+      - /competition/slam/map
+    required_services:
+      - /gazebo/get_entity_state|gazebo_msgs/srv/GetEntityState
+      - /controller_manager/list_controllers|controller_manager_msgs/srv/ListControllers
+      - /ATTACHLINK|linkattacher_msgs/srv/AttachLink
+      - /DETACHLINK|linkattacher_msgs/srv/DetachLink
+      - /compute_ik|moveit_msgs/srv/GetPositionIK
+    required_actions:
+      - /navigate_to_pose|nav2_msgs/action/NavigateToPose
+      - /arm_controller/follow_joint_trajectory|control_msgs/action/FollowJointTrajectory
+      - /gripper_controller/follow_joint_trajectory|control_msgs/action/FollowJointTrajectory
+      - /move_action|moveit_msgs/action/MoveGroup
+    required_transforms:
+      - map:base_link
+      - base_link:link6

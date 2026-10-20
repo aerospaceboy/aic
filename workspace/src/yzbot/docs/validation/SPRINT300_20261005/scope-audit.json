@@ -1,0 +1,46 @@
+{
+  "baseline_head": "365c0aff9814f1f749e3bd1048eaabc0297a2cde",
+  "allowed_model_changes": [
+    "blue_cube_1",
+    "blue_cube_4",
+    "competition_blue_pickup_tray",
+    "competition_blue_pickup_tray_4",
+    "competition_red_pickup_tray",
+    "competition_red_pickup_tray_3",
+    "red_cube_1",
+    "red_cube_3",
+    "zone_a"
+  ],
+  "map_changed_pixels": 288,
+  "map_diffs_confined_to_old_and_new_trays": true,
+  "four_actor_model_definitions_and_saved_states_unchanged": true,
+  "unchanged_world_elements_by_collection": {
+    "./world/model": 31,
+    "./world/state/model": 3
+  },
+  "nav_parameter_changes": [
+    {
+      "path": "/controller_server/ros__parameters/FollowPath/lookahead_time",
+      "before": 0.55,
+      "after": 0.8
+    },
+    {
+      "path": "/controller_server/ros__parameters/FollowPath/max_lookahead_dist",
+      "before": 0.85,
+      "after": 1.2
+    },
+    {
+      "path": "/controller_server/ros__parameters/FollowPath/min_lookahead_dist",
+      "before": 0.35,
+      "after": 0.6
+    },
+    {
+      "path": "/controller_server/ros__parameters/FollowPath/use_rotate_to_heading",
+      "before": true,
+      "after": false
+    }
+  ],
+  "other_nav_params_unchanged": true,
+  "world_sha256": "da2a9d9377548470243ea4514c9ba22c54ff83e13e241aba3812b639481800c4",
+  "existing_safety_and_acceptance_source_unchanged": true
+}

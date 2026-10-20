@@ -1,0 +1,12 @@
+{
+  "new_nan_beams": 27295,
+  "raw_masked_range_min": 0.3799999952316284,
+  "raw_masked_range_max": 0.496514230966568,
+  "unmasked_beams_unchanged": true,
+  "laser_range_min": 0.38,
+  "laser_xy": [
+    0,
+    0
+  ],
+  "mask_frame": "laser_link"
+}

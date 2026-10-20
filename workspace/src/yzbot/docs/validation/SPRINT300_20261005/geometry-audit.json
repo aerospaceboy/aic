@@ -1,0 +1,185 @@
+{
+  "world_sha256": "da2a9d9377548470243ea4514c9ba22c54ff83e13e241aba3812b639481800c4",
+  "minimum_cube_spacing": [
+    2.08806130178211,
+    "blue_cube_4",
+    "red_cube_4"
+  ],
+  "planning_keepout_margin": 0.15,
+  "required_robot_center_clearance": 0.38,
+  "entries_and_zones": [
+    {
+      "id": "red_cube_1",
+      "side": "east",
+      "entry": [
+        -2.1,
+        3.8
+      ],
+      "entry_clearance": 0.8,
+      "connected": true
+    },
+    {
+      "id": "red_cube_2",
+      "side": "east",
+      "entry": [
+        6.9,
+        3.8
+      ],
+      "entry_clearance": 0.8,
+      "connected": true
+    },
+    {
+      "id": "red_cube_3",
+      "side": "east",
+      "entry": [
+        0.9,
+        3.8
+      ],
+      "entry_clearance": 0.8,
+      "connected": true
+    },
+    {
+      "id": "red_cube_4",
+      "side": "east",
+      "entry": [
+        10.9,
+        -6.0
+      ],
+      "entry_clearance": 0.8,
+      "connected": true
+    },
+    {
+      "id": "red_cube_5",
+      "side": "east",
+      "entry": [
+        -3.8000000000000003,
+        -12.4
+      ],
+      "entry_clearance": 0.75,
+      "connected": true
+    },
+    {
+      "id": "blue_cube_1",
+      "side": "west",
+      "entry": [
+        10.9,
+        -2.5
+      ],
+      "entry_clearance": 0.75,
+      "connected": true
+    },
+    {
+      "id": "blue_cube_1",
+      "side": "east",
+      "entry": [
+        12.700000000000001,
+        -2.5
+      ],
+      "entry_clearance": 0.8,
+      "connected": true
+    },
+    {
+      "id": "blue_cube_2",
+      "side": "west",
+      "entry": [
+        -11.9,
+        -5.6
+      ],
+      "entry_clearance": 0.8,
+      "connected": true
+    },
+    {
+      "id": "blue_cube_2",
+      "side": "east",
+      "entry": [
+        -10.1,
+        -5.6
+      ],
+      "entry_clearance": 0.8,
+      "connected": true
+    },
+    {
+      "id": "blue_cube_3",
+      "side": "east",
+      "entry": [
+        -1.1,
+        -6.0
+      ],
+      "entry_clearance": 0.8,
+      "connected": true
+    },
+    {
+      "id": "blue_cube_4",
+      "side": "east",
+      "entry": [
+        12.9,
+        -6.6
+      ],
+      "entry_clearance": 0.8,
+      "connected": true
+    },
+    {
+      "id": "blue_cube_5",
+      "side": "west",
+      "entry": [
+        10.9,
+        -13.0
+      ],
+      "entry_clearance": 0.75,
+      "connected": true
+    },
+    {
+      "id": "blue_cube_5",
+      "side": "east",
+      "entry": [
+        12.700000000000001,
+        -13.0
+      ],
+      "entry_clearance": 0.8,
+      "connected": true
+    },
+    {
+      "id": "zone_a",
+      "dock": [
+        -5.0,
+        3.8,
+        3.141592653589793
+      ],
+      "clearance": 1.1500000000000001,
+      "connected": true
+    },
+    {
+      "id": "zone_b",
+      "dock": [
+        11.3,
+        -5.0,
+        0.0
+      ],
+      "clearance": 1.35,
+      "connected": true
+    },
+    {
+      "id": "zone_c",
+      "dock": [
+        2.9,
+        -12.1,
+        0.0
+      ],
+      "clearance": 1.0012492197250393,
+      "connected": true
+    }
+  ],
+  "note": "Grid certificate uses deployed static map plus full partition sweeps. Dynamic collision safety requires physical run; dock tray inflation excluded from entry criterion.",
+  "zone_separation_static_wall_intersections": {
+    "zone_a-zone_b": [
+      "Wall_72"
+    ],
+    "zone_a-zone_c": [
+      "Wall_38"
+    ],
+    "zone_b-zone_c": [
+      "Wall_113",
+      "Wall_127"
+    ]
+  }
+}

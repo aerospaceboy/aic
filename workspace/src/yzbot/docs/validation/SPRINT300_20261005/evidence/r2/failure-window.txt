@@ -1,0 +1,80 @@
+[task_navigator-22] [WARN] [1791213884.592219413] [competition_task_navigator]: mover_crossing_hold begin topic=/competition/obstacles/obstacle_2 reason=predicted_collision x=3.122 y=-0.487
+[bt_navigator-18] [ERROR] [1791213884.617898656] [bt_navigator_navigate_to_pose_rclcpp_node]: Failed to get result for follow_path in node halt!
+[bt_navigator-18] [INFO] [1791213884.617990409] [bt_navigator]: [navigate_to_pose] [ActionServer] Client requested to cancel the goal. Cancelling.
+[bt_navigator-18] [INFO] [1791213884.618109711] [bt_navigator]: Goal canceled
+[controller_server-14] [INFO] [1791213884.618499816] [controller_server]: Goal was canceled. Stopping the robot.
+[controller_server-14] [INFO] [1791213884.618533182] [controller_server]: [follow_path] [ActionServer] Client requested to cancel the goal. Cancelling.
+[task_navigator-22] [INFO] [1791213884.619052051] [competition_task_navigator]: obstacle_reverse_result_ignored
+[gzserver-1] [1;33m[Wrn] [Publisher.cc:135] [0m[1;33mQueue limit reached for topic [0m[1;33m/gazebo/my_world/pose/local/info[0m[1;33m, deleting message. [0m[1;33mThis warning is printed only once.[0m[1;33m
+[task_navigator-22] [ERROR] [1791213892.672742596] [competition_task_navigator]: No safe corridor crossing window before timeout
+[mission_coordinator-38] [INFO] [1791213892.675383449] [competition_mission_coordinator]: nav_result state=failed elapsed=52.32s
+[mission_coordinator-38] [INFO] [1791213892.675938053] [competition_mission_coordinator]: {"color":"blue","completed":3,"cube_name":"blue_cube_1","current_index":4,"detail":"going_to_blue_pickup","elapsed_sec":276.1,"schema_version":"1.0","skipped":0,"state":"navigating_pickup","target_zone":"B","task_id":"857e4da1a075d07a","total":5}
+[mission_coordinator-38] [INFO] [1791213892.679151802] [competition_mission_coordinator]: nav_start location=BLUE_CUBE_1 side=west robot=(3.447,-0.445,yaw=-0.008)
+[task_navigator-22] [INFO] [1791213892.684736747] [competition_task_navigator]: cube_entry_choice zone=BLUE_CUBE_1 side=west entry=(10.90,-2.50,yaw=0.00) dock=(11.44,-2.50)
+[task_navigator-22] [INFO] [1791213892.685390855] [competition_task_navigator]: nav_plan zone=BLUE_CUBE_1 poses=(10.90,-2.50,yaw=0.00) robot=(3.45,-0.44,yaw=-0.01)
+[task_navigator-22] [INFO] [1791213892.694668280] [competition_task_navigator]: nav_costmap_probe goal=(10.90,-2.50) goal_cost=0 start=(3.45,-0.44) start_cost=0 occupied_cells=95875
+[task_navigator-22] [INFO] [1791213892.695035764] [competition_task_navigator]: nav_goal zone=BLUE_CUBE_1 stage=1/1 x=10.900 y=-2.500 yaw=0.000
+[bt_navigator-18] [INFO] [1791213892.696668892] [bt_navigator]: Begin navigating from current location (3.45, -0.44) to (10.90, -2.50)
+[controller_server-14] [INFO] [1791213892.739323708] [controller_server]: Received a goal, begin computing control effort.
+[task_navigator-22] [WARN] [1791213893.279316720] [competition_task_navigator]: mover_crossing_hold begin topic=/competition/obstacles/obstacle_2 reason=predicted_collision x=3.448 y=-0.439
+[bt_navigator-18] [ERROR] [1791213893.307492196] [bt_navigator_navigate_to_pose_rclcpp_node]: Failed to get result for follow_path in node halt!
+[controller_server-14] [INFO] [1791213892.739323708] [controller_server]: Received a goal, begin computing control effort.
+[task_navigator-22] [WARN] [1791213893.279316720] [competition_task_navigator]: mover_crossing_hold begin topic=/competition/obstacles/obstacle_2 reason=predicted_collision x=3.448 y=-0.439
+[bt_navigator-18] [ERROR] [1791213893.307492196] [bt_navigator_navigate_to_pose_rclcpp_node]: Failed to get result for follow_path in node halt!
+[bt_navigator-18] [INFO] [1791213893.307576461] [bt_navigator]: [navigate_to_pose] [ActionServer] Client requested to cancel the goal. Cancelling.
+[bt_navigator-18] [INFO] [1791213893.307757385] [bt_navigator]: Goal canceled
+[task_navigator-22] [INFO] [1791213893.309161085] [competition_task_navigator]: obstacle_reverse_result_ignored
+[controller_server-14] [INFO] [1791213893.339497181] [controller_server]: Goal was canceled. Stopping the robot.
+[controller_server-14] [INFO] [1791213893.339575455] [controller_server]: [follow_path] [ActionServer] Client requested to cancel the goal. Cancelling.
+[task_navigator-22] [ERROR] [1791213901.309543960] [competition_task_navigator]: No safe corridor crossing window before timeout
+[mission_coordinator-38] [INFO] [1791213901.312286864] [competition_mission_coordinator]: nav_result state=failed elapsed=8.64s
+[mission_coordinator-38] [INFO] [1791213901.312728118] [competition_mission_coordinator]: {"color":"blue","completed":3,"cube_name":"blue_cube_1","current_index":4,"detail":"pickup_navigation_failed","elapsed_sec":284.8,"schema_version":"1.0","skipped":0,"state":"failed","target_zone":"B","task_id":"857e4da1a075d07a","total":5}
+[mission_coordinator-38] [INFO] [1791213901.312990893] [competition_mission_coordinator]: mission_terminal:pickup_navigation_failed
+[speed_profile_recorder-40] [INFO] [1791213901.318282752] [competition_speed_profile]: speed_profile_complete collision_slow=0.4s/0.80mps, constrained_straight=11.0s/0.98mps, docking_or_direct=31.8s/0.46mps, manipulation_or_wait=41.0s/0.00mps, open_straight=9.3s/1.16mps, ordinary_turn=49.9s/1.01mps, sharp_turn=115.2s/0.98mps, stationary=22.7s/0.00mps, truth_safety_slow=3.4s/0.33mps
+[speed_profile_recorder-40] [INFO] [1791213901.319086734] [competition_speed_profile]: speed_profile_path=/tmp/competition_speed_profile.json
+[collision_monitor-32] [0m[INFO] [1791213901.700099114] [rclcpp]: signal_handler(SIGINT/SIGTERM)[0m
+[collision_monitor-32] [0m[INFO] [1791213901.700600779] [collision_monitor]: Running Nav2 LifecycleNode rcl preshutdown (collision_monitor)[0m
+[collision_monitor-32] [0m[INFO] [1791213901.704086085] [collision_monitor]: Deactivating[0m
+[collision_monitor-32] [0m[INFO] [1791213901.704895576] [collision_monitor]: Destroying bond (collision_monitor) to lifecycle manager.[0m
+[lifecycle_manager-33] [0m[INFO] [1791213901.703327580] [rclcpp]: signal_handler(SIGINT/SIGTERM)[0m
+[lifecycle_manager-33] [0m[INFO] [1791213901.704144028] [collision_monitor_lifecycle_manager]: Running Nav2 LifecycleManager rcl preshutdown (collision_monitor_lifecycle_manager)[0m
+[bt_navigator-18] [ERROR] [1791213893.307492196] [bt_navigator_navigate_to_pose_rclcpp_node]: Failed to get result for follow_path in node halt!
+[bt_navigator-18] [INFO] [1791213893.307576461] [bt_navigator]: [navigate_to_pose] [ActionServer] Client requested to cancel the goal. Cancelling.
+[bt_navigator-18] [INFO] [1791213893.307757385] [bt_navigator]: Goal canceled
+[task_navigator-22] [INFO] [1791213893.309161085] [competition_task_navigator]: obstacle_reverse_result_ignored
+[controller_server-14] [INFO] [1791213893.339497181] [controller_server]: Goal was canceled. Stopping the robot.
+[controller_server-14] [INFO] [1791213893.339575455] [controller_server]: [follow_path] [ActionServer] Client requested to cancel the goal. Cancelling.
+[task_navigator-22] [ERROR] [1791213901.309543960] [competition_task_navigator]: No safe corridor crossing window before timeout
+[mission_coordinator-38] [INFO] [1791213901.312286864] [competition_mission_coordinator]: nav_result state=failed elapsed=8.64s
+[mission_coordinator-38] [INFO] [1791213901.312728118] [competition_mission_coordinator]: {"color":"blue","completed":3,"cube_name":"blue_cube_1","current_index":4,"detail":"pickup_navigation_failed","elapsed_sec":284.8,"schema_version":"1.0","skipped":0,"state":"failed","target_zone":"B","task_id":"857e4da1a075d07a","total":5}
+[mission_coordinator-38] [INFO] [1791213901.312990893] [competition_mission_coordinator]: mission_terminal:pickup_navigation_failed
+[speed_profile_recorder-40] [INFO] [1791213901.318282752] [competition_speed_profile]: speed_profile_complete collision_slow=0.4s/0.80mps, constrained_straight=11.0s/0.98mps, docking_or_direct=31.8s/0.46mps, manipulation_or_wait=41.0s/0.00mps, open_straight=9.3s/1.16mps, ordinary_turn=49.9s/1.01mps, sharp_turn=115.2s/0.98mps, stationary=22.7s/0.00mps, truth_safety_slow=3.4s/0.33mps
+[speed_profile_recorder-40] [INFO] [1791213901.319086734] [competition_speed_profile]: speed_profile_path=/tmp/competition_speed_profile.json
+[collision_monitor-32] [0m[INFO] [1791213901.700099114] [rclcpp]: signal_handler(SIGINT/SIGTERM)[0m
+[collision_monitor-32] [0m[INFO] [1791213901.700600779] [collision_monitor]: Running Nav2 LifecycleNode rcl preshutdown (collision_monitor)[0m
+[collision_monitor-32] [0m[INFO] [1791213901.704086085] [collision_monitor]: Deactivating[0m
+[collision_monitor-32] [0m[INFO] [1791213901.704895576] [collision_monitor]: Destroying bond (collision_monitor) to lifecycle manager.[0m
+[lifecycle_manager-33] [0m[INFO] [1791213901.703327580] [rclcpp]: signal_handler(SIGINT/SIGTERM)[0m
+[lifecycle_manager-33] [0m[INFO] [1791213901.704144028] [collision_monitor_lifecycle_manager]: Running Nav2 LifecycleManager rcl preshutdown (collision_monitor_lifecycle_manager)[0m
+[static_transform_publisher-8] [INFO] [1791213901.701392467] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[planner_server-16] [INFO] [1791213901.701610135] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[bt_navigator-18] [INFO] [1791213893.307576461] [bt_navigator]: [navigate_to_pose] [ActionServer] Client requested to cancel the goal. Cancelling.
+[bt_navigator-18] [INFO] [1791213893.307757385] [bt_navigator]: Goal canceled
+[task_navigator-22] [INFO] [1791213893.309161085] [competition_task_navigator]: obstacle_reverse_result_ignored
+[controller_server-14] [INFO] [1791213893.339497181] [controller_server]: Goal was canceled. Stopping the robot.
+[controller_server-14] [INFO] [1791213893.339575455] [controller_server]: [follow_path] [ActionServer] Client requested to cancel the goal. Cancelling.
+[task_navigator-22] [ERROR] [1791213901.309543960] [competition_task_navigator]: No safe corridor crossing window before timeout
+[mission_coordinator-38] [INFO] [1791213901.312286864] [competition_mission_coordinator]: nav_result state=failed elapsed=8.64s
+[mission_coordinator-38] [INFO] [1791213901.312728118] [competition_mission_coordinator]: {"color":"blue","completed":3,"cube_name":"blue_cube_1","current_index":4,"detail":"pickup_navigation_failed","elapsed_sec":284.8,"schema_version":"1.0","skipped":0,"state":"failed","target_zone":"B","task_id":"857e4da1a075d07a","total":5}
+[mission_coordinator-38] [INFO] [1791213901.312990893] [competition_mission_coordinator]: mission_terminal:pickup_navigation_failed
+[speed_profile_recorder-40] [INFO] [1791213901.318282752] [competition_speed_profile]: speed_profile_complete collision_slow=0.4s/0.80mps, constrained_straight=11.0s/0.98mps, docking_or_direct=31.8s/0.46mps, manipulation_or_wait=41.0s/0.00mps, open_straight=9.3s/1.16mps, ordinary_turn=49.9s/1.01mps, sharp_turn=115.2s/0.98mps, stationary=22.7s/0.00mps, truth_safety_slow=3.4s/0.33mps
+[speed_profile_recorder-40] [INFO] [1791213901.319086734] [competition_speed_profile]: speed_profile_path=/tmp/competition_speed_profile.json
+[collision_monitor-32] [0m[INFO] [1791213901.700099114] [rclcpp]: signal_handler(SIGINT/SIGTERM)[0m
+[collision_monitor-32] [0m[INFO] [1791213901.700600779] [collision_monitor]: Running Nav2 LifecycleNode rcl preshutdown (collision_monitor)[0m
+[collision_monitor-32] [0m[INFO] [1791213901.704086085] [collision_monitor]: Deactivating[0m
+[collision_monitor-32] [0m[INFO] [1791213901.704895576] [collision_monitor]: Destroying bond (collision_monitor) to lifecycle manager.[0m
+[lifecycle_manager-33] [0m[INFO] [1791213901.703327580] [rclcpp]: signal_handler(SIGINT/SIGTERM)[0m
+[lifecycle_manager-33] [0m[INFO] [1791213901.704144028] [collision_monitor_lifecycle_manager]: Running Nav2 LifecycleManager rcl preshutdown (collision_monitor_lifecycle_manager)[0m
+[static_transform_publisher-8] [INFO] [1791213901.701392467] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[planner_server-16] [INFO] [1791213901.701610135] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[planner_server-16] [INFO] [1791213901.702020240] [planner_server]: Running Nav2 LifecycleNode rcl preshutdown (planner_server)

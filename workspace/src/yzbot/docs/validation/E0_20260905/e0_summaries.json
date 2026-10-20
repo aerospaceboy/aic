@@ -1,0 +1,1148 @@
+[
+  {
+    "run_id": "baseline",
+    "task": "Move 1 red cube to zone C and 4 blue cubes to zone B.",
+    "terminal": {
+      "color": null,
+      "completed": 5,
+      "cube_name": "blue_cube_2",
+      "current_index": 5,
+      "detail": "completed=5,skipped=0",
+      "elapsed_sec": 327.3,
+      "schema_version": "1.0",
+      "skipped": 0,
+      "state": "completed",
+      "target_zone": null,
+      "task_id": "b2b334198da5e2d3",
+      "total": 5
+    },
+    "total_elapsed_sec": 327.3,
+    "event_span_sec": 327.19,
+    "nav_sum_monotonic": 257.17,
+    "nav_sum_event_delta": 257.13,
+    "manip_sum_event_delta": 64.43,
+    "residual_vs_total": 5.7,
+    "nav_count": 19,
+    "manip_count": 14,
+    "delivery_count": 5,
+    "nav_class_sums": {
+      "inbound": 134.1,
+      "delivery": 104.3,
+      "exit": 18.77,
+      "other": 0
+    },
+    "top5_actions": [
+      {
+        "kind": "nav",
+        "class": "delivery",
+        "location": "B",
+        "cube": "",
+        "sec": 40.1,
+        "displacement_m": 14.486,
+        "chain_len_m": 14.536
+      },
+      {
+        "kind": "nav",
+        "class": "inbound",
+        "location": "BLUE_CUBE_3",
+        "cube": "",
+        "sec": 33.51,
+        "displacement_m": 9.378,
+        "chain_len_m": 21.859
+      },
+      {
+        "kind": "nav",
+        "class": "inbound",
+        "location": "BLUE_CUBE_4",
+        "cube": "",
+        "sec": 32.73,
+        "displacement_m": 14.343,
+        "chain_len_m": 26.172
+      },
+      {
+        "kind": "nav",
+        "class": "inbound",
+        "location": "BLUE_CUBE_2",
+        "cube": "",
+        "sec": 28.33,
+        "displacement_m": 18.189,
+        "chain_len_m": 19.475
+      },
+      {
+        "kind": "nav",
+        "class": "delivery",
+        "location": "B",
+        "cube": "",
+        "sec": 23.73,
+        "displacement_m": 18.23,
+        "chain_len_m": 18.725
+      }
+    ],
+    "top5_low_translation_nav": [
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "sec": 2.7,
+        "displacement_m": 0.981,
+        "chain_len_m": 0.981,
+        "route": "direct",
+        "state": "succeeded"
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "sec": 2.31,
+        "displacement_m": 0.362,
+        "chain_len_m": 0.362,
+        "route": "direct",
+        "state": "succeeded"
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "sec": 1.91,
+        "displacement_m": 0.376,
+        "chain_len_m": 0.376,
+        "route": "direct",
+        "state": "succeeded"
+      },
+      {
+        "location": "C_EXIT",
+        "side": "auto",
+        "sec": 1.9,
+        "displacement_m": 0.416,
+        "chain_len_m": 0.416,
+        "route": "direct",
+        "state": "succeeded"
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "sec": 1.8,
+        "displacement_m": 0.381,
+        "chain_len_m": 0.381,
+        "route": "direct",
+        "state": "succeeded"
+      }
+    ],
+    "nav_segments_chain_vs_elapsed": [
+      {
+        "location": "RED_CUBE_1",
+        "side": "east",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 23.33,
+        "chain_len_m": 19.725,
+        "disp_m": 19.315,
+        "eff_mps": 0.845
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 1.71,
+        "chain_len_m": 0.513,
+        "disp_m": 0.513,
+        "eff_mps": 0.3
+      },
+      {
+        "location": "C",
+        "side": "auto",
+        "route": "batch",
+        "stages": 3,
+        "elapsed": 8.63,
+        "chain_len_m": 6.931,
+        "disp_m": 6.494,
+        "eff_mps": 0.803
+      },
+      {
+        "location": "C_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 1.9,
+        "chain_len_m": 0.416,
+        "disp_m": 0.416,
+        "eff_mps": 0.219
+      },
+      {
+        "location": "BLUE_CUBE_3",
+        "side": "west",
+        "route": "batch",
+        "stages": 4,
+        "elapsed": 33.51,
+        "chain_len_m": 21.859,
+        "disp_m": 9.378,
+        "eff_mps": 0.652
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 2.31,
+        "chain_len_m": 0.362,
+        "disp_m": 0.362,
+        "eff_mps": 0.157
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "route": "batch",
+        "stages": 3,
+        "elapsed": 23.73,
+        "chain_len_m": 18.725,
+        "disp_m": 18.23,
+        "eff_mps": 0.789
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 2.7,
+        "chain_len_m": 1.005,
+        "disp_m": 1.005,
+        "eff_mps": 0.372
+      },
+      {
+        "location": "BLUE_CUBE_1",
+        "side": "east",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 16.2,
+        "chain_len_m": 2.648,
+        "disp_m": 3.011,
+        "eff_mps": 0.163
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 0.91,
+        "chain_len_m": 0.385,
+        "disp_m": 0.385,
+        "eff_mps": 0.423
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 10.34,
+        "chain_len_m": 3.663,
+        "disp_m": 3.609,
+        "eff_mps": 0.354
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 2.83,
+        "chain_len_m": 1.012,
+        "disp_m": 1.012,
+        "eff_mps": 0.358
+      },
+      {
+        "location": "BLUE_CUBE_4",
+        "side": "east",
+        "route": "batch",
+        "stages": 4,
+        "elapsed": 32.73,
+        "chain_len_m": 26.172,
+        "disp_m": 14.343,
+        "eff_mps": 0.8
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 1.8,
+        "chain_len_m": 0.381,
+        "disp_m": 0.381,
+        "eff_mps": 0.212
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 40.1,
+        "chain_len_m": 14.536,
+        "disp_m": 14.486,
+        "eff_mps": 0.362
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 2.7,
+        "chain_len_m": 0.981,
+        "disp_m": 0.981,
+        "eff_mps": 0.363
+      },
+      {
+        "location": "BLUE_CUBE_2",
+        "side": "east",
+        "route": "batch",
+        "stages": 4,
+        "elapsed": 28.33,
+        "chain_len_m": 19.475,
+        "disp_m": 18.189,
+        "eff_mps": 0.687
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 1.91,
+        "chain_len_m": 0.376,
+        "disp_m": 0.376,
+        "eff_mps": 0.197
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 21.5,
+        "chain_len_m": 18.853,
+        "disp_m": 18.769,
+        "eff_mps": 0.877
+      }
+    ],
+    "avoidance_minimum_clearance": 0.1418,
+    "min_center_distance": "0.6018"
+  },
+  {
+    "run_id": "candidate_1bB4rA",
+    "task": "Move 1 blue cube to zone B and 4 red cubes to zone A.",
+    "terminal": {
+      "color": null,
+      "completed": 5,
+      "cube_name": "red_cube_5",
+      "current_index": 5,
+      "detail": "completed=5,skipped=0",
+      "elapsed_sec": 322.7,
+      "schema_version": "1.0",
+      "skipped": 0,
+      "state": "completed",
+      "target_zone": null,
+      "task_id": "29646fde9ae44a0b",
+      "total": 5
+    },
+    "total_elapsed_sec": 322.7,
+    "event_span_sec": 322.65,
+    "nav_sum_monotonic": 253.17,
+    "nav_sum_event_delta": 253.16,
+    "manip_sum_event_delta": 66.67,
+    "residual_vs_total": 2.86,
+    "nav_count": 19,
+    "manip_count": 11,
+    "delivery_count": 5,
+    "nav_class_sums": {
+      "inbound": 128.51,
+      "delivery": 99.42,
+      "exit": 25.24,
+      "other": 0
+    },
+    "top5_actions": [
+      {
+        "kind": "nav",
+        "class": "inbound",
+        "location": "BLUE_CUBE_4",
+        "cube": "",
+        "sec": 37.88,
+        "displacement_m": 13.945,
+        "chain_len_m": 27.398
+      },
+      {
+        "kind": "nav",
+        "class": "inbound",
+        "location": "RED_CUBE_2",
+        "cube": "",
+        "sec": 32.38,
+        "displacement_m": 14.531,
+        "chain_len_m": 14.044
+      },
+      {
+        "kind": "nav",
+        "class": "delivery",
+        "location": "A",
+        "cube": "",
+        "sec": 26.01,
+        "displacement_m": 15.029,
+        "chain_len_m": 15.073
+      },
+      {
+        "kind": "nav",
+        "class": "delivery",
+        "location": "B",
+        "cube": "",
+        "sec": 24.78,
+        "displacement_m": 14.499,
+        "chain_len_m": 14.533
+      },
+      {
+        "kind": "nav",
+        "class": "delivery",
+        "location": "A",
+        "cube": "",
+        "sec": 23.68,
+        "displacement_m": 13.972,
+        "chain_len_m": 14.02
+      }
+    ],
+    "top5_low_translation_nav": [
+      {
+        "location": "A",
+        "side": "auto",
+        "sec": 6.43,
+        "displacement_m": 0.632,
+        "chain_len_m": 0.719,
+        "route": "single",
+        "state": "succeeded"
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "sec": 2.31,
+        "displacement_m": 0.521,
+        "chain_len_m": 0.521,
+        "route": "direct",
+        "state": "succeeded"
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "sec": 2.22,
+        "displacement_m": 0.467,
+        "chain_len_m": 0.467,
+        "route": "direct",
+        "state": "succeeded"
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "sec": 2.01,
+        "displacement_m": 0.472,
+        "chain_len_m": 0.472,
+        "route": "direct",
+        "state": "succeeded"
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "sec": 2.0,
+        "displacement_m": 0.53,
+        "chain_len_m": 0.53,
+        "route": "direct",
+        "state": "succeeded"
+      }
+    ],
+    "nav_segments_chain_vs_elapsed": [
+      {
+        "location": "BLUE_CUBE_4",
+        "side": "east",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 37.88,
+        "chain_len_m": 27.398,
+        "disp_m": 13.945,
+        "eff_mps": 0.723
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 1.61,
+        "chain_len_m": 0.372,
+        "disp_m": 0.372,
+        "eff_mps": 0.231
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 24.78,
+        "chain_len_m": 14.533,
+        "disp_m": 14.499,
+        "eff_mps": 0.586
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 2.71,
+        "chain_len_m": 1.012,
+        "disp_m": 1.012,
+        "eff_mps": 0.373
+      },
+      {
+        "location": "RED_CUBE_1",
+        "side": "east",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 16.18,
+        "chain_len_m": 10.632,
+        "disp_m": 11.168,
+        "eff_mps": 0.657
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 2.31,
+        "chain_len_m": 0.521,
+        "disp_m": 0.521,
+        "eff_mps": 0.226
+      },
+      {
+        "location": "A",
+        "side": "auto",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 6.43,
+        "chain_len_m": 0.719,
+        "disp_m": 0.632,
+        "eff_mps": 0.112
+      },
+      {
+        "location": "A_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 1.89,
+        "chain_len_m": 0.416,
+        "disp_m": 0.416,
+        "eff_mps": 0.22
+      },
+      {
+        "location": "RED_CUBE_2",
+        "side": "west",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 32.38,
+        "chain_len_m": 14.044,
+        "disp_m": 14.531,
+        "eff_mps": 0.434
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 2.22,
+        "chain_len_m": 0.467,
+        "disp_m": 0.467,
+        "eff_mps": 0.21
+      },
+      {
+        "location": "A",
+        "side": "auto",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 18.52,
+        "chain_len_m": 12.794,
+        "disp_m": 12.78,
+        "eff_mps": 0.691
+      },
+      {
+        "location": "A_EXIT",
+        "side": "auto",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 4.37,
+        "chain_len_m": null,
+        "disp_m": 1.226,
+        "eff_mps": null
+      },
+      {
+        "location": "RED_CUBE_4",
+        "side": "west",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 21.8,
+        "chain_len_m": 16.276,
+        "disp_m": 16.693,
+        "eff_mps": 0.747
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 2.01,
+        "chain_len_m": 0.472,
+        "disp_m": 0.472,
+        "eff_mps": 0.235
+      },
+      {
+        "location": "A",
+        "side": "auto",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 26.01,
+        "chain_len_m": 15.073,
+        "disp_m": 15.029,
+        "eff_mps": 0.58
+      },
+      {
+        "location": "A_EXIT",
+        "side": "auto",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 6.12,
+        "chain_len_m": null,
+        "disp_m": 1.321,
+        "eff_mps": null
+      },
+      {
+        "location": "RED_CUBE_5",
+        "side": "east",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 20.27,
+        "chain_len_m": 14.658,
+        "disp_m": 14.683,
+        "eff_mps": 0.723
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 2.0,
+        "chain_len_m": 0.53,
+        "disp_m": 0.53,
+        "eff_mps": 0.265
+      },
+      {
+        "location": "A",
+        "side": "auto",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 23.68,
+        "chain_len_m": 14.02,
+        "disp_m": 13.972,
+        "eff_mps": 0.592
+      }
+    ],
+    "avoidance_minimum_clearance": 0.1369,
+    "min_center_distance": "0.5969"
+  },
+  {
+    "run_id": "candidate_1rC4bB",
+    "task": "Move 1 red cube to zone C and 4 blue cubes to zone B.",
+    "terminal": {
+      "color": null,
+      "completed": 5,
+      "cube_name": "blue_cube_2",
+      "current_index": 5,
+      "detail": "completed=5,skipped=0",
+      "elapsed_sec": 321.9,
+      "schema_version": "1.0",
+      "skipped": 0,
+      "state": "completed",
+      "target_zone": null,
+      "task_id": "b2b334198da5e2d3",
+      "total": 5
+    },
+    "total_elapsed_sec": 321.9,
+    "event_span_sec": 321.91,
+    "nav_sum_monotonic": 248.8,
+    "nav_sum_event_delta": 248.8,
+    "manip_sum_event_delta": 69.47,
+    "residual_vs_total": 3.63,
+    "nav_count": 19,
+    "manip_count": 12,
+    "delivery_count": 5,
+    "nav_class_sums": {
+      "inbound": 134.88,
+      "delivery": 94.48,
+      "exit": 19.44,
+      "other": 0
+    },
+    "top5_actions": [
+      {
+        "kind": "nav",
+        "class": "inbound",
+        "location": "BLUE_CUBE_3",
+        "cube": "",
+        "sec": 33.7,
+        "displacement_m": 9.379,
+        "chain_len_m": 21.869
+      },
+      {
+        "kind": "nav",
+        "class": "inbound",
+        "location": "BLUE_CUBE_4",
+        "cube": "",
+        "sec": 32.44,
+        "displacement_m": 14.338,
+        "chain_len_m": 26.179
+      },
+      {
+        "kind": "nav",
+        "class": "delivery",
+        "location": "B",
+        "cube": "",
+        "sec": 28.89,
+        "displacement_m": 14.504,
+        "chain_len_m": 14.529
+      },
+      {
+        "kind": "nav",
+        "class": "inbound",
+        "location": "BLUE_CUBE_2",
+        "cube": "",
+        "sec": 28.38,
+        "displacement_m": 18.175,
+        "chain_len_m": 19.467
+      },
+      {
+        "kind": "nav",
+        "class": "inbound",
+        "location": "RED_CUBE_1",
+        "cube": "",
+        "sec": 23.92,
+        "displacement_m": 19.315,
+        "chain_len_m": 19.726
+      }
+    ],
+    "top5_low_translation_nav": [
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "sec": 3.2,
+        "displacement_m": 0.505,
+        "chain_len_m": 0.505,
+        "route": "direct",
+        "state": "succeeded"
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "sec": 2.7,
+        "displacement_m": 0.998,
+        "chain_len_m": 0.998,
+        "route": "direct",
+        "state": "succeeded"
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "sec": 2.41,
+        "displacement_m": 0.377,
+        "chain_len_m": 0.377,
+        "route": "direct",
+        "state": "succeeded"
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "sec": 1.9,
+        "displacement_m": 0.389,
+        "chain_len_m": 0.389,
+        "route": "direct",
+        "state": "succeeded"
+      },
+      {
+        "location": "C_EXIT",
+        "side": "auto",
+        "sec": 1.89,
+        "displacement_m": 0.418,
+        "chain_len_m": 0.418,
+        "route": "direct",
+        "state": "succeeded"
+      }
+    ],
+    "nav_segments_chain_vs_elapsed": [
+      {
+        "location": "RED_CUBE_1",
+        "side": "east",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 23.92,
+        "chain_len_m": 19.726,
+        "disp_m": 19.315,
+        "eff_mps": 0.825
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 3.2,
+        "chain_len_m": 0.505,
+        "disp_m": 0.505,
+        "eff_mps": 0.158
+      },
+      {
+        "location": "C",
+        "side": "auto",
+        "route": "batch",
+        "stages": 3,
+        "elapsed": 9.63,
+        "chain_len_m": 6.932,
+        "disp_m": 6.501,
+        "eff_mps": 0.72
+      },
+      {
+        "location": "C_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 1.89,
+        "chain_len_m": 0.418,
+        "disp_m": 0.418,
+        "eff_mps": 0.221
+      },
+      {
+        "location": "BLUE_CUBE_3",
+        "side": "west",
+        "route": "batch",
+        "stages": 4,
+        "elapsed": 33.7,
+        "chain_len_m": 21.869,
+        "disp_m": 9.379,
+        "eff_mps": 0.649
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 2.41,
+        "chain_len_m": 0.377,
+        "disp_m": 0.377,
+        "eff_mps": 0.156
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "route": "batch",
+        "stages": 3,
+        "elapsed": 23.18,
+        "chain_len_m": 18.726,
+        "disp_m": 18.222,
+        "eff_mps": 0.808
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 2.7,
+        "chain_len_m": 0.998,
+        "disp_m": 0.998,
+        "eff_mps": 0.37
+      },
+      {
+        "location": "BLUE_CUBE_1",
+        "side": "east",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 16.44,
+        "chain_len_m": 2.647,
+        "disp_m": 3.015,
+        "eff_mps": 0.161
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 0.9,
+        "chain_len_m": 0.376,
+        "disp_m": 0.376,
+        "eff_mps": 0.418
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 10.04,
+        "chain_len_m": 3.674,
+        "disp_m": 3.612,
+        "eff_mps": 0.366
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 2.7,
+        "chain_len_m": 1.0,
+        "disp_m": 1.0,
+        "eff_mps": 0.37
+      },
+      {
+        "location": "BLUE_CUBE_4",
+        "side": "east",
+        "route": "batch",
+        "stages": 4,
+        "elapsed": 32.44,
+        "chain_len_m": 26.179,
+        "disp_m": 14.338,
+        "eff_mps": 0.807
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 1.9,
+        "chain_len_m": 0.389,
+        "disp_m": 0.389,
+        "eff_mps": 0.205
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 28.89,
+        "chain_len_m": 14.529,
+        "disp_m": 14.504,
+        "eff_mps": 0.503
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 2.84,
+        "chain_len_m": 1.039,
+        "disp_m": 1.039,
+        "eff_mps": 0.366
+      },
+      {
+        "location": "BLUE_CUBE_2",
+        "side": "east",
+        "route": "batch",
+        "stages": 4,
+        "elapsed": 28.38,
+        "chain_len_m": 19.467,
+        "disp_m": 18.175,
+        "eff_mps": 0.686
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 0.9,
+        "chain_len_m": 0.374,
+        "disp_m": 0.374,
+        "eff_mps": 0.416
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 22.74,
+        "chain_len_m": 18.843,
+        "disp_m": 18.778,
+        "eff_mps": 0.829
+      }
+    ],
+    "avoidance_minimum_clearance": 0.1432,
+    "min_center_distance": "0.6032"
+  },
+  {
+    "run_id": "injected_batch_rejection",
+    "task": "Move 1 red cube to zone C and 1 blue cube to zone B.",
+    "terminal": {
+      "color": null,
+      "completed": 2,
+      "cube_name": "blue_cube_3",
+      "current_index": 2,
+      "detail": "completed=2,skipped=0",
+      "elapsed_sec": 144.2,
+      "schema_version": "1.0",
+      "skipped": 0,
+      "state": "completed",
+      "target_zone": null,
+      "task_id": "8d954c4342d7f55a",
+      "total": 2
+    },
+    "total_elapsed_sec": 144.2,
+    "event_span_sec": 144.05,
+    "nav_sum_monotonic": 105.11,
+    "nav_sum_event_delta": 105.1,
+    "manip_sum_event_delta": 36.23,
+    "residual_vs_total": 2.86,
+    "nav_count": 7,
+    "manip_count": 7,
+    "delivery_count": 2,
+    "nav_class_sums": {
+      "inbound": 60.25,
+      "delivery": 37.24,
+      "exit": 7.62,
+      "other": 0
+    },
+    "top5_actions": [
+      {
+        "kind": "nav",
+        "class": "inbound",
+        "location": "BLUE_CUBE_3",
+        "cube": "",
+        "sec": 36.03,
+        "displacement_m": 9.401,
+        "chain_len_m": 21.878
+      },
+      {
+        "kind": "nav",
+        "class": "delivery",
+        "location": "B",
+        "cube": "",
+        "sec": 26.01,
+        "displacement_m": 18.243,
+        "chain_len_m": 18.725
+      },
+      {
+        "kind": "nav",
+        "class": "inbound",
+        "location": "RED_CUBE_1",
+        "cube": "",
+        "sec": 24.22,
+        "displacement_m": 19.297,
+        "chain_len_m": 19.711
+      },
+      {
+        "kind": "nav",
+        "class": "delivery",
+        "location": "C",
+        "cube": "",
+        "sec": 11.23,
+        "displacement_m": 6.507,
+        "chain_len_m": 6.932
+      },
+      {
+        "kind": "manip",
+        "class": "pick",
+        "location": "",
+        "cube": "red_cube_1",
+        "sec": 8.796,
+        "displacement_m": 0.015,
+        "chain_len_m": null
+      }
+    ],
+    "top5_low_translation_nav": [
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "sec": 3.62,
+        "displacement_m": 0.369,
+        "chain_len_m": 0.369,
+        "route": "direct",
+        "state": "succeeded"
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "sec": 2.11,
+        "displacement_m": 0.507,
+        "chain_len_m": 0.507,
+        "route": "direct",
+        "state": "succeeded"
+      },
+      {
+        "location": "C_EXIT",
+        "side": "auto",
+        "sec": 1.89,
+        "displacement_m": 0.419,
+        "chain_len_m": 0.419,
+        "route": "direct",
+        "state": "succeeded"
+      }
+    ],
+    "nav_segments_chain_vs_elapsed": [
+      {
+        "location": "RED_CUBE_1",
+        "side": "east",
+        "route": "single",
+        "stages": 0,
+        "elapsed": 24.22,
+        "chain_len_m": 19.711,
+        "disp_m": 19.297,
+        "eff_mps": 0.814
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 2.11,
+        "chain_len_m": 0.507,
+        "disp_m": 0.507,
+        "eff_mps": 0.24
+      },
+      {
+        "location": "C",
+        "side": "auto",
+        "route": "batch",
+        "stages": 3,
+        "elapsed": 11.23,
+        "chain_len_m": 6.932,
+        "disp_m": 6.507,
+        "eff_mps": 0.617
+      },
+      {
+        "location": "C_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 1.89,
+        "chain_len_m": 0.419,
+        "disp_m": 0.419,
+        "eff_mps": 0.222
+      },
+      {
+        "location": "BLUE_CUBE_3",
+        "side": "west",
+        "route": "batch",
+        "stages": 4,
+        "elapsed": 36.03,
+        "chain_len_m": 21.878,
+        "disp_m": 9.401,
+        "eff_mps": 0.607
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "route": "direct",
+        "stages": 0,
+        "elapsed": 3.62,
+        "chain_len_m": 0.369,
+        "disp_m": 0.369,
+        "eff_mps": 0.102
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "route": "batch",
+        "stages": 3,
+        "elapsed": 26.01,
+        "chain_len_m": 18.725,
+        "disp_m": 18.243,
+        "eff_mps": 0.72
+      }
+    ],
+    "avoidance_minimum_clearance": 0.1313,
+    "min_center_distance": "0.5913"
+  }
+]

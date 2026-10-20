@@ -1,0 +1,8 @@
+[INFO] [1791196364.462314893] [competition_case_runner]: PREFLIGHT_NAV_ACTION=true
+[INFO] [1791196364.475480725] [competition_case_runner]: PREFLIGHT_COLLISION_STATE=active
+[INFO] [1791196364.487020218] [competition_case_runner]: PREFLIGHT_SAFETY_CHAIN=true
+[INFO] [1791196364.488445504] [competition_case_runner]: PREFLIGHT_COLLISION_STATE_AFTER_CHAIN=active
+[INFO] [1791196364.572990160] [competition_case_runner]: TASK_PUBLISHED=Move 3 red cubes to zone A, then move 2 blue cubes to zone B.
+[INFO] [1791196784.588988923] [competition_case_runner]: MISSION_TERMINAL={"color":"blue","completed":4,"cube_name":"blue_cube_4","current_index":5,"detail":"going_to_zone_B","elapsed_sec":412.0,"schema_version":"1.0","skipped":0,"state":"navigating_destination","target_zone":"B","task_id":"857e4da1a075d07a","total":5}
+[INFO] [1791196784.589983384] [competition_case_runner]: CASE_ACCEPTED=false collision_faults=[]
+[ros2run]: Process exited with failure 1

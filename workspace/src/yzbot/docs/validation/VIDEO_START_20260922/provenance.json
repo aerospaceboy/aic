@@ -1,0 +1,25 @@
+{
+  "baseline_head": "ce61fc2e20689dd65ac4bf0b9cf6f29d08ec8e6a",
+  "dirty_during_rehearsal": true,
+  "unrelated_preexisting_change": "gazebo_debug_gui default refresh 15 to 60; preserved and not staged; video overrides runtime refresh to 15",
+  "rehearsal_code": "same functional source changes as this evidence commit; generic PS template and documentation added afterwards",
+  "full_tests": {
+    "passed": 565,
+    "skipped": 1,
+    "failed": 2,
+    "failures": [
+      "flake8",
+      "pep257"
+    ]
+  },
+  "lint_baseline": {
+    "flake8": 506,
+    "pep257": 76
+  },
+  "lint_working_tree": {
+    "flake8": 611,
+    "pep257": 76,
+    "extra_105": "duplicate legacy bot_navigation launch files under ignored install tree; no extra source errors"
+  },
+  "official_full_48_revalidation": false
+}

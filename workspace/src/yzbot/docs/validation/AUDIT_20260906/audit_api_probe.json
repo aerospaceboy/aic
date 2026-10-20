@@ -1,0 +1,1 @@
+{"ok": true, "model": "qwen3.7-flash-2026-07-15", "latency_sec": 0.767, "plan": {"schema_version": "1.0", "task_id": "865ad1d8d66de761", "source": "llm", "items": [{"color": "blue", "count": 1, "target_zone": "A"}, {"color": "red", "count": 4, "target_zone": "B"}], "counts": {"red": 4, "blue": 1}, "execution_order": ["blue", "red", "red", "red", "red"]}}

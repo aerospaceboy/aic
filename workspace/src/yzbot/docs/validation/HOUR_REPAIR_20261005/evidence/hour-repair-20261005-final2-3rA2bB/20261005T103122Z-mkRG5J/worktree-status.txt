@@ -1,0 +1,19 @@
+ M bot_navigation/config/competition_zones.yaml
+ M bot_navigation/launch/competition_navigation.launch.py
+ M docs/competition/competition_rules_2026_summary.md
+ M gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp
+ M mybot/pick_place_moveit.py
+ M mybot/test/test_pick_place_math.py
+ M tools_demo/test/test_dynamic_obstacle_filter.py
+ M tools_demo/test/test_navigation_contract.py
+ M tools_demo/test/test_navigation_math.py
+ M tools_demo/tools_demo/mission_coordinator.py
+ M tools_demo/tools_demo/navigation_math.py
+ M tools_demo/tools_demo/sweep_band_keepout.py
+ M tools_demo/tools_demo/task_navigator.py
+?? docs/AGENT_HISTORY_20260823.md
+?? docs/HANDOFF_PROMPT_V5.md
+?? docs/HANDOFF_PROMPT_V6.md
+?? docs/HANDOFF_PROMPT_V7.md
+?? mybot_description/worlds/competition_complex_preview.world
+?? tools_demo/test/test_layout_rescue.py

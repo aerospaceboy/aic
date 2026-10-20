@@ -1,0 +1,26 @@
+{
+  "root": "/home/ros/dev_ws/experiments/full48-290-20261007T032500Z",
+  "tags": 48,
+  "attempts": 50,
+  "accepted_attempts": 48,
+  "non_accepted_attempts": 2,
+  "failures": [
+    {
+      "tag": "2bA_3rB",
+      "attempt": 1,
+      "reason": "TIME_ONLY: 302.3 s over the 290 s gate",
+      "elapsed": 302.3,
+      "evidence": "/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2bA_3rB/20261007T051424Z-xTM6lW"
+    },
+    {
+      "tag": "2rB_3bC",
+      "attempt": 1,
+      "reason": "INFRA: mission never started (move_group/launch crash)",
+      "elapsed": 0.0,
+      "evidence": "/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2rB_3bC/20261007T054310Z-LJ3F6s"
+    }
+  ],
+  "contract_problems": [],
+  "governing_min_clearance": 0.1427,
+  "governing_max_elapsed": 284.3
+}

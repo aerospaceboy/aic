@@ -1,0 +1,15 @@
+[spawn_entity.py-3] [INFO] [1790041516.141162324] [spawn_entity]: Loading entity published on topic robot_description
+[spawn_entity.py-3] [INFO] [1790041516.143549775] [spawn_entity]: Waiting for entity xml on robot_description
+[spawn_entity.py-3] [INFO] [1790041516.155169018] [spawn_entity]: Waiting for service /spawn_entity, timeout = 30
+[spawn_entity.py-3] [INFO] [1790041516.155440270] [spawn_entity]: Waiting for service /spawn_entity
+[gazebo-1] Gazebo multi-robot simulator, version 11.10.2
+[map_server-11] [INFO] [1790041561.439531932] [map_io]: Loading image_file: /home/ros/dev_ws/install/bot_navigation/share/bot_navigation/maps/mapn3.pgm
+[lifecycle_manager-21] [INFO] [1790041561.526136066] [lifecycle_manager_navigation]: [34m[1mStarting managed nodes bringup...[0m[0m
+[lifecycle_manager-21] [INFO] [1790041561.526225067] [lifecycle_manager_navigation]: [34m[1mConfiguring controller_server[0m[0m
+[map_server-11] [INFO] [1790041561.529935732] [map_io]: Read map /home/ros/dev_ws/install/bot_navigation/share/bot_navigation/maps/mapn3.pgm: 658 X 822 map @ 0.05 m/cell
+[controller_server-14] [INFO] [1790041561.534310102] [controller_server]: Configuring controller interface
+[lifecycle_manager-13] [INFO] [1790041561.764166990] [lifecycle_manager_localization]: Server map_server connected with bond.
+[lifecycle_manager-13] [INFO] [1790041561.764625323] [lifecycle_manager_localization]: [34m[1mActivating amcl[0m[0m
+[controller_server-14] [WARN] [1790041561.767884701] [controller_server.rclcpp]: failed to send response to /controller_server/change_state (timeout): client will not receive response, at ./src/rmw_response.cpp:154, at ./src/rcl/service.c:314
+[amcl-12] [INFO] [1790041561.768610730] [amcl]: Activating
+[amcl-12] [INFO] [1790041561.768646413] [amcl]: initialPoseReceived

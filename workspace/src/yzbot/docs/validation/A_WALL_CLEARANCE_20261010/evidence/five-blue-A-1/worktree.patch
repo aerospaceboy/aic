@@ -1,0 +1,166 @@
+diff --git a/bot_navigation/launch/competition_navigation.launch.py b/bot_navigation/launch/competition_navigation.launch.py
+index 9c67151..38c32bf 100644
+--- a/bot_navigation/launch/competition_navigation.launch.py
++++ b/bot_navigation/launch/competition_navigation.launch.py
+@@ -138,6 +138,39 @@ def generate_launch_description():
+         ],
+         output="screen",
+     )
++    # The two support wheels are continuous joints in large_base.xacro but are
++    # not part of ros2_control and have no joint states, so robot_state_publisher
++    # never publishes base_link -> {left,right}_wheel_link and RViz reports
++    # "No transform from [left_wheel_link] to [map]". They never articulate (the
++    # base moves through the planar controller), so static transforms taken from
++    # the URDF origins are exact: x = wheel_joint_x, y = +-(base_width +
++    # wheel_length)/2, z = -(base_height/2 + caster_radius*2 - wheel_radius).
++    left_wheel_tf = Node(
++        package="tf2_ros",
++        executable="static_transform_publisher",
++        name="competition_left_wheel_tf",
++        arguments=[
++            "0.14", "0.185", "-0.0384", "0", "0", "0",
++            "base_link", "left_wheel_link",
++        ],
++        parameters=[
++            {"use_sim_time": LaunchConfiguration("use_sim_time")},
++        ],
++        output="screen",
++    )
++    right_wheel_tf = Node(
++        package="tf2_ros",
++        executable="static_transform_publisher",
++        name="competition_right_wheel_tf",
++        arguments=[
++            "0.14", "-0.185", "-0.0384", "0", "0", "0",
++            "base_link", "right_wheel_link",
++        ],
++        parameters=[
++            {"use_sim_time": LaunchConfiguration("use_sim_time")},
++        ],
++        output="screen",
++    )
+     velocity_selector = Node(
+         package="tools_demo", executable="velocity_selector",
+         name="competition_velocity_selector", output="screen",
+@@ -235,6 +268,8 @@ def generate_launch_description():
+             sim_time_argument,
+             obstacle_argument,
+             map_to_odom,
++            left_wheel_tf,
++            right_wheel_tf,
+             nav2,
+             delayed_collision_lifecycle_manager,
+             delayed_collision_monitor,
+diff --git a/gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp b/gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp
+index cf1fc0a..6fdd7ec 100644
+--- a/gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp
++++ b/gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp
+@@ -63,7 +63,7 @@ class GazeboDebugGuiPlugin : public GUIPlugin
+ {
+   public: GazeboDebugGuiPlugin()
+       : renderRate(std::max(1.0, EnvironmentDouble(
+-            "YZBOT_GAZEBO_GUI_RENDER_RATE", 15.0))),
++            "YZBOT_GAZEBO_GUI_RENDER_RATE", 60.0))),
+         windowWidth(std::max(640, EnvironmentInt(
+             "YZBOT_GAZEBO_GUI_WIDTH", 1100))),
+         windowHeight(std::max(480, EnvironmentInt(
+diff --git a/tools_demo/tools_demo/navigation_math.py b/tools_demo/tools_demo/navigation_math.py
+index cede35b..585f574 100644
+--- a/tools_demo/tools_demo/navigation_math.py
++++ b/tools_demo/tools_demo/navigation_math.py
+@@ -1275,6 +1275,31 @@ def bay_pocket_waypoints(
+     )
+ 
+ 
++def a_wall_tip_waypoints(
++    start_xy: Sequence[float], target_xy: Sequence[float],
++) -> Sequence[ZonePose]:
++    """Clear the current A room's south wall before turning west.
++
++    Wall_38 ends at (-2.8573, 0.8964) in the saved world state. A diagonal
++    approach let RPP enter that corner at cruise speed on the five-blue GUI
++    run. Stage east of the tip, then above it; the 0.757 m centre clearance
++    includes the unchanged 0.28 m navigation radius and 0.10 m margin.
++    Apply only to the current A dock, never a relocated or legacy zone.
++    """
++    values = tuple(float(v) for point in (start_xy, target_xy)
++                   for v in point[:2])
++    if len(values) != 4 or not all(math.isfinite(v) for v in values):
++        raise NavigationValueError("A wall routing requires finite XY")
++    sx, sy, tx, ty = values
++    if not (-5.8 <= tx <= -4.2 and 3.0 <= ty <= 4.6 and sy < 1.65):
++        return ()
++    north = ZonePose("A_WALL_NORTH_CLEAR", -2.10, 1.85, math.pi / 2)
++    if sx >= -2.70 and sy >= -0.30:
++        return (north,)
++    return (ZonePose("A_WALL_SOUTH_CLEAR", -2.10, -0.30, math.pi / 2),
++            north)
++
++
+ def lower_east_corridor_waypoints(
+     start_xy: Sequence[float], target_xy: Sequence[float],
+ ) -> Sequence[ZonePose]:
+diff --git a/tools_demo/tools_demo/task_navigator.py b/tools_demo/tools_demo/task_navigator.py
+index dce3c50..813576b 100644
+--- a/tools_demo/tools_demo/task_navigator.py
++++ b/tools_demo/tools_demo/task_navigator.py
+@@ -64,6 +64,7 @@ from tools_demo.navigation_math import CUBE_APPROACH_SIDES
+ from tools_demo.navigation_math import dynamic_gate_waypoints
+ from tools_demo.navigation_math import layout_a_sweep_waypoints
+ from tools_demo.navigation_math import bay_pocket_waypoints
++from tools_demo.navigation_math import a_wall_tip_waypoints
+ from tools_demo.navigation_math import lower_east_corridor_waypoints
+ from tools_demo.navigation_math import tray_crossing_waypoints
+ from tools_demo.navigation_math import CUBE_DOCK_STANDOFF
+@@ -1104,7 +1105,8 @@ class TaskNavigator(Node):
+             return min(self.nav_handoff_distance, 0.08)
+         if (self.pending_poses
+                 and getattr(self, "nav_goal_pose", None) is not None
+-                and self.nav_goal_pose.zone.startswith("bay_pocket_")):
++                and self.nav_goal_pose.zone.startswith(
++                    ("bay_pocket_", "A_WALL_"))):
+             # A staged waypoint left early lets the next leg cut the
+             # corner it was staged for.
+             return min(self.nav_handoff_distance, 0.08)
+@@ -1200,7 +1202,15 @@ class TaskNavigator(Node):
+         self.b_northeast_route_active = False
+         self.c_east_wall_descent_active = False
+         if not getattr(self, "use_legacy_layout_routes", True):
+-            if (zone == "A" and place.x < -10.0
++            a_guides = ()
++            if (zone == "A" and self.latest_x is not None
++                    and self.latest_y is not None):
++                a_guides = a_wall_tip_waypoints(
++                    (self.latest_x, self.latest_y), (place.x, place.y))
++            if a_guides:
++                self.pending_poses = list(a_guides) + self.pending_poses
++                self.get_logger().info("A_wall_tip_clearance_route active")
++            elif (zone == "A" and place.x < -10.0
+                     and self.latest_x is not None
+                     and self.latest_y is not None):
+                 guides = list(layout_a_sweep_waypoints(
+@@ -2550,19 +2560,21 @@ class TaskNavigator(Node):
+         return None
+ 
+     def _publish_stage_speed_limit(self, pose: Optional[ZonePose]) -> None:
+-        """Slow only the spawn wall turn; zero restores Nav2's normal limit."""
++        """Slow staged wall turns; zero restores Nav2's normal limit."""
+         publisher = getattr(self, "stage_speed_limit_publisher", None)
+         if publisher is None:
+             return
+         stage = pose.zone if pose is not None else None
+         corner = stage in (
+-            "universal_corridor_entry", "universal_wall_tip_clear")
++            "universal_corridor_entry", "universal_wall_tip_clear",
++            "A_WALL_NORTH_CLEAR")
+         message = SpeedLimit()
+         message.percentage = False
+         # Release the limit on the straight approach: early goal slowdown
+         # under a 1.2 cap suppressed the actual >1.0 m/s approach observed
+         # by the corridor response monitor in the GUI diagnostic run.
+-        message.speed_limit = 0.6 if corner else 0.0
++        message.speed_limit = (0.6 if corner else
++                               0.8 if stage == "A_WALL_SOUTH_CLEAR" else 0.0)
+         publisher.publish(message)
+         self.get_logger().info(
+             f"nav_stage_speed_limit limit={message.speed_limit:.2f} "

@@ -1,0 +1,9 @@
+[INFO] [1788663497.605892643] [competition_case_runner]: PREFLIGHT_NAV_ACTION=true
+[INFO] [1788663497.607369391] [competition_case_runner]: PREFLIGHT_COLLISION_STATE=active
+[INFO] [1788663498.028779200] [competition_case_runner]: PREFLIGHT_SAFETY_CHAIN=true
+[INFO] [1788663498.029635516] [competition_case_runner]: PREFLIGHT_COLLISION_STATE_AFTER_CHAIN=active
+[INFO] [1788663498.233269975] [competition_case_runner]: TASK_PUBLISHED=Move 4 blue cubes to zone C and 1 red cube to zone A.
+[INFO] [1788663826.640294656] [competition_case_runner]: MISSION_TERMINAL={"color":null,"completed":5,"cube_name":"red_cube_1","current_index":5,"detail":"completed=5,skipped=0","elapsed_sec":328.6,"schema_version":"1.0","skipped":0,"state":"completed","target_zone":null,"task_id":"aed9282ae8a878d4","total":5}
+[INFO] [1788663826.640668790] [competition_case_runner]: AVOIDANCE_EVIDENCE={"avoidance_demonstrated":true,"avoidance_event_count":2,"avoidance_events":["spawn_avoidance_1","spawn_avoidance_2"],"collision_detected":false,"encountered_obstacles":["competition_moving_obstacle_1","competition_moving_obstacle_2"],"minimum_clearance":0.1406,"minimum_event":{"model":"competition_moving_obstacle_2","obstacle":[5.0,-0.3],"robot":[5.545,-0.047]},"obstacle_updates":{"competition_moving_obstacle_1":1780,"competition_moving_obstacle_2":1784},"obstacles":{"competition_moving_obstacle_1":[8.5,-0.9],"competition_moving_obstacle_2":[5.0,-0.9]},"obstacles_seen":2,"required_clearance":0.1,"response_kinds":{"competition_moving_obstacle_1":"yield","competition_moving_obstacle_2":"yield"},"response_obstacles":["competition_moving_obstacle_1","competition_moving_obstacle_2"],"robot_speed":0.002,"safe":true,"sample_count":28105,"schema_version":"1.0"}
+[INFO] [1788663826.640920981] [competition_case_runner]: MINIMUM_CENTER_DISTANCE=0.6006
+[INFO] [1788663826.641175013] [competition_case_runner]: CASE_ACCEPTED=true collision_faults=[]

@@ -1,0 +1,82 @@
+{
+  "question": "Move 1 red cube to zone C and 4 blue cubes to zone A.",
+  "expected": [
+    [
+      "red",
+      "C"
+    ],
+    [
+      "blue",
+      "A"
+    ],
+    [
+      "blue",
+      "A"
+    ],
+    [
+      "blue",
+      "A"
+    ],
+    [
+      "blue",
+      "A"
+    ]
+  ],
+  "pick_entities": [
+    "red_cube_1",
+    "blue_cube_2",
+    "blue_cube_4",
+    "blue_cube_1",
+    "blue_cube_5"
+  ],
+  "delivery_truth": [
+    [
+      "red_cube_1",
+      "C",
+      "True",
+      "0.0000",
+      "True"
+    ],
+    [
+      "blue_cube_2",
+      "A",
+      "True",
+      "0.0000",
+      "True"
+    ],
+    [
+      "blue_cube_4",
+      "A",
+      "True",
+      "0.0000",
+      "True"
+    ],
+    [
+      "blue_cube_1",
+      "A",
+      "True",
+      "0.0000",
+      "True"
+    ],
+    [
+      "blue_cube_5",
+      "A",
+      "True",
+      "0.0000",
+      "True"
+    ]
+  ],
+  "order_verified": true,
+  "truth_precise": true,
+  "dual_yield": true,
+  "minimum_clearance": 0.2042,
+  "elapsed_sec": 279.1,
+  "motion_functional_pass": true,
+  "motion_under_300": true,
+  "full_competition_acceptance": "not_tested",
+  "limits": [
+    "LLM/question-generation/dashboard timing excluded",
+    "truth may follow existing entity-pose stabilization",
+    "repeated manipulation attempts require manual review"
+  ]
+}

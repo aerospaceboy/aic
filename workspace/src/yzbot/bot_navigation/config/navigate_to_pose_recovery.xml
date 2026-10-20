@@ -1,0 +1,43 @@
+<!--
+  Frozen static-navigation behavior: check physical path validity at 1 Hz.
+  Moving-obstacle stages select their own predictive behavior separately.
+  Compute an initial path for every action; never reuse the prior goal path.
+  Keep the upstream rotation/controller and bounded recovery policy unchanged.
+
+  The Nav2 default uses RecoveryNode number_of_retries=6; each recovery
+  cycle (clear costmaps + spin + wait + replan) used to take 10-17 s. More
+  importantly, a 90-degree Spin cannot succeed after the base has entered a
+  wall stop zone. Recovery therefore clears stale costs, waits one second for
+  a moving obstacle, and replans without commanding an unsafe in-place turn.
+-->
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <RecoveryNode number_of_retries="2" name="NavigateRecovery">
+      <Sequence name="InitialPlanThenTrackValidity">
+        <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+        <PipelineSequence name="ReplanWhileFollowing">
+        <RateController hz="1.0">
+          <Fallback>
+            <ReactiveSequence>
+              <Inverter><GlobalUpdatedGoal/></Inverter>
+              <IsPathValid path="{path}"/>
+            </ReactiveSequence>
+            <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+          </Fallback>
+        </RateController>
+        <FollowPath path="{path}" controller_id="FollowPath" goal_checker_id="general_goal_checker"/>
+        </PipelineSequence>
+      </Sequence>
+      <ReactiveFallback name="RecoveryFallback">
+        <GoalUpdated/>
+        <RoundRobin name="RecoveryActions">
+          <Sequence name="ClearingActions">
+            <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+            <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
+          </Sequence>
+          <Wait wait_duration="1"/>
+        </RoundRobin>
+      </ReactiveFallback>
+    </RecoveryNode>
+  </BehaviorTree>
+</root>

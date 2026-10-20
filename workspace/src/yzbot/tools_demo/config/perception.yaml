@@ -1,0 +1,22 @@
+competition_color_target_detector:
+  ros__parameters:
+    color_topic: /camera_rgbd/camera_rgbd/image_raw
+    depth_topic: /camera_rgbd/camera_rgbd/depth/image_raw
+    camera_info_topic: /camera_rgbd/camera_rgbd/camera_info
+    targets_topic: /competition/perception/targets
+    debug_image_topic: /competition/perception/debug_image
+    target_frame: base_link
+    minimum_area: 40
+    maximum_area: 50000
+    minimum_depth: 0.05
+    maximum_depth: 3.0
+    maximum_stamp_delta: 0.12
+    tf_timeout: 0.20
+    morphology_size: 3
+    maximum_targets_per_color: 5
+    red_lower_1: [0, 100, 70]
+    red_upper_1: [10, 255, 255]
+    red_lower_2: [170, 100, 70]
+    red_upper_2: [179, 255, 255]
+    blue_lower: [95, 100, 60]
+    blue_upper: [135, 255, 255]

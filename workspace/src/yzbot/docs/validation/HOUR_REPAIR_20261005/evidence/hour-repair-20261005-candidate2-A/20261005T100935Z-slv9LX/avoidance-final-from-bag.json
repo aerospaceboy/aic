@@ -1,0 +1,83 @@
+{
+  "additional_avoidance_events": [],
+  "avoidance_demonstrated": false,
+  "avoidance_event_count": 1,
+  "avoidance_events": [
+    "spawn_avoidance_1"
+  ],
+  "avoidance_policy": "two_distinct_effective_movers",
+  "box_obstacles": {
+    "preview_moving_partition_1": [
+      1.6,
+      0.12
+    ],
+    "preview_moving_partition_2": [
+      0.12,
+      1.6
+    ]
+  },
+  "collision_detected": false,
+  "encountered_obstacles": [
+    "competition_moving_obstacle_1",
+    "competition_moving_obstacle_2",
+    "preview_moving_partition_1"
+  ],
+  "minimum_clearance": 0.383,
+  "minimum_clearance_by_model": {
+    "competition_moving_obstacle_1": 0.3832382323509527,
+    "competition_moving_obstacle_2": 0.38300811883440894,
+    "preview_moving_partition_1": 0.5700979764832294,
+    "preview_moving_partition_2": 4.717329673821906
+  },
+  "minimum_event": {
+    "model": "competition_moving_obstacle_2",
+    "obstacle": [
+      5.0,
+      -0.485
+    ],
+    "robot": [
+      5.254,
+      0.319
+    ]
+  },
+  "obstacle_updates": {
+    "competition_moving_obstacle_1": 407,
+    "competition_moving_obstacle_2": 402,
+    "preview_moving_partition_1": 409,
+    "preview_moving_partition_2": 415
+  },
+  "obstacles": {
+    "competition_moving_obstacle_1": [
+      8.5,
+      -0.575
+    ],
+    "competition_moving_obstacle_2": [
+      5.0,
+      0.1
+    ],
+    "preview_moving_partition_1": [
+      -5.507,
+      1.9
+    ],
+    "preview_moving_partition_2": [
+      7.66,
+      -5.5
+    ]
+  },
+  "obstacles_seen": 4,
+  "original_gate_events": [
+    "spawn_avoidance_1"
+  ],
+  "original_pair_demonstrated": false,
+  "required_clearance": 0.1,
+  "response_kinds": {
+    "competition_moving_obstacle_1": "yield"
+  },
+  "response_obstacles": [
+    "competition_moving_obstacle_1"
+  ],
+  "robot_speed": 0.0,
+  "safe": true,
+  "sample_count": 16220,
+  "schema_version": "1.0"
+}

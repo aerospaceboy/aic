@@ -1,0 +1,10 @@
+{
+  "snapshots": 351,
+  "planned_snapshots": 0,
+  "trail_snapshots": 0,
+  "max_trail_points": 0,
+  "max_plan_points": 0,
+  "largest_trail_robot_error": 0.0,
+  "plan_endpoint_changes": 0,
+  "trail_endpoint_changes": 0
+}

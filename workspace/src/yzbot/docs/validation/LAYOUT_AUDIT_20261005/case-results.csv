@@ -1,0 +1,2 @@
+run_id,case,mode,completed,skipped,order_verified,truth_precise,dual_yield,minimum_clearance_m,motion_sec,case_accepted,full_competition_acceptance,api,costudio,entities,evidence
+20261005T022415Z-LoXFIp,4bC_1rA,motion-only,5,0,True,True,True,0.1618,232.5,True,not_tested,disabled,not_tested,blue_cube_3;blue_cube_2;blue_cube_4;blue_cube_1;red_cube_1,/home/ros/dev_ws/experiments/layout-audit-20261005/20261005T022415Z-LoXFIp

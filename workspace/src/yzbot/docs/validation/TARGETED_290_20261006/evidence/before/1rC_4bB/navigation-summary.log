@@ -1,0 +1,55 @@
+[mission_coordinator-38] [INFO] [1791288715.232869980] [competition_mission_coordinator]: unordered_schedule estimate=100.59 entries=['blue_cube_1:east', 'blue_cube_3:east', 'blue_cube_5:west', 'red_cube_4:east', 'blue_cube_4:east'] requirements=[('blue', 'B'), ('blue', 'B'), ('blue', 'B'), ('red', 'C'), ('blue', 'B')]
+[mission_coordinator-38] [INFO] [1791288715.234456117] [competition_mission_coordinator]: nav_start location=BLUE_CUBE_1 side=east robot=(13.200,-0.950,yaw=-3.140)
+[mission_coordinator-38] [INFO] [1791288749.022581700] [competition_mission_coordinator]: nav_result state=succeeded elapsed=33.79s
+[mission_coordinator-38] [INFO] [1791288749.024322395] [competition_mission_coordinator]: manip_start operation=scan cube=blue_cube_1 robot=(7.761,3.597,yaw=-3.116)
+[mission_coordinator-38] [INFO] [1791288752.159166715] [competition_mission_coordinator]: manip_start operation=pick cube=blue_cube_1 robot=(7.749,3.596,yaw=-3.118)
+[mission_coordinator-38] [INFO] [1791288757.493115677] [competition_mission_coordinator]: nav_start location=BLUE_EXIT side=auto robot=(7.751,3.596,yaw=-3.126)
+[mission_coordinator-38] [INFO] [1791288758.553631562] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.06s
+[mission_coordinator-38] [INFO] [1791288758.554386484] [competition_mission_coordinator]: nav_start location=B side=auto robot=(8.269,3.599,yaw=-3.129)
+[mission_coordinator-38] [INFO] [1791288784.889069077] [competition_mission_coordinator]: nav_result state=succeeded elapsed=26.33s
+[mission_coordinator-38] [INFO] [1791288784.891869256] [competition_mission_coordinator]: manip_start operation=place cube=blue_cube_1 robot=(11.312,-5.024,yaw=0.025)
+[mission_coordinator-38] [INFO] [1791288789.342948180] [competition_mission_coordinator]: nav_start location=B_EXIT side=auto robot=(11.312,-5.025,yaw=0.060)
+[mission_coordinator-38] [INFO] [1791288791.930933062] [competition_mission_coordinator]: nav_result state=succeeded elapsed=2.59s
+[mission_coordinator-38] [INFO] [1791288791.932711484] [competition_mission_coordinator]: nav_start location=BLUE_CUBE_3 side=east robot=(10.336,-5.002,yaw=-0.044)
+[mission_coordinator-38] [INFO] [1791288811.695446751] [competition_mission_coordinator]: nav_result state=succeeded elapsed=19.76s
+[mission_coordinator-38] [INFO] [1791288812.157025841] [competition_mission_coordinator]: dock_realign_result:blue_cube_3:moved=(0.02345531611778473, 0.01445959604120307)
+[mission_coordinator-38] [INFO] [1791288812.158488437] [competition_mission_coordinator]: manip_start operation=pick cube=blue_cube_3 robot=(-1.654,-5.990,yaw=3.139)
+[mission_coordinator-38] [INFO] [1791288817.629729676] [competition_mission_coordinator]: nav_start location=BLUE_EXIT side=auto robot=(-1.653,-5.991,yaw=3.131)
+[mission_coordinator-38] [INFO] [1791288818.727498491] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.10s
+[mission_coordinator-38] [INFO] [1791288818.728747805] [competition_mission_coordinator]: nav_start location=B side=auto robot=(-1.138,-6.000,yaw=3.131)
+[mission_coordinator-38] [INFO] [1791288841.508425040] [competition_mission_coordinator]: nav_result state=succeeded elapsed=22.78s
+[mission_coordinator-38] [INFO] [1791288841.509172036] [competition_mission_coordinator]: manip_start operation=place cube=blue_cube_3 robot=(11.305,-4.946,yaw=-0.006)
+[mission_coordinator-38] [INFO] [1791288845.860851001] [competition_mission_coordinator]: nav_start location=B_EXIT side=auto robot=(11.305,-4.946,yaw=0.004)
+[mission_coordinator-38] [INFO] [1791288848.317785377] [competition_mission_coordinator]: nav_result state=succeeded elapsed=2.46s
+[mission_coordinator-38] [INFO] [1791288848.318975085] [competition_mission_coordinator]: nav_start location=BLUE_CUBE_5 side=west robot=(10.336,-4.998,yaw=0.065)
+[mission_coordinator-38] [INFO] [1791288859.652876120] [competition_mission_coordinator]: nav_result state=succeeded elapsed=11.33s
+[mission_coordinator-38] [INFO] [1791288860.209816341] [competition_mission_coordinator]: dock_realign_result:blue_cube_5:moved=(0.006417241976068533, -0.022800400527940544)
+[mission_coordinator-38] [INFO] [1791288860.211206121] [competition_mission_coordinator]: manip_start operation=scan cube=blue_cube_5 robot=(11.440,-12.976,yaw=0.005)
+[mission_coordinator-38] [INFO] [1791288864.391357266] [competition_mission_coordinator]: manip_start operation=pick cube=blue_cube_5 robot=(11.439,-12.974,yaw=0.006)
+[mission_coordinator-38] [INFO] [1791288872.329707600] [competition_mission_coordinator]: nav_start location=BLUE_EXIT side=auto robot=(11.436,-12.973,yaw=-0.003)
+[mission_coordinator-38] [INFO] [1791288873.411429177] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.08s
+[mission_coordinator-38] [INFO] [1791288873.412133228] [competition_mission_coordinator]: nav_start location=B side=auto robot=(10.939,-12.995,yaw=0.080)
+[mission_coordinator-38] [INFO] [1791288884.531069949] [competition_mission_coordinator]: nav_result state=succeeded elapsed=11.12s
+[mission_coordinator-38] [INFO] [1791288884.531730233] [competition_mission_coordinator]: manip_start operation=place cube=blue_cube_5 robot=(11.257,-5.052,yaw=-0.028)
+[mission_coordinator-38] [INFO] [1791288888.903635581] [competition_mission_coordinator]: nav_start location=B_EXIT side=auto robot=(11.257,-5.051,yaw=-0.060)
+[mission_coordinator-38] [INFO] [1791288891.350983428] [competition_mission_coordinator]: nav_result state=succeeded elapsed=2.45s
+[mission_coordinator-38] [INFO] [1791288891.352728110] [competition_mission_coordinator]: nav_start location=RED_CUBE_4 side=east robot=(10.333,-5.002,yaw=-0.054)
+[mission_coordinator-38] [INFO] [1791288900.080857694] [competition_mission_coordinator]: nav_result state=succeeded elapsed=8.73s
+[mission_coordinator-38] [INFO] [1791288900.640608932] [competition_mission_coordinator]: dock_realign_result:red_cube_4:moved=(0.011834582563298047, 0.020628555837098172)
+[mission_coordinator-38] [INFO] [1791288900.642138402] [competition_mission_coordinator]: manip_start operation=pick cube=red_cube_4 robot=(11.760,-9.788,yaw=3.115)
+[mission_coordinator-38] [INFO] [1791288906.159480085] [competition_mission_coordinator]: nav_start location=RED_EXIT side=auto robot=(11.760,-9.789,yaw=3.109)
+[mission_coordinator-38] [INFO] [1791288907.217968135] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.06s
+[mission_coordinator-38] [INFO] [1791288907.219858278] [competition_mission_coordinator]: nav_start location=C side=auto robot=(12.262,-9.799,yaw=-3.139)
+[mission_coordinator-38] [INFO] [1791288920.353149633] [competition_mission_coordinator]: nav_result state=succeeded elapsed=13.13s
+[mission_coordinator-38] [INFO] [1791288920.353885299] [competition_mission_coordinator]: manip_start operation=place cube=red_cube_4 robot=(2.907,-12.162,yaw=0.026)
+[mission_coordinator-38] [INFO] [1791288924.704074574] [competition_mission_coordinator]: nav_start location=C_EXIT side=auto robot=(2.907,-12.162,yaw=-0.005)
+[mission_coordinator-38] [INFO] [1791288926.465041998] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.76s
+[mission_coordinator-38] [INFO] [1791288926.466054392] [competition_mission_coordinator]: nav_start location=BLUE_CUBE_4 side=east robot=(2.491,-12.159,yaw=-0.006)
+[mission_coordinator-38] [INFO] [1791288933.898990396] [competition_mission_coordinator]: nav_result state=succeeded elapsed=7.43s
+[mission_coordinator-38] [INFO] [1791288934.152520750] [competition_mission_coordinator]: dock_realign_result:blue_cube_4:moved=(0.0215482642258299, 1.508020293743446e-05)
+[mission_coordinator-38] [INFO] [1791288934.153840344] [competition_mission_coordinator]: manip_start operation=pick cube=blue_cube_4 robot=(-0.172,-8.810,yaw=-3.133)
+[mission_coordinator-38] [INFO] [1791288939.754199008] [competition_mission_coordinator]: nav_start location=BLUE_EXIT side=auto robot=(-0.170,-8.810,yaw=3.141)
+[mission_coordinator-38] [INFO] [1791288940.906842627] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.15s
+[mission_coordinator-38] [INFO] [1791288940.907854989] [competition_mission_coordinator]: nav_start location=B side=auto robot=(0.393,-8.802,yaw=-3.104)
+[mission_coordinator-38] [INFO] [1791288961.327417606] [competition_mission_coordinator]: nav_result state=succeeded elapsed=20.42s
+[mission_coordinator-38] [INFO] [1791288961.329911108] [competition_mission_coordinator]: manip_start operation=place cube=blue_cube_4 robot=(11.286,-5.051,yaw=0.018)

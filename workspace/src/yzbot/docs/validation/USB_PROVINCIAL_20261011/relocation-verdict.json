@@ -1,0 +1,9 @@
+{
+  "build_exit": 0,
+  "packages": 7,
+  "system_only_environment": true,
+  "old_overlay_loaded": false,
+  "build_base": "build-native",
+  "install_base": "install-native",
+  "usb_system_tested": false
+}

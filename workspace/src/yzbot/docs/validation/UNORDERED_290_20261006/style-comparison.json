@@ -1,0 +1,67 @@
+{
+  "tools_demo/tools_demo/mission_coordinator.py": {
+    "baseline": {
+      "E303 too many blank lines (3)": 3,
+      "E302 expected 2 blank lines, found 1": 2,
+      "E305 expected 2 blank lines after class or function definition, found 1": 1,
+      "E501 line too long (90 > 79 characters)": 1,
+      "E501 line too long (87 > 79 characters)": 1,
+      "E501 line too long (81 > 79 characters)": 4
+    },
+    "current": {
+      "E303 too many blank lines (3)": 3,
+      "E302 expected 2 blank lines, found 1": 2,
+      "E305 expected 2 blank lines after class or function definition, found 1": 1,
+      "E501 line too long (90 > 79 characters)": 1,
+      "E501 line too long (87 > 79 characters)": 1,
+      "E501 line too long (81 > 79 characters)": 4
+    },
+    "added": {}
+  },
+  "tools_demo/tools_demo/evidence_audit.py": {
+    "baseline": {},
+    "current": {},
+    "added": {}
+  },
+  "tools_demo/scripts/summarize48_v2.py": {
+    "baseline": {
+      "E402 module level import not at top of file": 1,
+      "E501 line too long (82 > 79 characters)": 1,
+      "E501 line too long (93 > 79 characters)": 1,
+      "E501 line too long (80 > 79 characters)": 2,
+      "E501 line too long (100 > 79 characters)": 1,
+      "E128 continuation line under-indented for visual indent": 16,
+      "E501 line too long (89 > 79 characters)": 2,
+      "E501 line too long (81 > 79 characters)": 2,
+      "E501 line too long (120 > 79 characters)": 1,
+      "E231 missing whitespace after ':'": 6,
+      "E501 line too long (84 > 79 characters)": 1,
+      "E225 missing whitespace around operator": 2,
+      "E702 multiple statements on one line (semicolon)": 1
+    },
+    "current": {
+      "E402 module level import not at top of file": 1,
+      "E501 line too long (82 > 79 characters)": 1,
+      "E501 line too long (93 > 79 characters)": 1,
+      "E501 line too long (80 > 79 characters)": 2,
+      "E501 line too long (100 > 79 characters)": 1,
+      "E128 continuation line under-indented for visual indent": 16,
+      "E501 line too long (89 > 79 characters)": 2,
+      "E501 line too long (81 > 79 characters)": 2,
+      "E501 line too long (120 > 79 characters)": 1,
+      "E231 missing whitespace after ':'": 6,
+      "E225 missing whitespace around operator": 2,
+      "E702 multiple statements on one line (semicolon)": 1
+    },
+    "added": {}
+  },
+  "tools_demo/test/test_evidence_audit.py": {
+    "baseline": {
+      "E501 line too long (80 > 79 characters)": 1
+    },
+    "current": {
+      "E501 line too long (80 > 79 characters)": 1
+    },
+    "added": {}
+  }
+}

@@ -1,0 +1,36 @@
+run_id,seq,kind,class,location,side,cube,zone,t_offset,wall_monotonic,wall_event_delta,state,route,stages,chain_len_m,displacement_m,pose_start,pose_end,detail_events,fallbacks,success,precise,slot_error,notes
+e2order4,1,nav,inbound,BLUE_CUBE_1,east,,BLUE_CUBE_1,-0.097,29.19,29.184,succeeded,single,0,18.792,8.973,"(13.221,-0.950,-3.140)","(4.722,1.928,-3.119)","alignment_start,cube_entry_choice,dynamic_gate_route,nav_costmap_probe,nav_goal,nav_handoff,nav_handoff_cancel_ack,nav_handoff_result_received,nav_plan,pickup_entry_alignment,speed_profile_start",,,,,
+e2order4,2,manip,scan,,,blue_cube_1,,29.495,,4.203,True,,,,0.006,"(4.722,1.928,-3.119)","(4.728,1.928,-3.120)",,,ok,,,
+e2order4,3,manip,pick,,,blue_cube_1,,33.755,,11.294,True,,,,0.015,"(4.728,1.928,-3.120)","(4.714,1.924,3.135)",,,ok,,,
+e2order4,4,nav,exit,BLUE_EXIT,auto,,BLUE_EXIT,45.169,0.91,0.911,succeeded,direct,0,0.378,0.378,"(4.714,1.924,3.135)","(5.091,1.903,-3.138)","alignment_start,nav_plan",,,,,
+e2order4,5,nav,delivery,B,auto,,B,46.084,9.58,9.58,succeeded,single,0,3.667,3.619,"(5.091,1.903,-3.138)","(8.545,2.983,0.040)","alignment_start,nav_costmap_probe,nav_goal,nav_handoff,nav_handoff_cancel_ack,nav_handoff_result_received,nav_plan",,,,,
+e2order4,6,manip,place,,,blue_cube_1,,55.664,,5.307,True,,,,0.0,"(8.545,2.983,0.040)","(8.545,2.983,0.041)",,,ok,,,
+e2order4,7,delivery_truth,delivery_truth,,,blue_cube_1,B,61.111,,,,,,,,,,,,True,True,0.0000,x=8.9900 y=3.0000 z=0.0349
+e2order4,8,nav,exit,B_EXIT,auto,,B_EXIT,61.112,2.82,2.818,succeeded,direct,0,1.015,1.015,"(8.545,2.983,0.041)","(7.530,2.993,-0.121)",,,,,,
+e2order4,9,nav,inbound,RED_CUBE_2,west,,RED_CUBE_2,63.932,7.06,7.058,succeeded,single,0,3.62,4.112,"(7.530,2.993,-0.121)","(11.642,3.007,-0.018)","alignment_start,cube_entry_choice,nav_costmap_probe,nav_goal,nav_handoff,nav_handoff_cancel_ack,nav_handoff_result_received,nav_plan,pickup_entry_alignment",,,,,
+e2order4,10,manip,pick,,,red_cube_2,,71.25,,6.306,True,,,,0.013,"(11.642,3.007,-0.018)","(11.655,3.010,-0.042)",,,ok,,,
+e2order4,11,nav,exit,RED_EXIT,auto,,RED_EXIT,77.625,2.31,2.307,succeeded,direct,0,0.473,0.473,"(11.655,3.010,-0.042)","(11.182,3.014,0.242)","alignment_start,nav_plan",,,,,
+e2order4,12,nav,delivery,A,auto,,A,79.932,18.79,18.789,succeeded,single,0,12.792,12.736,"(11.182,3.014,0.242)","(-1.554,3.036,-3.108)","alignment_start,nav_costmap_probe,nav_goal,nav_plan",,,,,
+e2order4,13,manip,place,,,red_cube_2,,98.73,,5.313,True,,,,0.001,"(-1.554,3.036,-3.108)","(-1.553,3.036,-3.107)",,,ok,,,
+e2order4,14,delivery_truth,delivery_truth,,,red_cube_2,A,104.049,,,,,,,,,,,,True,True,0.0000,x=-2.0100 y=2.8300 z=0.0350
+e2order4,15,nav,exit,A_EXIT,auto,,A_EXIT,104.05,3.31,3.312,succeeded,single,0,,1.211,"(-1.553,3.036,-3.107)","(-2.694,3.442,2.766)","nav_costmap_probe,nav_goal,nav_handoff,nav_handoff_cancel_ack,nav_handoff_result_received",,,,,
+e2order4,16,nav,inbound,RED_CUBE_1,east,,RED_CUBE_1,107.363,8.79,8.786,succeeded,single,0,0.6,1.04,"(-2.694,3.442,2.766)","(-3.640,3.010,-3.122)","alignment_start,cube_entry_choice,nav_costmap_probe,nav_goal,nav_handoff,nav_handoff_cancel_ack,nav_handoff_result_received,nav_plan,pickup_entry_alignment,zone_exit_already_complete",,,,,
+e2order4,17,manip,pick,,,red_cube_1,,116.562,,8.288,True,,,,0.015,"(-3.640,3.010,-3.122)","(-3.654,3.006,3.132)",,,ok,,,
+e2order4,18,nav,exit,RED_EXIT,auto,,RED_EXIT,125.007,1.82,1.814,succeeded,direct,0,0.516,0.516,"(-3.654,3.006,3.132)","(-3.138,2.988,-2.973)","alignment_start,nav_plan",,,,,
+e2order4,19,nav,delivery,A,auto,,A,126.822,7.68,7.679,succeeded,single,0,0.728,0.682,"(-3.138,2.988,-2.973)","(-2.456,2.974,0.037)","alignment_start,nav_costmap_probe,nav_goal,nav_handoff,nav_handoff_cancel_ack,nav_handoff_result_received,nav_plan",,,,,
+e2order4,20,manip,place,,,red_cube_1,,134.501,,5.305,True,,,,0.0,"(-2.456,2.974,0.037)","(-2.456,2.974,0.035)",,,ok,,,
+e2order4,21,delivery_truth,delivery_truth,,,red_cube_1,A,139.954,,,,,,,,,,,,True,True,0.0000,x=-2.0100 y=2.9367 z=0.0350
+e2order4,22,nav,exit,A_EXIT,auto,,A_EXIT,139.955,1.9,1.902,succeeded,direct,0,0.415,0.415,"(-2.456,2.974,0.035)","(-2.871,2.960,0.036)",zone_exit_waypoint_skipped,,,,,
+e2order4,23,nav,inbound,RED_CUBE_3,east,,RED_CUBE_3,141.858,16.82,16.823,succeeded,single,0,5.897,6.113,"(-2.871,2.960,0.036)","(-5.640,-2.490,-3.124)","alignment_start,cube_entry_choice,nav_costmap_probe,nav_goal,nav_handoff,nav_handoff_cancel_ack,nav_handoff_result_received,nav_plan,pickup_entry_alignment,zone_exit_already_complete",,,,,
+e2order4,24,manip,pick,,,red_cube_3,,158.94,,6.33,True,,,,0.013,"(-5.640,-2.490,-3.124)","(-5.652,-2.494,3.135)",,,ok,,,
+e2order4,25,nav,exit,RED_EXIT,auto,,RED_EXIT,165.318,1.61,1.613,succeeded,direct,0,0.517,0.517,"(-5.652,-2.494,3.135)","(-5.135,-2.509,-2.999)","alignment_start,nav_plan",,,,,
+e2order4,26,nav,delivery,A,auto,,A,166.933,16.01,16.013,succeeded,single,0,6.137,6.074,"(-5.135,-2.509,-2.999)","(-2.432,2.930,0.035)","alignment_start,nav_costmap_probe,nav_goal,nav_handoff,nav_handoff_cancel_ack,nav_handoff_result_received,nav_plan",,,,,
+e2order4,27,manip,place,,,red_cube_3,,182.947,,5.309,True,,,,0.0,"(-2.432,2.930,0.035)","(-2.432,2.930,0.035)",,,ok,,,
+e2order4,28,delivery_truth,delivery_truth,,,red_cube_3,A,188.291,,,,,,,,,,,,True,True,0.0000,x=-2.0100 y=3.0433 z=0.0349
+e2order4,29,nav,exit,A_EXIT,auto,,A_EXIT,188.292,1.91,1.914,succeeded,direct,0,0.417,0.417,"(-2.432,2.930,0.035)","(-2.849,2.915,0.034)",zone_exit_waypoint_skipped,,,,,
+e2order4,30,nav,inbound,RED_CUBE_5,east,,RED_CUBE_5,190.206,18.92,18.92,succeeded,single,0,13.917,13.94,"(-2.849,2.915,0.034)","(-3.644,-11.002,-3.123)","alignment_start,cube_entry_choice,nav_costmap_probe,nav_goal,nav_handoff,nav_handoff_cancel_ack,nav_handoff_result_received,nav_plan,pickup_entry_alignment,zone_exit_already_complete",,,,,
+e2order4,31,manip,pick,,,red_cube_5,,209.484,,6.311,True,,,,0.013,"(-3.644,-11.002,-3.123)","(-3.657,-11.005,3.135)",,,ok,,,
+e2order4,32,nav,exit,RED_EXIT,auto,,RED_EXIT,215.873,1.72,1.715,succeeded,direct,0,0.533,0.533,"(-3.657,-11.005,3.135)","(-3.124,-11.010,-2.969)","alignment_start,nav_plan",,,,,
+e2order4,33,nav,delivery,A,auto,,A,217.589,23.83,23.827,succeeded,single,0,14.018,13.949,"(-3.124,-11.010,-2.969)","(-2.449,2.923,0.034)","alignment_start,nav_costmap_probe,nav_goal,nav_plan",,,,,
+e2order4,34,manip,place,,,red_cube_5,,241.417,,5.313,True,,,,,"(-2.449,2.923,0.034)",,,,ok,,,
+e2order4,35,delivery_truth,delivery_truth,,,red_cube_5,A,246.751,,,,,,,,,,,,True,True,0.0000,x=-2.0100 y=3.1500 z=0.0350

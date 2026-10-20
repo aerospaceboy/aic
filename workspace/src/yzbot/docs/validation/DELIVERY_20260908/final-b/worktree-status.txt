@@ -1,0 +1,13 @@
+ M mybot/pick_place_moveit.py
+ M mybot/test/test_pick_place_math.py
+ M tools_demo/config/cube_order_policy.json
+ M tools_demo/launch/mission.launch.py
+ M tools_demo/tools_demo/moving_obstacle.py
+ M tools_demo/tools_demo/task_navigator.py
+?? docs/AGENT_HISTORY_20260823.md
+?? docs/HANDOFF_PROMPT_V5.md
+?? docs/HANDOFF_PROMPT_V6.md
+?? docs/HANDOFF_PROMPT_V7.md
+?? tools_demo/test/test_delivery_release.py
+?? tools_demo/tools_demo/b_delivery_route.py
+?? tools_demo/tools_demo/continuous_response.py

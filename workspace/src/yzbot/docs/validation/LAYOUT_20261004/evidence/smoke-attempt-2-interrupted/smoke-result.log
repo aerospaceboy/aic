@@ -1,0 +1,6 @@
+OVERRIDE_READY True
+[INFO] [1791129677.746704148] [competition_case_runner]: PREFLIGHT_NAV_ACTION=true
+[INFO] [1791129678.656154233] [competition_case_runner]: PREFLIGHT_COLLISION_STATE=active
+[INFO] [1791129678.677444791] [competition_case_runner]: PREFLIGHT_SAFETY_CHAIN=true
+[INFO] [1791129678.681794334] [competition_case_runner]: PREFLIGHT_COLLISION_STATE_AFTER_CHAIN=active
+[INFO] [1791129678.784626880] [competition_case_runner]: TASK_PUBLISHED=Move 1 red cube to zone B.

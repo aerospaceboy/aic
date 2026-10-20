@@ -1,0 +1,17 @@
+<!--
+  Compute one path through every configured safety anchor and follow it
+  continuously. Do not periodically delete waypoints: the stock Humble tree
+  can miss a cut corner, then replan backwards to an already-passed anchor.
+  TaskNavigator falls back to its proven serial route on any action failure.
+-->
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="StrictAnchoredRoute">
+      <ComputePathThroughPoses
+        goals="{goals}"
+        path="{path}"
+        planner_id="GridBased"/>
+      <FollowPath path="{path}" controller_id="FollowPath" goal_checker_id="general_goal_checker"/>
+    </Sequence>
+  </BehaviorTree>
+</root>

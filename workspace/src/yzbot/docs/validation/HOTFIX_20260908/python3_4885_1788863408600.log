@@ -1,0 +1,129 @@
+[INFO] [1788863409.398501355] [competition_mission_coordinator]: {"color":null,"completed":0,"cube_name":null,"current_index":0,"detail":"waiting_for_task","elapsed_sec":0.0,"schema_version":"1.0","skipped":0,"state":"idle","target_zone":null,"task_id":null,"total":0}
+[INFO] [1788863471.518533182] [competition_mission_coordinator]: cube_order_policy_loaded tasks=48
+[INFO] [1788863471.519731876] [competition_mission_coordinator]: cube_order_policy_seeded n=5
+[INFO] [1788863471.520675557] [competition_mission_coordinator]: {"color":"red","completed":0,"cube_name":"red_cube_1","current_index":1,"detail":"going_to_red_pickup","elapsed_sec":0.0,"schema_version":"1.0","skipped":0,"state":"navigating_pickup","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863471.521398199] [competition_mission_coordinator]: cube_selection_override name=red_cube_1 side=east
+[INFO] [1788863471.521758141] [competition_mission_coordinator]: nav_start location=RED_CUBE_1 side=east robot=(13.223,-0.950,yaw=-3.139)
+[INFO] [1788863492.554490243] [competition_mission_coordinator]: nav_result state=succeeded elapsed=21.03s
+[INFO] [1788863492.555769185] [competition_mission_coordinator]: dock_realign_start:red_cube_1:slot=(0.369,0.031) correction=(0.000,0.031)
+[INFO] [1788863492.858386705] [competition_mission_coordinator]: dock_realign_result:red_cube_1:moved=(0.0026794288788987587, 0.03199565048038493)
+[INFO] [1788863492.858863325] [competition_mission_coordinator]: {"color":"red","completed":0,"cube_name":"red_cube_1","current_index":1,"detail":"recognizing_red","elapsed_sec":21.4,"schema_version":"1.0","skipped":0,"state":"waiting_perception","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863492.859159534] [competition_mission_coordinator]: manip_start operation=scan cube=red_cube_1 robot=(-3.634,2.992,yaw=3.122)
+[INFO] [1788863492.859730349] [competition_mission_coordinator]: manip_request id=1 op=scan cube=red_cube_1
+[INFO] [1788863497.172604050] [competition_mission_coordinator]: {"color":"red","completed":0,"cube_name":"red_cube_1","current_index":1,"detail":"recognizing_red","elapsed_sec":25.7,"schema_version":"1.0","skipped":0,"state":"waiting_perception","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863498.176027439] [competition_mission_coordinator]: {"color":"red","completed":0,"cube_name":"red_cube_1","current_index":1,"detail":"retrying_perception","elapsed_sec":26.7,"schema_version":"1.0","skipped":0,"state":"waiting_perception","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863498.176334599] [competition_mission_coordinator]: manip_start operation=scan cube=red_cube_1 robot=(-3.626,2.991,yaw=3.119)
+[INFO] [1788863498.176683943] [competition_mission_coordinator]: manip_request id=2 op=scan cube=red_cube_1
+[INFO] [1788863498.376878590] [competition_mission_coordinator]: {"color":"red","completed":0,"cube_name":"red_cube_1","current_index":1,"detail":"retrying_perception","elapsed_sec":26.9,"schema_version":"1.0","skipped":0,"state":"waiting_perception","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863498.465827882] [competition_mission_coordinator]: selected_target:red_cube_1:{"x": 0.37854, "y": 0.00651, "z": 0.0316}
+[INFO] [1788863498.466520527] [competition_mission_coordinator]: {"color":"red","completed":0,"cube_name":"red_cube_1","current_index":1,"detail":"picking_red_cube_1","elapsed_sec":27.0,"schema_version":"1.0","skipped":0,"state":"picking","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863498.466891402] [competition_mission_coordinator]: manip_start operation=pick cube=red_cube_1 robot=(-3.626,2.991,yaw=3.119)
+[INFO] [1788863498.467526642] [competition_mission_coordinator]: manip_request id=3 op=pick cube=red_cube_1
+[INFO] [1788863507.417598942] [competition_mission_coordinator]: {"color":"red","completed":0,"cube_name":"red_cube_1","current_index":1,"detail":"leaving_red_pickup","elapsed_sec":35.9,"schema_version":"1.0","skipped":0,"state":"navigating_departure","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863507.417896230] [competition_mission_coordinator]: nav_start location=RED_EXIT side=auto robot=(-3.637,2.989,yaw=3.095)
+[INFO] [1788863509.722524223] [competition_mission_coordinator]: nav_result state=succeeded elapsed=2.31s
+[INFO] [1788863509.722962519] [competition_mission_coordinator]: {"color":"red","completed":0,"cube_name":"red_cube_1","current_index":1,"detail":"going_to_zone_C","elapsed_sec":38.2,"schema_version":"1.0","skipped":0,"state":"navigating_destination","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863509.723233230] [competition_mission_coordinator]: nav_start location=C side=auto robot=(-3.135,2.983,yaw=-2.842)
+[INFO] [1788863519.353659703] [competition_mission_coordinator]: nav_result state=succeeded elapsed=9.63s
+[INFO] [1788863519.354148219] [competition_mission_coordinator]: {"color":"red","completed":0,"cube_name":"red_cube_1","current_index":1,"detail":"placing_in_zone_C","elapsed_sec":47.8,"schema_version":"1.0","skipped":0,"state":"placing","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863519.354419476] [competition_mission_coordinator]: manip_start operation=place cube=red_cube_1 robot=(-9.517,1.980,yaw=3.110)
+[INFO] [1788863519.354881731] [competition_mission_coordinator]: delivery_slot zone=C slot=1/2 y_offset=-0.160 frame=world_compensated local=(0.350,0.155) clamped=True
+[INFO] [1788863519.355264661] [competition_mission_coordinator]: manip_request id=4 op=place cube=red_cube_1
+[INFO] [1788863524.680422262] [competition_mission_coordinator]: {"color":"red","completed":0,"cube_name":"red_cube_1","current_index":1,"detail":"verifying_delivery","elapsed_sec":53.2,"schema_version":"1.0","skipped":0,"state":"verifying","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863524.692311393] [competition_mission_coordinator]: delivery_truth cube=red_cube_1 zone=C x=-10.0000 y=1.8400 z=0.0349 valid=True slot_error=0.0000 precise=True
+[INFO] [1788863524.692985712] [competition_mission_coordinator]: {"color":"red","completed":0,"cube_name":"red_cube_1","current_index":1,"detail":"leaving_zone_C","elapsed_sec":53.2,"schema_version":"1.0","skipped":0,"state":"navigating_zone_exit","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863524.693261909] [competition_mission_coordinator]: nav_start location=C_EXIT side=auto robot=(-9.517,1.980,yaw=3.119)
+[INFO] [1788863526.584338933] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.89s
+[INFO] [1788863526.584856510] [competition_mission_coordinator]: {"color":"red","completed":1,"cube_name":"red_cube_1","current_index":2,"detail":"going_to_red_pickup","elapsed_sec":55.1,"schema_version":"1.0","skipped":0,"state":"navigating_pickup","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863526.585101279] [competition_mission_coordinator]: cube_selection_override name=red_cube_3 side=east
+[INFO] [1788863526.585478571] [competition_mission_coordinator]: nav_start location=RED_CUBE_3 side=east robot=(-9.101,1.972,yaw=3.117)
+[INFO] [1788863547.060545403] [competition_mission_coordinator]: nav_result state=succeeded elapsed=20.48s
+[INFO] [1788863547.060957226] [competition_mission_coordinator]: dock_realign_start:red_cube_3:slot=(0.376,-0.037) correction=(0.016,-0.035)
+[INFO] [1788863547.463790041] [competition_mission_coordinator]: dock_realign_result:red_cube_3:moved=(0.015668652561347418, -0.03600824273374781)
+[INFO] [1788863547.464282770] [competition_mission_coordinator]: {"color":"red","completed":1,"cube_name":"red_cube_3","current_index":2,"detail":"recognizing_red","elapsed_sec":76.0,"schema_version":"1.0","skipped":0,"state":"waiting_perception","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863547.464632650] [competition_mission_coordinator]: perception_cached_slot:red_cube_3:x=0.361,y=-0.001
+[INFO] [1788863547.465013942] [competition_mission_coordinator]: {"color":"red","completed":1,"cube_name":"red_cube_3","current_index":2,"detail":"picking_red_cube_2","elapsed_sec":76.0,"schema_version":"1.0","skipped":0,"state":"picking","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863547.465312971] [competition_mission_coordinator]: manip_start operation=pick cube=red_cube_3 robot=(-5.639,-2.494,yaw=-3.122)
+[INFO] [1788863547.465685581] [competition_mission_coordinator]: manip_request id=5 op=pick cube=red_cube_3
+[INFO] [1788863553.788287223] [competition_mission_coordinator]: {"color":"red","completed":1,"cube_name":"red_cube_3","current_index":2,"detail":"leaving_red_pickup","elapsed_sec":82.3,"schema_version":"1.0","skipped":0,"state":"navigating_departure","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863553.789279635] [competition_mission_coordinator]: nav_start location=RED_EXIT side=auto robot=(-5.649,-2.497,yaw=3.138)
+[INFO] [1788863555.291006193] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.50s
+[INFO] [1788863555.291800760] [competition_mission_coordinator]: {"color":"red","completed":1,"cube_name":"red_cube_3","current_index":2,"detail":"going_to_zone_C","elapsed_sec":83.8,"schema_version":"1.0","skipped":0,"state":"navigating_destination","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863555.292067252] [competition_mission_coordinator]: nav_start location=C side=auto robot=(-5.138,-2.510,yaw=-3.008)
+[INFO] [1788863594.748341751] [competition_mission_coordinator]: nav_result state=succeeded elapsed=39.46s
+[INFO] [1788863594.749173188] [competition_mission_coordinator]: {"color":"red","completed":1,"cube_name":"red_cube_3","current_index":2,"detail":"placing_in_zone_C","elapsed_sec":123.2,"schema_version":"1.0","skipped":0,"state":"placing","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863594.749475602] [competition_mission_coordinator]: manip_start operation=place cube=red_cube_3 robot=(-9.567,1.940,yaw=3.107)
+[INFO] [1788863594.749726841] [competition_mission_coordinator]: delivery_slot zone=C slot=2/2 y_offset=0.160 frame=world_compensated local=(0.350,-0.160) clamped=True
+[INFO] [1788863594.750058762] [competition_mission_coordinator]: manip_request id=6 op=place cube=red_cube_3
+[INFO] [1788863600.167286275] [competition_mission_coordinator]: {"color":"red","completed":1,"cube_name":"red_cube_3","current_index":2,"detail":"verifying_delivery","elapsed_sec":128.7,"schema_version":"1.0","skipped":0,"state":"verifying","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863600.170682039] [competition_mission_coordinator]: delivery_truth cube=red_cube_3 zone=C x=-10.0000 y=2.1600 z=0.0350 valid=True slot_error=0.0000 precise=True
+[INFO] [1788863600.171298274] [competition_mission_coordinator]: {"color":"red","completed":1,"cube_name":"red_cube_3","current_index":2,"detail":"leaving_zone_C","elapsed_sec":128.7,"schema_version":"1.0","skipped":0,"state":"navigating_zone_exit","target_zone":"C","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863600.171561808] [competition_mission_coordinator]: nav_start location=C_EXIT side=auto robot=(-9.566,1.940,yaw=3.112)
+[INFO] [1788863602.071606966] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.90s
+[INFO] [1788863602.072015397] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"red_cube_3","current_index":3,"detail":"going_to_blue_pickup","elapsed_sec":130.6,"schema_version":"1.0","skipped":0,"state":"navigating_pickup","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863602.072255948] [competition_mission_coordinator]: cube_selection_override name=blue_cube_2 side=east
+[INFO] [1788863602.072489511] [competition_mission_coordinator]: nav_start location=BLUE_CUBE_2 side=east robot=(-9.148,1.928,yaw=3.115)
+[INFO] [1788863629.690507587] [competition_mission_coordinator]: nav_result state=succeeded elapsed=27.62s
+[INFO] [1788863629.690926543] [competition_mission_coordinator]: dock_realign_start:blue_cube_2:slot=(0.376,-0.022) correction=(0.016,-0.022)
+[INFO] [1788863630.096642524] [competition_mission_coordinator]: dock_realign_result:blue_cube_2:moved=(0.0010084937487883792, 7.752756536078293e-06)
+[INFO] [1788863630.097054205] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_2","current_index":3,"detail":"recognizing_blue","elapsed_sec":158.6,"schema_version":"1.0","skipped":0,"state":"waiting_perception","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863630.097338139] [competition_mission_coordinator]: perception_cached_slot_rejected:y=-0.0223 exceeds 0.020; scanning instead
+[INFO] [1788863630.097615363] [competition_mission_coordinator]: manip_start operation=scan cube=blue_cube_2 robot=(-9.624,-3.015,yaw=-3.123)
+[INFO] [1788863630.097953837] [competition_mission_coordinator]: manip_request id=7 op=scan cube=blue_cube_2
+[INFO] [1788863634.307576025] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_2","current_index":3,"detail":"recognizing_blue","elapsed_sec":162.8,"schema_version":"1.0","skipped":0,"state":"waiting_perception","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863635.309449931] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_2","current_index":3,"detail":"retrying_perception","elapsed_sec":163.8,"schema_version":"1.0","skipped":0,"state":"waiting_perception","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863635.309735631] [competition_mission_coordinator]: perception_cached_slot_rejected:y=-0.0213 exceeds 0.020; scanning instead
+[INFO] [1788863635.309967700] [competition_mission_coordinator]: manip_start operation=scan cube=blue_cube_2 robot=(-9.616,-3.015,yaw=-3.126)
+[INFO] [1788863635.310311196] [competition_mission_coordinator]: manip_request id=8 op=scan cube=blue_cube_2
+[INFO] [1788863635.512004011] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_2","current_index":3,"detail":"retrying_perception","elapsed_sec":164.0,"schema_version":"1.0","skipped":0,"state":"waiting_perception","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863635.594584648] [competition_mission_coordinator]: selected_target:blue_cube_2:{"x": 0.39137, "y": -0.01127, "z": 0.03308}
+[INFO] [1788863635.595044356] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_2","current_index":3,"detail":"picking_blue_cube_1","elapsed_sec":164.1,"schema_version":"1.0","skipped":0,"state":"picking","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863635.595289351] [competition_mission_coordinator]: manip_start operation=pick cube=blue_cube_2 robot=(-9.616,-3.015,yaw=-3.126)
+[INFO] [1788863635.595606972] [competition_mission_coordinator]: manip_request id=9 op=pick cube=blue_cube_2
+[INFO] [1788863644.555560917] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_2","current_index":3,"detail":"leaving_blue_pickup","elapsed_sec":173.0,"schema_version":"1.0","skipped":0,"state":"navigating_departure","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863644.555851802] [competition_mission_coordinator]: nav_start location=BLUE_EXIT side=auto robot=(-9.627,-3.017,yaw=3.132)
+[INFO] [1788863646.763496070] [competition_mission_coordinator]: nav_result state=succeeded elapsed=2.21s
+[INFO] [1788863646.763946492] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_2","current_index":3,"detail":"going_to_zone_A","elapsed_sec":175.3,"schema_version":"1.0","skipped":0,"state":"navigating_destination","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863646.764324060] [competition_mission_coordinator]: nav_start location=A side=auto robot=(-9.270,-3.013,yaw=-2.876)
+[INFO] [1788863677.073981394] [competition_mission_coordinator]: nav_result state=aborted elapsed=30.31s
+[INFO] [1788863677.074419205] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_2","current_index":3,"detail":"going_to_zone_A","elapsed_sec":205.6,"schema_version":"1.0","skipped":0,"state":"navigating_destination","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863677.074837515] [competition_mission_coordinator]: nav_start location=A side=auto robot=(-2.826,0.527,yaw=0.450)
+[INFO] [1788863693.748505303] [competition_mission_coordinator]: nav_result state=aborted elapsed=16.67s
+[INFO] [1788863693.750731192] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_2","current_index":3,"detail":"safety_release:destination_navigation_failed","elapsed_sec":222.2,"schema_version":"1.0","skipped":0,"state":"releasing","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863693.751053126] [competition_mission_coordinator]: manip_start operation=release cube=blue_cube_2 robot=(-2.816,0.533,yaw=0.499)
+[INFO] [1788863693.751657475] [competition_mission_coordinator]: manip_request id=10 op=release cube=blue_cube_2
+[INFO] [1788863694.382750981] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_2","current_index":4,"detail":"going_to_blue_pickup","elapsed_sec":222.9,"schema_version":"1.0","skipped":1,"state":"navigating_pickup","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863694.383068469] [competition_mission_coordinator]: cube_selection_override name=blue_cube_5 side=west
+[INFO] [1788863694.383715487] [competition_mission_coordinator]: nav_start location=BLUE_CUBE_5 side=west robot=(-2.816,0.534,yaw=0.499)
+[INFO] [1788863711.014391159] [competition_mission_coordinator]: nav_result state=aborted elapsed=16.63s
+[INFO] [1788863711.014901517] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_5","current_index":4,"detail":"going_to_blue_pickup","elapsed_sec":239.5,"schema_version":"1.0","skipped":1,"state":"navigating_pickup","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863711.015169150] [competition_mission_coordinator]: cube_selection_override name=blue_cube_1 side=east
+[INFO] [1788863711.015428177] [competition_mission_coordinator]: nav_start location=BLUE_CUBE_1 side=east robot=(-2.809,0.537,yaw=0.503)
+[INFO] [1788863727.476151843] [competition_mission_coordinator]: nav_result state=aborted elapsed=16.46s
+[INFO] [1788863727.476566460] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_1","current_index":5,"detail":"going_to_blue_pickup","elapsed_sec":256.0,"schema_version":"1.0","skipped":2,"state":"navigating_pickup","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863727.477088709] [competition_mission_coordinator]: cube_selection: blue_cube_3 total=23.91 dock=[-5.64, -7.0] base=23.914 lateral=0.0 failures=0 group=lower pref=0.0
+[INFO] [1788863727.477323116] [competition_mission_coordinator]: cube_selection: blue_cube_4 total=29.16 dock=[1.04, -3.9] base=29.156 lateral=0.0 failures=0 group=upper pref=0.0
+[INFO] [1788863727.477555113] [competition_mission_coordinator]: cube_selection: choose blue_cube_3 for blue -> A hardest_first=False
+[INFO] [1788863727.477936456] [competition_mission_coordinator]: nav_start location=BLUE_CUBE_3 side=east robot=(-2.802,0.541,yaw=0.506)
+[INFO] [1788863759.236784721] [competition_mission_coordinator]: nav_result state=succeeded elapsed=31.76s
+[INFO] [1788863759.237754889] [competition_mission_coordinator]: dock_realign_start:blue_cube_3:slot=(0.377,0.030) correction=(0.017,0.030)
+[INFO] [1788863759.746732246] [competition_mission_coordinator]: dock_realign_result:blue_cube_3:moved=(0.01801553826497302, 0.02375123330709287)
+[INFO] [1788863759.747147060] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_3","current_index":5,"detail":"recognizing_blue","elapsed_sec":288.2,"schema_version":"1.0","skipped":2,"state":"waiting_perception","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863759.747460260] [competition_mission_coordinator]: perception_cached_slot:blue_cube_3:x=0.359,y=0.020
+[INFO] [1788863759.747795068] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_3","current_index":5,"detail":"picking_blue_cube_3","elapsed_sec":288.2,"schema_version":"1.0","skipped":2,"state":"picking","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863759.748095231] [competition_mission_coordinator]: manip_start operation=pick cube=blue_cube_3 robot=(-5.641,-6.989,yaw=3.117)
+[INFO] [1788863759.748532863] [competition_mission_coordinator]: manip_request id=11 op=pick cube=blue_cube_3
+[INFO] [1788863765.659022762] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_3","current_index":5,"detail":"leaving_blue_pickup","elapsed_sec":294.1,"schema_version":"1.0","skipped":2,"state":"navigating_departure","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863765.659805373] [competition_mission_coordinator]: nav_start location=BLUE_EXIT side=auto robot=(-5.643,-6.995,yaw=3.086)
+[INFO] [1788863767.867854962] [competition_mission_coordinator]: nav_result state=succeeded elapsed=2.21s
+[INFO] [1788863767.868617711] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_3","current_index":5,"detail":"going_to_zone_A","elapsed_sec":296.4,"schema_version":"1.0","skipped":2,"state":"navigating_destination","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863767.868919352] [competition_mission_coordinator]: nav_start location=A side=auto robot=(-5.274,-7.012,yaw=-2.922)
+[INFO] [1788863788.353534389] [competition_mission_coordinator]: nav_result state=succeeded elapsed=20.49s
+[INFO] [1788863788.353898649] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_3","current_index":5,"detail":"placing_in_zone_A","elapsed_sec":316.8,"schema_version":"1.0","skipped":2,"state":"placing","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863788.354137734] [competition_mission_coordinator]: manip_start operation=place cube=blue_cube_3 robot=(-2.403,2.953,yaw=0.034)
+[INFO] [1788863788.354391601] [competition_mission_coordinator]: delivery_slot zone=A slot=3/3 y_offset=0.160 frame=world_compensated local=(0.350,0.160) clamped=True
+[INFO] [1788863788.354698395] [competition_mission_coordinator]: manip_request id=12 op=place cube=blue_cube_3
+[INFO] [1788863793.768667995] [competition_mission_coordinator]: {"color":"blue","completed":2,"cube_name":"blue_cube_3","current_index":5,"detail":"verifying_delivery","elapsed_sec":322.3,"schema_version":"1.0","skipped":2,"state":"verifying","target_zone":"A","task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863793.771690045] [competition_mission_coordinator]: delivery_truth cube=blue_cube_3 zone=A x=-2.0100 y=3.1500 z=0.0349 valid=True slot_error=0.0000 precise=True
+[INFO] [1788863793.772220110] [competition_mission_coordinator]: {"color":null,"completed":3,"cube_name":"blue_cube_3","current_index":5,"detail":"incomplete:completed=3,skipped=2,total=5","elapsed_sec":322.3,"schema_version":"1.0","skipped":2,"state":"failed","target_zone":null,"task_id":"29ede428c0f32dfc","total":5}
+[INFO] [1788863793.772515384] [competition_mission_coordinator]: mission_terminal:incomplete:completed=3,skipped=2,total=5

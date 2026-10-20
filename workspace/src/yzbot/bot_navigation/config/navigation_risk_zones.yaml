@@ -1,0 +1,73 @@
+# Generated from config/final_mission_layout.yaml by
+# tools_demo/scripts/generate_navigation_risk_zones.py.
+frame: map
+robot_half_diagonal: 0.226
+inflation_radius: 0.45
+rotation_clearance: 0.68
+safe_wait_clearance: 0.9
+risk_zones:
+  large_rock:
+    center:
+    - -2.7
+    - -3.54
+    radius: 1.08
+    forbidden_turning: true
+    escape_waypoint:
+    - -1.9
+    - -4.9
+zone_strategies:
+  A:
+    approach_pose: &id001
+    - -5.0
+    - 3.8
+    - 3.141592653589793
+    place_pose: *id001
+    retreat_pose: &id002
+    - -4.0
+    - 3.8
+    - 3.141592653589793
+    escape_pose: *id002
+    return_waypoint: *id002
+    exit_waypoints: []
+    primary_waypoints: []
+    backup_waypoints: []
+    staged_handoff_distance: 0.2
+  B:
+    approach_pose: &id003
+    - 11.299999999999999
+    - -5.0
+    - 0.0
+    place_pose: *id003
+    retreat_pose: &id004
+    - 10.299999999999999
+    - -5.0
+    - 0.0
+    escape_pose: *id004
+    return_waypoint: *id004
+    exit_waypoints: []
+    primary_waypoints: []
+    backup_waypoints: []
+    staged_handoff_distance: 0.2
+  C:
+    approach_pose: &id005
+    - 2.9
+    - -12.1
+    - 0.0
+    place_pose: *id005
+    retreat_pose: &id006
+    - 2.4499999999999997
+    - -11.0
+    - 0.0
+    escape_pose: *id006
+    return_waypoint: *id006
+    exit_waypoints: []
+    primary_waypoints: []
+    backup_waypoints: []
+    staged_handoff_distance: 0.2
+high_frequency_routes: {}
+recovery:
+  reverse_speed: 0.25
+  reverse_max_distance: 1.5
+  reverse_check_radius: 0.8
+  max_recovery_level: 5
+  clear_costmap_before_replan: true

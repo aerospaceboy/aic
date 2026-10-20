@@ -1,0 +1,32 @@
+{
+  "run": "gui-attempt-7",
+  "task_id": "repair-4cac3777472548cb808863448e2078ad",
+  "state": "completed",
+  "motion_elapsed": 387.7,
+  "submission_to_terminal_observed": 389.731,
+  "completed": 5,
+  "skipped": 0,
+  "obstacles_seen": 4,
+  "minimum_dynamic_clearance": 0.4707,
+  "dynamic_collision_detected": false,
+  "original_pair_demonstrated": true,
+  "responses": {
+    "competition_moving_obstacle_1": "yield",
+    "competition_moving_obstacle_2": "yield"
+  },
+  "goods_truth_count": 5,
+  "goods_truth_all_valid_precise": true,
+  "llm_source": "llm",
+  "llm_model": "qwen3.8-max",
+  "pre_commit": "a668b575a008293a94bb2bcbaba36812e2047bd3",
+  "worktree_patch_sha256": "aef5d9f8ce421ebeace1d866f21e5bcdce49c6791086ca9134bbe7021c0cbed4",
+  "runtime_directory": "$RUN_ROOT/gui-attempt-7",
+  "static_contacts": "unverified_no_active_contacts_publisher",
+  "first_nav_result": [
+    "succeeded",
+    "55.28"
+  ],
+  "collision_ahead_predictions": 199,
+  "patience_exceeded": 3,
+  "navigation_retry_skips": 1
+}

@@ -1,0 +1,20 @@
+[task_navigator-22] [INFO] [1791215747.611061796] [competition_task_navigator]: obstacle_reverse_result_ignored
+[safety_limiter-37] [INFO] [1791215747.624865136] [competition_safety_limiter]: east mover gate waiting clear of swept lane
+[task_navigator-22] [WARN] [1791215753.115380710] [competition_task_navigator]: mover_crossing_hold end topic=/competition/obstacles/obstacle_1
+[safety_limiter-37] [INFO] [1791215753.447299543] [competition_safety_limiter]: east mover gate waiting clear of swept lane
+[safety_limiter-37] [INFO] [1791215754.493694510] [competition_safety_limiter]: east mover gate waiting clear of swept lane
+[safety_limiter-37] [INFO] [1791215755.493695638] [competition_safety_limiter]: east mover gate waiting clear of swept lane
+[safety_limiter-37] [INFO] [1791215756.543754482] [competition_safety_limiter]: east mover gate waiting clear of swept lane
+[safety_limiter-37] [INFO] [1791215756.793681392] [competition_safety_limiter]: east mover gate released on southbound phase
+[task_navigator-22] [ERROR] [1791215759.161659495] [competition_task_navigator]: Admitted crossing did not clear the patrol
+[mission_coordinator-38] [INFO] [1791215759.166803923] [competition_mission_coordinator]: nav_result state=failed elapsed=20.73s
+[mission_coordinator-38] [INFO] [1791215759.169268286] [competition_mission_coordinator]: {"color":"blue","completed":0,"cube_name":"blue_cube_1","current_index":1,"detail":"going_to_blue_pickup","elapsed_sec":20.7,"schema_version":"1.0","skipped":0,"state":"navigating_pickup","target_zone":"B","task_id":"787ceb74b903dc07","total":5}
+[mission_coordinator-38] [INFO] [1791215759.170524956] [competition_mission_coordinator]: nav_start location=BLUE_CUBE_1 side=west robot=(7.854,0.423,yaw=3.142)
+[task_navigator-22] [INFO] [1791215759.194552339] [competition_task_navigator]: cube_entry_choice zone=BLUE_CUBE_1 side=west entry=(10.90,-2.50,yaw=0.00) dock=(11.44,-2.50)
+[task_navigator-22] [INFO] [1791215759.195891079] [competition_task_navigator]: nav_plan zone=BLUE_CUBE_1 poses=(10.90,-2.50,yaw=0.00) robot=(7.85,0.42,yaw=3.14)
+[task_navigator-22] [INFO] [1791215759.196385404] [competition_task_navigator]: pre_navigation_alignment distance=4.22 error=2.38 target_yaw=-0.76
+[task_navigator-22] [INFO] [1791215761.145262860] [competition_task_navigator]: nav_costmap_probe goal=(10.90,-2.50) goal_cost=0 start=(7.72,0.43) start_cost=0 occupied_cells=95587
+[task_navigator-22] [INFO] [1791215761.146317801] [competition_task_navigator]: nav_goal zone=BLUE_CUBE_1 stage=1/1 x=10.900 y=-2.500 yaw=0.000
+[bt_navigator-18] [INFO] [1791215761.152555222] [bt_navigator]: Begin navigating from current location (7.72, 0.43) to (10.90, -2.50)
+[controller_server-14] [INFO] [1791215761.206209753] [controller_server]: Received a goal, begin computing control effort.
+[controller_server-14] [INFO] [1791215763.273718947] [controller_server]: Passing new path to controller.

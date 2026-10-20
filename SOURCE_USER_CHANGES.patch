@@ -1,0 +1,66 @@
+diff --git a/bot_navigation/launch/competition_navigation.launch.py b/bot_navigation/launch/competition_navigation.launch.py
+index 0667d6a..bd57483 100644
+--- a/bot_navigation/launch/competition_navigation.launch.py
++++ b/bot_navigation/launch/competition_navigation.launch.py
+@@ -150,6 +150,39 @@ def generate_launch_description():
+         ],
+         output="screen",
+     )
++    # The two support wheels are continuous joints in large_base.xacro but are
++    # not part of ros2_control and have no joint states, so robot_state_publisher
++    # never publishes base_link -> {left,right}_wheel_link and RViz reports
++    # "No transform from [left_wheel_link] to [map]". They never articulate (the
++    # base moves through the planar controller), so static transforms taken from
++    # the URDF origins are exact: x = wheel_joint_x, y = +-(base_width +
++    # wheel_length)/2, z = -(base_height/2 + caster_radius*2 - wheel_radius).
++    left_wheel_tf = Node(
++        package="tf2_ros",
++        executable="static_transform_publisher",
++        name="competition_left_wheel_tf",
++        arguments=[
++            "0.14", "0.185", "-0.0384", "0", "0", "0",
++            "base_link", "left_wheel_link",
++        ],
++        parameters=[
++            {"use_sim_time": LaunchConfiguration("use_sim_time")},
++        ],
++        output="screen",
++    )
++    right_wheel_tf = Node(
++        package="tf2_ros",
++        executable="static_transform_publisher",
++        name="competition_right_wheel_tf",
++        arguments=[
++            "0.14", "-0.185", "-0.0384", "0", "0", "0",
++            "base_link", "right_wheel_link",
++        ],
++        parameters=[
++            {"use_sim_time": LaunchConfiguration("use_sim_time")},
++        ],
++        output="screen",
++    )
+     velocity_selector = Node(
+         package="tools_demo", executable="velocity_selector",
+         name="competition_velocity_selector", output="screen",
+@@ -247,6 +280,8 @@ def generate_launch_description():
+             sim_time_argument,
+             obstacle_argument,
+             map_to_odom,
++            left_wheel_tf,
++            right_wheel_tf,
+             nav2,
+             delayed_collision_lifecycle_manager,
+             delayed_collision_monitor,
+diff --git a/gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp b/gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp
+index cf1fc0a..6fdd7ec 100644
+--- a/gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp
++++ b/gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp
+@@ -63,7 +63,7 @@ class GazeboDebugGuiPlugin : public GUIPlugin
+ {
+   public: GazeboDebugGuiPlugin()
+       : renderRate(std::max(1.0, EnvironmentDouble(
+-            "YZBOT_GAZEBO_GUI_RENDER_RATE", 15.0))),
++            "YZBOT_GAZEBO_GUI_RENDER_RATE", 60.0))),
+         windowWidth(std::max(640, EnvironmentInt(
+             "YZBOT_GAZEBO_GUI_WIDTH", 1100))),
+         windowHeight(std::max(480, EnvironmentInt(

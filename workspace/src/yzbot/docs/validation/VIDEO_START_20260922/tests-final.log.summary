@@ -1,0 +1,9 @@
+            'Found %d code style errors / warnings:\n' % len(errors) + \
+E       AssertionError: Found 611 code style errors / warnings:
+611 errors
+>       assert rc == 0, 'Found code style errors / warnings'
+E       AssertionError: Found code style errors / warnings
+76 errors
+FAILED tools_demo/test/test_flake8.py::test_flake8 - AssertionError: Found 61...
+FAILED tools_demo/test/test_pep257.py::test_pep257 - AssertionError: Found co...
+2 failed, 565 passed, 1 skipped in 6.50s

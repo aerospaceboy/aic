@@ -1,0 +1,2019 @@
+"""Coordinate ordered navigation, perception, and manipulation."""
+
+import json
+import math
+import struct
+import time
+from typing import Optional, Sequence
+
+from gazebo_msgs.srv import GetEntityState
+from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
+from sensor_msgs.msg import PointCloud2
+from sensor_msgs.msg import PointField
+import rclpy
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
+from rclpy.executors import MultiThreadedExecutor
+from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy
+from rclpy.qos import HistoryPolicy
+from rclpy.qos import QoSProfile
+from rclpy.qos import ReliabilityPolicy
+from std_msgs.msg import Bool
+from std_msgs.msg import String
+
+from tools_demo.mission_state_machine import MissionAction
+from tools_demo.mission_state_machine import MissionJob
+from tools_demo.mission_state_machine import MissionStateMachine
+from tools_demo.mission_state_machine import MissionValueError
+from tools_demo.navigation_math import APPROACH_EAST
+from tools_demo.navigation_math import APPROACH_WEST
+from tools_demo.navigation_math import ApproachCandidate
+from tools_demo.navigation_math import approach_dock
+from tools_demo.navigation_math import approach_entry
+from tools_demo.navigation_math import bounded_dock_realign
+from tools_demo.navigation_math import choose_approach
+from tools_demo.navigation_math import cube_delivery_cost
+from tools_demo.navigation_math import delivery_leg_estimate
+from tools_demo.navigation_math import CUBE_APPROACH_SIDES
+from tools_demo.navigation_math import ZonePose
+from tools_demo.mission_state_machine import parse_task_plan_json
+from tools_demo.mission_state_machine import select_reachable_target
+
+
+TERMINAL_NAVIGATION_STATES = {
+    "succeeded",
+    "canceled",
+    "aborted",
+    "failed",
+    "timed_out",
+}
+
+
+# Known static cube positions in offic_room.world. The mission must select the
+# detection that matches the CURRENT job slot; several same-colour cubes are
+# in view at once and picking by colour alone can select the wrong cube.
+CUBE_WORLD_SLOTS = {
+    "red_cube_1": (-4.00, 3.00),
+    "red_cube_2": (12.00, 3.00),
+    "red_cube_3": (-6.00, -2.50),
+    "red_cube_4": (12.00, -5.00),
+    "red_cube_5": (-4.00, -11.00),
+    "blue_cube_1": (4.36, 1.91),
+    "blue_cube_2": (-10.00, -3.00),
+    "blue_cube_3": (-6.00, -7.00),
+    "blue_cube_4": (4.00, -11.00),
+    "blue_cube_5": (10.00, -9.00),
+}
+
+
+# Distance kept between base_link and the cube centre at a per-cube dock.
+# 0.36 m centres the cube in the arm reach window (0.285 - 0.430 m) and
+# leaves 0.08 m between the 0.32 m chassis front and the tray face.
+CUBE_DOCK_STANDOFF = 0.36
+
+
+# Cube centre height in base_link (tray-supported world z=0.13 minus the
+# 0.1034 m base_link offset).
+CUBE_SLOT_BASE_Z = 0.0266
+CENTERED_PICK_FORWARD_COMPENSATION = 0.045
+# A lateral offset above this triggers a base centring move, which in turn
+# applies the forward compensation above. Two constraints set the value:
+#
+#   - It must stay well inside GRASP_XY_LIMIT (0.035 in pick_place_moveit), or
+#     the arm would be asked to grasp outside its safe window. Measured
+#     successful grasps sit at y = 0.009-0.014 with no centring at all.
+#   - It must not be so tight that a small offset triggers a centring move,
+#     because the +0.045 m compensation is calibrated for a much larger
+#     correction. At 0.012, offsets of 12.4-16.0 mm drove 34-37 mm centring
+#     moves and every one of them overshot to tool x = 0.0587-0.0596 against
+#     the 0.035 limit, failing the grasp and forcing a rescan.
+#
+# The cached world-slot estimate also carries roughly 15 mm of odometry error,
+# so it must not be trusted to decide this either (see the cached-path gate).
+CENTERING_LATERAL_THRESHOLD = 0.020
+
+
+def world_target_in_base(
+    robot_pose: Sequence[float],
+    target_xy: Sequence[float],
+) -> tuple:
+    """Transform one world-frame delivery target into the robot frame."""
+    robot_x, robot_y, robot_yaw = (float(value) for value in robot_pose)
+    delta_x = float(target_xy[0]) - robot_x
+    delta_y = float(target_xy[1]) - robot_y
+    cosine = math.cos(robot_yaw)
+    sine = math.sin(robot_yaw)
+    return (
+        cosine * delta_x + sine * delta_y,
+        -sine * delta_x + cosine * delta_y,
+    )
+
+
+def centering_time_budget(
+    target_y: float,
+    commanded_speed: float = 0.07,
+) -> float:
+    """
+    Return the wall-clock budget for one lateral-centring move.
+
+    The loaded v2 base may reach only ~50% of commanded lateral speed, so
+    a target/commanded-speed budget expires short and the outer shelf
+    slots (|y| up to 0.24 m) keep a residual. Budget against the observed
+    speed; the closed loop exits as soon as the odometry travel reaches
+    the target.
+    """
+    # Gazebo measurements with a loaded arm show that the planar base reaches
+    # about 40% of the requested lateral speed.  Budget against the measured
+    # rate so cached detections are centred on the gripper before committing
+    # to a grasp, including the outermost cube slots.
+    observed_speed = 0.40 * abs(float(commanded_speed))
+    if observed_speed <= 0.0:
+        raise ValueError("commanded_speed must be non-zero")
+    return min(abs(float(target_y)) / observed_speed, 10.0)
+
+
+def two_leg_navigation_cost(
+    start_xy: Sequence[float],
+    pickup_xy: Sequence[float],
+    delivery_xy: Sequence[float],
+) -> float:
+    """Return start-to-pickup plus pickup-to-delivery path distance."""
+    values = tuple(
+        float(value)
+        for point in (start_xy, pickup_xy, delivery_xy)
+        for value in point[:2]
+    )
+    if len(values) != 6 or not all(math.isfinite(value) for value in values):
+        raise ValueError("Two-leg navigation points must be finite XY pairs")
+    start_x, start_y, pickup_x, pickup_y, delivery_x, delivery_y = values
+    return math.hypot(pickup_x - start_x, pickup_y - start_y) + (
+        delivery_leg_estimate(
+            (pickup_x, pickup_y),
+            (delivery_x, delivery_y),
+        )
+    )
+
+
+def cube_selection_cost(
+    base_cost: float,
+    lateral_offset: float,
+    failure_count: int,
+    hardest_first: bool = False,
+    group_preference: float = 0.0,
+) -> float:
+    """
+    Score one pickup candidate: navigation cost plus grasp-side costs.
+
+    Large missions take the outer, high-offset cubes first while Gazebo and
+    the repeated arm constraints are freshest. Small missions retain the
+    shortest-centering-first behaviour. Each prior failure remains costly.
+    ``group_preference`` is a soft bonus (in metres) for a delivery-zone
+    group preference (C -> upper blocks, A/B -> lower blocks); it must never
+    be large enough to override an obviously better or unreachable candidate.
+    """
+    lateral_cost = 20.0 * abs(float(lateral_offset))
+    if hardest_first:
+        lateral_cost = -lateral_cost
+    return (
+        float(base_cost)
+        + lateral_cost
+        + 8.0 * int(failure_count)
+        - float(group_preference)
+    )
+
+
+def reliable_transient_qos() -> QoSProfile:
+    """Return QoS used by public task and mission state topics."""
+    return QoSProfile(
+        history=HistoryPolicy.KEEP_LAST,
+        depth=10,
+        reliability=ReliabilityPolicy.RELIABLE,
+        durability=DurabilityPolicy.TRANSIENT_LOCAL,
+    )
+
+
+class MissionCoordinator(Node):
+    """Execute each requested cube in strict task-plan order."""
+
+    def __init__(self) -> None:
+        super().__init__("competition_mission_coordinator")
+        self.declare_parameter("plan_topic", "/competition/task/plan")
+        self.declare_parameter(
+            "perception_topic",
+            "/competition/perception/targets",
+        )
+        self.declare_parameter(
+            "navigation_goal_topic",
+            "/competition/navigation/goal",
+        )
+        self.declare_parameter(
+            "navigation_cancel_topic",
+            "/competition/navigation/cancel",
+        )
+        self.declare_parameter(
+            "navigation_state_topic",
+            "/competition/navigation/state",
+        )
+        self.declare_parameter(
+            "mission_state_topic",
+            "/competition/mission/state",
+        )
+        self.declare_parameter(
+            "mission_error_topic",
+            "/competition/mission/error",
+        )
+        self.declare_parameter(
+            "mission_cancel_topic",
+            "/competition/mission/cancel",
+        )
+        self.declare_parameter("maximum_retries", 1)
+        self.declare_parameter("maximum_perception_retries", 2)
+        self.declare_parameter("maximum_cubes_per_color", 5)
+        # Soft group preference (metres of path-cost equivalent) for
+        # delivery zones: C prefers upper blocks, A/B prefer lower blocks.
+        self.declare_parameter("cube_group_preference_bonus", 0.0)
+        self.declare_parameter("perception_timeout_sec", 2.0)
+        # One bounded recovery scan runs only after ordinary fresh-frame
+        # retries are exhausted; it never turns an unobserved slot into a
+        # blind grasp.
+        self.declare_parameter("perception_recovery_rescans", 1)
+        self.declare_parameter("manipulation_timeout_sec", 60.0)
+        self.declare_parameter("mission_timeout_sec", 300.0)
+        self.declare_parameter("manipulation_velocity_scaling", 0.50)
+        self.declare_parameter("manipulation_acceleration_scaling", 0.50)
+        self.declare_parameter("manipulation_cartesian_duration", 1.5)
+        self.declare_parameter("manipulation_gripper_duration", 0.75)
+        self.declare_parameter("manipulation_pick_transit_height", 0.180)
+        self.declare_parameter("reachable_minimum_x", 0.285)
+        self.declare_parameter("reachable_maximum_x", 0.430)
+        self.declare_parameter("reachable_maximum_abs_y", 0.30)
+        self.declare_parameter("reachable_minimum_z", 0.005)
+        self.declare_parameter("pickup_preferred_y", 0.045)
+        self.declare_parameter(
+            "pick_tool_offset",
+            [0.010, 0.001, 0.025],
+        )
+        self.declare_parameter("pick_safe_lift", 0.070)
+        self.declare_parameter("scan_pose", [0.300, -0.030, 0.390])
+        self.declare_parameter(
+            "scan_tool_orientation",
+            [-0.2369, 0.9667, 0.0225, 0.0946],
+        )
+        self.declare_parameter(
+            "pick_tool_orientation",
+            [0.0, 1.0, 0.0, 0.0],
+        )
+        self.declare_parameter("place_pose", [0.350, 0.000, 0.160])
+        self.declare_parameter(
+            "place_safe_pose",
+            [0.350, 0.000, 0.200],
+        )
+        self.declare_parameter("place_slot_spacing", 0.080)
+        self.declare_parameter("place_minimum_x", 0.290)
+        self.declare_parameter("place_maximum_x", 0.350)
+        self.declare_parameter("place_maximum_abs_y", 0.160)
+        self.declare_parameter("zone_a_center", [-2.01, 2.99])
+        self.declare_parameter("zone_b_center", [8.99, 3.00])
+        self.declare_parameter("zone_c_center", [-10.0, 2.00])
+        self.declare_parameter("pickup_red_dock", [-2.40, -1.00, 0.0])
+        self.declare_parameter("pickup_blue_dock", [-0.40, -1.00, 0.0])
+        # Per-cube docks: the 2026 layout distributes cubes over y in
+        # [-7, 3], so a single shared per-colour dock cannot reach them.
+        # Each dock approaches its cube from the west with the cube
+        # 0.36 m ahead of base_link.
+        for cube_name, (slot_x, slot_y) in CUBE_WORLD_SLOTS.items():
+            self.declare_parameter(
+                f"{cube_name}_dock",
+                [round(slot_x - CUBE_DOCK_STANDOFF, 2), slot_y, 0.0],
+            )
+        self.declare_parameter(
+            "pickup_red_exit_clear", [-2.80, 0.40, -1.5708]
+        )
+        self.declare_parameter(
+            "pickup_blue_exit_clear", [-2.30, 0.40, -1.5708]
+        )
+        self.declare_parameter("zone_a_nav", [-8.40, -7.00, 0.0])
+        self.declare_parameter("zone_b_nav", [9.60, 0.00, 0.0])
+        self.declare_parameter("zone_c_nav", [-10.40, 2.00, 0.0])
+        self.declare_parameter("zone_half_extent", [0.485, 0.235])
+        self.declare_parameter("delivery_surface_z", 0.020)
+        self.declare_parameter("delivery_cube_half_height", 0.015)
+        self.declare_parameter("delivery_height_tolerance", 0.10)
+        self.declare_parameter("delivery_precision_tolerance", 0.06)
+        self.declare_parameter("ros2_executable", "ros2")
+        self.declare_parameter("manipulation_package", "mybot")
+        self.declare_parameter(
+            "manipulation_executable",
+            "pick_place_moveit",
+        )
+
+        self.machine = MissionStateMachine(
+            maximum_retries=int(
+                self.get_parameter("maximum_retries").value
+            ),
+            maximum_perception_retries=int(
+                self.get_parameter("maximum_perception_retries").value
+            ),
+            maximum_cubes_per_color=int(
+                self.get_parameter("maximum_cubes_per_color").value
+            ),
+        )
+        self.cube_group_preference_bonus = max(
+            0.0,
+            float(
+                self.get_parameter("cube_group_preference_bonus").value
+            ),
+        )
+        self.perception_timeout = self._positive_parameter(
+            "perception_timeout_sec"
+        )
+        self.perception_recovery_rescans = int(
+            self.get_parameter("perception_recovery_rescans").value
+        )
+        if self.perception_recovery_rescans < 0:
+            raise ValueError("perception_recovery_rescans cannot be negative")
+        self._perception_recovery_used = {}
+        self.manipulation_timeout = self._positive_parameter(
+            "manipulation_timeout_sec"
+        )
+        self.mission_timeout = self._positive_parameter(
+            "mission_timeout_sec"
+        )
+        self.manipulation_velocity_scaling = self._unit_parameter(
+            "manipulation_velocity_scaling"
+        )
+        self.manipulation_acceleration_scaling = self._unit_parameter(
+            "manipulation_acceleration_scaling"
+        )
+        self.manipulation_cartesian_duration = self._positive_parameter(
+            "manipulation_cartesian_duration"
+        )
+        self.manipulation_gripper_duration = self._positive_parameter(
+            "manipulation_gripper_duration"
+        )
+        self.manipulation_pick_transit_height = self._positive_parameter(
+            "manipulation_pick_transit_height"
+        )
+        self.reachable_minimum_x = float(
+            self.get_parameter("reachable_minimum_x").value
+        )
+        self.reachable_maximum_x = float(
+            self.get_parameter("reachable_maximum_x").value
+        )
+        self.reachable_maximum_abs_y = float(
+            self.get_parameter("reachable_maximum_abs_y").value
+        )
+        self.reachable_minimum_z = float(
+            self.get_parameter("reachable_minimum_z").value
+        )
+        self.pickup_preferred_y = float(
+            self.get_parameter("pickup_preferred_y").value
+        )
+        self.pick_tool_offset = self._vector_parameter(
+            "pick_tool_offset", 3
+        )
+        self.pick_safe_lift = self._positive_parameter("pick_safe_lift")
+        self.scan_pose = self._vector_parameter("scan_pose", 3)
+        self.scan_tool_orientation = self._vector_parameter(
+            "scan_tool_orientation",
+            4,
+        )
+        self.pick_tool_orientation = self._vector_parameter(
+            "pick_tool_orientation",
+            4,
+        )
+        self.place_pose = self._vector_parameter("place_pose", 3)
+        self.place_safe_pose = self._vector_parameter(
+            "place_safe_pose", 3
+        )
+        self.place_slot_spacing = self._positive_parameter(
+            "place_slot_spacing"
+        )
+        self.place_minimum_x = self._positive_parameter(
+            "place_minimum_x"
+        )
+        self.place_maximum_x = self._positive_parameter(
+            "place_maximum_x"
+        )
+        self.place_maximum_abs_y = self._positive_parameter(
+            "place_maximum_abs_y"
+        )
+        self.zone_centers = {
+            zone: self._vector_parameter(
+                f"zone_{zone.lower()}_center", 2
+            )
+            for zone in ("A", "B", "C")
+        }
+        self.zone_half_extent = self._vector_parameter(
+            "zone_half_extent", 2
+        )
+        self.delivery_surface_z = float(
+            self.get_parameter("delivery_surface_z").value
+        )
+        self.delivery_cube_half_height = self._positive_parameter(
+            "delivery_cube_half_height"
+        )
+        self.delivery_height_tolerance = self._positive_parameter(
+            "delivery_height_tolerance"
+        )
+        self.delivery_precision_tolerance = self._positive_parameter(
+            "delivery_precision_tolerance"
+        )
+
+        qos = reliable_transient_qos()
+        self.state_publisher = self.create_publisher(
+            String,
+            str(self.get_parameter("mission_state_topic").value),
+            qos,
+        )
+        self.error_publisher = self.create_publisher(
+            String,
+            str(self.get_parameter("mission_error_topic").value),
+            qos,
+        )
+        self.navigation_goal_publisher = self.create_publisher(
+            String,
+            str(self.get_parameter("navigation_goal_topic").value),
+            10,
+        )
+        self.navigation_cancel_publisher = self.create_publisher(
+            Bool,
+            str(self.get_parameter("navigation_cancel_topic").value),
+            10,
+        )
+        self.cmd_vel_publisher = self.create_publisher(
+            Twist, "/cmd_vel", 10
+        )
+        self.manipulation_request_publisher = self.create_publisher(
+            String,
+            "/competition/manipulation/request",
+            10,
+        )
+        self.placed_cubes_publisher = self.create_publisher(
+            PointCloud2,
+            "/competition/placed_cubes",
+            QoSProfile(
+                depth=10,
+                reliability=ReliabilityPolicy.BEST_EFFORT,
+            ),
+        )
+        # Nav2 obstacle_layer subscribes with BEST_EFFORT sensor QoS, so a
+        # one-shot RELIABLE publish was never received (the crossing-zone bug
+        # remained). Publish BEST_EFFORT and re-publish at 1 Hz so the
+        # already-placed cubes stay visible in the costmap all mission long.
+        self._placed_cubes_timer = self.create_timer(
+            1.0,
+            self._publish_placed_cubes,
+        )
+        self.manipulation_result_subscription = self.create_subscription(
+            String,
+            "/competition/manipulation/result",
+            self.manipulation_result_callback,
+            10,
+        )
+        self.odom_pose: Optional[tuple] = None
+        self.placed_cubes = {}
+        self._odom_callback_group = MutuallyExclusiveCallbackGroup()
+        self.create_subscription(
+            Odometry,
+            "/odom",
+            self._odom_callback,
+            QoSProfile(
+                depth=5,
+                reliability=ReliabilityPolicy.BEST_EFFORT,
+            ),
+            callback_group=self._odom_callback_group,
+        )
+        self.create_subscription(
+            String,
+            str(self.get_parameter("plan_topic").value),
+            self.plan_callback,
+            qos,
+        )
+        self.create_subscription(
+            String,
+            str(self.get_parameter("perception_topic").value),
+            self.perception_callback,
+            10,
+        )
+        self.create_subscription(
+            String,
+            str(self.get_parameter("navigation_state_topic").value),
+            self.navigation_state_callback,
+            qos,
+        )
+        self.create_subscription(
+            Bool,
+            str(self.get_parameter("mission_cancel_topic").value),
+            self.cancel_callback,
+            10,
+        )
+        self.entity_client = self.create_client(
+            GetEntityState,
+            "/gazebo/get_entity_state",
+        )
+        self.timer = self.create_timer(0.2, self.timer_callback)
+
+        self.active_task_id: Optional[str] = None
+        self.mission_started_at: Optional[float] = None
+        self.action_started_at: Optional[float] = None
+        self.perception_deadline: Optional[float] = None
+        self.navigation_location: Optional[str] = None
+        self.navigation_seen_active = False
+        # Dynamic per-round cube selection state.
+        self._round_cube_name: Optional[str] = None
+        self._round_zone: Optional[str] = None
+        self._cube_done = set()
+        self._cube_excluded = set()
+        self._cube_failures = {}
+        self.inventory_scan_complete = False
+        self._perception_recovery_used = {}
+        self.manipulation_request_id = 0
+        self.manipulation_pending_id: Optional[int] = None
+        self.manipulation_active = False
+        self.manipulation_operation: Optional[str] = None
+        self.manipulation_job = None
+        self.manipulation_deadline: Optional[float] = None
+        self.manipulation_timed_out = False
+        self.manipulation_result: Optional[dict] = None
+        self.verification_future = None
+        self.verification_cube_name: Optional[str] = None
+        self.cancel_pending = False
+        self.publish_state()
+
+    def _positive_parameter(self, name: str) -> float:
+        value = float(self.get_parameter(name).value)
+        if value <= 0.0:
+            raise ValueError(f"{name} must be positive")
+        return value
+
+    def _unit_parameter(self, name: str) -> float:
+        value = self._positive_parameter(name)
+        if value > 1.0:
+            raise ValueError(f"{name} must not exceed 1.0")
+        return value
+
+    def _vector_parameter(
+        self,
+        name: str,
+        length: int,
+    ) -> tuple:
+        values = tuple(float(item) for item in self.get_parameter(name).value)
+        if len(values) != length:
+            raise ValueError(f"{name} must contain {length} numbers")
+        return values
+
+    def publish_state(self) -> None:
+        """Publish the complete dashboard-ready mission snapshot."""
+        payload = self.machine.snapshot()
+        elapsed = (
+            time.monotonic() - self.mission_started_at
+            if self.mission_started_at is not None
+            else 0.0
+        )
+        payload["elapsed_sec"] = round(elapsed, 1)
+        message = String()
+        message.data = json.dumps(
+            payload,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+        self.state_publisher.publish(message)
+        self.get_logger().info(message.data)
+
+    def publish_error(self, text: str) -> None:
+        """Publish a public error without hiding it in process logs."""
+        message = String()
+        message.data = text
+        self.error_publisher.publish(message)
+        self.get_logger().error(text)
+
+    def plan_callback(self, message: String) -> None:
+        """Start one new task plan while rejecting unsafe replacement."""
+        try:
+            plan = parse_task_plan_json(message.data)
+        except MissionValueError as exception:
+            self.publish_error(str(exception))
+            return
+        if plan.task_id == self.active_task_id:
+            return
+        if not self.machine.terminal and self.machine.state != "idle":
+            self.publish_error(
+                f"Mission {self.active_task_id} is already active"
+            )
+            return
+        try:
+            action = self.machine.start(plan)
+        except MissionValueError as exception:
+            self.publish_error(str(exception))
+            return
+        self.active_task_id = plan.task_id
+        self.mission_started_at = time.monotonic()
+        self.cancel_pending = False
+        self.placed_cubes = {}
+        self._publish_placed_cubes()
+        self.inventory_scan_complete = False
+        self.handle_action(action)
+
+    def navigation_state_callback(self, message: String) -> None:
+        """Consume only states belonging to the goal just published."""
+        if self.machine.state not in {
+            "navigating_pickup",
+            "navigating_departure",
+            "navigating_destination",
+            "navigating_zone_exit",
+        }:
+            return
+        try:
+            payload = json.loads(message.data)
+        except json.JSONDecodeError:
+            return
+        if payload.get("zone") != self.navigation_location:
+            return
+        state = payload.get("state")
+        if state in {"sending", "active", "canceling", "timing_out"}:
+            self.navigation_seen_active = True
+            return
+        if (
+            state not in TERMINAL_NAVIGATION_STATES
+            or not self.navigation_seen_active
+        ):
+            return
+        self.navigation_location = None
+        self.navigation_seen_active = False
+        self.get_logger().info(
+            f"nav_result state={state} elapsed="
+            f"{time.monotonic() - self.action_started_at:.2f}s"
+        )
+        try:
+            action = self.machine.navigation_finished(
+                state == "succeeded"
+            )
+        except MissionValueError as exception:
+            self.publish_error(str(exception))
+            return
+        if (
+            state == "succeeded"
+            and action.kind == "perceive"
+            and self._round_cube_name is not None
+        ):
+            self._realign_dock_to_cached_slot(self._round_cube_name)
+        self.handle_action(action)
+
+    def perception_callback(self, message: String) -> None:
+        """Select the fresh target corresponding to the current cube."""
+        job = self._active_job()
+        if (
+            self.machine.state != "waiting_perception"
+            or job is None
+            or self.perception_deadline is None
+        ):
+            return
+        try:
+            payload = json.loads(message.data)
+            targets = payload["targets"]
+        except (json.JSONDecodeError, KeyError, TypeError):
+            return
+        if not isinstance(targets, Sequence) or isinstance(targets, str):
+            return
+        expected = self._expected_cube_base_position(job.cube_name)
+        target = select_reachable_target(
+            targets,
+            color=job.color,
+            minimum_x=self.reachable_minimum_x,
+            maximum_x=self.reachable_maximum_x,
+            maximum_abs_y=self.reachable_maximum_abs_y,
+            minimum_z=self.reachable_minimum_z,
+            preferred_y=self.pickup_preferred_y,
+            expected_position=expected,
+        )
+        if target is None:
+            # Do not turn one transient no-match frame into a blind slot
+            # grasp. Later cubes may have been nudged; keep consuming fresh
+            # RGB-D frames until the short deadline triggers a rescan.
+            return
+        self.get_logger().info(
+            "selected_target:"
+            f"{job.cube_name}:"
+            f"{json.dumps(target['position'], sort_keys=True)}"
+        )
+        self.inventory_scan_complete = True
+        self.perception_deadline = None
+        self._perception_recovery_used.pop(job.cube_name, None)
+        try:
+            action = self.machine.perception_finished(target)
+        except MissionValueError as exception:
+            self.publish_error(str(exception))
+            return
+        self.handle_action(action)
+
+    def cancel_callback(self, message: Bool) -> None:
+        """Cancel navigation/process work and request a safe release."""
+        if not message.data or self.machine.terminal:
+            return
+        self.cancel_pending = True
+        if self.navigation_location is not None:
+            cancel = Bool()
+            cancel.data = True
+            self.navigation_cancel_publisher.publish(cancel)
+        if self.manipulation_active:
+            self._send_manipulation_request(
+                "release", self.manipulation_job, None
+            )
+            return
+        self.finish_cancel()
+
+    def finish_cancel(self) -> None:
+        """Advance cancellation after any child process has stopped."""
+        self.cancel_pending = False
+        try:
+            action = self.machine.cancel()
+        except MissionValueError as exception:
+            self.publish_error(str(exception))
+            return
+        self.handle_action(action)
+
+    def timer_callback(self) -> None:
+        """Enforce timeouts and poll the isolated manipulation process."""
+        now = time.monotonic()
+        if (
+            self.mission_started_at is not None
+            and not self.machine.terminal
+            and now - self.mission_started_at >= self.mission_timeout
+            and not self.cancel_pending
+        ):
+            self.publish_error("Mission exceeded the five-minute deadline")
+            cancel = Bool()
+            cancel.data = True
+            self.cancel_callback(cancel)
+            return
+
+        if (
+            self.machine.state == "waiting_perception"
+            and self.perception_deadline is not None
+            and now >= self.perception_deadline
+        ):
+            self.perception_deadline = None
+            if self._attempt_no_target_recovery():
+                return
+            if self._attempt_slot_fallback():
+                return
+            action = self.machine.perception_finished(None)
+            self.handle_action(action)
+            return
+
+        if not self.manipulation_active:
+            return
+        if self.manipulation_result is not None:
+            result = self.manipulation_result
+            operation = self.manipulation_operation
+            success = bool(result.get("success"))
+            success = success and not self.manipulation_timed_out
+            self._reset_manipulation()
+            if self.cancel_pending:
+                self.finish_cancel()
+                return
+            if operation == "scan":
+                if success:
+                    self.perception_deadline = (
+                        time.monotonic() + self.perception_timeout
+                    )
+                    self.publish_state()
+                else:
+                    action = self.machine.perception_finished(None)
+                    self.handle_action(action)
+                return
+            if operation not in {"pick", "place", "release"}:
+                self.publish_error(
+                    f"Unknown completed operation: {operation}"
+                )
+                return
+            if operation == "place" and success:
+                # A verified delivery does not disturb the remaining shelf,
+                # and the arm now returns home in the background. Reuse the
+                # known world slots on the next visit; any failed grasp still
+                # invalidates this cache and forces a fresh RGB-D scan.
+                self.inventory_scan_complete = True
+            if operation == "pick" and not success:
+                # A disturbed or stale slot must be observed again before a
+                # retry or any later cached pick.
+                self.inventory_scan_complete = False
+                cube = self._round_cube_name
+                if cube is not None:
+                    failures = self._cube_failures.get(cube, 0) + 1
+                    self._cube_failures[cube] = failures
+                    if failures >= 2:
+                        self._cube_excluded.add(cube)
+                        self.get_logger().warn(
+                            f"cube_selection: exclude {cube} after "
+                            f"{failures} failures"
+                        )
+            action = self.machine.manipulation_finished(success)
+            self.handle_action(action)
+            return
+        if (
+            self.manipulation_deadline is not None
+            and now >= self.manipulation_deadline
+            and not self.manipulation_timed_out
+        ):
+            self.manipulation_timed_out = True
+            operation = self.manipulation_operation
+            self.publish_error(
+                f"Manipulation {operation} timed out"
+            )
+            job = self.manipulation_job
+            self._reset_manipulation()
+            self._send_manipulation_request("release", job, None)
+            if operation == "scan":
+                action = self.machine.perception_finished(None)
+            else:
+                action = self.machine.manipulation_finished(False)
+            self.handle_action(action)
+
+    def handle_action(self, action: MissionAction) -> None:
+        """Perform one side effect requested by the pure state machine."""
+        self.action_started_at = time.monotonic()
+        self.publish_state()
+        if action.kind == "navigate":
+            location = action.location
+            if action.location in {"RED", "BLUE"} and action.job is not None:
+                if self._round_cube_name is not None:
+                    self._cube_done.add(self._round_cube_name)
+                self._round_zone = action.job.target_zone
+                self._round_cube_name = self._select_best_cube(action.job)
+                # Navigate to the selected cube's own dock instead of the
+                # shared per-colour pickup point. The approach side is chosen
+                # with the delivery leg in mind so the base ends up on the
+                # side that shortens the trip to the target zone.
+                side = self._cube_approach_side(
+                    self._round_cube_name,
+                    action.job.target_zone,
+                )
+                self.start_navigation(
+                    action,
+                    location=self._round_cube_name.upper(),
+                    side_hint=side,
+                )
+                return
+            self.start_navigation(action, location=location)
+        elif action.kind == "perceive":
+            job = self._active_job() or action.job
+            expected = (
+                self._expected_cube_base_position(job.cube_name)
+                if job is not None
+                else None
+            )
+            # Only skip the scan when the cached estimate is good enough to
+            # grasp directly. If it claims a lateral offset large enough to
+            # need a centring move, its own error is the same size as the
+            # thing it is measuring, and acting on it produces an invalid
+            # grasp window plus a forced rescan.
+            cached_is_graspable = (
+                expected is not None
+                and abs(expected[1]) <= CENTERING_LATERAL_THRESHOLD
+            )
+            if expected is not None and not cached_is_graspable:
+                self.get_logger().info(
+                    "perception_cached_slot_rejected:"
+                    f"y={expected[1]:.4f} exceeds "
+                    f"{CENTERING_LATERAL_THRESHOLD:.3f}; scanning instead"
+                )
+            if (
+                self.inventory_scan_complete
+                and job is not None
+                and expected
+                and cached_is_graspable
+            ):
+                target = {
+                    "color": job.color,
+                    "position": {
+                        "x": float(expected[0]),
+                        "y": float(expected[1]),
+                        "z": CUBE_SLOT_BASE_Z,
+                    },
+                }
+                self.get_logger().info(
+                    f"perception_cached_slot:{job.cube_name}:"
+                    f"x={expected[0]:.3f},y={expected[1]:.3f}"
+                )
+                next_action = self.machine.perception_finished(target)
+                self.handle_action(next_action)
+            else:
+                self.start_manipulation(
+                    MissionAction(
+                        "scan",
+                        job=action.job,
+                        reason="prepare_wrist_camera",
+                    )
+                )
+        elif action.kind in {"pick", "place", "release"}:
+            self.start_manipulation(action)
+        elif action.kind == "verify":
+            self.start_verification(action)
+        elif action.kind == "done":
+            if self._round_cube_name is not None:
+                self._cube_done.add(self._round_cube_name)
+            self.get_logger().info(f"mission_terminal:{action.reason}")
+        else:
+            self.publish_error(f"Unsupported mission action: {action.kind}")
+
+    def _attempt_no_target_recovery(self) -> bool:
+        """Re-align once and take a fresh scan before rejecting a cube."""
+        job = self._active_job()
+        if job is None:
+            return False
+        attempts = self.machine.attempts.get("perception", 0)
+        used = self._perception_recovery_used.get(job.cube_name, 0)
+        if (
+            attempts < self.machine.maximum_perception_retries
+            or used >= self.perception_recovery_rescans
+        ):
+            return False
+        expected = self._expected_cube_base_position(job.cube_name)
+        if expected is None:
+            return False
+        cube_x, cube_y = expected
+        if not (
+            self.reachable_minimum_x <= cube_x <= self.reachable_maximum_x
+            and abs(cube_y) <= self.reachable_maximum_abs_y
+        ):
+            return False
+        self._perception_recovery_used[job.cube_name] = used + 1
+        self.get_logger().warn(
+            f"perception_recovery_rescan:{job.cube_name}:"
+            f"attempt={used + 1}/{self.perception_recovery_rescans}:"
+            f"slot=({cube_x:.3f},{cube_y:.3f})"
+        )
+        if used >= 1:
+            # A cube nudged toward the robot can sit at 0.22 m, behind the
+            # wrist camera's scan standoff (0.30 m), so even a fresh scan
+            # sees nothing. Back up 0.10 m so the cube returns to ~0.32 m
+            # in front of the base, inside the camera FOV and the reachable
+            # window, then scan again.
+            self._backup_dock_for_rescan(job.cube_name)
+        else:
+            self._realign_dock_to_cached_slot(job.cube_name)
+        self.start_manipulation(
+            MissionAction(
+                "scan",
+                job=job,
+                reason="no_target_recovery_rescan",
+            )
+        )
+        return True
+
+    def _backup_dock_for_rescan(self, cube_name: str) -> None:
+        """
+        Back the base up a bounded 0.10 m so a nudged cube is visible.
+
+        A cube pushed toward the dock can sit closer than the wrist camera's
+        scan standoff and is invisible to RGB-D; backing up brings it back
+        into the depth range without leaving the reachable window.
+        """
+        start = self._odom_pose()
+        if start is None:
+            self.get_logger().warn(
+                f"backup_rescan_skipped:{cube_name}:odom_unavailable"
+            )
+            return
+        backup_distance = 0.10
+
+        def travelled() -> Optional[float]:
+            current = self._odom_pose()
+            if current is None:
+                return None
+            yaw = start[2]
+            dx = current[0] - start[0]
+            dy = current[1] - start[1]
+            forward = dx * math.cos(yaw) + dy * math.sin(yaw)
+            return -forward  # negative of forward travel = backward travel
+
+        speed = 0.12
+        observed_speed = 0.40 * speed
+        deadline = time.monotonic() + min(
+            backup_distance / observed_speed, 6.0
+        )
+        self.get_logger().info(
+            f"backup_rescan_start:{cube_name}:"
+            f"distance={backup_distance:.2f}m"
+        )
+        while time.monotonic() < deadline:
+            moved = travelled()
+            if moved is not None and moved >= backup_distance - 0.005:
+                break
+            twist = Twist()
+            twist.linear.x = -speed
+            self.cmd_vel_publisher.publish(twist)
+            time.sleep(0.05)
+        stop = Twist()
+        for _ in range(5):
+            self.cmd_vel_publisher.publish(stop)
+            time.sleep(0.02)
+        moved = travelled()
+        self.get_logger().info(
+            f"backup_rescan_result:{cube_name}:moved={moved}"
+        )
+
+    def _attempt_slot_fallback(self) -> bool:
+        """
+        Try one direct slot grasp when perception keeps failing.
+
+        The wrist camera can miss a cube that sits exactly under its scan
+        axis (e.g. after a small disturbance), while the per-cube world slot
+        is known. Once the scan retries are exhausted, attempt a direct pick
+        at the expected slot position instead of skipping outright; the pick
+        still validates the actual grasp window, so a genuinely moved cube
+        falls through to the normal skip path.
+        """
+        job = self._active_job()
+        if job is None:
+            return False
+        attempts = self.machine.attempts.get("perception", 0)
+        if attempts < self.machine.maximum_perception_retries:
+            return False
+        expected = self._expected_cube_base_position(job.cube_name)
+        if expected is None:
+            return False
+        cube_x, cube_y = expected
+        if not (
+            self.reachable_minimum_x <= cube_x <= self.reachable_maximum_x
+        ):
+            return False
+        # A fallback must already be inside the no-centring grasp band.
+        # A broad arm-reach check previously permitted y~0.19 m, which could
+        # only fail validate_grasp_window after moving the cube.
+        if abs(cube_y) > CENTERING_LATERAL_THRESHOLD:
+            return False
+        target = {
+            "color": job.color,
+            "position": {
+                "x": float(cube_x),
+                "y": float(cube_y),
+                "z": CUBE_SLOT_BASE_Z,
+            },
+        }
+        self.get_logger().warn(
+            f"perception_slot_fallback:{job.cube_name}:"
+            f"x={cube_x:.3f},y={cube_y:.3f}"
+        )
+        action = self.machine.perception_finished(target)
+        self.handle_action(action)
+        return True
+
+    def _active_job(self):
+        """Return the round job whose cube is dynamically selected."""
+        job = self.machine.current_job
+        if job is None:
+            return None
+        if (
+            self._round_cube_name
+            and self._round_cube_name != job.cube_name
+        ):
+            return MissionJob(
+                index=job.index,
+                total=job.total,
+                color=job.color,
+                cube_name=self._round_cube_name,
+                target_zone=job.target_zone,
+            )
+        return job
+
+    def _pickup_dock_pose(self, color: str):
+        """Return the configured pickup dock pose for one color."""
+        key = "pickup_red_dock" if color == "red" else "pickup_blue_dock"
+        values = self.get_parameter(key).value
+        return (float(values[0]), float(values[1]), float(values[2]))
+
+    def _cube_approach_candidates(self, cube_key: str, cube_xy):
+        """
+        Build the same approach candidates TaskNavigator uses.
+
+        West docks come from the deployed config; blue east-side (inner)
+        docks also come from the config. The remaining cardinal sides are
+        derived geometrically so scoring agrees with the navigator even when
+        the robot approaches a cube from the inside or from the side.
+        """
+        cube_x, cube_y = cube_xy
+        upper = cube_key.upper()
+        candidates = []
+        for side in CUBE_APPROACH_SIDES.get(cube_key, (APPROACH_WEST,)):
+            if side == APPROACH_WEST:
+                dock_values = self.get_parameter(f"{cube_key}_dock").value
+                dock = (
+                    float(dock_values[0]),
+                    float(dock_values[1]),
+                    float(dock_values[2]),
+                )
+                entry = approach_entry(cube_x, cube_y, side)
+                candidates.append(
+                    ApproachCandidate(
+                        side,
+                        cube_key,
+                        entry,
+                        ZonePose(cube_key, dock[0], dock[1], dock[2]),
+                    )
+                )
+            elif (
+                side == APPROACH_EAST
+                and upper.startswith("BLUE")
+                and self.has_parameter(f"{cube_key}_dock_inner")
+                and self.has_parameter(f"{cube_key}_entry_inner")
+            ):
+                entry_values = self.get_parameter(
+                    f"{cube_key}_entry_inner"
+                ).value
+                dock_values = self.get_parameter(
+                    f"{cube_key}_dock_inner"
+                ).value
+                candidates.append(
+                    ApproachCandidate(
+                        side,
+                        cube_key,
+                        ZonePose(cube_key, *entry_values[:3]),
+                        ZonePose(cube_key, *dock_values[:3]),
+                    )
+                )
+            else:
+                candidates.append(
+                    ApproachCandidate(
+                        side,
+                        cube_key,
+                        approach_entry(cube_x, cube_y, side),
+                        approach_dock(cube_x, cube_y, side),
+                    )
+                )
+        return candidates
+
+    def _choose_delivery_candidate(
+        self,
+        candidates,
+        robot_pose,
+        target_zone,
+        failure_count=0,
+    ):
+        """Choose one approach using the full per-zone delivery cost."""
+        if target_zone is None:
+            return choose_approach(candidates, robot_pose, ())
+        place_xy = self.zone_centers[target_zone]
+        return min(
+            candidates,
+            key=lambda candidate: cube_delivery_cost(
+                robot_pose,
+                candidate,
+                target_zone,
+                place_xy,
+                failure_count=failure_count,
+            ),
+        )
+
+    def _cube_approach_side(
+        self,
+        cube_name: str,
+        target_zone: str,
+    ) -> str:
+        """
+        Return the cheapest approach side including the delivery leg.
+
+        The delivery-zone term makes the approach leave the base on the side
+        that shortens the subsequent trip to the target zone (e.g. west for
+        red cubes delivered to A/C, east for red cubes delivered to B).
+        """
+        cube_key = cube_name.lower()
+        cube_xy = CUBE_WORLD_SLOTS.get(cube_key)
+        if cube_xy is None:
+            return APPROACH_WEST
+        pose = self._odom_pose()
+        if pose is None:
+            pose = (0.0, 0.0, 0.0)
+        candidates = self._cube_approach_candidates(cube_key, cube_xy)
+        chosen = self._choose_delivery_candidate(
+            candidates, pose, target_zone,
+        )
+        return chosen.side
+
+    def _cube_dock_pose(self, cube_name: str, target_zone: str = None):
+        """
+        Return the side-aware per-cube dock used for selection scoring.
+
+        Uses the same dynamic approach planner as TaskNavigator so the cube
+        selected for a round is the one whose actual approach dock is
+        cheapest, including the subsequent delivery leg.
+        """
+        cube_key = cube_name.lower()
+        cube_xy = CUBE_WORLD_SLOTS.get(cube_key)
+        if cube_xy is None:
+            values = self.get_parameter(f"{cube_name}_dock").value
+            return (float(values[0]), float(values[1]), float(values[2]))
+        pose = self._odom_pose()
+        if pose is None:
+            pose = (0.0, 0.0, 0.0)
+        candidates = self._cube_approach_candidates(cube_key, cube_xy)
+        chosen = self._choose_delivery_candidate(
+            candidates, pose, target_zone,
+        )
+        return (chosen.dock.x, chosen.dock.y, chosen.dock.yaw)
+
+    def _zone_nav_pose(self, zone: str):
+        """Return the configured zone navigation pose for one zone."""
+        key = f"zone_{zone.lower()}_nav"
+        values = self.get_parameter(key).value
+        return (float(values[0]), float(values[1]), float(values[2]))
+
+    @staticmethod
+    def _cube_group(colors_y: Sequence[float], cube_y: float) -> str:
+        """
+        Return 'upper' or 'lower' from the colour's actual y values.
+
+        The split is the median of the remaining same-colour cube y
+        coordinates, so the grouping adapts to the current layout instead of
+        being hard-coded to array indices.
+        """
+        ordered = sorted(colors_y)
+        if not ordered:
+            return "upper"
+        median = ordered[len(ordered) // 2]
+        return "upper" if cube_y >= median else "lower"
+
+    def _select_best_cube(self, job):
+        """Choose the same-colour cube with the lowest feasible total cost."""
+        color = job.color
+        candidates = []
+        for name, (wx, wy) in CUBE_WORLD_SLOTS.items():
+            if not name.startswith(color):
+                continue
+            if name in self._cube_done or name in self._cube_excluded:
+                continue
+            candidates.append((name, wx, wy))
+        if not candidates:
+            self.get_logger().warn(
+                f"cube_selection: no remaining {color} candidates"
+            )
+            return job.cube_name
+        # Each cube now has its own dock, so the differentiator is the
+        # straight-line distance from the current robot pose to that cube's
+        # dock plus the prior failure count. Keep selection deterministic
+        # and avoid blocking the coordinator executor.
+        robot_pose = self._odom_pose()
+        scored = []
+        # A five-job mission does not require emptying either five-slot
+        # shelf. Prefer the closest cube; the bounded per-cube dock keeps
+        # the arm centred on every cube without lateral base corrections.
+        hardest_first = False
+        colors_y = [wy for n, _, wy in candidates
+                    if n.startswith(color)]
+        for name, wx, wy in candidates:
+            failure_count = self._cube_failures.get(name, 0)
+            pose = robot_pose or (0.0, 0.0, 0.0)
+            approach_candidates = self._cube_approach_candidates(
+                name, (wx, wy)
+            )
+            chosen = self._choose_delivery_candidate(
+                approach_candidates,
+                pose,
+                job.target_zone,
+                failure_count=failure_count,
+            )
+            dock = (chosen.dock.x, chosen.dock.y, chosen.dock.yaw)
+            # Lateral offset is a grasp difficulty term kept visible in the
+            # log even though the selected cardinal dock is centred.
+            cos_yaw = math.cos(dock[2])
+            sin_yaw = math.sin(dock[2])
+            dx = wx - dock[0]
+            dy = wy - dock[1]
+            lateral = abs(-dx * sin_yaw + dy * cos_yaw)
+            base_cost = cube_delivery_cost(
+                pose,
+                chosen,
+                job.target_zone,
+                self.zone_centers[job.target_zone],
+                failure_count=failure_count,
+            )
+            # Soft delivery-zone group preference: C favours upper blocks,
+            # A/B favour lower blocks. The bonus is capped so it can never
+            # override an obviously better or unreachable candidate.
+            group = self._cube_group(colors_y, wy)
+            preference = 0.0
+            if (
+                self.cube_group_preference_bonus > 0.0
+                and (
+                    (job.target_zone == "C" and group == "upper")
+                    or (job.target_zone in ("A", "B") and group == "lower")
+                )
+            ):
+                preference = min(
+                    self.cube_group_preference_bonus,
+                    1.5,
+                )
+            total = cube_selection_cost(
+                base_cost,
+                lateral,
+                0,
+                hardest_first=hardest_first,
+                group_preference=preference,
+            )
+            scored.append(
+                {
+                    "cube": name,
+                    "dock": [round(dock[0], 2), round(dock[1], 2)],
+                    "base": round(base_cost, 3),
+                    "lateral": round(lateral, 3),
+                    "failures": failure_count,
+                    "group": group,
+                    "pref": round(preference, 2),
+                    "total": round(total, 2),
+                }
+            )
+        scored.sort(
+            key=lambda item: (
+                item["total"],
+                item["lateral"],
+                item["cube"],
+            )
+        )
+        for item in scored:
+            self.get_logger().info(
+                f"cube_selection: {item['cube']} total={item['total']} "
+                f"dock={item['dock']} base={item['base']} "
+                f"lateral={item['lateral']} failures={item['failures']} "
+                f"group={item.get('group')} pref={item.get('pref')}"
+            )
+        selected = scored[0]["cube"]
+        self.get_logger().info(
+            f"cube_selection: choose {selected} for {color} -> "
+            f"{job.target_zone} hardest_first={hardest_first}"
+        )
+        return selected
+
+    def start_navigation(
+        self,
+        action: MissionAction,
+        location: Optional[str] = None,
+        side_hint: Optional[str] = None,
+    ) -> None:
+        """Publish one semantic location command to TaskNavigator."""
+        if action.location is None:
+            self.publish_error("Navigation action omitted its location")
+            return
+        if location is None:
+            location = action.location
+        # The tracked location stays the canonical zone name because the
+        # navigator reports state with the normalized zone; the optional
+        # approach-side hint is appended only to the wire command.
+        self.navigation_location = location
+        self.navigation_seen_active = False
+        pose = self._odom_pose()
+        pose_text = (
+            f"robot=({pose[0]:.3f},{pose[1]:.3f},yaw={pose[2]:.3f})"
+            if pose is not None
+            else "robot=unknown"
+        )
+        self.get_logger().info(
+            f"nav_start location={location} "
+            f"side={side_hint or 'auto'} {pose_text}"
+        )
+        message = String()
+        if side_hint is not None:
+            message.data = f"{location}:{side_hint}"
+        else:
+            message.data = location
+        self.navigation_goal_publisher.publish(message)
+
+    def start_manipulation(self, action: MissionAction) -> None:
+        """Send one operation to the persistent pick-place node."""
+        if self.manipulation_active:
+            self.publish_error("A manipulation operation is already active")
+            return
+        job = self._active_job() or action.job
+        if job is None:
+            self.publish_error("Manipulation action omitted its job")
+            return
+        pose = self._odom_pose()
+        pose_text = (
+            f"robot=({pose[0]:.3f},{pose[1]:.3f},yaw={pose[2]:.3f})"
+            if pose is not None
+            else "robot=unknown"
+        )
+        self.get_logger().info(
+            f"manip_start operation={action.kind} "
+            f"cube={job.cube_name} {pose_text}"
+        )
+        target = None
+        if action.kind == "pick":
+            if action.target is None:
+                self.publish_error("Pick action omitted its detected target")
+                return
+            position = action.target["position"]
+            raw_y = float(position.get("y", 0.0))
+            expected_before = self._expected_cube_base_position(
+                job.cube_name
+            )
+            # Perception matches the known slots to ~1-3 cm, so a large
+            # mismatch means the cube was nudged and the camera is
+            # authoritative; otherwise the static slot is the better
+            # estimate for the outer slots where the camera adds parallax.
+            slot_consistent = (
+                expected_before is not None
+                and abs(raw_y - expected_before[1]) <= 0.06
+            )
+            if abs(raw_y) > CENTERING_LATERAL_THRESHOLD:
+                self._center_target_laterally(raw_y)
+            if slot_consistent:
+                expected = self._expected_cube_base_position(job.cube_name)
+                if expected is not None:
+                    target = {
+                        "x": float(expected[0])
+                        + self.pick_tool_offset[0],
+                        "y": float(expected[1])
+                        + self.pick_tool_offset[1],
+                        "z": CUBE_SLOT_BASE_Z
+                        + self.pick_tool_offset[2],
+                    }
+                else:
+                    centred_y = (
+                        0.0
+                        if abs(raw_y) > CENTERING_LATERAL_THRESHOLD
+                        else raw_y
+                    )
+                    target = {
+                        "x": float(position["x"])
+                        + self.pick_tool_offset[0],
+                        "y": centred_y + self.pick_tool_offset[1],
+                        "z": float(position["z"])
+                        + self.pick_tool_offset[2],
+                    }
+            else:
+                centred_y = (
+                    0.0
+                    if abs(raw_y) > CENTERING_LATERAL_THRESHOLD
+                    else raw_y
+                )
+                target = {
+                    "x": float(position["x"]) + self.pick_tool_offset[0],
+                    "y": centred_y + self.pick_tool_offset[1],
+                    "z": float(position["z"]) + self.pick_tool_offset[2],
+                }
+            # Lateral centring only moves the base in Y, so the cube's X in
+            # the robot frame is unchanged. The old +0.045 m forward
+            # compensation was calibrated for a stale 61.7 mm shortfall and
+            # now overshoots to tool x ~= 0.059 m (grasp limit 0.035 m),
+            # which is exactly the first-descent failure the user observed.
+            # The un-compensated re-scan grasp lands at x ~= 0.0145 m, so no
+            # forward compensation is needed at all.
+        self._send_manipulation_request(action.kind, job, target)
+
+    def _send_manipulation_request(
+        self,
+        operation: str,
+        job,
+        target: Optional[dict],
+    ) -> None:
+        """Publish one manipulation request and arm its deadline."""
+        job = self._manipulation_job if job is None else job
+        if job is None:
+            self.publish_error("Manipulation request omitted its job")
+            return
+        self.manipulation_request_id += 1
+        request_id = self.manipulation_request_id
+        self.manipulation_pending_id = request_id
+        self.manipulation_operation = operation
+        self.manipulation_job = job
+        self.manipulation_active = True
+        self.manipulation_timed_out = False
+        self.manipulation_result = None
+        self.manipulation_deadline = (
+            time.monotonic() + self.manipulation_timeout
+        )
+        cube_name = job.cube_name
+        release_world_pose = None
+        if operation == "scan":
+            pick_pose = self.scan_pose
+            pick_safe_pose = self.scan_pose
+            tool_orientation = self.scan_tool_orientation
+            place_pose = self.place_pose
+            place_safe_pose = self.place_safe_pose
+        elif operation == "pick":
+            if target is None:
+                self.publish_error("Pick request omitted its target")
+                return
+            pick_pose = [
+                float(target["x"]),
+                float(target["y"]),
+                float(target["z"]),
+            ]
+            pick_safe_pose = [
+                pick_pose[0],
+                pick_pose[1],
+                pick_pose[2] + self.pick_safe_lift,
+            ]
+            tool_orientation = list(self.pick_tool_orientation)
+            place_pose = self.place_pose
+            place_safe_pose = self.place_safe_pose
+        elif operation == "place":
+            place_pose, place_safe_pose = self._place_slot_poses(job)
+            y_offset, _, _ = self._delivery_slot_offset(job)
+            center_x, center_y = self.zone_centers[job.target_zone]
+            release_world_pose = [
+                float(center_x),
+                float(center_y + y_offset),
+                float(
+                    self.delivery_surface_z
+                    + self.delivery_cube_half_height
+                ),
+            ]
+            pick_pose = self.place_pose
+            pick_safe_pose = self.place_safe_pose
+            tool_orientation = list(self.pick_tool_orientation)
+        elif operation == "release":
+            pick_pose = self.place_pose
+            pick_safe_pose = self.place_safe_pose
+            tool_orientation = list(self.pick_tool_orientation)
+            place_pose = self.place_pose
+            place_safe_pose = self.place_safe_pose
+        else:
+            self.publish_error(f"Unsupported manipulation: {operation}")
+            return
+        request = {
+            "request_id": request_id,
+            "operation": operation,
+            "cube_name": cube_name,
+            "pick_pose": [float(v) for v in pick_pose],
+            "pick_safe_pose": [float(v) for v in pick_safe_pose],
+            "place_pose": [float(v) for v in place_pose],
+            "place_safe_pose": [float(v) for v in place_safe_pose],
+            "tool_orientation": [float(v) for v in tool_orientation],
+            "pick_transit_height": float(
+                self.manipulation_pick_transit_height
+            ),
+            "velocity_scaling": float(
+                self.manipulation_velocity_scaling
+            ),
+            "acceleration_scaling": float(
+                self.manipulation_acceleration_scaling
+            ),
+            "cartesian_duration": float(
+                self.manipulation_cartesian_duration
+            ),
+            "gripper_duration": float(
+                self.manipulation_gripper_duration
+            ),
+        }
+        if release_world_pose is not None:
+            request["release_world_pose"] = release_world_pose
+        message = String()
+        message.data = json.dumps(request, separators=(",", ":"))
+        self.manipulation_request_publisher.publish(message)
+        self.get_logger().info(
+            f"manip_request id={request_id} op={operation} "
+            f"cube={cube_name}"
+        )
+
+    def manipulation_result_callback(self, message: String) -> None:
+        """Store the result that matches the pending manipulation."""
+        try:
+            result = json.loads(message.data)
+        except (TypeError, json.JSONDecodeError):
+            return
+        if result.get("request_id") != self.manipulation_pending_id:
+            return
+        self.manipulation_result = result
+
+    def _reset_manipulation(self) -> None:
+        """Clear the in-flight manipulation state."""
+        self.manipulation_active = False
+        self.manipulation_operation = None
+        self.manipulation_job = None
+        self.manipulation_deadline = None
+        self.manipulation_timed_out = False
+        self.manipulation_result = None
+
+    def _place_slot_poses(self, job) -> tuple:
+        """Assign a world-fixed slot despite Nav2 docking pose variation."""
+        y_offset, slot_index, slot_count = self._delivery_slot_offset(job)
+        robot_pose = self._odom_pose()
+        if robot_pose is None:
+            local_x = self.place_pose[0]
+            local_y = self.place_pose[1] + y_offset
+            frame = "fixed_fallback"
+        else:
+            center_x, center_y = self.zone_centers[job.target_zone]
+            local_x, local_y = world_target_in_base(
+                robot_pose,
+                (center_x, center_y + y_offset),
+            )
+            frame = "world_compensated"
+        requested_x, requested_y = local_x, local_y
+        local_x = min(
+            max(local_x, self.place_minimum_x),
+            self.place_maximum_x,
+        )
+        local_y = min(
+            max(local_y, -self.place_maximum_abs_y),
+            self.place_maximum_abs_y,
+        )
+        clamped = not (
+            math.isclose(local_x, requested_x)
+            and math.isclose(local_y, requested_y)
+        )
+        place_pose = (local_x, local_y, self.place_pose[2])
+        place_safe_pose = (local_x, local_y, self.place_safe_pose[2])
+        self.get_logger().info(
+            "delivery_slot "
+            f"zone={job.target_zone} slot={slot_index + 1}/"
+            f"{slot_count} y_offset={y_offset:.3f} frame={frame} "
+            f"local=({local_x:.3f},{local_y:.3f}) clamped={clamped}"
+        )
+        return place_pose, place_safe_pose
+
+    def _delivery_slot_offset(self, job) -> tuple:
+        """Return the job's centered zone-slot offset and stable index."""
+        jobs_in_zone = [
+            candidate
+            for candidate in self.machine.jobs
+            if candidate.target_zone == job.target_zone
+        ]
+        # Dynamic inventory selection may substitute another physical cube
+        # for this logical job. Delivery slots belong to the job order, not
+        # to the selected cube name.
+        slot_index = next(
+            index
+            for index, candidate in enumerate(jobs_in_zone)
+            if candidate.index == job.index
+        )
+        count = len(jobs_in_zone)
+        centered_index = slot_index - (count - 1) / 2.0
+        # Spread the slots across the arm's lateral reach window instead of
+        # a fixed 0.08 m pitch. The chassis clears the 3 cm cube (base plate
+        # bottom sits ~5.3 cm above ground), so the observed collision is the
+        # gripper brushing an already-placed cube while descending to place an
+        # adjacent one. Few-cube deliveries now keep much larger separation
+        # (2 cubes -> 0.32 m apart) while 5-cube fills stay at the arm limit.
+        if count > 1:
+            spacing = max(
+                self.place_slot_spacing,
+                2.0 * self.place_maximum_abs_y / (count - 1),
+            )
+        else:
+            spacing = 0.0
+        y_offset = centered_index * spacing
+        return y_offset, slot_index, count
+
+    def _expected_cube_base_position(
+        self,
+        cube_name: str,
+    ) -> Optional[tuple]:
+        """
+        Return the expected base-frame cube position from the world slot.
+
+        The wrist camera reports in base_link, so the expected position is
+        the world slot expressed in the robot base frame using the current
+        odometry yaw (a pure x/y difference is only valid when the robot
+        faces exactly south, which the rotated office no longer allows).
+        Returns None when the cube is unknown or localization is
+        unavailable, falling back to colour-only pick.
+        """
+        world = CUBE_WORLD_SLOTS.get(cube_name)
+        if world is None:
+            return None
+        pose = self._odom_pose()
+        if pose is None:
+            return None
+        robot_x, robot_y, robot_yaw = pose[0], pose[1], pose[2]
+        delta_x = world[0] - robot_x
+        delta_y = world[1] - robot_y
+        cos_yaw = math.cos(robot_yaw)
+        sin_yaw = math.sin(robot_yaw)
+        return (
+            delta_x * cos_yaw + delta_y * sin_yaw,
+            -delta_x * sin_yaw + delta_y * cos_yaw,
+        )
+
+    def _align_dock_yaw(self, cube_name: str) -> None:
+        """
+        Rotate the base back to the dock heading before scanning.
+
+        The robot can arrive at a cube dock with a large yaw error (observed
+        -0.8 rad on red_cube_3): the wrist camera then points away from the
+        cube, the cached slot reads a large lateral offset and the scan
+        finds nothing, which ends in a skip. Rotate in place (bounded, slow)
+        to the dock's intended yaw whenever the error exceeds 0.08 rad.
+        """
+        dock = self._cube_dock_pose(cube_name)
+        if dock is None:
+            return
+        target_yaw = float(dock[2])
+        start = self._odom_pose()
+        if start is None:
+            return
+
+        def yaw_error() -> Optional[float]:
+            current = self._odom_pose()
+            if current is None:
+                return None
+            return math.atan2(
+                math.sin(target_yaw - current[2]),
+                math.cos(target_yaw - current[2]),
+            )
+
+        error = yaw_error()
+        if error is None or abs(error) <= 0.08:
+            return
+        self.get_logger().warn(
+            f"dock_yaw_align:{cube_name}:"
+            f"yaw={start[2]:.3f} target={target_yaw:.3f} "
+            f"error={error:.3f}"
+        )
+        speed = 0.5
+        deadline = time.monotonic() + min(
+            abs(error) / 0.35, 4.0
+        )
+        while time.monotonic() < deadline:
+            error = yaw_error()
+            if error is None:
+                break
+            if abs(error) <= 0.06:
+                break
+            twist = Twist()
+            twist.angular.z = math.copysign(
+                max(0.15, min(speed, 1.8 * abs(error))),
+                error,
+            )
+            self.cmd_vel_publisher.publish(twist)
+            time.sleep(0.05)
+        stop = Twist()
+        for _ in range(5):
+            self.cmd_vel_publisher.publish(stop)
+            time.sleep(0.02)
+        final = yaw_error()
+        self.get_logger().info(
+            f"dock_yaw_align_result:{cube_name}:error={final}"
+        )
+
+    def _realign_dock_to_cached_slot(self, cube_name: str) -> None:
+        """Correct a small dock error before the normal camera scan."""
+        self._align_dock_yaw(cube_name)
+        expected = self._expected_cube_base_position(cube_name)
+        if expected is None:
+            self.get_logger().warn(
+                f"dock_realign_skipped:{cube_name}:odom_unavailable"
+            )
+            return
+        forward, lateral = bounded_dock_realign(*expected)
+        if forward == 0.0 and lateral == 0.0:
+            self.get_logger().info(
+                f"dock_realign_within_tolerance:{cube_name}:"
+                f"slot=({expected[0]:.3f},{expected[1]:.3f})"
+            )
+            return
+
+        start = self._odom_pose()
+        if start is None:
+            return
+
+        def displacement():
+            current = self._odom_pose()
+            if current is None:
+                return None
+            dx = current[0] - start[0]
+            dy = current[1] - start[1]
+            yaw = start[2]
+            return (
+                dx * math.cos(yaw) + dy * math.sin(yaw),
+                -dx * math.sin(yaw) + dy * math.cos(yaw),
+            )
+
+        speed = 0.12
+        observed_speed = 0.40 * speed
+        deadline = time.monotonic() + min(
+            max(abs(forward), abs(lateral)) / observed_speed,
+            3.0,
+        )
+        self.get_logger().info(
+            f"dock_realign_start:{cube_name}:"
+            f"slot=({expected[0]:.3f},{expected[1]:.3f}) "
+            f"correction=({forward:.3f},{lateral:.3f})"
+        )
+        while time.monotonic() < deadline:
+            moved = displacement()
+            if moved is None:
+                break
+            remaining_forward = forward - moved[0]
+            remaining_lateral = lateral - moved[1]
+            if (
+                abs(remaining_forward) <= 0.005
+                and abs(remaining_lateral) <= 0.005
+            ):
+                break
+            twist = Twist()
+            if abs(remaining_forward) > 0.005:
+                twist.linear.x = math.copysign(speed, remaining_forward)
+            if abs(remaining_lateral) > 0.005:
+                twist.linear.y = math.copysign(speed, remaining_lateral)
+            self.cmd_vel_publisher.publish(twist)
+            time.sleep(0.05)
+        stop = Twist()
+        for _ in range(5):
+            self.cmd_vel_publisher.publish(stop)
+            time.sleep(0.02)
+        self.get_logger().info(
+            f"dock_realign_result:{cube_name}:moved={displacement()}"
+        )
+
+    def _center_target_laterally(self, target_y: float, timeout: float = 4.0):
+        """
+        Shift the base sideways so the detected cube is centred under link6.
+
+        The wrist camera reports the cube offset in base_link (verified
+        against all five known slots), so the base moves in the same
+        direction as the detected y to centre the cube. Uses closed-loop
+        odometry feedback so the manoeuvre is accurate even when the
+        simulation runs slower or faster than wall-clock time.
+        """
+        if abs(target_y) < 0.012:
+            return True
+        sign = 1.0 if target_y > 0 else -1.0
+        speed = 0.12
+        # Outer shelf slots are up to 0.24 m off-centre; the wall-clock
+        # budget must cover the observed ~85% of commanded base speed so the
+        # closed loop can actually reach the target travel.
+        duration = centering_time_budget(target_y, speed)
+        start = self._odom_pose()
+        twist = Twist()
+        twist.linear.y = sign * speed
+        deadline = time.monotonic() + duration
+        self.get_logger().info(
+            f"centering_lateral target_y={target_y:.4f} "
+            f"sign={sign:.0f} speed={speed:.3f} duration={duration:.3f}"
+        )
+        rate = 20
+        target_travel = abs(target_y)
+        while time.monotonic() < deadline:
+            self.cmd_vel_publisher.publish(twist)
+            moved = self._lateral_displacement(start)
+            if moved is not None and abs(moved) >= target_travel - 0.005:
+                break
+            time.sleep(1.0 / rate)
+        twist.linear.y = 0.0
+        for _ in range(5):
+            self.cmd_vel_publisher.publish(twist)
+            time.sleep(0.02)
+        moved = self._lateral_displacement(start)
+        self.get_logger().info(
+            "centering_result "
+            f"moved={moved} "
+            f"residual_y={target_y - moved if moved is not None else 0.0:.4f}"
+        )
+        return True
+
+    def _odom_callback(self, message: Odometry) -> None:
+        """Cache the latest base pose for lateral-centring feedback."""
+        pose = message.pose.pose
+        quaternion = pose.orientation
+        yaw = math.atan2(
+            2.0 * (quaternion.w * quaternion.z + quaternion.x * quaternion.y),
+            1.0 - 2.0
+            * (quaternion.y * quaternion.y + quaternion.z * quaternion.z),
+        )
+        self.odom_pose = (pose.position.x, pose.position.y, yaw)
+
+    def _odom_pose(self):
+        """Return the latest (x, y, yaw) base pose from /odom or None."""
+        return self.odom_pose
+
+    def _lateral_displacement(self, start):
+        """Return base-frame lateral travel since the start pose, or None."""
+        current = self._odom_pose()
+        if current is None or start is None:
+            return None
+        dx = current[0] - start[0]
+        dy = current[1] - start[1]
+        yaw = current[2]
+        return -dx * math.sin(yaw) + dy * math.cos(yaw)
+
+    @staticmethod
+    def _vector_arguments(name: str, values: Sequence[float]) -> list:
+        return [
+            "-p",
+            f"{name}:={json.dumps([round(value, 6) for value in values])}",
+        ]
+
+    def start_verification(self, action: MissionAction) -> None:
+        """Query Gazebo truth before counting one delivered cube."""
+        if action.job is None:
+            self.publish_error("Verification action omitted its job")
+            return
+        if not self.entity_client.service_is_ready():
+            self.publish_error("/gazebo/get_entity_state is unavailable")
+            follow_up = self.machine.verification_finished(False)
+            self.handle_action(follow_up)
+            return
+        request = GetEntityState.Request()
+        active = self._active_job() or action.job
+        self.verification_cube_name = active.cube_name
+        request.name = active.cube_name
+        request.reference_frame = "world"
+        self.verification_future = self.entity_client.call_async(request)
+        self.verification_future.add_done_callback(
+            self.verification_callback
+        )
+
+    def verification_callback(self, future) -> None:
+        """Check the queried cube against its requested zone bounds."""
+        job = self.machine.current_job
+        success = False
+        try:
+            response = future.result()
+            if response.success and job is not None:
+                center_x, center_y = self.zone_centers[job.target_zone]
+                half_x, half_y = self.zone_half_extent
+                expected_z = (
+                    self.delivery_surface_z
+                    + self.delivery_cube_half_height
+                )
+                position = response.state.pose.position
+                slot_offset, _, _ = self._delivery_slot_offset(job)
+                slot_error = math.hypot(
+                    position.x - center_x,
+                    position.y - (center_y + slot_offset),
+                )
+                precise = slot_error <= self.delivery_precision_tolerance
+                success = (
+                    abs(position.x - center_x) <= half_x
+                    and abs(position.y - center_y) <= half_y
+                    and abs(position.z - expected_z)
+                    <= self.delivery_height_tolerance
+                )
+                self.get_logger().info(
+                    "delivery_truth "
+                    f"cube={self.verification_cube_name} "
+                    f"zone={job.target_zone} "
+                    f"x={position.x:.4f} y={position.y:.4f} "
+                    f"z={position.z:.4f} valid={success} "
+                    f"slot_error={slot_error:.4f} precise={precise}"
+                )
+                if success:
+                    self.placed_cubes[self.verification_cube_name] = (
+                        float(position.x),
+                        float(position.y),
+                    )
+                    self._publish_placed_cubes()
+        except Exception as exception:  # noqa: B902
+            self.publish_error(f"Delivery verification failed: {exception}")
+        self.verification_future = None
+        self.verification_cube_name = None
+        try:
+            action = self.machine.verification_finished(success)
+        except MissionValueError as exception:
+            self.publish_error(str(exception))
+            return
+        self.handle_action(action)
+
+
+    def _publish_placed_cubes(self) -> None:
+        """Publish placed-cube world positions as a PointCloud2.
+
+        The global costmap obstacle_layer consumes this so the planner routes
+        the chassis around already-placed cubes instead of driving over the
+        delivery-slot line.
+        """
+        points = [
+            (float(x), float(y), 0.035)
+            for x, y in self.placed_cubes.values()
+        ]
+        cloud = PointCloud2()
+        cloud.header.stamp = self.get_clock().now().to_msg()
+        cloud.header.frame_id = "map"
+        cloud.height = 1
+        cloud.width = len(points)
+        cloud.fields = [
+            PointField(name="x", offset=0, datatype=PointField.FLOAT32, count=1),
+            PointField(name="y", offset=4, datatype=PointField.FLOAT32, count=1),
+            PointField(name="z", offset=8, datatype=PointField.FLOAT32, count=1),
+        ]
+        cloud.is_bigendian = False
+        cloud.point_step = 12
+        cloud.row_step = 12 * len(points)
+        cloud.is_dense = True
+        cloud.data = b"".join(struct.pack("<fff", *p) for p in points)
+        self.placed_cubes_publisher.publish(cloud)
+
+
+def main(args=None) -> None:
+    """Run the competition mission coordinator."""
+    rclpy.init(args=args)
+    node = MissionCoordinator()
+    executor = MultiThreadedExecutor(num_threads=4)
+    executor.add_node(node)
+    try:
+        executor.spin()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        executor.shutdown()
+        node.destroy_node()
+        rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()

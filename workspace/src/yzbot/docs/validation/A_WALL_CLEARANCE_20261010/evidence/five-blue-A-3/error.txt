@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "$RUN_ROOT/run_blue_3.py", line 36, in <module>
+    if s.get('parse_result',{}).get('request_id')==task_id and s['parse_result'].get('state')=='failed':raise RuntimeError('API parse failed')
+RuntimeError: API parse failed

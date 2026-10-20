@@ -1,0 +1,101 @@
+{
+  "red_cube_4": {
+    "query_success": true,
+    "position": [
+      11.7,
+      -5.0,
+      0.0349608
+    ],
+    "orientation_xyzw": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  },
+  "zone_b": {
+    "query_success": true,
+    "position": [
+      11.7,
+      -5.0,
+      0.01
+    ],
+    "orientation_xyzw": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  },
+  "six_arm": {
+    "query_success": true,
+    "position": [
+      11.248169691069748,
+      -5.039259150440806,
+      -0.0010143838776462966
+    ],
+    "orientation_xyzw": [
+      -3.246069816288059e-07,
+      2.709751169353677e-05,
+      -0.013184134110320354,
+      -0.9999130851595956
+    ]
+  },
+  "competition_moving_obstacle_1": {
+    "query_success": true,
+    "position": [
+      8.5,
+      -0.7999999999957921,
+      0.25
+    ],
+    "orientation_xyzw": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  },
+  "competition_moving_obstacle_2": {
+    "query_success": true,
+    "position": [
+      5.0,
+      0.010000000004212972,
+      0.25
+    ],
+    "orientation_xyzw": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  },
+  "preview_moving_partition_1": {
+    "query_success": true,
+    "position": [
+      -6.040000000004996,
+      1.9,
+      0.6
+    ],
+    "orientation_xyzw": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  },
+  "preview_moving_partition_2": {
+    "query_success": true,
+    "position": [
+      7.100000000003741,
+      -5.5,
+      0.6
+    ],
+    "orientation_xyzw": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  },
+  "note": "Terminal truth snapshot, not maximum attitude or full-scene contact evidence."
+}

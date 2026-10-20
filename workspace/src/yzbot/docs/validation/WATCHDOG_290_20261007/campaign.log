@@ -1,0 +1,202 @@
+CHAIN_START 2026-10-07T03:18:02Z HEAD=f8074d466f9dad040e5bf70102d7de9ac40a07b2
+CONVERGE_PASS=1 2026-10-07T03:18:02Z
+RUN 1/48 1rA_4bB
+DONE 1rA_4bB evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/1rA_4bB/20261007T031803Z-0i1fCW
+RUN 2/48 4bB_1rA
+DONE 4bB_1rA evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/4bB_1rA/20261007T032434Z-Jo6ugG
+RUN 3/48 2rA_3bB
+DONE 2rA_3bB evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2rA_3bB/20261007T033101Z-tTekL0
+RUN 4/48 3bB_2rA
+DONE 3bB_2rA evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/3bB_2rA/20261007T033706Z-FrFnyv
+RUN 5/48 3rA_2bB
+DONE 3rA_2bB evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/3rA_2bB/20261007T034300Z-y3Yu8J
+RUN 6/48 2bB_3rA
+DONE 2bB_3rA evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2bB_3rA/20261007T034835Z-4eiEBM
+RUN 7/48 4rA_1bB
+DONE 4rA_1bB evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/4rA_1bB/20261007T035418Z-R2iaPl
+RUN 8/48 1bB_4rA
+DONE 1bB_4rA evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/1bB_4rA/20261007T035941Z-QYx66F
+RUN 9/48 1rA_4bC
+DONE 1rA_4bC evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/1rA_4bC/20261007T040508Z-v0jZlL
+RUN 10/48 4bC_1rA
+DONE 4bC_1rA evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/4bC_1rA/20261007T041002Z-05HOPN
+RUN 11/48 2rA_3bC
+DONE 2rA_3bC evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2rA_3bC/20261007T041501Z-z1shaL
+RUN 12/48 3bC_2rA
+DONE 3bC_2rA evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/3bC_2rA/20261007T042009Z-UOOLnB
+RUN 13/48 3rA_2bC
+DONE 3rA_2bC evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/3rA_2bC/20261007T042459Z-0dBXlx
+RUN 14/48 2bC_3rA
+DONE 2bC_3rA evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2bC_3rA/20261007T042939Z-VzEjDt
+RUN 15/48 4rA_1bC
+DONE 4rA_1bC evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/4rA_1bC/20261007T043429Z-MefgUA
+RUN 16/48 1bC_4rA
+DONE 1bC_4rA evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/1bC_4rA/20261007T043928Z-BYesUY
+RUN 17/48 1rB_4bA
+DONE 1rB_4bA evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/1rB_4bA/20261007T044444Z-OgBjJx
+RUN 18/48 4bA_1rB
+DONE 4bA_1rB evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/4bA_1rB/20261007T045022Z-a9ZCg9
+RUN 19/48 2rB_3bA
+DONE 2rB_3bA evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2rB_3bA/20261007T045621Z-dAuIjo
+RUN 20/48 3bA_2rB
+DONE 3bA_2rB evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/3bA_2rB/20261007T050230Z-n8nEoA
+RUN 21/48 3rB_2bA
+DONE 3rB_2bA evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/3rB_2bA/20261007T050831Z-geDxzk
+RUN 22/48 2bA_3rB
+FAILED 2bA_3rB rc=0 evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2bA_3rB/20261007T051424Z-xTM6lW harness=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2bA_3rB/harness-FkMJYu.log
+RUN 23/48 4rB_1bA
+DONE 4rB_1bA evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/4rB_1bA/20261007T052113Z-r2BADB
+RUN 24/48 1bA_4rB
+DONE 1bA_4rB evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/1bA_4rB/20261007T052718Z-R2b6gv
+RUN 25/48 1rB_4bC
+DONE 1rB_4bC evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/1rB_4bC/20261007T053320Z-2hrV71
+RUN 26/48 4bC_1rB
+DONE 4bC_1rB evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/4bC_1rB/20261007T053814Z-YlB2Oc
+RUN 27/48 2rB_3bC
+FAILED 2rB_3bC rc=1 evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2rB_3bC/20261007T054310Z-LJ3F6s harness=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2rB_3bC/harness-tTSkWf.log
+RUN 28/48 3bC_2rB
+DONE 3bC_2rB evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/3bC_2rB/20261007T055457Z-RDljcY
+RUN 29/48 3rB_2bC
+DONE 3rB_2bC evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/3rB_2bC/20261007T055955Z-NrDubC
+RUN 30/48 2bC_3rB
+DONE 2bC_3rB evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2bC_3rB/20261007T060518Z-RjexxM
+RUN 31/48 4rB_1bC
+DONE 4rB_1bC evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/4rB_1bC/20261007T061045Z-4XhBvb
+RUN 32/48 1bC_4rB
+DONE 1bC_4rB evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/1bC_4rB/20261007T061649Z-Q6Hrxx
+RUN 33/48 1rC_4bA
+DONE 1rC_4bA evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/1rC_4bA/20261007T062238Z-M958xY
+RUN 34/48 4bA_1rC
+DONE 4bA_1rC evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/4bA_1rC/20261007T062809Z-pykIt7
+RUN 35/48 2rC_3bA
+DONE 2rC_3bA evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2rC_3bA/20261007T063354Z-mWbsy1
+RUN 36/48 3bA_2rC
+DONE 3bA_2rC evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/3bA_2rC/20261007T063917Z-BNErLP
+RUN 37/48 3rC_2bA
+DONE 3rC_2bA evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/3rC_2bA/20261007T064443Z-HMZHeI
+RUN 38/48 2bA_3rC
+DONE 2bA_3rC evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2bA_3rC/20261007T064939Z-I7rcEg
+RUN 39/48 4rC_1bA
+DONE 4rC_1bA evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/4rC_1bA/20261007T065433Z-twjNZZ
+RUN 40/48 1bA_4rC
+DONE 1bA_4rC evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/1bA_4rC/20261007T065940Z-RoGaEB
+RUN 41/48 1rC_4bB
+DONE 1rC_4bB evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/1rC_4bB/20261007T070505Z-zCYVRX
+RUN 42/48 4bB_1rC
+DONE 4bB_1rC evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/4bB_1rC/20261007T071115Z-5DqcsG
+RUN 43/48 2rC_3bB
+DONE 2rC_3bB evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2rC_3bB/20261007T071717Z-zd9hmD
+RUN 44/48 3bB_2rC
+DONE 3bB_2rC evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/3bB_2rC/20261007T072256Z-1WDh77
+RUN 45/48 3rC_2bB
+DONE 3rC_2bB evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/3rC_2bB/20261007T072836Z-Hr5A0M
+RUN 46/48 2bB_3rC
+DONE 2bB_3rC evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2bB_3rC/20261007T073404Z-gdXzcZ
+RUN 47/48 4rC_1bB
+DONE 4rC_1bB evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/4rC_1bB/20261007T073919Z-3Ea9Z5
+RUN 48/48 1bB_4rC
+DONE 1bB_4rC evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/1bB_4rC/20261007T074439Z-mChlnv
+BATCH_DONE
+{
+  "tasks": 48,
+  "five_of_five": 47,
+  "case_accepted": 47,
+  "strict_motion_pass": 47,
+  "under300": 46,
+  "under290": 46,
+  "retry": [
+    "2bA_3rB",
+    "2rB_3bC"
+  ]
+}
+{
+  "expected": 48,
+  "rows": 48,
+  "accepted": 46,
+  "failing": [
+    "2bA_3rB",
+    "2rB_3bC"
+  ]
+}
+CONVERGE_PASS=2 2026-10-07T07:50:40Z
+SKIP 1rA_4bB (accepted on this campaign version)
+SKIP 4bB_1rA (accepted on this campaign version)
+SKIP 2rA_3bB (accepted on this campaign version)
+SKIP 3bB_2rA (accepted on this campaign version)
+SKIP 3rA_2bB (accepted on this campaign version)
+SKIP 2bB_3rA (accepted on this campaign version)
+SKIP 4rA_1bB (accepted on this campaign version)
+SKIP 1bB_4rA (accepted on this campaign version)
+SKIP 1rA_4bC (accepted on this campaign version)
+SKIP 4bC_1rA (accepted on this campaign version)
+SKIP 2rA_3bC (accepted on this campaign version)
+SKIP 3bC_2rA (accepted on this campaign version)
+SKIP 3rA_2bC (accepted on this campaign version)
+SKIP 2bC_3rA (accepted on this campaign version)
+SKIP 4rA_1bC (accepted on this campaign version)
+SKIP 1bC_4rA (accepted on this campaign version)
+SKIP 1rB_4bA (accepted on this campaign version)
+SKIP 4bA_1rB (accepted on this campaign version)
+SKIP 2rB_3bA (accepted on this campaign version)
+SKIP 3bA_2rB (accepted on this campaign version)
+SKIP 3rB_2bA (accepted on this campaign version)
+RUN 22/48 2bA_3rB
+DONE 2bA_3rB evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2bA_3rB/20261007T075040Z-LdpxSJ
+SKIP 4rB_1bA (accepted on this campaign version)
+SKIP 1bA_4rB (accepted on this campaign version)
+SKIP 1rB_4bC (accepted on this campaign version)
+SKIP 4bC_1rB (accepted on this campaign version)
+RUN 27/48 2rB_3bC
+DONE 2rB_3bC evidence=/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/2rB_3bC/20261007T075651Z-l7HfNq
+SKIP 3bC_2rB (accepted on this campaign version)
+SKIP 3rB_2bC (accepted on this campaign version)
+SKIP 2bC_3rB (accepted on this campaign version)
+SKIP 4rB_1bC (accepted on this campaign version)
+SKIP 1bC_4rB (accepted on this campaign version)
+SKIP 1rC_4bA (accepted on this campaign version)
+SKIP 4bA_1rC (accepted on this campaign version)
+SKIP 2rC_3bA (accepted on this campaign version)
+SKIP 3bA_2rC (accepted on this campaign version)
+SKIP 3rC_2bA (accepted on this campaign version)
+SKIP 2bA_3rC (accepted on this campaign version)
+SKIP 4rC_1bA (accepted on this campaign version)
+SKIP 1bA_4rC (accepted on this campaign version)
+SKIP 1rC_4bB (accepted on this campaign version)
+SKIP 4bB_1rC (accepted on this campaign version)
+SKIP 2rC_3bB (accepted on this campaign version)
+SKIP 3bB_2rC (accepted on this campaign version)
+SKIP 3rC_2bB (accepted on this campaign version)
+SKIP 2bB_3rC (accepted on this campaign version)
+SKIP 4rC_1bB (accepted on this campaign version)
+SKIP 1bB_4rC (accepted on this campaign version)
+BATCH_DONE
+{
+  "tasks": 48,
+  "five_of_five": 48,
+  "case_accepted": 48,
+  "strict_motion_pass": 48,
+  "under300": 48,
+  "under290": 48,
+  "retry": []
+}
+{
+  "expected": 48,
+  "rows": 48,
+  "accepted": 48,
+  "failing": []
+}
+CONVERGED_ALL_48_UNDER_290
+{
+  "rows": 48,
+  "green": 48,
+  "first_pass_green": 46,
+  "attempt_histogram": {
+    "1": 46,
+    "2": 2
+  },
+  "worst_elapsed": 284.3,
+  "worst_clearance": 0.1427,
+  "failing": [],
+  "out": "/home/ros/dev_ws/experiments/full48-290-20261007T032500Z/report48_290.csv"
+}
+REPORT_DONE

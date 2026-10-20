@@ -1,0 +1,10 @@
+{
+  "root": "/home/ros/dev_ws/experiments/full48-290-20261007T032500Z",
+  "head": "f8074d466f9dad040e5bf70102d7de9ac40a07b2",
+  "patch": "/home/ros/frozen-290-watchdog-20261007T031757Z.patch",
+  "patch_sha256": "aedee84946e154a5b2f32af92a80441f9828a992ac2e8eb9fa3d33f18ef3106c",
+  "manifest_sha256": "9604ad03fee7e4937f80c0aaad7baca82e4dd573de622ad11937d3709ecc2a12",
+  "started_utc": "20261007T031757Z",
+  "rlc_timeout_sec": 600.0,
+  "started_by": "dsh agent"
+}

@@ -1,0 +1,388 @@
+[
+  {
+    "tag": "3rA_2bB",
+    "evidence": "/home/ros/dev_ws/experiments/unordered-smoke-20261006/3rA_2bB/20261006T114906Z-lPeuih",
+    "commit": "0326585ee4aa2a01a92c19f595e218305bc71bf6",
+    "audit": {
+      "question": "Move 3 red cubes to zone A and 2 blue cubes to zone B.",
+      "expected": [
+        [
+          "red",
+          "A"
+        ],
+        [
+          "red",
+          "A"
+        ],
+        [
+          "red",
+          "A"
+        ],
+        [
+          "blue",
+          "B"
+        ],
+        [
+          "blue",
+          "B"
+        ]
+      ],
+      "pick_entities": [
+        "blue_cube_1",
+        "blue_cube_5",
+        "red_cube_2",
+        "red_cube_1",
+        "red_cube_3"
+      ],
+      "delivery_truth": [
+        [
+          "blue_cube_1",
+          "B",
+          "True",
+          "0.0000",
+          "True"
+        ],
+        [
+          "blue_cube_5",
+          "B",
+          "True",
+          "0.0000",
+          "True"
+        ],
+        [
+          "red_cube_2",
+          "A",
+          "True",
+          "0.0000",
+          "True"
+        ],
+        [
+          "red_cube_1",
+          "A",
+          "True",
+          "0.0000",
+          "True"
+        ],
+        [
+          "red_cube_3",
+          "A",
+          "True",
+          "0.0000",
+          "True"
+        ]
+      ],
+      "order_verified": false,
+      "color_order_required": false,
+      "requirements_verified": true,
+      "pickup_delivery_consistent": true,
+      "goods_score": 20,
+      "truth_precise": true,
+      "dual_yield": true,
+      "two_dynamic_responses": true,
+      "minimum_clearance": 0.4055,
+      "elapsed_sec": 239.8,
+      "motion_functional_pass": true,
+      "motion_under_300": true,
+      "motion_under_290": true,
+      "full_competition_acceptance": "not_tested",
+      "limits": [
+        "LLM/question-generation/dashboard timing excluded",
+        "truth may follow existing entity-pose stabilization",
+        "repeated manipulation attempts require manual review"
+      ]
+    },
+    "mission": {
+      "color": null,
+      "completed": 5,
+      "cube_name": "red_cube_3",
+      "current_index": 5,
+      "detail": "completed=5,skipped=0",
+      "elapsed_sec": 239.8,
+      "schema_version": "1.0",
+      "skipped": 0,
+      "state": "completed",
+      "target_zone": null,
+      "task_id": "2fe727e350c30314",
+      "total": 5
+    },
+    "avoidance": {
+      "additional_avoidance_events": [],
+      "avoidance_demonstrated": true,
+      "avoidance_event_count": 2,
+      "avoidance_events": [
+        "spawn_avoidance_1",
+        "spawn_avoidance_2"
+      ],
+      "avoidance_policy": "two_distinct_effective_movers",
+      "box_obstacles": {
+        "preview_moving_partition_1": [
+          1.6,
+          0.12
+        ],
+        "preview_moving_partition_2": [
+          0.12,
+          1.6
+        ]
+      },
+      "collision_detected": false,
+      "encountered_obstacles": [
+        "competition_moving_obstacle_1",
+        "competition_moving_obstacle_2"
+      ],
+      "minimum_clearance": 0.4055,
+      "minimum_clearance_by_model": {
+        "competition_moving_obstacle_1": 0.5758788407728381,
+        "competition_moving_obstacle_2": 0.5947608372687301,
+        "preview_moving_partition_1": 0.40548023799490884,
+        "preview_moving_partition_2": 1.4459267900485573
+      },
+      "minimum_event": {
+        "model": "preview_moving_partition_1",
+        "obstacle": [
+          -4.6,
+          1.9
+        ],
+        "robot": [
+          -3.268,
+          2.392
+        ]
+      },
+      "obstacle_updates": {
+        "competition_moving_obstacle_1": 1314,
+        "competition_moving_obstacle_2": 1319,
+        "preview_moving_partition_1": 1321,
+        "preview_moving_partition_2": 1326
+      },
+      "obstacles": {
+        "competition_moving_obstacle_1": [
+          8.5,
+          -0.485
+        ],
+        "competition_moving_obstacle_2": [
+          5.0,
+          0.01
+        ],
+        "preview_moving_partition_1": [
+          -6.147,
+          1.9
+        ],
+        "preview_moving_partition_2": [
+          7.78,
+          -5.5
+        ]
+      },
+      "obstacles_seen": 4,
+      "original_gate_events": [
+        "spawn_avoidance_1",
+        "spawn_avoidance_2"
+      ],
+      "original_pair_demonstrated": true,
+      "required_clearance": 0.1,
+      "response_kinds": {
+        "competition_moving_obstacle_1": "yield",
+        "competition_moving_obstacle_2": "yield"
+      },
+      "response_obstacles": [
+        "competition_moving_obstacle_1",
+        "competition_moving_obstacle_2"
+      ],
+      "robot_speed": 0.0,
+      "safe": true,
+      "sample_count": 52136,
+      "schema_version": "1.0"
+    }
+  },
+  {
+    "tag": "1bC_4rB",
+    "evidence": "/home/ros/dev_ws/experiments/unordered-smoke-20261006/1bC_4rB/20261006T115453Z-PjYn0H",
+    "commit": "0326585ee4aa2a01a92c19f595e218305bc71bf6",
+    "audit": {
+      "question": "Move 1 blue cube to zone C and 4 red cubes to zone B.",
+      "expected": [
+        [
+          "blue",
+          "C"
+        ],
+        [
+          "red",
+          "B"
+        ],
+        [
+          "red",
+          "B"
+        ],
+        [
+          "red",
+          "B"
+        ],
+        [
+          "red",
+          "B"
+        ]
+      ],
+      "pick_entities": [
+        "red_cube_3",
+        "red_cube_4",
+        "blue_cube_5",
+        "red_cube_5",
+        "red_cube_2"
+      ],
+      "delivery_truth": [
+        [
+          "red_cube_3",
+          "B",
+          "True",
+          "0.0000",
+          "True"
+        ],
+        [
+          "red_cube_4",
+          "B",
+          "True",
+          "0.0000",
+          "True"
+        ],
+        [
+          "blue_cube_5",
+          "C",
+          "True",
+          "0.0000",
+          "True"
+        ],
+        [
+          "red_cube_5",
+          "B",
+          "True",
+          "0.0000",
+          "True"
+        ],
+        [
+          "red_cube_2",
+          "B",
+          "True",
+          "0.0000",
+          "True"
+        ]
+      ],
+      "order_verified": false,
+      "color_order_required": false,
+      "requirements_verified": true,
+      "pickup_delivery_consistent": true,
+      "goods_score": 20,
+      "truth_precise": true,
+      "dual_yield": true,
+      "two_dynamic_responses": true,
+      "minimum_clearance": 0.3344,
+      "elapsed_sec": 243.3,
+      "motion_functional_pass": true,
+      "motion_under_300": true,
+      "motion_under_290": true,
+      "full_competition_acceptance": "not_tested",
+      "limits": [
+        "LLM/question-generation/dashboard timing excluded",
+        "truth may follow existing entity-pose stabilization",
+        "repeated manipulation attempts require manual review"
+      ]
+    },
+    "mission": {
+      "color": null,
+      "completed": 5,
+      "cube_name": "red_cube_2",
+      "current_index": 5,
+      "detail": "completed=5,skipped=0",
+      "elapsed_sec": 243.3,
+      "schema_version": "1.0",
+      "skipped": 0,
+      "state": "completed",
+      "target_zone": null,
+      "task_id": "bb09caaece23ac85",
+      "total": 5
+    },
+    "avoidance": {
+      "additional_avoidance_events": [],
+      "avoidance_demonstrated": true,
+      "avoidance_event_count": 2,
+      "avoidance_events": [
+        "spawn_avoidance_1",
+        "spawn_avoidance_2"
+      ],
+      "avoidance_policy": "two_distinct_effective_movers",
+      "box_obstacles": {
+        "preview_moving_partition_1": [
+          1.6,
+          0.12
+        ],
+        "preview_moving_partition_2": [
+          0.12,
+          1.6
+        ]
+      },
+      "collision_detected": false,
+      "encountered_obstacles": [
+        "competition_moving_obstacle_1",
+        "competition_moving_obstacle_2"
+      ],
+      "minimum_clearance": 0.3344,
+      "minimum_clearance_by_model": {
+        "competition_moving_obstacle_1": 0.3344271559359206,
+        "competition_moving_obstacle_2": 0.5628033896750999,
+        "preview_moving_partition_1": 4.186726054740211,
+        "preview_moving_partition_2": 1.445561344846156
+      },
+      "minimum_event": {
+        "model": "competition_moving_obstacle_1",
+        "obstacle": [
+          8.5,
+          -0.305
+        ],
+        "robot": [
+          8.255,
+          0.451
+        ]
+      },
+      "obstacle_updates": {
+        "competition_moving_obstacle_1": 1350,
+        "competition_moving_obstacle_2": 1351,
+        "preview_moving_partition_1": 1348,
+        "preview_moving_partition_2": 1350
+      },
+      "obstacles": {
+        "competition_moving_obstacle_1": [
+          8.5,
+          -0.26
+        ],
+        "competition_moving_obstacle_2": [
+          5.0,
+          -0.395
+        ],
+        "preview_moving_partition_1": [
+          -4.76,
+          1.9
+        ],
+        "preview_moving_partition_2": [
+          7.18,
+          -5.5
+        ]
+      },
+      "obstacles_seen": 4,
+      "original_gate_events": [
+        "spawn_avoidance_1",
+        "spawn_avoidance_2"
+      ],
+      "original_pair_demonstrated": true,
+      "required_clearance": 0.1,
+      "response_kinds": {
+        "competition_moving_obstacle_1": "yield",
+        "competition_moving_obstacle_2": "yield"
+      },
+      "response_obstacles": [
+        "competition_moving_obstacle_1",
+        "competition_moving_obstacle_2"
+      ],
+      "robot_speed": 0.0,
+      "safe": true,
+      "sample_count": 53326,
+      "schema_version": "1.0"
+    }
+  }
+]

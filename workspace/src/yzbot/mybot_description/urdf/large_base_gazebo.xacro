@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<robot name="six_arm" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:include filename="$(find mybot_description)/urdf/large_base.xacro" />
+
+    <!-- Transmission is important to link the joints and the controller -->
+    <xacro:macro name="wheel_transmission" params="prefix">
+        <transmission name="${prefix}_wheel_joint_trans">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="${prefix}_wheel_joint">
+                <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="${prefix}_wheel_joint_motor">
+                <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+
+        <gazebo reference="${prefix}_wheel_link">
+            <material>Gazebo/Gray</material>
+            <!-- Planar motion owns XY velocity; wheels only support the model. -->
+            <mu1>0.0</mu1>
+            <mu2>0.0</mu2>
+            <kp>1000000.0</kp>
+            <kd>100.0</kd>
+            <minDepth>0.001</minDepth>
+            <maxVel>0.1</maxVel>
+        </gazebo>
+    </xacro:macro>
+
+    <!-- /////////////////////////////////   Gazebo   ////////////////////////////////////// -->
+    <gazebo reference="base_footprint">
+        <turnGravityOff>false</turnGravityOff>
+        <!-- Keep planar_move velocity control, but leave the base dynamic so
+             Gazebo contacts remain a final wall-collision backstop. A
+             kinematic base can be integrated straight through geometry when
+             the scan/costmap safety chain misses an obstacle. -->
+        <kinematic>false</kinematic>
+    </gazebo>
+    <gazebo reference="base_link">
+        <material>Gazebo/Blue</material>
+    </gazebo>
+
+    <gazebo reference="back_caster_link">
+        <material>Gazebo/Black</material>
+        <mu1>0.0</mu1>
+        <mu2>0.0</mu2>
+        <kp>1000000.0</kp>
+        <kd>100.0</kd>
+        <minDepth>0.001</minDepth>
+        <maxVel>0.1</maxVel>
+    </gazebo>
+
+    <xacro:wheel_transmission prefix="left" />
+    <xacro:wheel_transmission prefix="right" />
+
+
+    <!--
+      Drive the competition model in the horizontal plane while Gazebo still
+      resolves contacts. Nav2 velocity_smoother owns acceleration limiting;
+      zero-friction support wheels avoid wheel-contact impulses.
+    -->
+    <gazebo>
+        <plugin name="planar_move_controller" filename="libgazebo_ros_planar_move.so">
+            <update_rate>100</update_rate>
+            <publish_rate>30</publish_rate>
+            <publish_odom>true</publish_odom>
+            <publish_odom_tf>true</publish_odom_tf>
+            <odometry_frame>odom</odometry_frame>
+            <robot_base_frame>base_footprint</robot_base_frame>
+            <!-- All motion goes through the safety limiter so a moving
+                 obstacle that the laser/costmap misses still cannot be hit. -->
+            <ros>
+                <remapping>cmd_vel:=cmd_vel_safe</remapping>
+            </ros>
+        </plugin>
+    </gazebo>
+</robot>

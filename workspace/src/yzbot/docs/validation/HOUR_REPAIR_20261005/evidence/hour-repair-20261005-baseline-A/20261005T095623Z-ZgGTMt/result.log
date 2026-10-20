@@ -1,0 +1,23 @@
+[INFO] [1791194261.396635233] [competition_case_runner]: PREFLIGHT_NAV_ACTION=true
+[INFO] [1791194262.701220615] [competition_case_runner]: PREFLIGHT_COLLISION_STATE=active
+[INFO] [1791194262.702914098] [competition_case_runner]: PREFLIGHT_SAFETY_CHAIN=true
+[INFO] [1791194262.703705493] [competition_case_runner]: PREFLIGHT_COLLISION_STATE_AFTER_CHAIN=active
+[INFO] [1791194262.784127080] [competition_case_runner]: TASK_PUBLISHED=Move 1 red cube to zone A.
+Traceback (most recent call last):
+  File "/home/ros/dev_ws/install/tools_demo/lib/tools_demo/competition_case_runner", line 33, in <module>
+    sys.exit(load_entry_point('tools-demo', 'console_scripts', 'competition_case_runner')())
+  File "/home/ros/dev_ws/build/tools_demo/tools_demo/competition_case_runner.py", line 233, in main
+    terminal = runner.run_to_terminal()
+  File "/home/ros/dev_ws/build/tools_demo/tools_demo/competition_case_runner.py", line 173, in run_to_terminal
+    rclpy.spin_once(self, timeout_sec=0.1)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/__init__.py", line 208, in spin_once
+    executor.spin_once(timeout_sec=timeout_sec)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 808, in spin_once
+    self._spin_once_impl(timeout_sec)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 797, in _spin_once_impl
+    handler, entity, node = self.wait_for_ready_callbacks(timeout_sec=timeout_sec)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 780, in wait_for_ready_callbacks
+    return next(self._cb_iter)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 681, in _wait_for_ready_callbacks
+    raise ExternalShutdownException()
+rclpy.executors.ExternalShutdownException

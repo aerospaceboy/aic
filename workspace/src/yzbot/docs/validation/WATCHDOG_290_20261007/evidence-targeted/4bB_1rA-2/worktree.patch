@@ -1,0 +1,134 @@
+diff --git a/bot_navigation/launch/competition_navigation.launch.py b/bot_navigation/launch/competition_navigation.launch.py
+index 9c67151..38c32bf 100644
+--- a/bot_navigation/launch/competition_navigation.launch.py
++++ b/bot_navigation/launch/competition_navigation.launch.py
+@@ -138,6 +138,39 @@ def generate_launch_description():
+         ],
+         output="screen",
+     )
++    # The two support wheels are continuous joints in large_base.xacro but are
++    # not part of ros2_control and have no joint states, so robot_state_publisher
++    # never publishes base_link -> {left,right}_wheel_link and RViz reports
++    # "No transform from [left_wheel_link] to [map]". They never articulate (the
++    # base moves through the planar controller), so static transforms taken from
++    # the URDF origins are exact: x = wheel_joint_x, y = +-(base_width +
++    # wheel_length)/2, z = -(base_height/2 + caster_radius*2 - wheel_radius).
++    left_wheel_tf = Node(
++        package="tf2_ros",
++        executable="static_transform_publisher",
++        name="competition_left_wheel_tf",
++        arguments=[
++            "0.14", "0.185", "-0.0384", "0", "0", "0",
++            "base_link", "left_wheel_link",
++        ],
++        parameters=[
++            {"use_sim_time": LaunchConfiguration("use_sim_time")},
++        ],
++        output="screen",
++    )
++    right_wheel_tf = Node(
++        package="tf2_ros",
++        executable="static_transform_publisher",
++        name="competition_right_wheel_tf",
++        arguments=[
++            "0.14", "-0.185", "-0.0384", "0", "0", "0",
++            "base_link", "right_wheel_link",
++        ],
++        parameters=[
++            {"use_sim_time": LaunchConfiguration("use_sim_time")},
++        ],
++        output="screen",
++    )
+     velocity_selector = Node(
+         package="tools_demo", executable="velocity_selector",
+         name="competition_velocity_selector", output="screen",
+@@ -235,6 +268,8 @@ def generate_launch_description():
+             sim_time_argument,
+             obstacle_argument,
+             map_to_odom,
++            left_wheel_tf,
++            right_wheel_tf,
+             nav2,
+             delayed_collision_lifecycle_manager,
+             delayed_collision_monitor,
+diff --git a/gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp b/gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp
+index cf1fc0a..6fdd7ec 100644
+--- a/gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp
++++ b/gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp
+@@ -63,7 +63,7 @@ class GazeboDebugGuiPlugin : public GUIPlugin
+ {
+   public: GazeboDebugGuiPlugin()
+       : renderRate(std::max(1.0, EnvironmentDouble(
+-            "YZBOT_GAZEBO_GUI_RENDER_RATE", 15.0))),
++            "YZBOT_GAZEBO_GUI_RENDER_RATE", 60.0))),
+         windowWidth(std::max(640, EnvironmentInt(
+             "YZBOT_GAZEBO_GUI_WIDTH", 1100))),
+         windowHeight(std::max(480, EnvironmentInt(
+diff --git a/tools_demo/test/test_navigation_contract.py b/tools_demo/test/test_navigation_contract.py
+index ff1722f..a80986f 100644
+--- a/tools_demo/test/test_navigation_contract.py
++++ b/tools_demo/test/test_navigation_contract.py
+@@ -856,7 +856,23 @@ def test_navigation_has_bounded_slow_progress_watchdog():
+     )[0]
+     assert "navigation_progress_stalled(" in timeout
+     assert "self.goal_handle.cancel_goal_async()" in timeout
+-    assert "self.nav_retries < self.nav_retry_attempts" in timeout
++    # The watchdog must stay live after the retry budget is spent. Gating it
++    # on nav_retries turned it off for the rest of the leg: 4bB_1rA
++    # (2026-10-07) burned 41-46 s in a second stall that way. Escalation is
++    # bounded in result_callback instead.
++    assert "self.nav_retries < self.nav_retry_attempts" not in timeout
++    assert "self.progress_recovery_pending = True" in timeout
++    result = source.split("def result_callback", 1)[1].split(
++        "def cancel_callback", 1
++    )[0]
++    progress = result.split("if self.progress_recovery_pending:", 1)[1].split(
++        "try:", 1
++    )[0]
++    assert "self._retry_nav_goal()" in progress
++    assert "self._try_bounded_recovery()" in progress
++    assert progress.index("self._retry_nav_goal()") < progress.index(
++        "self._try_bounded_recovery()"
++    )
+     assert "translation >= self.progress_min_translation" in timeout
+     assert "self.progress_anchor_x = self.latest_x" in timeout
+     assert "self.last_completed_zone_exit = None" in source
+diff --git a/tools_demo/tools_demo/task_navigator.py b/tools_demo/tools_demo/task_navigator.py
+index c184a65..08f38f0 100644
+--- a/tools_demo/tools_demo/task_navigator.py
++++ b/tools_demo/tools_demo/task_navigator.py
+@@ -2797,6 +2797,13 @@ class TaskNavigator(Node):
+             self.progress_recovery_pending = False
+             if self._retry_nav_goal():
+                 return
++            # The retry budget is spent and the base still is not translating,
++            # so escalate to the same guarded escape the aborted/failed path
++            # uses. Reporting "canceled" instead left the coordinator to
++            # re-drive the leg from the stuck cell, and the escape that did
++            # clear it (2rB_3bC, 2026-10-06) only ran after Nav2 aborted.
++            if self._try_bounded_recovery():
++                return
+         try:
+             status = future.result().status
+         except Exception as exception:  # noqa: B902
+@@ -3715,12 +3722,19 @@ class TaskNavigator(Node):
+         elapsed = self.get_clock().now().nanoseconds - self.goal_start_ns
+         if self.goal_timed_out:
+             return
++        # The progress watchdog is deliberately NOT gated on the retry
++        # budget. With nav_retry_attempts=1 the first stall consumed the only
++        # retry and the detector went blind for the rest of the leg: measured
++        # on 4bB_1rA (2026-10-07), a second stall near the wall stub at
++        # (7.0,-1.0) burned 41-46 s until Nav2 aborted on its own. The
++        # escalation stays bounded - by the retry budget in result_callback
++        # and by max_recovery_attempts in _try_bounded_recovery - instead of
++        # by disarming the detector.
+         if (
+             self.goal_handle is not None
+             and self.progress_anchor_ns is not None
+             and self.progress_anchor_x is not None
+             and self.progress_anchor_y is not None
+-            and self.nav_retries < self.nav_retry_attempts
+         ):
+             now_ns = self.get_clock().now().nanoseconds
+             window_elapsed = (now_ns - self.progress_anchor_ns) / 1e9

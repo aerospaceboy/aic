@@ -1,0 +1,16 @@
+Starting >>> linkattacher_msgs
+Starting >>> gazebo_debug_gui
+Starting >>> mybot_description
+Finished <<< gazebo_debug_gui [1.50s]
+Finished <<< linkattacher_msgs [3.41s]
+Starting >>> ros2_linkattacher
+Finished <<< ros2_linkattacher [0.24s]
+Finished <<< mybot_description [3.58s]
+Starting >>> mybot
+Finished <<< mybot [0.11s]
+Starting >>> tools_demo
+Finished <<< tools_demo [2.52s]
+Starting >>> bot_navigation
+Finished <<< bot_navigation [0.46s]
+
+Summary: 7 packages finished [7.54s]

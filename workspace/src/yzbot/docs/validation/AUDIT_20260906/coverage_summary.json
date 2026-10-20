@@ -1,0 +1,12 @@
+{
+  "tasks": 48,
+  "five_of_five": 45,
+  "case_accepted": 45,
+  "strict_motion_pass": 45,
+  "under300": 26,
+  "retry": [
+    "4bC_1rA",
+    "4bC_1rB",
+    "1rC_4bA"
+  ]
+}

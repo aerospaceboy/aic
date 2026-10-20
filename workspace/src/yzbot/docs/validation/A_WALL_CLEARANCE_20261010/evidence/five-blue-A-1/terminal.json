@@ -1,0 +1,486 @@
+{
+  "observed_elapsed": 256.34746471100004,
+  "question": "每个宠物店有5只宠物;有猫、狗两种宠物店;小爱领养25只狗;设猫宠物店数量为x,狗宠物店数量为y,计算x、y分别为多少",
+  "plan": {
+    "counts": {
+      "blue": 5,
+      "red": 0
+    },
+    "execution_order": [
+      "blue",
+      "blue",
+      "blue",
+      "blue",
+      "blue"
+    ],
+    "items": [
+      {
+        "color": "blue",
+        "count": 5,
+        "target_zone": "A"
+      }
+    ],
+    "schema_version": "1.0",
+    "source": "llm",
+    "task_id": "repair-de8e931113194cc493f0d191e3e9b999"
+  },
+  "parse_result": {
+    "request_id": "repair-de8e931113194cc493f0d191e3e9b999",
+    "question": "每个宠物店有5只宠物;有猫、狗两种宠物店;小爱领养25只狗;设猫宠物店数量为x,狗宠物店数量为y,计算x、y分别为多少",
+    "mapping_rules": "x代表红色，y代表蓝色，数量大于等于1的去A区，其他颜色去B区",
+    "schema_version": "1.0",
+    "state": "published",
+    "model": "qwen3.8-max",
+    "published": true,
+    "task_id": "repair-de8e931113194cc493f0d191e3e9b999",
+    "source": "llm",
+    "plan": {
+      "schema_version": "1.0",
+      "task_id": "repair-de8e931113194cc493f0d191e3e9b999",
+      "source": "llm",
+      "items": [
+        {
+          "color": "blue",
+          "count": 5,
+          "target_zone": "A"
+        }
+      ],
+      "counts": {
+        "red": 0,
+        "blue": 5
+      },
+      "execution_order": [
+        "blue",
+        "blue",
+        "blue",
+        "blue",
+        "blue"
+      ]
+    },
+    "error": ""
+  },
+  "llm": {
+    "available": true,
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "detail": "validated_model_problem_solution",
+    "latency_sec": 1.246,
+    "model": "qwen3.8-max",
+    "required": true,
+    "schema_version": "1.0",
+    "source": "llm"
+  },
+  "mission": {
+    "color": null,
+    "completed": 5,
+    "cube_name": "blue_cube_4",
+    "current_index": 5,
+    "detail": "completed=5,skipped=0",
+    "elapsed_sec": 255.1,
+    "schema_version": "1.0",
+    "skipped": 0,
+    "state": "completed",
+    "target_zone": null,
+    "task_id": "repair-de8e931113194cc493f0d191e3e9b999",
+    "total": 5
+  },
+  "navigation": {
+    "alignment_error": 0.0144,
+    "recovery_attempts": 0,
+    "return_route_zone": null,
+    "route": "primary",
+    "route_zone": "A",
+    "state": "succeeded",
+    "status_code": 4,
+    "zone": "A"
+  },
+  "perception": {
+    "frame_id": "base_link",
+    "schema_version": "1.0",
+    "source_frame": "camera_rgbd_frame_optical",
+    "stamp": {
+      "nanosec": 904000000,
+      "sec": 574
+    },
+    "targets": [
+      {
+        "area_px": 4753,
+        "color": "blue",
+        "depth_m": 0.28241,
+        "pixel": {
+          "u": 116.36,
+          "v": 155.97
+        },
+        "position": {
+          "x": 0.45307,
+          "y": -0.05591,
+          "z": -0.05242
+        }
+      },
+      {
+        "area_px": 741,
+        "color": "blue",
+        "depth_m": 0.30564,
+        "pixel": {
+          "u": 6.05,
+          "v": 158.2
+        },
+        "position": {
+          "x": 0.45538,
+          "y": 0.01348,
+          "z": -0.07563
+        }
+      },
+      {
+        "area_px": 3911,
+        "color": "blue",
+        "depth_m": 0.28241,
+        "pixel": {
+          "u": 266.02,
+          "v": 158.08
+        },
+        "position": {
+          "x": 0.452,
+          "y": -0.13216,
+          "z": -0.05244
+        }
+      },
+      {
+        "area_px": 4161,
+        "color": "blue",
+        "depth_m": 0.28234,
+        "pixel": {
+          "u": 418.55,
+          "v": 160.52
+        },
+        "position": {
+          "x": 0.45074,
+          "y": -0.20987,
+          "z": -0.05239
+        }
+      }
+    ]
+  },
+  "avoidance": {
+    "additional_avoidance_events": [],
+    "avoidance_demonstrated": true,
+    "avoidance_event_count": 2,
+    "avoidance_events": [
+      "spawn_avoidance_1",
+      "spawn_avoidance_2"
+    ],
+    "avoidance_policy": "two_distinct_effective_movers",
+    "box_obstacles": {
+      "preview_moving_partition_1": [
+        1.6,
+        0.12
+      ],
+      "preview_moving_partition_2": [
+        0.12,
+        1.6
+      ]
+    },
+    "collision_detected": false,
+    "encountered_obstacles": [
+      "competition_moving_obstacle_1",
+      "competition_moving_obstacle_2"
+    ],
+    "minimum_clearance": 0.5546,
+    "minimum_clearance_by_model": {
+      "competition_moving_obstacle_1": 0.7188206492371474,
+      "competition_moving_obstacle_2": 0.5545747107947774,
+      "preview_moving_partition_1": 1.0518842170646046,
+      "preview_moving_partition_2": 4.335970839533255
+    },
+    "minimum_event": {
+      "model": "competition_moving_obstacle_2",
+      "obstacle": [
+        5.0,
+        -0.62
+      ],
+      "robot": [
+        5.406,
+        0.31
+      ]
+    },
+    "obstacle_updates": {
+      "competition_moving_obstacle_1": 1484,
+      "competition_moving_obstacle_2": 1488,
+      "preview_moving_partition_1": 1487,
+      "preview_moving_partition_2": 1484
+    },
+    "obstacles": {
+      "competition_moving_obstacle_1": [
+        8.5,
+        -0.62
+      ],
+      "competition_moving_obstacle_2": [
+        5.0,
+        -0.215
+      ],
+      "preview_moving_partition_1": [
+        -5.453,
+        1.9
+      ],
+      "preview_moving_partition_2": [
+        7.38,
+        -5.5
+      ]
+    },
+    "obstacles_seen": 4,
+    "original_gate_events": [
+      "spawn_avoidance_1",
+      "spawn_avoidance_2"
+    ],
+    "original_pair_demonstrated": true,
+    "required_clearance": 0.1,
+    "response_kinds": {
+      "competition_moving_obstacle_1": "yield",
+      "competition_moving_obstacle_2": "yield"
+    },
+    "response_obstacles": [
+      "competition_moving_obstacle_1",
+      "competition_moving_obstacle_2"
+    ],
+    "robot_speed": 0.0,
+    "safe": true,
+    "sample_count": 58676,
+    "schema_version": "1.0"
+  },
+  "obstacles": {
+    "competition_moving_obstacle_1": [
+      8.5,
+      -0.62
+    ],
+    "competition_moving_obstacle_2": [
+      5.0,
+      -0.215
+    ],
+    "preview_moving_partition_1": [
+      -5.453,
+      1.9
+    ],
+    "preview_moving_partition_2": [
+      7.38,
+      -5.5
+    ]
+  },
+  "layout": {
+    "source": "$WORKSPACE/install/mybot_description/share/mybot_description/worlds/offic_room.world",
+    "pickups": [
+      {
+        "name": "competition_red_pickup_tray",
+        "x": -7.5,
+        "y": -2.8,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_red_pickup_tray_2",
+        "x": 1.0,
+        "y": -5.4,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_red_pickup_tray_3",
+        "x": 0.0,
+        "y": 3.8,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_red_pickup_tray_4",
+        "x": 11.4,
+        "y": -9.8,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_red_pickup_tray_5",
+        "x": -4.7,
+        "y": -12.4,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray",
+        "x": 7.4,
+        "y": 3.6,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray_2",
+        "x": -11.0,
+        "y": -5.6,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray_3",
+        "x": -2.0,
+        "y": -6.0,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray_4",
+        "x": -0.5,
+        "y": -8.8,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray_5",
+        "x": 11.8,
+        "y": -13.0,
+        "width": 0.24,
+        "height": 0.24
+      }
+    ],
+    "zones": [
+      {
+        "name": "zone_a",
+        "x": -5.4,
+        "y": 3.8,
+        "width": 1.0,
+        "height": 0.5,
+        "label": "A"
+      },
+      {
+        "name": "zone_b",
+        "x": 11.7,
+        "y": -5.0,
+        "width": 1.0,
+        "height": 0.5,
+        "label": "B"
+      },
+      {
+        "name": "zone_c",
+        "x": 3.3,
+        "y": -12.1,
+        "width": 1.0,
+        "height": 0.5,
+        "label": "C"
+      }
+    ],
+    "cubes": [
+      {
+        "name": "red_cube_1",
+        "x": -7.5,
+        "y": -2.8
+      },
+      {
+        "name": "red_cube_2",
+        "x": 1.0,
+        "y": -5.4
+      },
+      {
+        "name": "red_cube_3",
+        "x": 0.0,
+        "y": 3.8
+      },
+      {
+        "name": "red_cube_4",
+        "x": 11.4,
+        "y": -9.8
+      },
+      {
+        "name": "red_cube_5",
+        "x": -4.7,
+        "y": -12.4
+      },
+      {
+        "name": "blue_cube_1",
+        "x": 7.4,
+        "y": 3.6
+      },
+      {
+        "name": "blue_cube_2",
+        "x": -11.0,
+        "y": -5.6
+      },
+      {
+        "name": "blue_cube_3",
+        "x": -2.0,
+        "y": -6.0
+      },
+      {
+        "name": "blue_cube_4",
+        "x": -0.5,
+        "y": -8.8
+      },
+      {
+        "name": "blue_cube_5",
+        "x": 11.8,
+        "y": -13.0
+      }
+    ],
+    "bounds": {
+      "minX": -12.2,
+      "maxX": 13.0,
+      "minY": -14.2,
+      "maxY": 5.0
+    }
+  },
+  "gripper": "released:blue_cube_4",
+  "path": [],
+  "local_path": [],
+  "path_updated_at": 1791638413.831858,
+  "local_path_updated_at": 0.0,
+  "robot": {
+    "x": -4.9453,
+    "y": 3.7549,
+    "yaw": -3.126
+  },
+  "robot_updated_at": 1791638427.285565,
+  "obstacles_updated_at": 1791638427.1893995,
+  "rounds": [
+    {
+      "index": 1,
+      "color": "blue",
+      "cube_name": "blue_cube_5",
+      "target_zone": "A",
+      "result": "completed",
+      "detail": "leaving_zone_A",
+      "elapsed_sec": 84.6
+    },
+    {
+      "index": 2,
+      "color": "blue",
+      "cube_name": "blue_cube_1",
+      "target_zone": "A",
+      "result": "completed",
+      "detail": "leaving_zone_A",
+      "elapsed_sec": 120.1
+    },
+    {
+      "index": 3,
+      "color": "blue",
+      "cube_name": "blue_cube_2",
+      "target_zone": "A",
+      "result": "completed",
+      "detail": "leaving_zone_A",
+      "elapsed_sec": 182.7
+    },
+    {
+      "index": 4,
+      "color": "blue",
+      "cube_name": "blue_cube_3",
+      "target_zone": "A",
+      "result": "completed",
+      "detail": "leaving_zone_A",
+      "elapsed_sec": 217.4
+    },
+    {
+      "index": 5,
+      "color": "blue",
+      "cube_name": "blue_cube_4",
+      "target_zone": "A",
+      "result": "completed",
+      "detail": "completed=5,skipped=0",
+      "elapsed_sec": 255.1
+    }
+  ],
+  "updated_at": 1791638427.3302462
+}

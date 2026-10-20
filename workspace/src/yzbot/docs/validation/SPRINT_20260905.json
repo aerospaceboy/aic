@@ -1,0 +1,1390 @@
+[
+  {
+    "run": "baseline",
+    "mission": {
+      "color": null,
+      "completed": 5,
+      "cube_name": "blue_cube_2",
+      "current_index": 5,
+      "detail": "completed=5,skipped=0",
+      "elapsed_sec": 327.3,
+      "schema_version": "1.0",
+      "skipped": 0,
+      "state": "completed",
+      "target_zone": null,
+      "task_id": "b2b334198da5e2d3",
+      "total": 5
+    },
+    "avoidance": {
+      "avoidance_demonstrated": true,
+      "avoidance_event_count": 2,
+      "avoidance_events": [
+        "spawn_avoidance_1",
+        "spawn_avoidance_2"
+      ],
+      "collision_detected": false,
+      "encountered_obstacles": [
+        "competition_moving_obstacle_1",
+        "competition_moving_obstacle_2"
+      ],
+      "minimum_clearance": 0.1418,
+      "minimum_event": {
+        "model": "competition_moving_obstacle_2",
+        "obstacle": [
+          5.0,
+          -0.1
+        ],
+        "robot": [
+          5.6,
+          -0.05
+        ]
+      },
+      "obstacle_updates": {
+        "competition_moving_obstacle_1": 1769,
+        "competition_moving_obstacle_2": 1769
+      },
+      "obstacles": {
+        "competition_moving_obstacle_1": [
+          8.5,
+          -0.9
+        ],
+        "competition_moving_obstacle_2": [
+          5.0,
+          -0.9
+        ]
+      },
+      "obstacles_seen": 2,
+      "required_clearance": 0.1,
+      "response_kinds": {
+        "competition_moving_obstacle_1": "yield",
+        "competition_moving_obstacle_2": "yield"
+      },
+      "response_obstacles": [
+        "competition_moving_obstacle_1",
+        "competition_moving_obstacle_2"
+      ],
+      "robot_speed": 0.003,
+      "safe": true,
+      "sample_count": 27879,
+      "schema_version": "1.0"
+    },
+    "runner_case_accepted": true,
+    "delivery_truth_records": [
+      "cube=red_cube_1 zone=C x=-10.0000 y=2.0000 z=0.0349 valid=True slot_error=0.0000 precise=True",
+      "cube=blue_cube_3 zone=B x=8.9900 y=2.8400 z=0.0349 valid=True slot_error=0.0000 precise=True",
+      "cube=blue_cube_1 zone=B x=8.9900 y=2.9467 z=0.0349 valid=True slot_error=0.0000 precise=True",
+      "cube=blue_cube_4 zone=B x=8.9900 y=3.0533 z=0.0350 valid=True slot_error=0.0000 precise=True",
+      "cube=blue_cube_2 zone=B x=8.9900 y=3.1600 z=0.0349 valid=True slot_error=0.0000 precise=True"
+    ],
+    "precise_valid_deliveries": 5,
+    "batch_fallbacks": [],
+    "batch_goal_count": 5,
+    "nav_retries": 0,
+    "body_stop_count": 0,
+    "rpp_prediction_count": 5,
+    "nav_result_seconds": [
+      23.33,
+      1.71,
+      8.63,
+      1.9,
+      33.51,
+      2.31,
+      23.73,
+      2.7,
+      16.2,
+      0.91,
+      10.34,
+      2.83,
+      32.73,
+      1.8,
+      40.1,
+      2.7,
+      28.33,
+      1.91,
+      21.5
+    ],
+    "maximum_roll_pitch": null,
+    "roll_pitch_note": "Not continuously recorded by this runner; no numeric maximum claimed.",
+    "logged_transport_samples": 20,
+    "logged_transport_invalid_count": 0,
+    "logged_transport_max_abs_roll": 0.0844,
+    "logged_transport_max_abs_pitch": 0.03872,
+    "realtime_factor": {
+      "sample_count": 1632,
+      "median": 0.99,
+      "mean_reported": 0.9936,
+      "fraction_below_0_9": 0.0012,
+      "sim_delta_over_real_delta": 0.9938
+    },
+    "speed_profile_task_matches": true,
+    "speed_profile": {
+      "schema_version": "1.0",
+      "task_id": "b2b334198da5e2d3",
+      "terminal_state": "completed",
+      "mission": {
+        "color": null,
+        "completed": 5,
+        "cube_name": "blue_cube_2",
+        "current_index": 5,
+        "detail": "completed=5,skipped=0",
+        "elapsed_sec": 327.3,
+        "schema_version": "1.0",
+        "skipped": 0,
+        "state": "completed",
+        "target_zone": null,
+        "task_id": "b2b334198da5e2d3",
+        "total": 5
+      },
+      "elapsed_sec": 327.33,
+      "speed_bins_mps": [
+        0.0,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.8,
+        1.0,
+        1.2,
+        1.5,
+        1.8,
+        2.1,
+        2.4
+      ],
+      "categories": {
+        "constrained_straight": {
+          "duration_sec": 19.95,
+          "distance_m": 30.64,
+          "moving_mean_mps": 1.536,
+          "p50_mps": 1.653,
+          "p90_mps": 1.654,
+          "sample_count": 99,
+          "histogram_seconds": {
+            "0.0-0.1": 0.0,
+            "0.1-0.2": 0.41,
+            "0.2-0.3": 0.0,
+            "0.3-0.4": 0.2,
+            "0.4-0.5": 0.2,
+            "0.5-0.6": 0.2,
+            "0.6-0.8": 0.2,
+            "0.8-1.0": 0.8,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.6,
+            "1.5-1.8": 17.34,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "docking_or_direct": {
+          "duration_sec": 39.39,
+          "distance_m": 9.07,
+          "moving_mean_mps": 0.419,
+          "p50_mps": 0.446,
+          "p90_mps": 0.698,
+          "sample_count": 196,
+          "histogram_seconds": {
+            "0.0-0.1": 19.9,
+            "0.1-0.2": 3.23,
+            "0.2-0.3": 3.61,
+            "0.3-0.4": 1.61,
+            "0.4-0.5": 2.81,
+            "0.5-0.6": 1.81,
+            "0.6-0.8": 4.82,
+            "0.8-1.0": 1.6,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.0,
+            "1.5-1.8": 0.0,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "manipulation_or_wait": {
+          "duration_sec": 68.83,
+          "distance_m": 0.14,
+          "moving_mean_mps": 0.082,
+          "p50_mps": 0.055,
+          "p90_mps": 0.2,
+          "sample_count": 342,
+          "histogram_seconds": {
+            "0.0-0.1": 68.63,
+            "0.1-0.2": 0.2,
+            "0.2-0.3": 0.0,
+            "0.3-0.4": 0.0,
+            "0.4-0.5": 0.0,
+            "0.5-0.6": 0.0,
+            "0.6-0.8": 0.0,
+            "0.8-1.0": 0.0,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.0,
+            "1.5-1.8": 0.0,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "open_straight": {
+          "duration_sec": 30.3,
+          "distance_m": 38.21,
+          "moving_mean_mps": 1.494,
+          "p50_mps": 1.653,
+          "p90_mps": 1.654,
+          "sample_count": 151,
+          "histogram_seconds": {
+            "0.0-0.1": 4.94,
+            "0.1-0.2": 0.0,
+            "0.2-0.3": 0.6,
+            "0.3-0.4": 0.2,
+            "0.4-0.5": 0.0,
+            "0.5-0.6": 0.81,
+            "0.6-0.8": 0.8,
+            "0.8-1.0": 0.81,
+            "1.0-1.2": 0.2,
+            "1.2-1.5": 0.61,
+            "1.5-1.8": 21.33,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "ordinary_turn": {
+          "duration_sec": 118.19,
+          "distance_m": 70.33,
+          "moving_mean_mps": 1.292,
+          "p50_mps": 1.652,
+          "p90_mps": 1.654,
+          "sample_count": 587,
+          "histogram_seconds": {
+            "0.0-0.1": 65.29,
+            "0.1-0.2": 1.41,
+            "0.2-0.3": 3.43,
+            "0.3-0.4": 1.21,
+            "0.4-0.5": 0.81,
+            "0.5-0.6": 2.81,
+            "0.6-0.8": 2.82,
+            "0.8-1.0": 1.6,
+            "1.0-1.2": 0.59,
+            "1.2-1.5": 2.63,
+            "1.5-1.8": 35.59,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "sharp_turn": {
+          "duration_sec": 45.25,
+          "distance_m": 32.45,
+          "moving_mean_mps": 1.011,
+          "p50_mps": 0.906,
+          "p90_mps": 1.653,
+          "sample_count": 225,
+          "histogram_seconds": {
+            "0.0-0.1": 13.49,
+            "0.1-0.2": 0.0,
+            "0.2-0.3": 2.62,
+            "0.3-0.4": 1.2,
+            "0.4-0.5": 0.2,
+            "0.5-0.6": 3.62,
+            "0.6-0.8": 5.84,
+            "0.8-1.0": 3.82,
+            "1.0-1.2": 2.2,
+            "1.2-1.5": 3.6,
+            "1.5-1.8": 8.66,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "stationary": {
+          "duration_sec": 3.2,
+          "distance_m": 0.01,
+          "moving_mean_mps": 0.0,
+          "p50_mps": 0.0,
+          "p90_mps": 0.0,
+          "sample_count": 16,
+          "histogram_seconds": {
+            "0.0-0.1": 3.2,
+            "0.1-0.2": 0.0,
+            "0.2-0.3": 0.0,
+            "0.3-0.4": 0.0,
+            "0.4-0.5": 0.0,
+            "0.5-0.6": 0.0,
+            "0.6-0.8": 0.0,
+            "0.8-1.0": 0.0,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.0,
+            "1.5-1.8": 0.0,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "truth_safety_slow": {
+          "duration_sec": 2.21,
+          "distance_m": 0.91,
+          "moving_mean_mps": 0.412,
+          "p50_mps": 0.305,
+          "p90_mps": 0.833,
+          "sample_count": 11,
+          "histogram_seconds": {
+            "0.0-0.1": 0.0,
+            "0.1-0.2": 0.2,
+            "0.2-0.3": 0.8,
+            "0.3-0.4": 0.4,
+            "0.4-0.5": 0.2,
+            "0.5-0.6": 0.2,
+            "0.6-0.8": 0.0,
+            "0.8-1.0": 0.4,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.0,
+            "1.5-1.8": 0.0,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        }
+      }
+    }
+  },
+  {
+    "run": "candidate_1bB4rA",
+    "mission": {
+      "color": null,
+      "completed": 5,
+      "cube_name": "red_cube_5",
+      "current_index": 5,
+      "detail": "completed=5,skipped=0",
+      "elapsed_sec": 322.7,
+      "schema_version": "1.0",
+      "skipped": 0,
+      "state": "completed",
+      "target_zone": null,
+      "task_id": "29646fde9ae44a0b",
+      "total": 5
+    },
+    "avoidance": {
+      "avoidance_demonstrated": true,
+      "avoidance_event_count": 2,
+      "avoidance_events": [
+        "spawn_avoidance_1",
+        "spawn_avoidance_2"
+      ],
+      "collision_detected": false,
+      "encountered_obstacles": [
+        "competition_moving_obstacle_1",
+        "competition_moving_obstacle_2"
+      ],
+      "minimum_clearance": 0.1369,
+      "minimum_event": {
+        "model": "competition_moving_obstacle_1",
+        "obstacle": [
+          8.5,
+          -0.3
+        ],
+        "robot": [
+          9.058,
+          -0.088
+        ]
+      },
+      "obstacle_updates": {
+        "competition_moving_obstacle_1": 1768,
+        "competition_moving_obstacle_2": 1768
+      },
+      "obstacles": {
+        "competition_moving_obstacle_1": [
+          8.5,
+          -0.9
+        ],
+        "competition_moving_obstacle_2": [
+          5.0,
+          -0.9
+        ]
+      },
+      "obstacles_seen": 2,
+      "required_clearance": 0.1,
+      "response_kinds": {
+        "competition_moving_obstacle_1": "yield",
+        "competition_moving_obstacle_2": "yield"
+      },
+      "response_obstacles": [
+        "competition_moving_obstacle_1",
+        "competition_moving_obstacle_2"
+      ],
+      "robot_speed": 0.002,
+      "safe": true,
+      "sample_count": 27871,
+      "schema_version": "1.0"
+    },
+    "runner_case_accepted": true,
+    "delivery_truth_records": [
+      "cube=blue_cube_4 zone=B x=8.9900 y=3.0000 z=0.0350 valid=True slot_error=0.0000 precise=True",
+      "cube=red_cube_1 zone=A x=-2.0100 y=2.8300 z=0.0347 valid=True slot_error=0.0000 precise=True",
+      "cube=red_cube_2 zone=A x=-2.0100 y=2.9367 z=0.0350 valid=True slot_error=0.0000 precise=True",
+      "cube=red_cube_4 zone=A x=-2.0100 y=3.0433 z=0.0349 valid=True slot_error=0.0000 precise=True",
+      "cube=red_cube_5 zone=A x=-2.0100 y=3.1500 z=0.0349 valid=True slot_error=0.0000 precise=True"
+    ],
+    "precise_valid_deliveries": 5,
+    "batch_fallbacks": [],
+    "batch_goal_count": 0,
+    "nav_retries": 0,
+    "body_stop_count": 0,
+    "rpp_prediction_count": 2,
+    "nav_result_seconds": [
+      37.88,
+      1.61,
+      24.78,
+      2.71,
+      16.18,
+      2.31,
+      6.43,
+      1.89,
+      32.38,
+      2.22,
+      18.52,
+      4.37,
+      21.8,
+      2.01,
+      26.01,
+      6.12,
+      20.27,
+      2.0,
+      23.68
+    ],
+    "maximum_roll_pitch": null,
+    "roll_pitch_note": "Not continuously recorded by this runner; no numeric maximum claimed.",
+    "logged_transport_samples": 20,
+    "logged_transport_invalid_count": 0,
+    "logged_transport_max_abs_roll": 0.08083,
+    "logged_transport_max_abs_pitch": 0.03954,
+    "realtime_factor": {
+      "sample_count": 1623,
+      "median": 1.0,
+      "mean_reported": 0.9961,
+      "fraction_below_0_9": 0.0,
+      "sim_delta_over_real_delta": 0.9952
+    },
+    "speed_profile_task_matches": true,
+    "speed_profile": {
+      "schema_version": "1.0",
+      "task_id": "29646fde9ae44a0b",
+      "terminal_state": "completed",
+      "mission": {
+        "color": null,
+        "completed": 5,
+        "cube_name": "red_cube_5",
+        "current_index": 5,
+        "detail": "completed=5,skipped=0",
+        "elapsed_sec": 322.7,
+        "schema_version": "1.0",
+        "skipped": 0,
+        "state": "completed",
+        "target_zone": null,
+        "task_id": "29646fde9ae44a0b",
+        "total": 5
+      },
+      "elapsed_sec": 322.69,
+      "timing_coverage": {
+        "sampled_wall_sec": 322.686,
+        "unobserved_wall_sec": 0.005,
+        "maximum_sample_gap_sec": 0.265,
+        "delayed_sample_count": 0
+      },
+      "speed_bins_mps": [
+        0.0,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.8,
+        1.0,
+        1.2,
+        1.5,
+        1.8,
+        2.1,
+        2.4
+      ],
+      "categories": {
+        "collision_slow": {
+          "duration_sec": 0.4,
+          "distance_m": 0.32,
+          "moving_mean_mps": 0.796,
+          "p50_mps": 0.688,
+          "p90_mps": 0.903,
+          "sample_count": 2,
+          "histogram_seconds": {
+            "0.0-0.1": 0.0,
+            "0.1-0.2": 0.0,
+            "0.2-0.3": 0.0,
+            "0.3-0.4": 0.0,
+            "0.4-0.5": 0.0,
+            "0.5-0.6": 0.0,
+            "0.6-0.8": 0.2,
+            "0.8-1.0": 0.2,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.0,
+            "1.5-1.8": 0.0,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "constrained_straight": {
+          "duration_sec": 22.5,
+          "distance_m": 34.65,
+          "moving_mean_mps": 1.54,
+          "p50_mps": 1.653,
+          "p90_mps": 1.654,
+          "sample_count": 112,
+          "histogram_seconds": {
+            "0.0-0.1": 0.41,
+            "0.1-0.2": 0.0,
+            "0.2-0.3": 0.0,
+            "0.3-0.4": 0.0,
+            "0.4-0.5": 0.2,
+            "0.5-0.6": 0.4,
+            "0.6-0.8": 0.4,
+            "0.8-1.0": 0.8,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.81,
+            "1.5-1.8": 19.48,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "docking_or_direct": {
+          "duration_sec": 42.99,
+          "distance_m": 9.1,
+          "moving_mean_mps": 0.411,
+          "p50_mps": 0.413,
+          "p90_mps": 0.75,
+          "sample_count": 214,
+          "histogram_seconds": {
+            "0.0-0.1": 22.7,
+            "0.1-0.2": 3.61,
+            "0.2-0.3": 4.21,
+            "0.3-0.4": 1.42,
+            "0.4-0.5": 2.82,
+            "0.5-0.6": 2.21,
+            "0.6-0.8": 4.42,
+            "0.8-1.0": 1.4,
+            "1.0-1.2": 0.2,
+            "1.2-1.5": 0.0,
+            "1.5-1.8": 0.0,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "manipulation_or_wait": {
+          "duration_sec": 68.57,
+          "distance_m": 0.11,
+          "moving_mean_mps": 0.042,
+          "p50_mps": 0.039,
+          "p90_mps": 0.057,
+          "sample_count": 341,
+          "histogram_seconds": {
+            "0.0-0.1": 68.57,
+            "0.1-0.2": 0.0,
+            "0.2-0.3": 0.0,
+            "0.3-0.4": 0.0,
+            "0.4-0.5": 0.0,
+            "0.5-0.6": 0.0,
+            "0.6-0.8": 0.0,
+            "0.8-1.0": 0.0,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.0,
+            "1.5-1.8": 0.0,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "open_straight": {
+          "duration_sec": 42.33,
+          "distance_m": 54.69,
+          "moving_mean_mps": 1.503,
+          "p50_mps": 1.653,
+          "p90_mps": 1.654,
+          "sample_count": 211,
+          "histogram_seconds": {
+            "0.0-0.1": 6.54,
+            "0.1-0.2": 0.2,
+            "0.2-0.3": 0.8,
+            "0.3-0.4": 0.0,
+            "0.4-0.5": 0.2,
+            "0.5-0.6": 0.61,
+            "0.6-0.8": 1.41,
+            "0.8-1.0": 0.6,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 1.41,
+            "1.5-1.8": 30.55,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "ordinary_turn": {
+          "duration_sec": 104.92,
+          "distance_m": 53.13,
+          "moving_mean_mps": 1.255,
+          "p50_mps": 1.652,
+          "p90_mps": 1.654,
+          "sample_count": 522,
+          "histogram_seconds": {
+            "0.0-0.1": 64.32,
+            "0.1-0.2": 0.6,
+            "0.2-0.3": 3.62,
+            "0.3-0.4": 1.61,
+            "0.4-0.5": 0.8,
+            "0.5-0.6": 1.81,
+            "0.6-0.8": 1.61,
+            "0.8-1.0": 0.81,
+            "1.0-1.2": 0.6,
+            "1.2-1.5": 3.41,
+            "1.5-1.8": 25.73,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "sharp_turn": {
+          "duration_sec": 38.16,
+          "distance_m": 29.23,
+          "moving_mean_mps": 1.1,
+          "p50_mps": 1.047,
+          "p90_mps": 1.653,
+          "sample_count": 190,
+          "histogram_seconds": {
+            "0.0-0.1": 11.87,
+            "0.1-0.2": 0.0,
+            "0.2-0.3": 1.2,
+            "0.3-0.4": 0.6,
+            "0.4-0.5": 0.2,
+            "0.5-0.6": 2.82,
+            "0.6-0.8": 4.21,
+            "0.8-1.0": 3.42,
+            "1.0-1.2": 2.01,
+            "1.2-1.5": 2.82,
+            "1.5-1.8": 9.01,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "stationary": {
+          "duration_sec": 0.41,
+          "distance_m": 0.0,
+          "moving_mean_mps": 0.0,
+          "p50_mps": 0.0,
+          "p90_mps": 0.0,
+          "sample_count": 2,
+          "histogram_seconds": {
+            "0.0-0.1": 0.41,
+            "0.1-0.2": 0.0,
+            "0.2-0.3": 0.0,
+            "0.3-0.4": 0.0,
+            "0.4-0.5": 0.0,
+            "0.5-0.6": 0.0,
+            "0.6-0.8": 0.0,
+            "0.8-1.0": 0.0,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.0,
+            "1.5-1.8": 0.0,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "truth_safety_slow": {
+          "duration_sec": 2.42,
+          "distance_m": 0.97,
+          "moving_mean_mps": 0.402,
+          "p50_mps": 0.26,
+          "p90_mps": 0.996,
+          "sample_count": 12,
+          "histogram_seconds": {
+            "0.0-0.1": 0.0,
+            "0.1-0.2": 0.4,
+            "0.2-0.3": 1.01,
+            "0.3-0.4": 0.2,
+            "0.4-0.5": 0.2,
+            "0.5-0.6": 0.2,
+            "0.6-0.8": 0.0,
+            "0.8-1.0": 0.2,
+            "1.0-1.2": 0.2,
+            "1.2-1.5": 0.0,
+            "1.5-1.8": 0.0,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        }
+      }
+    }
+  },
+  {
+    "run": "candidate_1rC4bB",
+    "mission": {
+      "color": null,
+      "completed": 5,
+      "cube_name": "blue_cube_2",
+      "current_index": 5,
+      "detail": "completed=5,skipped=0",
+      "elapsed_sec": 321.9,
+      "schema_version": "1.0",
+      "skipped": 0,
+      "state": "completed",
+      "target_zone": null,
+      "task_id": "b2b334198da5e2d3",
+      "total": 5
+    },
+    "avoidance": {
+      "avoidance_demonstrated": true,
+      "avoidance_event_count": 2,
+      "avoidance_events": [
+        "spawn_avoidance_1",
+        "spawn_avoidance_2"
+      ],
+      "collision_detected": false,
+      "encountered_obstacles": [
+        "competition_moving_obstacle_1",
+        "competition_moving_obstacle_2"
+      ],
+      "minimum_clearance": 0.1432,
+      "minimum_event": {
+        "model": "competition_moving_obstacle_2",
+        "obstacle": [
+          5.0,
+          -0.1
+        ],
+        "robot": [
+          5.601,
+          -0.051
+        ]
+      },
+      "obstacle_updates": {
+        "competition_moving_obstacle_1": 1762,
+        "competition_moving_obstacle_2": 1762
+      },
+      "obstacles": {
+        "competition_moving_obstacle_1": [
+          8.5,
+          -0.9
+        ],
+        "competition_moving_obstacle_2": [
+          5.0,
+          -0.9
+        ]
+      },
+      "obstacles_seen": 2,
+      "required_clearance": 0.1,
+      "response_kinds": {
+        "competition_moving_obstacle_1": "yield",
+        "competition_moving_obstacle_2": "yield"
+      },
+      "response_obstacles": [
+        "competition_moving_obstacle_1",
+        "competition_moving_obstacle_2"
+      ],
+      "robot_speed": 0.003,
+      "safe": true,
+      "sample_count": 27773,
+      "schema_version": "1.0"
+    },
+    "runner_case_accepted": true,
+    "delivery_truth_records": [
+      "cube=red_cube_1 zone=C x=-10.0000 y=2.0000 z=0.0349 valid=True slot_error=0.0000 precise=True",
+      "cube=blue_cube_3 zone=B x=8.9900 y=2.8400 z=0.0349 valid=True slot_error=0.0000 precise=True",
+      "cube=blue_cube_1 zone=B x=8.9900 y=2.9467 z=0.0349 valid=True slot_error=0.0000 precise=True",
+      "cube=blue_cube_4 zone=B x=8.9900 y=3.0533 z=0.0349 valid=True slot_error=0.0000 precise=True",
+      "cube=blue_cube_2 zone=B x=8.9900 y=3.1600 z=0.0349 valid=True slot_error=0.0000 precise=True"
+    ],
+    "precise_valid_deliveries": 5,
+    "batch_fallbacks": [],
+    "batch_goal_count": 5,
+    "nav_retries": 0,
+    "body_stop_count": 0,
+    "rpp_prediction_count": 0,
+    "nav_result_seconds": [
+      23.92,
+      3.2,
+      9.63,
+      1.89,
+      33.7,
+      2.41,
+      23.18,
+      2.7,
+      16.44,
+      0.9,
+      10.04,
+      2.7,
+      32.44,
+      1.9,
+      28.89,
+      2.84,
+      28.38,
+      0.9,
+      22.74
+    ],
+    "maximum_roll_pitch": null,
+    "roll_pitch_note": "Not continuously recorded by this runner; no numeric maximum claimed.",
+    "logged_transport_samples": 20,
+    "logged_transport_invalid_count": 0,
+    "logged_transport_max_abs_roll": 0.08894,
+    "logged_transport_max_abs_pitch": 0.03934,
+    "realtime_factor": {
+      "sample_count": 1619,
+      "median": 1.0,
+      "mean_reported": 0.9955,
+      "fraction_below_0_9": 0.0,
+      "sim_delta_over_real_delta": 0.994
+    },
+    "speed_profile_task_matches": true,
+    "speed_profile": {
+      "schema_version": "1.0",
+      "task_id": "b2b334198da5e2d3",
+      "terminal_state": "completed",
+      "mission": {
+        "color": null,
+        "completed": 5,
+        "cube_name": "blue_cube_2",
+        "current_index": 5,
+        "detail": "completed=5,skipped=0",
+        "elapsed_sec": 321.9,
+        "schema_version": "1.0",
+        "skipped": 0,
+        "state": "completed",
+        "target_zone": null,
+        "task_id": "b2b334198da5e2d3",
+        "total": 5
+      },
+      "elapsed_sec": 321.95,
+      "speed_bins_mps": [
+        0.0,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.8,
+        1.0,
+        1.2,
+        1.5,
+        1.8,
+        2.1,
+        2.4
+      ],
+      "categories": {
+        "constrained_straight": {
+          "duration_sec": 22.08,
+          "distance_m": 35.25,
+          "moving_mean_mps": 1.596,
+          "p50_mps": 1.652,
+          "p90_mps": 1.654,
+          "sample_count": 110,
+          "histogram_seconds": {
+            "0.0-0.1": 0.0,
+            "0.1-0.2": 0.0,
+            "0.2-0.3": 0.0,
+            "0.3-0.4": 0.0,
+            "0.4-0.5": 0.0,
+            "0.5-0.6": 0.2,
+            "0.6-0.8": 0.4,
+            "0.8-1.0": 0.2,
+            "1.0-1.2": 0.4,
+            "1.2-1.5": 1.01,
+            "1.5-1.8": 19.87,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "docking_or_direct": {
+          "duration_sec": 41.55,
+          "distance_m": 9.49,
+          "moving_mean_mps": 0.414,
+          "p50_mps": 0.415,
+          "p90_mps": 0.7,
+          "sample_count": 207,
+          "histogram_seconds": {
+            "0.0-0.1": 20.86,
+            "0.1-0.2": 3.42,
+            "0.2-0.3": 4.21,
+            "0.3-0.4": 1.6,
+            "0.4-0.5": 2.42,
+            "0.5-0.6": 2.21,
+            "0.6-0.8": 5.02,
+            "0.8-1.0": 1.8,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.0,
+            "1.5-1.8": 0.0,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "manipulation_or_wait": {
+          "duration_sec": 72.1,
+          "distance_m": 0.09,
+          "moving_mean_mps": 0.047,
+          "p50_mps": 0.04,
+          "p90_mps": 0.07,
+          "sample_count": 357,
+          "histogram_seconds": {
+            "0.0-0.1": 72.1,
+            "0.1-0.2": 0.0,
+            "0.2-0.3": 0.0,
+            "0.3-0.4": 0.0,
+            "0.4-0.5": 0.0,
+            "0.5-0.6": 0.0,
+            "0.6-0.8": 0.0,
+            "0.8-1.0": 0.0,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.0,
+            "1.5-1.8": 0.0,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "open_straight": {
+          "duration_sec": 29.76,
+          "distance_m": 39.75,
+          "moving_mean_mps": 1.569,
+          "p50_mps": 1.653,
+          "p90_mps": 1.654,
+          "sample_count": 148,
+          "histogram_seconds": {
+            "0.0-0.1": 4.63,
+            "0.1-0.2": 0.2,
+            "0.2-0.3": 0.2,
+            "0.3-0.4": 0.2,
+            "0.4-0.5": 0.0,
+            "0.5-0.6": 0.21,
+            "0.6-0.8": 0.39,
+            "0.8-1.0": 0.2,
+            "1.0-1.2": 0.2,
+            "1.2-1.5": 0.2,
+            "1.5-1.8": 23.32,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "ordinary_turn": {
+          "duration_sec": 104.56,
+          "distance_m": 62.78,
+          "moving_mean_mps": 1.251,
+          "p50_mps": 1.65,
+          "p90_mps": 1.654,
+          "sample_count": 520,
+          "histogram_seconds": {
+            "0.0-0.1": 55.26,
+            "0.1-0.2": 1.21,
+            "0.2-0.3": 3.81,
+            "0.3-0.4": 2.41,
+            "0.4-0.5": 1.42,
+            "0.5-0.6": 2.42,
+            "0.6-0.8": 2.02,
+            "0.8-1.0": 1.42,
+            "1.0-1.2": 1.2,
+            "1.2-1.5": 2.4,
+            "1.5-1.8": 30.97,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "sharp_turn": {
+          "duration_sec": 45.86,
+          "distance_m": 33.15,
+          "moving_mean_mps": 1.045,
+          "p50_mps": 0.954,
+          "p90_mps": 1.65,
+          "sample_count": 228,
+          "histogram_seconds": {
+            "0.0-0.1": 15.28,
+            "0.1-0.2": 0.2,
+            "0.2-0.3": 1.41,
+            "0.3-0.4": 0.8,
+            "0.4-0.5": 0.4,
+            "0.5-0.6": 2.22,
+            "0.6-0.8": 6.66,
+            "0.8-1.0": 4.02,
+            "1.0-1.2": 1.2,
+            "1.2-1.5": 3.81,
+            "1.5-1.8": 9.86,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "stationary": {
+          "duration_sec": 3.81,
+          "distance_m": 0.01,
+          "moving_mean_mps": 0.0,
+          "p50_mps": 0.0,
+          "p90_mps": 0.0,
+          "sample_count": 19,
+          "histogram_seconds": {
+            "0.0-0.1": 3.81,
+            "0.1-0.2": 0.0,
+            "0.2-0.3": 0.0,
+            "0.3-0.4": 0.0,
+            "0.4-0.5": 0.0,
+            "0.5-0.6": 0.0,
+            "0.6-0.8": 0.0,
+            "0.8-1.0": 0.0,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.0,
+            "1.5-1.8": 0.0,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "truth_safety_slow": {
+          "duration_sec": 2.21,
+          "distance_m": 1.16,
+          "moving_mean_mps": 0.524,
+          "p50_mps": 0.327,
+          "p90_mps": 0.985,
+          "sample_count": 11,
+          "histogram_seconds": {
+            "0.0-0.1": 0.0,
+            "0.1-0.2": 0.4,
+            "0.2-0.3": 0.4,
+            "0.3-0.4": 0.4,
+            "0.4-0.5": 0.2,
+            "0.5-0.6": 0.2,
+            "0.6-0.8": 0.0,
+            "0.8-1.0": 0.4,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.2,
+            "1.5-1.8": 0.0,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        }
+      }
+    }
+  },
+  {
+    "run": "injected_batch_rejection",
+    "mission": {
+      "color": null,
+      "completed": 2,
+      "cube_name": "blue_cube_3",
+      "current_index": 2,
+      "detail": "completed=2,skipped=0",
+      "elapsed_sec": 144.2,
+      "schema_version": "1.0",
+      "skipped": 0,
+      "state": "completed",
+      "target_zone": null,
+      "task_id": "8d954c4342d7f55a",
+      "total": 2
+    },
+    "avoidance": {
+      "avoidance_demonstrated": true,
+      "avoidance_event_count": 2,
+      "avoidance_events": [
+        "spawn_avoidance_1",
+        "spawn_avoidance_2"
+      ],
+      "collision_detected": false,
+      "encountered_obstacles": [
+        "competition_moving_obstacle_1",
+        "competition_moving_obstacle_2"
+      ],
+      "minimum_clearance": 0.1313,
+      "minimum_event": {
+        "model": "competition_moving_obstacle_1",
+        "obstacle": [
+          8.5,
+          -0.1
+        ],
+        "robot": [
+          9.091,
+          -0.091
+        ]
+      },
+      "obstacle_updates": {
+        "competition_moving_obstacle_1": 860,
+        "competition_moving_obstacle_2": 857
+      },
+      "obstacles": {
+        "competition_moving_obstacle_1": [
+          8.5,
+          -0.9
+        ],
+        "competition_moving_obstacle_2": [
+          5.0,
+          -0.9
+        ]
+      },
+      "obstacles_seen": 2,
+      "required_clearance": 0.1,
+      "response_kinds": {
+        "competition_moving_obstacle_1": "yield",
+        "competition_moving_obstacle_2": "yield"
+      },
+      "response_obstacles": [
+        "competition_moving_obstacle_1",
+        "competition_moving_obstacle_2"
+      ],
+      "robot_speed": 0.003,
+      "safe": true,
+      "sample_count": 13504,
+      "schema_version": "1.0"
+    },
+    "runner_case_accepted": false,
+    "delivery_truth_records": [
+      "cube=red_cube_1 zone=C x=-10.0000 y=2.0000 z=0.0350 valid=True slot_error=0.0000 precise=True",
+      "cube=blue_cube_3 zone=B x=8.9900 y=3.0000 z=0.0350 valid=True slot_error=0.0000 precise=True"
+    ],
+    "precise_valid_deliveries": 2,
+    "batch_fallbacks": [
+      "batch_navigation_failed",
+      "batch_navigation_failed",
+      "batch_navigation_failed"
+    ],
+    "batch_goal_count": 3,
+    "nav_retries": 0,
+    "body_stop_count": 0,
+    "rpp_prediction_count": 1,
+    "nav_result_seconds": [
+      24.22,
+      2.11,
+      11.23,
+      1.89,
+      36.03,
+      3.62,
+      26.01
+    ],
+    "maximum_roll_pitch": null,
+    "roll_pitch_note": "Not continuously recorded by this runner; no numeric maximum claimed.",
+    "logged_transport_samples": 8,
+    "logged_transport_invalid_count": 0,
+    "logged_transport_max_abs_roll": 0.08035,
+    "logged_transport_max_abs_pitch": 0.03773,
+    "realtime_factor": {
+      "sample_count": 721,
+      "median": 1.0,
+      "mean_reported": 0.9972,
+      "fraction_below_0_9": 0.0,
+      "sim_delta_over_real_delta": 0.996
+    },
+    "speed_profile_task_matches": true,
+    "speed_profile": {
+      "schema_version": "1.0",
+      "task_id": "8d954c4342d7f55a",
+      "terminal_state": "completed",
+      "mission": {
+        "color": null,
+        "completed": 2,
+        "cube_name": "blue_cube_3",
+        "current_index": 2,
+        "detail": "completed=2,skipped=0",
+        "elapsed_sec": 144.2,
+        "schema_version": "1.0",
+        "skipped": 0,
+        "state": "completed",
+        "target_zone": null,
+        "task_id": "8d954c4342d7f55a",
+        "total": 2
+      },
+      "elapsed_sec": 144.19,
+      "timing_coverage": {
+        "sampled_wall_sec": 144.181,
+        "unobserved_wall_sec": 0.005,
+        "maximum_sample_gap_sec": 0.217,
+        "delayed_sample_count": 0
+      },
+      "speed_bins_mps": [
+        0.0,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.8,
+        1.0,
+        1.2,
+        1.5,
+        1.8,
+        2.1,
+        2.4
+      ],
+      "categories": {
+        "constrained_straight": {
+          "duration_sec": 12.23,
+          "distance_m": 19.29,
+          "moving_mean_mps": 1.577,
+          "p50_mps": 1.653,
+          "p90_mps": 1.654,
+          "sample_count": 61,
+          "histogram_seconds": {
+            "0.0-0.1": 0.0,
+            "0.1-0.2": 0.0,
+            "0.2-0.3": 0.0,
+            "0.3-0.4": 0.41,
+            "0.4-0.5": 0.0,
+            "0.5-0.6": 0.0,
+            "0.6-0.8": 0.2,
+            "0.8-1.0": 0.0,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.4,
+            "1.5-1.8": 11.23,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "docking_or_direct": {
+          "duration_sec": 15.66,
+          "distance_m": 2.9,
+          "moving_mean_mps": 0.393,
+          "p50_mps": 0.352,
+          "p90_mps": 0.799,
+          "sample_count": 78,
+          "histogram_seconds": {
+            "0.0-0.1": 9.04,
+            "0.1-0.2": 1.0,
+            "0.2-0.3": 1.81,
+            "0.3-0.4": 0.2,
+            "0.4-0.5": 1.6,
+            "0.5-0.6": 0.6,
+            "0.6-0.8": 0.81,
+            "0.8-1.0": 0.6,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.0,
+            "1.5-1.8": 0.0,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "manipulation_or_wait": {
+          "duration_sec": 38.55,
+          "distance_m": 0.04,
+          "moving_mean_mps": 0.05,
+          "p50_mps": 0.05,
+          "p90_mps": 0.05,
+          "sample_count": 192,
+          "histogram_seconds": {
+            "0.0-0.1": 38.55,
+            "0.1-0.2": 0.0,
+            "0.2-0.3": 0.0,
+            "0.3-0.4": 0.0,
+            "0.4-0.5": 0.0,
+            "0.5-0.6": 0.0,
+            "0.6-0.8": 0.0,
+            "0.8-1.0": 0.0,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.0,
+            "1.5-1.8": 0.0,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "open_straight": {
+          "duration_sec": 14.86,
+          "distance_m": 18.14,
+          "moving_mean_mps": 1.436,
+          "p50_mps": 1.652,
+          "p90_mps": 1.654,
+          "sample_count": 75,
+          "histogram_seconds": {
+            "0.0-0.1": 2.23,
+            "0.1-0.2": 0.2,
+            "0.2-0.3": 0.2,
+            "0.3-0.4": 0.4,
+            "0.4-0.5": 0.0,
+            "0.5-0.6": 0.6,
+            "0.6-0.8": 0.2,
+            "0.8-1.0": 0.6,
+            "1.0-1.2": 0.2,
+            "1.2-1.5": 0.6,
+            "1.5-1.8": 9.62,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "ordinary_turn": {
+          "duration_sec": 46.58,
+          "distance_m": 26.14,
+          "moving_mean_mps": 1.279,
+          "p50_mps": 1.65,
+          "p90_mps": 1.654,
+          "sample_count": 232,
+          "histogram_seconds": {
+            "0.0-0.1": 26.7,
+            "0.1-0.2": 0.4,
+            "0.2-0.3": 0.8,
+            "0.3-0.4": 0.2,
+            "0.4-0.5": 1.0,
+            "0.5-0.6": 1.0,
+            "0.6-0.8": 1.2,
+            "0.8-1.0": 0.4,
+            "1.0-1.2": 1.21,
+            "1.2-1.5": 1.41,
+            "1.5-1.8": 12.26,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "sharp_turn": {
+          "duration_sec": 11.88,
+          "distance_m": 7.53,
+          "moving_mean_mps": 1.165,
+          "p50_mps": 1.0,
+          "p90_mps": 1.652,
+          "sample_count": 59,
+          "histogram_seconds": {
+            "0.0-0.1": 5.46,
+            "0.1-0.2": 0.0,
+            "0.2-0.3": 0.0,
+            "0.3-0.4": 0.0,
+            "0.4-0.5": 0.0,
+            "0.5-0.6": 0.4,
+            "0.6-0.8": 2.2,
+            "0.8-1.0": 0.4,
+            "1.0-1.2": 0.4,
+            "1.2-1.5": 0.2,
+            "1.5-1.8": 2.81,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "stationary": {
+          "duration_sec": 1.8,
+          "distance_m": 0.01,
+          "moving_mean_mps": 0.0,
+          "p50_mps": 0.0,
+          "p90_mps": 0.0,
+          "sample_count": 9,
+          "histogram_seconds": {
+            "0.0-0.1": 1.8,
+            "0.1-0.2": 0.0,
+            "0.2-0.3": 0.0,
+            "0.3-0.4": 0.0,
+            "0.4-0.5": 0.0,
+            "0.5-0.6": 0.0,
+            "0.6-0.8": 0.0,
+            "0.8-1.0": 0.0,
+            "1.0-1.2": 0.0,
+            "1.2-1.5": 0.0,
+            "1.5-1.8": 0.0,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        },
+        "truth_safety_slow": {
+          "duration_sec": 2.61,
+          "distance_m": 1.2,
+          "moving_mean_mps": 0.459,
+          "p50_mps": 0.273,
+          "p90_mps": 1.019,
+          "sample_count": 13,
+          "histogram_seconds": {
+            "0.0-0.1": 0.0,
+            "0.1-0.2": 0.6,
+            "0.2-0.3": 0.81,
+            "0.3-0.4": 0.2,
+            "0.4-0.5": 0.4,
+            "0.5-0.6": 0.0,
+            "0.6-0.8": 0.0,
+            "0.8-1.0": 0.2,
+            "1.0-1.2": 0.2,
+            "1.2-1.5": 0.0,
+            "1.5-1.8": 0.2,
+            "1.8-2.1": 0.0,
+            "2.1-2.4": 0.0
+          }
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,1 @@
+Move 3 red cubes to zone A, then move 2 blue cubes to zone B.

@@ -1,0 +1,47 @@
+# ---------------------------------------------------------------------------
+# YZBot 省赛交付代码仓库
+# 只跟踪源码、配置、脚本、文档与随包构建产物；以下大体积/可再生成内容不入库。
+# 完整交付物仍以 SHA256SUMS、vendor/、acceptance/ 目录为准（这些不纳入 Git）。
+# ---------------------------------------------------------------------------
+
+# 第三方安装包与解包副本（~883 MiB）
+/vendor/
+
+# 历史验收与实验材料（~473 MiB）
+/acceptance/
+
+# 运行期证据与临时输出
+/runs/
+
+# ROS 2 / colcon 生成产物
+/workspace/build/
+/workspace/install/
+/workspace/log/
+
+# Python / 测试缓存
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / 前端依赖
+/node_modules/
+**/node_modules/
+
+# 编辑器 / 系统文件
+.DS_Store
+*~
+.vscode/
+.idea/
+*.swp
+
+# 本地备份与历史场景变体（可由 Git 历史或交付包恢复）
+*.orig
+*.bak
+*.bak_before_*
+*.pre_*
+*.pre_shengsai_relocation
+
+# 已归档的损坏快照 Git 仓库（见 项目分析/运行环境备份/yzbot-broken-git-20261021）
+/workspace/src/yzbot/.git.broken-*/

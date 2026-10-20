@@ -1,0 +1,50 @@
+[
+  {
+    "record_stamp_ns": 1788832892717571367,
+    "task_id": "729b0674c761407c",
+    "topic": "/competition/obstacles/obstacle_1",
+    "model": "competition_moving_obstacle_1",
+    "observation": {
+      "distance": 0.9767,
+      "peak_speed": 1.6538,
+      "response_speed": 0.5418,
+      "stamp_sec": 313.249
+    }
+  },
+  {
+    "record_stamp_ns": 1788832896733773553,
+    "task_id": "729b0674c761407c",
+    "topic": "/competition/obstacles/obstacle_2",
+    "model": "competition_moving_obstacle_2",
+    "observation": {
+      "distance": 1.0524,
+      "peak_speed": 1.6538,
+      "response_speed": 0.6707,
+      "stamp_sec": 318.049
+    }
+  },
+  {
+    "record_stamp_ns": 1788833259300824920,
+    "task_id": "c2b725622be4dbfe",
+    "topic": "/competition/obstacles/obstacle_1",
+    "model": "competition_moving_obstacle_1",
+    "observation": {
+      "distance": 1.1443,
+      "peak_speed": 1.6537,
+      "response_speed": 0.6937,
+      "stamp_sec": 316.049
+    }
+  },
+  {
+    "record_stamp_ns": 1788833261718897181,
+    "task_id": "c2b725622be4dbfe",
+    "topic": "/competition/obstacles/obstacle_2",
+    "model": "competition_moving_obstacle_2",
+    "observation": {
+      "distance": 1.078,
+      "peak_speed": 1.6537,
+      "response_speed": 0.796,
+      "stamp_sec": 318.449
+    }
+  }
+]

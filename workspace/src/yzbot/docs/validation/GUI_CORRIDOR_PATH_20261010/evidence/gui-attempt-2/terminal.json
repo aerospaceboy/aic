@@ -1,0 +1,494 @@
+{
+  "observed_elapsed": 39.32125530099984,
+  "question": "每个宠物店有5只宠物;有猫、狗两种宠物店;小爱领养2只猫,5只狗;小宠、小动都领养2只猫;小乐领养3只猫,5只狗;小欢领养4只狗。设猫宠物店数量为x,狗宠物店数量为y,计算x、y分别为多少",
+  "plan": {
+    "counts": {
+      "blue": 3,
+      "red": 2
+    },
+    "execution_order": [
+      "red",
+      "red",
+      "blue",
+      "blue",
+      "blue"
+    ],
+    "items": [
+      {
+        "color": "red",
+        "count": 2,
+        "target_zone": "B"
+      },
+      {
+        "color": "blue",
+        "count": 3,
+        "target_zone": "A"
+      }
+    ],
+    "schema_version": "1.0",
+    "source": "llm",
+    "task_id": "repair-7ca33849415d4379bde24de2447f26d0"
+  },
+  "parse_result": {
+    "request_id": "repair-7ca33849415d4379bde24de2447f26d0",
+    "question": "每个宠物店有5只宠物;有猫、狗两种宠物店;小爱领养2只猫,5只狗;小宠、小动都领养2只猫;小乐领养3只猫,5只狗;小欢领养4只狗。设猫宠物店数量为x,狗宠物店数量为y,计算x、y分别为多少",
+    "mapping_rules": "x代表红色，y代表蓝色，数量大于等于3的去A区，其他颜色去B区",
+    "schema_version": "1.0",
+    "state": "published",
+    "model": "qwen3.8-max",
+    "published": true,
+    "task_id": "repair-7ca33849415d4379bde24de2447f26d0",
+    "source": "llm",
+    "plan": {
+      "schema_version": "1.0",
+      "task_id": "repair-7ca33849415d4379bde24de2447f26d0",
+      "source": "llm",
+      "items": [
+        {
+          "color": "red",
+          "count": 2,
+          "target_zone": "B"
+        },
+        {
+          "color": "blue",
+          "count": 3,
+          "target_zone": "A"
+        }
+      ],
+      "counts": {
+        "red": 2,
+        "blue": 3
+      },
+      "execution_order": [
+        "red",
+        "red",
+        "blue",
+        "blue",
+        "blue"
+      ]
+    },
+    "error": ""
+  },
+  "llm": {
+    "available": true,
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "detail": "validated_model_problem_solution",
+    "latency_sec": 1.241,
+    "model": "qwen3.8-max",
+    "required": true,
+    "schema_version": "1.0",
+    "source": "llm"
+  },
+  "mission": {
+    "color": "blue",
+    "completed": 0,
+    "cube_name": "blue_cube_3",
+    "current_index": 1,
+    "detail": "pickup_navigation_failed",
+    "elapsed_sec": 37.8,
+    "schema_version": "1.0",
+    "skipped": 0,
+    "state": "failed",
+    "target_zone": "A",
+    "task_id": "repair-7ca33849415d4379bde24de2447f26d0",
+    "total": 5
+  },
+  "navigation": {
+    "command_path": [
+      [
+        9.9864,
+        0.4144
+      ],
+      [
+        3.8,
+        0.45
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        -1.1,
+        -6.0
+      ]
+    ],
+    "goal": [
+      -1.1,
+      -6.0
+    ],
+    "reason": "mover_crossing_unsafe_timeout",
+    "recovery_attempts": 0,
+    "return_route_zone": null,
+    "route": "primary",
+    "route_zone": null,
+    "state": "failed",
+    "zone": "BLUE_CUBE_3"
+  },
+  "perception": {
+    "frame_id": "base_link",
+    "schema_version": "1.0",
+    "source_frame": "camera_rgbd_frame_optical",
+    "stamp": {
+      "nanosec": 794000000,
+      "sec": 355
+    },
+    "targets": [
+      {
+        "area_px": 42,
+        "color": "blue",
+        "depth_m": 1.12619,
+        "pixel": {
+          "u": 599.0,
+          "v": 171.5
+        },
+        "position": {
+          "x": -0.19908,
+          "y": -0.56589,
+          "z": 1.75634
+        }
+      },
+      {
+        "area_px": 15639,
+        "color": "red",
+        "depth_m": 1.0388,
+        "pixel": {
+          "u": 620.91,
+          "v": 254.64
+        },
+        "position": {
+          "x": -0.03243,
+          "y": -0.56305,
+          "z": 1.66883
+        }
+      },
+      {
+        "area_px": 11814,
+        "color": "red",
+        "depth_m": 1.20023,
+        "pixel": {
+          "u": 580.19,
+          "v": 265.09
+        },
+        "position": {
+          "x": -0.00557,
+          "y": -0.56237,
+          "z": 1.83023
+        }
+      },
+      {
+        "area_px": 6253,
+        "color": "red",
+        "depth_m": 1.38601,
+        "pixel": {
+          "u": 545.5,
+          "v": 293.45
+        },
+        "position": {
+          "x": 0.07374,
+          "y": -0.56265,
+          "z": 2.01595
+        }
+      },
+      {
+        "area_px": 7265,
+        "color": "red",
+        "depth_m": 1.534,
+        "pixel": {
+          "u": 523.38,
+          "v": 250.03
+        },
+        "position": {
+          "x": -0.03219,
+          "y": -0.56151,
+          "z": 2.16402
+        }
+      },
+      {
+        "area_px": 4185,
+        "color": "red",
+        "depth_m": 1.70556,
+        "pixel": {
+          "u": 502.24,
+          "v": 303.0
+        },
+        "position": {
+          "x": 0.13387,
+          "y": -0.55926,
+          "z": 2.33546
+        }
+      }
+    ]
+  },
+  "avoidance": {
+    "additional_avoidance_events": [],
+    "avoidance_demonstrated": false,
+    "avoidance_event_count": 0,
+    "avoidance_events": [],
+    "avoidance_policy": "two_distinct_effective_movers",
+    "box_obstacles": {
+      "preview_moving_partition_1": [
+        1.6,
+        0.12
+      ],
+      "preview_moving_partition_2": [
+        0.12,
+        1.6
+      ]
+    },
+    "collision_detected": false,
+    "encountered_obstacles": [],
+    "minimum_clearance": 0.931,
+    "minimum_clearance_by_model": {
+      "competition_moving_obstacle_1": 0.9309756304246217,
+      "competition_moving_obstacle_2": 4.438356037633176,
+      "preview_moving_partition_1": 13.534943976284211,
+      "preview_moving_partition_2": 5.186232336476077
+    },
+    "minimum_event": {
+      "model": "competition_moving_obstacle_1",
+      "obstacle": [
+        8.5,
+        0.1
+      ],
+      "robot": [
+        9.857,
+        0.406
+      ]
+    },
+    "obstacle_updates": {
+      "competition_moving_obstacle_1": 378,
+      "competition_moving_obstacle_2": 380,
+      "preview_moving_partition_1": 378,
+      "preview_moving_partition_2": 379
+    },
+    "obstacles": {
+      "competition_moving_obstacle_1": [
+        8.5,
+        -0.08
+      ],
+      "competition_moving_obstacle_2": [
+        5.0,
+        -0.71
+      ],
+      "preview_moving_partition_1": [
+        -5.347,
+        1.9
+      ],
+      "preview_moving_partition_2": [
+        6.82,
+        -5.5
+      ]
+    },
+    "obstacles_seen": 4,
+    "original_gate_events": [],
+    "original_pair_demonstrated": false,
+    "required_clearance": 0.1,
+    "response_kinds": {},
+    "response_obstacles": [],
+    "robot_speed": 0.0,
+    "safe": true,
+    "sample_count": 15037,
+    "schema_version": "1.0"
+  },
+  "obstacles": {
+    "competition_moving_obstacle_1": [
+      8.5,
+      -0.035
+    ],
+    "competition_moving_obstacle_2": [
+      5.0,
+      -0.755
+    ],
+    "preview_moving_partition_1": [
+      -5.293,
+      1.9
+    ],
+    "preview_moving_partition_2": [
+      6.78,
+      -5.5
+    ]
+  },
+  "layout": {
+    "source": "$WORKSPACE/install/mybot_description/share/mybot_description/worlds/offic_room.world",
+    "pickups": [
+      {
+        "name": "competition_red_pickup_tray",
+        "x": -7.5,
+        "y": -2.8,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_red_pickup_tray_2",
+        "x": 1.0,
+        "y": -5.4,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_red_pickup_tray_3",
+        "x": 0.0,
+        "y": 3.8,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_red_pickup_tray_4",
+        "x": 11.4,
+        "y": -9.8,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_red_pickup_tray_5",
+        "x": -4.7,
+        "y": -12.4,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray",
+        "x": 7.4,
+        "y": 3.6,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray_2",
+        "x": -11.0,
+        "y": -5.6,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray_3",
+        "x": -2.0,
+        "y": -6.0,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray_4",
+        "x": -0.5,
+        "y": -8.8,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray_5",
+        "x": 11.8,
+        "y": -13.0,
+        "width": 0.24,
+        "height": 0.24
+      }
+    ],
+    "zones": [
+      {
+        "name": "zone_a",
+        "x": -5.4,
+        "y": 3.8,
+        "width": 1.0,
+        "height": 0.5,
+        "label": "A"
+      },
+      {
+        "name": "zone_b",
+        "x": 11.7,
+        "y": -5.0,
+        "width": 1.0,
+        "height": 0.5,
+        "label": "B"
+      },
+      {
+        "name": "zone_c",
+        "x": 3.3,
+        "y": -12.1,
+        "width": 1.0,
+        "height": 0.5,
+        "label": "C"
+      }
+    ],
+    "cubes": [
+      {
+        "name": "red_cube_1",
+        "x": -7.5,
+        "y": -2.8
+      },
+      {
+        "name": "red_cube_2",
+        "x": 1.0,
+        "y": -5.4
+      },
+      {
+        "name": "red_cube_3",
+        "x": 0.0,
+        "y": 3.8
+      },
+      {
+        "name": "red_cube_4",
+        "x": 11.4,
+        "y": -9.8
+      },
+      {
+        "name": "red_cube_5",
+        "x": -4.7,
+        "y": -12.4
+      },
+      {
+        "name": "blue_cube_1",
+        "x": 7.4,
+        "y": 3.6
+      },
+      {
+        "name": "blue_cube_2",
+        "x": -11.0,
+        "y": -5.6
+      },
+      {
+        "name": "blue_cube_3",
+        "x": -2.0,
+        "y": -6.0
+      },
+      {
+        "name": "blue_cube_4",
+        "x": -0.5,
+        "y": -8.8
+      },
+      {
+        "name": "blue_cube_5",
+        "x": 11.8,
+        "y": -13.0
+      }
+    ],
+    "bounds": {
+      "minX": -12.2,
+      "maxX": 13.0,
+      "minY": -14.2,
+      "maxY": 5.0
+    }
+  },
+  "gripper": "unknown",
+  "path": [],
+  "local_path": [],
+  "path_updated_at": 1791630529.9182367,
+  "local_path_updated_at": 0.0,
+  "robot": {
+    "x": 9.9864,
+    "y": 0.4144,
+    "yaw": 3.125
+  },
+  "robot_updated_at": 1791630544.9436696,
+  "obstacles_updated_at": 1791630544.9514287,
+  "rounds": [
+    {
+      "index": 1,
+      "color": "blue",
+      "cube_name": "blue_cube_3",
+      "target_zone": "A",
+      "result": "failed",
+      "detail": "pickup_navigation_failed",
+      "elapsed_sec": 37.8
+    }
+  ],
+  "updated_at": 1791630544.9514287
+}

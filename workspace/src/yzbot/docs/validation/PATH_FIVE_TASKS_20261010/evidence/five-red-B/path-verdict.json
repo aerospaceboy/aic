@@ -1,0 +1,14 @@
+{
+  "persistent_plan_snapshots": 1016,
+  "max_plan_age": 29.69727810500035,
+  "planned_width": 0.14,
+  "trail_width": 0.035,
+  "snapshots": 1267,
+  "planned_snapshots": 1264,
+  "trail_snapshots": 1263,
+  "max_trail_points": 673,
+  "max_plan_points": 524,
+  "largest_trail_robot_error": 0.058750068955644094,
+  "plan_endpoint_changes": 15,
+  "trail_endpoint_changes": 671
+}

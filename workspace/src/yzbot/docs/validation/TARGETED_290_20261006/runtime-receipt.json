@@ -1,0 +1,8 @@
+{
+  "runtime_commit": "c124b24300f7e441bca8c9bab628bbcc07c3ea74",
+  "protected_patch_unchanged": true,
+  "protected_patch_sha256": "aedee84946e154a5b2f32af92a80441f9828a992ac2e8eb9fa3d33f18ef3106c",
+  "runtime_manifests_identical": true,
+  "all_after_accepted": true,
+  "status": " M bot_navigation/launch/competition_navigation.launch.py\n M gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp\n?? docs/AGENT_HISTORY_20260823.md\n?? docs/HANDOFF_PROMPT_V5.md\n?? docs/HANDOFF_PROMPT_V6.md\n?? docs/HANDOFF_PROMPT_V7.md\n?? mybot_description/worlds/competition_complex_preview.world\n"
+}

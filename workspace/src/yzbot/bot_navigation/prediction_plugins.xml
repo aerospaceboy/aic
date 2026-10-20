@@ -1,0 +1,5 @@
+<library path="dynamic_prediction_layer">
+  <class type="bot_navigation::PredictionLayer" base_class_type="nav2_costmap_2d::Layer">
+    <description>Replacing short-horizon laser-derived predictions, expiring without erasing static or raw obstacles.</description>
+  </class>
+</library>

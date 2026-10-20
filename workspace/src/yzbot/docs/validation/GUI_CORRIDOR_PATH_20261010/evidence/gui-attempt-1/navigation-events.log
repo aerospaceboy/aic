@@ -1,0 +1,35 @@
+[task_navigator-22] [WARN] [1791630102.702262831] [competition_task_navigator]: mover_crossing_hold begin topic=/competition/obstacles/obstacle_1 reason=staged_admission x=9.921 y=0.426
+[task_navigator-22] [WARN] [1791630107.311280346] [competition_task_navigator]: mover_crossing_hold end topic=/competition/obstacles/obstacle_1
+[task_navigator-22] [INFO] [1791630110.535810575] [competition_task_navigator]: mover_crossing finished clear of patrol
+[task_navigator-22] [WARN] [1791630111.616631567] [competition_task_navigator]: mover_crossing_hold begin topic=/competition/obstacles/obstacle_2 reason=predicted_collision x=6.868 y=0.425
+[task_navigator-22] [WARN] [1791630115.865945474] [competition_task_navigator]: mover_crossing_hold end topic=/competition/obstacles/obstacle_2
+[task_navigator-22] [INFO] [1791630121.113402604] [competition_task_navigator]: mover_crossing finished clear of patrol
+[mission_coordinator-38] [INFO] [1791630131.361368861] [competition_mission_coordinator]: nav_result state=succeeded elapsed=36.34s
+[mission_coordinator-38] [INFO] [1791630144.356443901] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.06s
+[mission_coordinator-38] [INFO] [1791630153.248399278] [competition_mission_coordinator]: nav_result state=succeeded elapsed=8.89s
+[mission_coordinator-38] [INFO] [1791630157.684277847] [competition_mission_coordinator]: delivery_truth cube=blue_cube_3 zone=A x=-5.4000 y=3.6400 z=0.0346 valid=True slot_error=0.0000 precise=True
+[mission_coordinator-38] [INFO] [1791630159.401695485] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.72s
+[mission_coordinator-38] [INFO] [1791630176.642505225] [competition_mission_coordinator]: nav_result state=succeeded elapsed=17.24s
+[mission_coordinator-38] [INFO] [1791630185.146249395] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.19s
+[task_navigator-22] [WARN] [1791630205.236050378] [competition_task_navigator]: nav_retry_skip_stalled_inflation cost=91
+[task_navigator-22] [WARN] [1791630205.236687194] [competition_task_navigator]: Bounded recovery #1: hazard=large_rock escape=(-1.90,-4.90) robot=(-1.95,-3.42)
+[mission_coordinator-38] [INFO] [1791630219.626201493] [competition_mission_coordinator]: nav_result state=succeeded elapsed=34.48s
+[mission_coordinator-38] [INFO] [1791630224.162174701] [competition_mission_coordinator]: delivery_truth cube=blue_cube_2 zone=A x=-5.4000 y=3.8000 z=0.0346 valid=True slot_error=0.0000 precise=True
+[mission_coordinator-38] [INFO] [1791630226.190525830] [competition_mission_coordinator]: nav_result state=succeeded elapsed=2.03s
+[mission_coordinator-38] [INFO] [1791630235.847618325] [competition_mission_coordinator]: nav_result state=succeeded elapsed=9.66s
+[mission_coordinator-38] [INFO] [1791630243.048212185] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.08s
+[mission_coordinator-38] [INFO] [1791630260.995552274] [competition_mission_coordinator]: nav_result state=succeeded elapsed=17.94s
+[mission_coordinator-38] [INFO] [1791630266.788916952] [competition_mission_coordinator]: delivery_truth cube=red_cube_3 zone=B x=11.7000 y=-5.1600 z=0.0348 valid=True slot_error=0.0000 precise=True
+[mission_coordinator-38] [INFO] [1791630269.365787003] [competition_mission_coordinator]: nav_result state=succeeded elapsed=2.57s
+[mission_coordinator-38] [INFO] [1791630278.130277462] [competition_mission_coordinator]: nav_result state=succeeded elapsed=8.76s
+[mission_coordinator-38] [INFO] [1791630284.884178870] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.18s
+[mission_coordinator-38] [INFO] [1791630292.425490432] [competition_mission_coordinator]: nav_result state=succeeded elapsed=7.54s
+[mission_coordinator-38] [INFO] [1791630296.789548840] [competition_mission_coordinator]: delivery_truth cube=red_cube_4 zone=B x=11.7000 y=-4.8400 z=0.0349 valid=True slot_error=0.0000 precise=True
+[mission_coordinator-38] [INFO] [1791630299.363831793] [competition_mission_coordinator]: nav_result state=succeeded elapsed=2.57s
+[task_navigator-22] [WARN] [1791630310.565486036] [competition_task_navigator]: mover_crossing_hold begin topic=/competition/obstacles/obstacle_2 reason=predicted_collision x=4.779 y=-1.411
+[task_navigator-22] [WARN] [1791630316.005990289] [competition_task_navigator]: mover_crossing_hold end topic=/competition/obstacles/obstacle_2
+[task_navigator-22] [INFO] [1791630319.043064118] [competition_task_navigator]: mover_crossing finished clear of patrol
+[mission_coordinator-38] [INFO] [1791630333.104727597] [competition_mission_coordinator]: nav_result state=succeeded elapsed=33.74s
+[mission_coordinator-38] [INFO] [1791630340.365680145] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.10s
+[mission_coordinator-38] [INFO] [1791630350.876770813] [competition_mission_coordinator]: nav_result state=succeeded elapsed=10.51s
+[mission_coordinator-38] [INFO] [1791630355.279299606] [competition_mission_coordinator]: delivery_truth cube=blue_cube_1 zone=A x=-5.4000 y=3.9600 z=0.0346 valid=True slot_error=0.0000 precise=True

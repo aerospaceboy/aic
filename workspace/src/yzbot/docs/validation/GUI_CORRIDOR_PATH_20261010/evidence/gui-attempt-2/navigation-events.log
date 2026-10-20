@@ -1,0 +1,6 @@
+[task_navigator-22] [WARN] [1791630514.884395449] [competition_task_navigator]: mover_crossing_hold begin topic=/competition/obstacles/obstacle_1 reason=staged_admission x=9.920 y=0.410
+[task_navigator-22] [ERROR] [1791630527.557728057] [competition_task_navigator]: No safe corridor crossing window before timeout
+[mission_coordinator-38] [INFO] [1791630527.566235271] [competition_mission_coordinator]: nav_result state=failed elapsed=20.46s
+[task_navigator-22] [WARN] [1791630532.624130261] [competition_task_navigator]: mover_crossing_hold begin topic=/competition/obstacles/obstacle_1 reason=staged_admission x=9.986 y=0.415
+[task_navigator-22] [ERROR] [1791630544.739675504] [competition_task_navigator]: No safe corridor crossing window before timeout
+[mission_coordinator-38] [INFO] [1791630544.743625105] [competition_mission_coordinator]: nav_result state=failed elapsed=17.18s

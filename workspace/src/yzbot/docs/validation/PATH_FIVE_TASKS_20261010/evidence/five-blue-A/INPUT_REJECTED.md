@@ -1,0 +1,1 @@
+First blue API reply failed strict count validation. No task was admitted, mission remained idle. Count was outside the permitted item range; raw model reply was not recorded, so its exact invalid count is unknown. Preserve as API preflight failure, not physical run.

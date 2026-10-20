@@ -1,0 +1,6 @@
+case,commit,status,completed,skipped,motion_seconds,api_submit_to_terminal_seconds,wall_contact_records,dynamic_collision,dynamic_minimum_clearance,original_pair_demonstrated,truth_valid_precise,max_abs_roll_deg,motion_under_290,full_competition_acceptance
+five-blue-A-1,cd89b3d0687027e850ecd81f86b5cbc83bb1313f,UNSAFE_WALL_CONTACT,5,0,255.1,256.34746471100004,2016,False,0.5546,True,True,46.15425061125093,True,not_tested
+five-blue-A-2,acd372be88b8f19ec3f656bf9b662b7051a81909,TIME_ONLY_OVER_300,5,0,302.5,304.0433488629999,0,False,0.5508,True,True,0.15801610659083357,False,not_tested
+five-blue-A-3,3e65e8caf684c687fe97952c344422863d7778a0,API_INPUT_REJECTED_NO_MOTION,0,,,,,not_evaluated,,,,,False,not_tested
+five-blue-A-4,3e65e8caf684c687fe97952c344422863d7778a0,INFRA_INTERRUPTED_NO_TERMINAL,0,,,,,not_evaluated,,,,,False,not_tested
+five-blue-A-5,3e65e8caf684c687fe97952c344422863d7778a0,WALL_FIX_PASS_NOT_UNDER_290,5,0,293.9,295.6622401550003,0,False,0.5122,True,True,0.15504374435406337,False,not_tested

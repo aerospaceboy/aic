@@ -1,0 +1,20 @@
+VERSION=ffdfdec42df22fa004b4851c8280d4bd5bec6d40e859a944e195b94e1d6041c8
+RUN 2bA_3rB#1 2026-10-07T08:03:30Z
+DONE 2bA_3rB#1 rc=0 evidence=/home/ros/dev_ws/experiments/repeat290-frozen-20261007/2bA_3rB-1/20261007T080330Z-xaI69d
+SCORE 2bA_3rB#1 el=247.4 clr=0.2626 u290=True func=True accepted=True resp2=True dual=True
+RUN 2bA_3rB#2 2026-10-07T08:09:25Z
+DONE 2bA_3rB#2 rc=0 evidence=/home/ros/dev_ws/experiments/repeat290-frozen-20261007/2bA_3rB-2/20261007T080925Z-gwH579
+SCORE 2bA_3rB#2 el=254.3 clr=0.2875 u290=True func=True accepted=True resp2=True dual=True
+RUN 2rB_3bC#1 2026-10-07T08:15:26Z
+DONE 2rB_3bC#1 rc=0 evidence=/home/ros/dev_ws/experiments/repeat290-frozen-20261007/2rB_3bC-1/20261007T081527Z-5qFPgz
+SCORE 2rB_3bC#1 el=200.5 clr=0.2924 u290=True func=True accepted=True resp2=True dual=True
+RUN 2rB_3bC#2 2026-10-07T08:20:33Z
+DONE 2rB_3bC#2 rc=0 evidence=/home/ros/dev_ws/experiments/repeat290-frozen-20261007/2rB_3bC-2/20261007T082033Z-VhCWyI
+SCORE 2rB_3bC#2 el=199.1 clr=0.4924 u290=True func=True accepted=True resp2=True dual=True
+RUN 1rA_4bB#1 2026-10-07T08:25:43Z
+DONE 1rA_4bB#1 rc=0 evidence=/home/ros/dev_ws/experiments/repeat290-frozen-20261007/1rA_4bB-1/20261007T082543Z-CE74Q7
+SCORE 1rA_4bB#1 el=266.8 clr=0.2503 u290=True func=True accepted=True resp2=True dual=True
+RUN 4bB_1rA#1 2026-10-07T08:31:57Z
+DONE 4bB_1rA#1 rc=0 evidence=/home/ros/dev_ws/experiments/repeat290-frozen-20261007/4bB_1rA-1/20261007T083157Z-wT5aV8
+SCORE 4bB_1rA#1 el=284.3 clr=0.5412 u290=True func=True accepted=True resp2=True dual=True
+BATCH_DONE

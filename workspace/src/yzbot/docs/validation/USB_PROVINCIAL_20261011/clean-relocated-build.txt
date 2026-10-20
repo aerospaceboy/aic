@@ -1,0 +1,37 @@
+Starting >>> linkattacher_msgs
+Starting >>> gazebo_debug_gui
+[Processing: gazebo_debug_gui, linkattacher_msgs]
+Finished <<< linkattacher_msgs [52.8s]
+Starting >>> mybot_description
+Finished <<< mybot_description [6.46s]
+Starting >>> ros2_linkattacher
+[Processing: gazebo_debug_gui, ros2_linkattacher]
+[Processing: gazebo_debug_gui, ros2_linkattacher]
+[Processing: gazebo_debug_gui, ros2_linkattacher]
+[Processing: gazebo_debug_gui, ros2_linkattacher]
+[Processing: gazebo_debug_gui, ros2_linkattacher]
+Finished <<< ros2_linkattacher [2min 43s]
+--- stderr: gazebo_debug_gui
+CMake Warning (dev) at /usr/share/cmake-3.22/Modules/FindPackageHandleStandardArgs.cmake:438 (message):
+  The package name passed to `find_package_handle_standard_args` (PkgConfig)
+  does not match the name of the calling package (gazebo).  This can lead to
+  problems in calling code that expects `find_package` result variables
+  (e.g., `_FOUND`) to follow a certain pattern.
+Call Stack (most recent call first):
+  /usr/share/cmake-3.22/Modules/FindPkgConfig.cmake:99 (find_package_handle_standard_args)
+  /usr/lib/x86_64-linux-gnu/cmake/gazebo/gazebo-config.cmake:72 (include)
+  CMakeLists.txt:5 (find_package)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+---
+[Processing: gazebo_debug_gui]
+Finished <<< gazebo_debug_gui [4min 18s]
+Starting >>> mybot
+Finished <<< mybot [13.6s]
+Starting >>> tools_demo
+Finished <<< tools_demo [9.73s]
+Starting >>> bot_navigation
+Finished <<< bot_navigation [7.97s]
+
+Summary: 7 packages finished [4min 52s]
+  1 package had stderr output: gazebo_debug_gui

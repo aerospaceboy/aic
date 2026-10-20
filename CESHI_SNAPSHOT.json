@@ -1,0 +1,30 @@
+{
+  "name": "ceshi",
+  "kind": "development_test_snapshot_NOT_accepted_baseline",
+  "created_local": "2026-10-17T20:47:57.348124+08:00",
+  "source_repository": "/home/ros/yzbot_usb/workspace/src/yzbot",
+  "local_git_head": "1245c43c73bbb6644142fa3e6784ecff684ee532",
+  "has_uncommitted_and_untracked_source": true,
+  "upstream_identity": "SOURCE_VERSION.json is historical import identity, not current snapshot contents",
+  "validation": {
+    "validate_v22_cases": 23,
+    "validate_v22_wrapper_passes": 18,
+    "current_receipt_sha256": "858a91b54a39228c55a1e92663a7af45385d48721b6594e2bfefb8ee88b33337",
+    "full24_pass": false,
+    "formal_rule_click_chains": "not_completed",
+    "unit_tests_and_ros_build_rerun_for_snapshot": false,
+    "portable_build_tested_for_snapshot": false
+  },
+  "known_review_correction": "3rA_2bB 400.5s has return-home MoveGroup timeout and joint-state timeout, not proved pure navigation/time-only failure",
+  "evidence_path_map": {
+    "/home/ros/yzbot_usb/experiments/repair-dsh-20261017T0922": "acceptance/experiments/repair-dsh-20261017T0922",
+    "/home/ros/yzbot_usb/experiments/repair-baseline-20261016T1527": "acceptance/experiments/repair-baseline-20261016T1527",
+    "/home/ros/yzbot_usb/experiments/shengsai-optimization-20261016T0946": "acceptance/experiments/shengsai-optimization-20261016T0946"
+  },
+  "old_absolute_paths_preserved_in_historical_logs": true,
+  "build_install_runtime_included": false,
+  "private_credentials_included": false,
+  "snapshot_does_not_modify_practice_source_or_stop_current_GUI": true,
+  "launch_wrappers": "New snapshot-only helpers: syntax/integrity checked; not live-tested",
+  "launch_mode": "coexisting deployments; one simulation at a time with current underlying scripts"
+}

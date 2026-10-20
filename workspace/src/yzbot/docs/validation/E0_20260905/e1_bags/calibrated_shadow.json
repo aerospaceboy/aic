@@ -1,0 +1,406 @@
+{
+  "calibration": {
+    "inbound": {
+      "median_travelled_vs_chain": 1.062,
+      "ratio_max": 1.437,
+      "median_speed_mps": 0.726,
+      "n": 16
+    },
+    "delivery": {
+      "median_travelled_vs_chain": 1.25,
+      "ratio_max": 2.32,
+      "median_speed_mps": 0.913,
+      "n": 15
+    }
+  },
+  "per_leg": [
+    {
+      "run": "e1rep1",
+      "location": "RED_CUBE_1",
+      "side": "east",
+      "class": "inbound",
+      "elapsed": 24.04,
+      "chain": 19.723,
+      "plan_len": 12.94192388729338,
+      "n_plans": 3,
+      "odom_travelled": 20.68
+    },
+    {
+      "run": "e1rep1",
+      "location": "C",
+      "side": "auto",
+      "class": "delivery",
+      "elapsed": 8.64,
+      "chain": 6.933,
+      "plan_len": 7.015138624329398,
+      "n_plans": 1,
+      "odom_travelled": 6.98
+    },
+    {
+      "run": "e1rep1",
+      "location": "BLUE_CUBE_3",
+      "side": "west",
+      "class": "inbound",
+      "elapsed": 34.28,
+      "chain": 21.824,
+      "plan_len": 22.56568169171627,
+      "n_plans": 1,
+      "odom_travelled": 22.81
+    },
+    {
+      "run": "e1rep1",
+      "location": "B",
+      "side": "auto",
+      "class": "delivery",
+      "elapsed": 24.0,
+      "chain": 18.725,
+      "plan_len": 23.104502297078362,
+      "n_plans": 1,
+      "odom_travelled": 23.41
+    },
+    {
+      "run": "e1rep1",
+      "location": "BLUE_CUBE_1",
+      "side": "east",
+      "class": "inbound",
+      "elapsed": 16.68,
+      "chain": 2.645,
+      "plan_len": 3.2096412277246906,
+      "n_plans": 1,
+      "odom_travelled": 3.79
+    },
+    {
+      "run": "e1rep1",
+      "location": "B",
+      "side": "auto",
+      "class": "delivery",
+      "elapsed": 10.74,
+      "chain": 3.659,
+      "plan_len": 4.263505847717234,
+      "n_plans": 1,
+      "odom_travelled": 4.82
+    },
+    {
+      "run": "e1rep1",
+      "location": "BLUE_CUBE_4",
+      "side": "east",
+      "class": "inbound",
+      "elapsed": 32.87,
+      "chain": 26.174,
+      "plan_len": 27.11579553082029,
+      "n_plans": 1,
+      "odom_travelled": 27.75
+    },
+    {
+      "run": "e1rep1",
+      "location": "B",
+      "side": "auto",
+      "class": "delivery",
+      "elapsed": 25.48,
+      "chain": 14.535,
+      "plan_len": 24.166193405796204,
+      "n_plans": 1,
+      "odom_travelled": 24.42
+    },
+    {
+      "run": "e1rep1",
+      "location": "BLUE_CUBE_2",
+      "side": "east",
+      "class": "inbound",
+      "elapsed": 28.65,
+      "chain": 19.47,
+      "plan_len": 20.38416332020329,
+      "n_plans": 1,
+      "odom_travelled": 20.71
+    },
+    {
+      "run": "e1rep1",
+      "location": "B",
+      "side": "auto",
+      "class": "delivery",
+      "elapsed": 22.2,
+      "chain": 18.838,
+      "plan_len": 20.03351410242071,
+      "n_plans": 1,
+      "odom_travelled": 20.38
+    },
+    {
+      "run": "e1rep2",
+      "location": "RED_CUBE_1",
+      "side": "east",
+      "class": "inbound",
+      "elapsed": 23.87,
+      "chain": 19.727,
+      "plan_len": 12.967343491797198,
+      "n_plans": 3,
+      "odom_travelled": 20.65
+    },
+    {
+      "run": "e1rep2",
+      "location": "C",
+      "side": "auto",
+      "class": "delivery",
+      "elapsed": 8.82,
+      "chain": 6.939,
+      "plan_len": 7.015138624329398,
+      "n_plans": 1,
+      "odom_travelled": 7.1
+    },
+    {
+      "run": "e1rep2",
+      "location": "BLUE_CUBE_3",
+      "side": "west",
+      "class": "inbound",
+      "elapsed": 33.03,
+      "chain": 21.848,
+      "plan_len": 22.619786383268288,
+      "n_plans": 1,
+      "odom_travelled": 22.9
+    },
+    {
+      "run": "e1rep2",
+      "location": "B",
+      "side": "auto",
+      "class": "delivery",
+      "elapsed": 22.74,
+      "chain": 18.726,
+      "plan_len": 23.104502297078362,
+      "n_plans": 1,
+      "odom_travelled": 23.31
+    },
+    {
+      "run": "e1rep2",
+      "location": "BLUE_CUBE_1",
+      "side": "east",
+      "class": "inbound",
+      "elapsed": 16.39,
+      "chain": 2.644,
+      "plan_len": 3.2096412277246906,
+      "n_plans": 1,
+      "odom_travelled": 3.8
+    },
+    {
+      "run": "e1rep2",
+      "location": "B",
+      "side": "auto",
+      "class": "delivery",
+      "elapsed": 10.54,
+      "chain": 3.671,
+      "plan_len": 4.301064185561385,
+      "n_plans": 1,
+      "odom_travelled": 4.76
+    },
+    {
+      "run": "e1rep2",
+      "location": "BLUE_CUBE_4",
+      "side": "east",
+      "class": "inbound",
+      "elapsed": 32.89,
+      "chain": 26.172,
+      "plan_len": 27.11579553082029,
+      "n_plans": 1,
+      "odom_travelled": 27.82
+    },
+    {
+      "run": "e1rep2",
+      "location": "B",
+      "side": "auto",
+      "class": "delivery",
+      "elapsed": 23.87,
+      "chain": 14.53,
+      "plan_len": 24.166193405796204,
+      "n_plans": 1,
+      "odom_travelled": 24.74
+    },
+    {
+      "run": "e1rep2",
+      "location": "BLUE_CUBE_2",
+      "side": "east",
+      "class": "inbound",
+      "elapsed": 28.46,
+      "chain": 19.475,
+      "plan_len": 20.38416332020329,
+      "n_plans": 1,
+      "odom_travelled": 20.6
+    },
+    {
+      "run": "e1rep2",
+      "location": "B",
+      "side": "auto",
+      "class": "delivery",
+      "elapsed": 21.96,
+      "chain": 18.851,
+      "plan_len": 20.03351410242071,
+      "n_plans": 1,
+      "odom_travelled": 20.38
+    },
+    {
+      "run": "e1rep3",
+      "location": "RED_CUBE_1",
+      "side": "east",
+      "class": "inbound",
+      "elapsed": 24.0,
+      "chain": 19.72,
+      "plan_len": 12.967343491797198,
+      "n_plans": 3,
+      "odom_travelled": 20.69
+    },
+    {
+      "run": "e1rep3",
+      "location": "C",
+      "side": "auto",
+      "class": "delivery",
+      "elapsed": 9.17,
+      "chain": 6.937,
+      "plan_len": 7.015138624329398,
+      "n_plans": 1,
+      "odom_travelled": 6.98
+    },
+    {
+      "run": "e1rep3",
+      "location": "BLUE_CUBE_3",
+      "side": "west",
+      "class": "inbound",
+      "elapsed": 34.45,
+      "chain": 21.838,
+      "plan_len": 22.61568141238734,
+      "n_plans": 1,
+      "odom_travelled": 22.79
+    },
+    {
+      "run": "e1rep3",
+      "location": "BLUE_CUBE_4",
+      "side": "west",
+      "class": "inbound",
+      "elapsed": 13.92,
+      "chain": 10.752,
+      "plan_len": 11.468908886918156,
+      "n_plans": 1,
+      "odom_travelled": 11.99
+    },
+    {
+      "run": "e1rep3",
+      "location": "B",
+      "side": "auto",
+      "class": "delivery",
+      "elapsed": 25.15,
+      "chain": 15.861,
+      "plan_len": 25.681268058552547,
+      "n_plans": 1,
+      "odom_travelled": 22.96
+    },
+    {
+      "run": "e1rep3",
+      "location": "BLUE_CUBE_1",
+      "side": "east",
+      "class": "inbound",
+      "elapsed": 16.1,
+      "chain": 2.641,
+      "plan_len": 3.2096412277246906,
+      "n_plans": 1,
+      "odom_travelled": 3.79
+    },
+    {
+      "run": "e1rep3",
+      "location": "B",
+      "side": "auto",
+      "class": "delivery",
+      "elapsed": 10.44,
+      "chain": 3.676,
+      "plan_len": 4.301064185561385,
+      "n_plans": 1,
+      "odom_travelled": 4.75
+    },
+    {
+      "run": "e1rep3",
+      "location": "BLUE_CUBE_2",
+      "side": "east",
+      "class": "inbound",
+      "elapsed": 28.48,
+      "chain": 19.47,
+      "plan_len": 20.38416332020329,
+      "n_plans": 1,
+      "odom_travelled": 20.72
+    },
+    {
+      "run": "e1rep3",
+      "location": "B",
+      "side": "auto",
+      "class": "delivery",
+      "elapsed": 21.57,
+      "chain": 18.837,
+      "plan_len": 20.03351410242071,
+      "n_plans": 1,
+      "odom_travelled": 20.0
+    },
+    {
+      "run": "e1rep3",
+      "location": "BLUE_CUBE_5",
+      "side": "west",
+      "class": "inbound",
+      "elapsed": 38.25,
+      "chain": 29.87,
+      "plan_len": 33.20512409876056,
+      "n_plans": 1,
+      "odom_travelled": 33.46
+    },
+    {
+      "run": "e1rep3",
+      "location": "B",
+      "side": "auto",
+      "class": "delivery",
+      "elapsed": 38.04,
+      "chain": 11.99,
+      "plan_len": 27.389194411276943,
+      "n_plans": 2,
+      "odom_travelled": 27.82
+    }
+  ],
+  "current": {
+    "tag": "b:4e r:4e r:1e r:2w r:4w r:5e",
+    "time": 174.3
+  },
+  "top10": [
+    {
+      "tag": "b:1e r:1e r:2w r:1e r:3e r:5e",
+      "time": 110.1
+    },
+    {
+      "tag": "b:1e r:1e r:2w r:1e r:3e r:5w",
+      "time": 111.6
+    },
+    {
+      "tag": "b:1w r:1w r:2w r:1e r:3e r:5e",
+      "time": 112.9
+    },
+    {
+      "tag": "b:1e r:1e r:2w r:4w r:1e r:3e",
+      "time": 113.5
+    },
+    {
+      "tag": "b:1e r:1e r:2w r:4w r:3e r:1e",
+      "time": 113.7
+    },
+    {
+      "tag": "b:1e r:1e r:2w r:1e r:3w r:5e",
+      "time": 114.2
+    },
+    {
+      "tag": "b:1w r:1w r:2w r:1e r:3e r:5w",
+      "time": 114.4
+    },
+    {
+      "tag": "b:1e r:1e r:4w r:2w r:1e r:3e",
+      "time": 114.9
+    },
+    {
+      "tag": "b:1e r:1e r:2w r:1e r:3w r:5w",
+      "time": 115.2
+    },
+    {
+      "tag": "b:1w r:1w r:1e r:3e r:4w r:2w",
+      "time": 115.3
+    }
+  ],
+  "saving_vs_current": 64.2
+}

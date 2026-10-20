@@ -1,0 +1,2 @@
+[task_parser-34] [ERROR] [1791639294.938345838] [competition_task_parser]: Problem rejected: Required LLM problem parsing failed: Task count must be between 1 and 10
+[task_navigator-22] [ERROR] [1791639502.503797172] [competition_task_navigator]: navigation prerequisites never became ready within 60s (global costmap / action server); failing the leg instead of stalling

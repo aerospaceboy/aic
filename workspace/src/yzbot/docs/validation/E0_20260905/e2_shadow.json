@@ -1,0 +1,787 @@
+{
+  "v_inbound": 0.6874338157430286,
+  "v_delivery": 0.6172751558325913,
+  "speed_detail": {
+    "inbound": {
+      "median_v": 0.6874338157430286,
+      "n": 17
+    },
+    "delivery": {
+      "median_v": 0.6172751558325913,
+      "n": 17
+    }
+  },
+  "task_1bB4rA": {
+    "spawn_leg_common_s": 28.7,
+    "current_from_log": {
+      "tag": "b:4e r:1e r:2w r:4w r:5e",
+      "time": 178.6,
+      "detail": [
+        {
+          "cube": "BLUE_CUBE_4",
+          "side": "east",
+          "zone": "B",
+          "in_chain": 11.99,
+          "del_chain": 14.51,
+          "in_s": 17.4,
+          "del_s": 21.1
+        },
+        {
+          "cube": "RED_CUBE_1",
+          "side": "east",
+          "zone": "A",
+          "in_chain": 16.06,
+          "del_chain": 0.69,
+          "in_s": 23.4,
+          "del_s": 1.0
+        },
+        {
+          "cube": "RED_CUBE_2",
+          "side": "west",
+          "zone": "A",
+          "in_chain": 14.25,
+          "del_chain": 12.76,
+          "in_s": 20.7,
+          "del_s": 18.6
+        },
+        {
+          "cube": "RED_CUBE_4",
+          "side": "west",
+          "zone": "A",
+          "in_chain": 8.0,
+          "del_chain": 15.06,
+          "in_s": 11.6,
+          "del_s": 21.9
+        },
+        {
+          "cube": "RED_CUBE_5",
+          "side": "east",
+          "zone": "A",
+          "in_chain": 15.46,
+          "del_chain": 14.01,
+          "in_s": 22.5,
+          "del_s": 20.4
+        }
+      ]
+    },
+    "n_candidates": 19200,
+    "top10": [
+      {
+        "tag": "b:1e r:2w r:1e r:3e r:5e",
+        "time": 112.9,
+        "blue": "BLUE_CUBE_1",
+        "blue_side": "east",
+        "red_order": [
+          "RED_CUBE_2",
+          "RED_CUBE_1",
+          "RED_CUBE_3",
+          "RED_CUBE_5"
+        ],
+        "red_sides": [
+          "west",
+          "east",
+          "east",
+          "east"
+        ],
+        "detail": [
+          {
+            "cube": "BLUE_CUBE_1",
+            "side": "east",
+            "zone": "B",
+            "in_chain": 5.46,
+            "del_chain": 3.64,
+            "in_s": 7.9,
+            "del_s": 5.3
+          },
+          {
+            "cube": "RED_CUBE_2",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 6.13,
+            "del_chain": 12.76,
+            "in_s": 8.9,
+            "del_s": 18.6
+          },
+          {
+            "cube": "RED_CUBE_1",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 14.25,
+            "del_chain": 0.69,
+            "in_s": 20.7,
+            "del_s": 1.0
+          },
+          {
+            "cube": "RED_CUBE_3",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 5.85,
+            "del_chain": 6.11,
+            "in_s": 8.5,
+            "del_s": 8.9
+          },
+          {
+            "cube": "RED_CUBE_5",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 8.73,
+            "del_chain": 14.01,
+            "in_s": 12.7,
+            "del_s": 20.4
+          }
+        ]
+      },
+      {
+        "tag": "b:1e r:2w r:1e r:3e r:5w",
+        "time": 114.6,
+        "blue": "BLUE_CUBE_1",
+        "blue_side": "east",
+        "red_order": [
+          "RED_CUBE_2",
+          "RED_CUBE_1",
+          "RED_CUBE_3",
+          "RED_CUBE_5"
+        ],
+        "red_sides": [
+          "west",
+          "east",
+          "east",
+          "west"
+        ],
+        "detail": [
+          {
+            "cube": "BLUE_CUBE_1",
+            "side": "east",
+            "zone": "B",
+            "in_chain": 5.46,
+            "del_chain": 3.64,
+            "in_s": 7.9,
+            "del_s": 5.3
+          },
+          {
+            "cube": "RED_CUBE_2",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 6.13,
+            "del_chain": 12.76,
+            "in_s": 8.9,
+            "del_s": 18.6
+          },
+          {
+            "cube": "RED_CUBE_1",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 14.25,
+            "del_chain": 0.69,
+            "in_s": 20.7,
+            "del_s": 1.0
+          },
+          {
+            "cube": "RED_CUBE_3",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 5.85,
+            "del_chain": 6.11,
+            "in_s": 8.5,
+            "del_s": 8.9
+          },
+          {
+            "cube": "RED_CUBE_5",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 8.5,
+            "del_chain": 15.35,
+            "in_s": 12.4,
+            "del_s": 22.3
+          }
+        ]
+      },
+      {
+        "tag": "b:1w r:2w r:1e r:3e r:5e",
+        "time": 115.9,
+        "blue": "BLUE_CUBE_1",
+        "blue_side": "west",
+        "red_order": [
+          "RED_CUBE_2",
+          "RED_CUBE_1",
+          "RED_CUBE_3",
+          "RED_CUBE_5"
+        ],
+        "red_sides": [
+          "west",
+          "east",
+          "east",
+          "east"
+        ],
+        "detail": [
+          {
+            "cube": "BLUE_CUBE_1",
+            "side": "west",
+            "zone": "B",
+            "in_chain": 4.08,
+            "del_chain": 5.57,
+            "in_s": 5.9,
+            "del_s": 8.1
+          },
+          {
+            "cube": "RED_CUBE_2",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 7.63,
+            "del_chain": 12.76,
+            "in_s": 11.1,
+            "del_s": 18.6
+          },
+          {
+            "cube": "RED_CUBE_1",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 14.25,
+            "del_chain": 0.69,
+            "in_s": 20.7,
+            "del_s": 1.0
+          },
+          {
+            "cube": "RED_CUBE_3",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 5.85,
+            "del_chain": 6.11,
+            "in_s": 8.5,
+            "del_s": 8.9
+          },
+          {
+            "cube": "RED_CUBE_5",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 8.73,
+            "del_chain": 14.01,
+            "in_s": 12.7,
+            "del_s": 20.4
+          }
+        ]
+      },
+      {
+        "tag": "b:1e r:2w r:4w r:1e r:3e",
+        "time": 116.4,
+        "blue": "BLUE_CUBE_1",
+        "blue_side": "east",
+        "red_order": [
+          "RED_CUBE_2",
+          "RED_CUBE_4",
+          "RED_CUBE_1",
+          "RED_CUBE_3"
+        ],
+        "red_sides": [
+          "west",
+          "west",
+          "east",
+          "east"
+        ],
+        "detail": [
+          {
+            "cube": "BLUE_CUBE_1",
+            "side": "east",
+            "zone": "B",
+            "in_chain": 5.46,
+            "del_chain": 3.64,
+            "in_s": 7.9,
+            "del_s": 5.3
+          },
+          {
+            "cube": "RED_CUBE_2",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 6.13,
+            "del_chain": 12.76,
+            "in_s": 8.9,
+            "del_s": 18.6
+          },
+          {
+            "cube": "RED_CUBE_4",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 8.0,
+            "del_chain": 15.06,
+            "in_s": 11.6,
+            "del_s": 21.9
+          },
+          {
+            "cube": "RED_CUBE_1",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 16.34,
+            "del_chain": 0.69,
+            "in_s": 23.8,
+            "del_s": 1.0
+          },
+          {
+            "cube": "RED_CUBE_3",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 5.85,
+            "del_chain": 6.11,
+            "in_s": 8.5,
+            "del_s": 8.9
+          }
+        ]
+      },
+      {
+        "tag": "b:1e r:2w r:4w r:3e r:1e",
+        "time": 116.6,
+        "blue": "BLUE_CUBE_1",
+        "blue_side": "east",
+        "red_order": [
+          "RED_CUBE_2",
+          "RED_CUBE_4",
+          "RED_CUBE_3",
+          "RED_CUBE_1"
+        ],
+        "red_sides": [
+          "west",
+          "west",
+          "east",
+          "east"
+        ],
+        "detail": [
+          {
+            "cube": "BLUE_CUBE_1",
+            "side": "east",
+            "zone": "B",
+            "in_chain": 5.46,
+            "del_chain": 3.64,
+            "in_s": 7.9,
+            "del_s": 5.3
+          },
+          {
+            "cube": "RED_CUBE_2",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 6.13,
+            "del_chain": 12.76,
+            "in_s": 8.9,
+            "del_s": 18.6
+          },
+          {
+            "cube": "RED_CUBE_4",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 8.0,
+            "del_chain": 15.06,
+            "in_s": 11.6,
+            "del_s": 21.9
+          },
+          {
+            "cube": "RED_CUBE_3",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 16.44,
+            "del_chain": 6.11,
+            "in_s": 23.9,
+            "del_s": 8.9
+          },
+          {
+            "cube": "RED_CUBE_1",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 5.85,
+            "del_chain": 0.69,
+            "in_s": 8.5,
+            "del_s": 1.0
+          }
+        ]
+      },
+      {
+        "tag": "b:1e r:2w r:1e r:3w r:5e",
+        "time": 117.1,
+        "blue": "BLUE_CUBE_1",
+        "blue_side": "east",
+        "red_order": [
+          "RED_CUBE_2",
+          "RED_CUBE_1",
+          "RED_CUBE_3",
+          "RED_CUBE_5"
+        ],
+        "red_sides": [
+          "west",
+          "east",
+          "west",
+          "east"
+        ],
+        "detail": [
+          {
+            "cube": "BLUE_CUBE_1",
+            "side": "east",
+            "zone": "B",
+            "in_chain": 5.46,
+            "del_chain": 3.64,
+            "in_s": 7.9,
+            "del_s": 5.3
+          },
+          {
+            "cube": "RED_CUBE_2",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 6.13,
+            "del_chain": 12.76,
+            "in_s": 8.9,
+            "del_s": 18.6
+          },
+          {
+            "cube": "RED_CUBE_1",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 14.25,
+            "del_chain": 0.69,
+            "in_s": 20.7,
+            "del_s": 1.0
+          },
+          {
+            "cube": "RED_CUBE_3",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 6.66,
+            "del_chain": 7.64,
+            "in_s": 9.7,
+            "del_s": 11.1
+          },
+          {
+            "cube": "RED_CUBE_5",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 9.29,
+            "del_chain": 14.01,
+            "in_s": 13.5,
+            "del_s": 20.4
+          }
+        ]
+      },
+      {
+        "tag": "b:1w r:2w r:1e r:3e r:5w",
+        "time": 117.5,
+        "blue": "BLUE_CUBE_1",
+        "blue_side": "west",
+        "red_order": [
+          "RED_CUBE_2",
+          "RED_CUBE_1",
+          "RED_CUBE_3",
+          "RED_CUBE_5"
+        ],
+        "red_sides": [
+          "west",
+          "east",
+          "east",
+          "west"
+        ],
+        "detail": [
+          {
+            "cube": "BLUE_CUBE_1",
+            "side": "west",
+            "zone": "B",
+            "in_chain": 4.08,
+            "del_chain": 5.57,
+            "in_s": 5.9,
+            "del_s": 8.1
+          },
+          {
+            "cube": "RED_CUBE_2",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 7.63,
+            "del_chain": 12.76,
+            "in_s": 11.1,
+            "del_s": 18.6
+          },
+          {
+            "cube": "RED_CUBE_1",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 14.25,
+            "del_chain": 0.69,
+            "in_s": 20.7,
+            "del_s": 1.0
+          },
+          {
+            "cube": "RED_CUBE_3",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 5.85,
+            "del_chain": 6.11,
+            "in_s": 8.5,
+            "del_s": 8.9
+          },
+          {
+            "cube": "RED_CUBE_5",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 8.5,
+            "del_chain": 15.35,
+            "in_s": 12.4,
+            "del_s": 22.3
+          }
+        ]
+      },
+      {
+        "tag": "b:1e r:4w r:2w r:1e r:3e",
+        "time": 117.8,
+        "blue": "BLUE_CUBE_1",
+        "blue_side": "east",
+        "red_order": [
+          "RED_CUBE_4",
+          "RED_CUBE_2",
+          "RED_CUBE_1",
+          "RED_CUBE_3"
+        ],
+        "red_sides": [
+          "west",
+          "west",
+          "east",
+          "east"
+        ],
+        "detail": [
+          {
+            "cube": "BLUE_CUBE_1",
+            "side": "east",
+            "zone": "B",
+            "in_chain": 5.46,
+            "del_chain": 3.64,
+            "in_s": 7.9,
+            "del_s": 5.3
+          },
+          {
+            "cube": "RED_CUBE_4",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 9.17,
+            "del_chain": 15.06,
+            "in_s": 13.3,
+            "del_s": 21.9
+          },
+          {
+            "cube": "RED_CUBE_2",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 8.0,
+            "del_chain": 12.76,
+            "in_s": 11.6,
+            "del_s": 18.6
+          },
+          {
+            "cube": "RED_CUBE_1",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 14.25,
+            "del_chain": 0.69,
+            "in_s": 20.7,
+            "del_s": 1.0
+          },
+          {
+            "cube": "RED_CUBE_3",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 5.85,
+            "del_chain": 6.11,
+            "in_s": 8.5,
+            "del_s": 8.9
+          }
+        ]
+      },
+      {
+        "tag": "b:1w r:1e r:3e r:4w r:2w",
+        "time": 118.3,
+        "blue": "BLUE_CUBE_1",
+        "blue_side": "west",
+        "red_order": [
+          "RED_CUBE_1",
+          "RED_CUBE_3",
+          "RED_CUBE_4",
+          "RED_CUBE_2"
+        ],
+        "red_sides": [
+          "east",
+          "east",
+          "west",
+          "west"
+        ],
+        "detail": [
+          {
+            "cube": "BLUE_CUBE_1",
+            "side": "west",
+            "zone": "B",
+            "in_chain": 4.08,
+            "del_chain": 5.57,
+            "in_s": 5.9,
+            "del_s": 8.1
+          },
+          {
+            "cube": "RED_CUBE_1",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 6.79,
+            "del_chain": 0.69,
+            "in_s": 9.9,
+            "del_s": 1.0
+          },
+          {
+            "cube": "RED_CUBE_3",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 5.85,
+            "del_chain": 6.11,
+            "in_s": 8.5,
+            "del_s": 8.9
+          },
+          {
+            "cube": "RED_CUBE_4",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 16.44,
+            "del_chain": 15.06,
+            "in_s": 23.9,
+            "del_s": 21.9
+          },
+          {
+            "cube": "RED_CUBE_2",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 8.0,
+            "del_chain": 12.76,
+            "in_s": 11.6,
+            "del_s": 18.6
+          }
+        ]
+      },
+      {
+        "tag": "b:1e r:2w r:1e r:3w r:5w",
+        "time": 118.3,
+        "blue": "BLUE_CUBE_1",
+        "blue_side": "east",
+        "red_order": [
+          "RED_CUBE_2",
+          "RED_CUBE_1",
+          "RED_CUBE_3",
+          "RED_CUBE_5"
+        ],
+        "red_sides": [
+          "west",
+          "east",
+          "west",
+          "west"
+        ],
+        "detail": [
+          {
+            "cube": "BLUE_CUBE_1",
+            "side": "east",
+            "zone": "B",
+            "in_chain": 5.46,
+            "del_chain": 3.64,
+            "in_s": 7.9,
+            "del_s": 5.3
+          },
+          {
+            "cube": "RED_CUBE_2",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 6.13,
+            "del_chain": 12.76,
+            "in_s": 8.9,
+            "del_s": 18.6
+          },
+          {
+            "cube": "RED_CUBE_1",
+            "side": "east",
+            "zone": "A",
+            "in_chain": 14.25,
+            "del_chain": 0.69,
+            "in_s": 20.7,
+            "del_s": 1.0
+          },
+          {
+            "cube": "RED_CUBE_3",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 6.66,
+            "del_chain": 7.64,
+            "in_s": 9.7,
+            "del_s": 11.1
+          },
+          {
+            "cube": "RED_CUBE_5",
+            "side": "west",
+            "zone": "A",
+            "in_chain": 8.73,
+            "del_chain": 15.35,
+            "in_s": 12.7,
+            "del_s": 22.3
+          }
+        ]
+      }
+    ],
+    "best": {
+      "tag": "b:1e r:2w r:1e r:3e r:5e",
+      "time": 112.9,
+      "blue": "BLUE_CUBE_1",
+      "blue_side": "east",
+      "red_order": [
+        "RED_CUBE_2",
+        "RED_CUBE_1",
+        "RED_CUBE_3",
+        "RED_CUBE_5"
+      ],
+      "red_sides": [
+        "west",
+        "east",
+        "east",
+        "east"
+      ],
+      "detail": [
+        {
+          "cube": "BLUE_CUBE_1",
+          "side": "east",
+          "zone": "B",
+          "in_chain": 5.46,
+          "del_chain": 3.64,
+          "in_s": 7.9,
+          "del_s": 5.3
+        },
+        {
+          "cube": "RED_CUBE_2",
+          "side": "west",
+          "zone": "A",
+          "in_chain": 6.13,
+          "del_chain": 12.76,
+          "in_s": 8.9,
+          "del_s": 18.6
+        },
+        {
+          "cube": "RED_CUBE_1",
+          "side": "east",
+          "zone": "A",
+          "in_chain": 14.25,
+          "del_chain": 0.69,
+          "in_s": 20.7,
+          "del_s": 1.0
+        },
+        {
+          "cube": "RED_CUBE_3",
+          "side": "east",
+          "zone": "A",
+          "in_chain": 5.85,
+          "del_chain": 6.11,
+          "in_s": 8.5,
+          "del_s": 8.9
+        },
+        {
+          "cube": "RED_CUBE_5",
+          "side": "east",
+          "zone": "A",
+          "in_chain": 8.73,
+          "del_chain": 14.01,
+          "in_s": 12.7,
+          "del_s": 20.4
+        }
+      ]
+    },
+    "saving_best_vs_current": 65.7
+  }
+}

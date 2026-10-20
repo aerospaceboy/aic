@@ -1,0 +1,265 @@
+diff --git a/bot_navigation/launch/competition_navigation.launch.py b/bot_navigation/launch/competition_navigation.launch.py
+index 9c67151..38c32bf 100644
+--- a/bot_navigation/launch/competition_navigation.launch.py
++++ b/bot_navigation/launch/competition_navigation.launch.py
+@@ -138,6 +138,39 @@ def generate_launch_description():
+         ],
+         output="screen",
+     )
++    # The two support wheels are continuous joints in large_base.xacro but are
++    # not part of ros2_control and have no joint states, so robot_state_publisher
++    # never publishes base_link -> {left,right}_wheel_link and RViz reports
++    # "No transform from [left_wheel_link] to [map]". They never articulate (the
++    # base moves through the planar controller), so static transforms taken from
++    # the URDF origins are exact: x = wheel_joint_x, y = +-(base_width +
++    # wheel_length)/2, z = -(base_height/2 + caster_radius*2 - wheel_radius).
++    left_wheel_tf = Node(
++        package="tf2_ros",
++        executable="static_transform_publisher",
++        name="competition_left_wheel_tf",
++        arguments=[
++            "0.14", "0.185", "-0.0384", "0", "0", "0",
++            "base_link", "left_wheel_link",
++        ],
++        parameters=[
++            {"use_sim_time": LaunchConfiguration("use_sim_time")},
++        ],
++        output="screen",
++    )
++    right_wheel_tf = Node(
++        package="tf2_ros",
++        executable="static_transform_publisher",
++        name="competition_right_wheel_tf",
++        arguments=[
++            "0.14", "-0.185", "-0.0384", "0", "0", "0",
++            "base_link", "right_wheel_link",
++        ],
++        parameters=[
++            {"use_sim_time": LaunchConfiguration("use_sim_time")},
++        ],
++        output="screen",
++    )
+     velocity_selector = Node(
+         package="tools_demo", executable="velocity_selector",
+         name="competition_velocity_selector", output="screen",
+@@ -235,6 +268,8 @@ def generate_launch_description():
+             sim_time_argument,
+             obstacle_argument,
+             map_to_odom,
++            left_wheel_tf,
++            right_wheel_tf,
+             nav2,
+             delayed_collision_lifecycle_manager,
+             delayed_collision_monitor,
+diff --git a/gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp b/gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp
+index cf1fc0a..6fdd7ec 100644
+--- a/gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp
++++ b/gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp
+@@ -63,7 +63,7 @@ class GazeboDebugGuiPlugin : public GUIPlugin
+ {
+   public: GazeboDebugGuiPlugin()
+       : renderRate(std::max(1.0, EnvironmentDouble(
+-            "YZBOT_GAZEBO_GUI_RENDER_RATE", 15.0))),
++            "YZBOT_GAZEBO_GUI_RENDER_RATE", 60.0))),
+         windowWidth(std::max(640, EnvironmentInt(
+             "YZBOT_GAZEBO_GUI_WIDTH", 1100))),
+         windowHeight(std::max(480, EnvironmentInt(
+diff --git a/tools_demo/test/test_dynamic_obstacle_filter.py b/tools_demo/test/test_dynamic_obstacle_filter.py
+index c9cac03..3ded7c7 100644
+--- a/tools_demo/test/test_dynamic_obstacle_filter.py
++++ b/tools_demo/test/test_dynamic_obstacle_filter.py
+@@ -46,5 +46,5 @@ def test_complex_layout_keeps_original_spawn_staging():
+     stages = node._cube_approach_waypoints("RED_CUBE_4", 13.2, -.95)
+     assert stages[-1].zone == "universal_origin_staging"
+     assert (stages[-1].x, stages[-1].y) == (0.0, 0.0)
+-    assert len(stages) == 4
++    assert len(stages) == 6
+     assert node._cube_approach_waypoints("RED_CUBE_4", 0.0, 0.0) == []
+diff --git a/tools_demo/test/test_navigation_math.py b/tools_demo/test/test_navigation_math.py
+index edec3cd..beb7c73 100644
+--- a/tools_demo/test/test_navigation_math.py
++++ b/tools_demo/test/test_navigation_math.py
+@@ -406,17 +406,17 @@ def test_prefer_same_side_approaches_falls_back_when_side_is_disabled():
+ def test_dynamic_gate_waypoints_use_universal_origin_staging(target):
+     """Every first pickup shares one origin-staging avoidance corridor."""
+     route = dynamic_gate_waypoints((15.0, -2.0), target)
+-    assert len(route) == 4
++    assert len(route) == 6
+     assert (route[0].x, route[0].y) == pytest.approx(
+         (12.6, -0.6)
+     )
+     assert (route[1].x, route[1].y) == pytest.approx(
+-        (12.6, -0.1)
++        (12.6, 0.45)
+     )
+     assert (route[2].x, route[2].y) == pytest.approx(
+-        (9.8, 0.15)
++        (9.8, 0.45)
+     )
+-    assert (route[3].x, route[3].y) == pytest.approx(
++    assert (route[-1].x, route[-1].y) == pytest.approx(
+         (0.0, 0.0)
+     )
+     assert all(pose.yaw == pytest.approx(math.pi) for pose in route)
+@@ -426,11 +426,11 @@ def test_dynamic_gate_waypoints_use_universal_origin_staging(target):
+ def test_dynamic_gate_waypoints_trigger_for_advanced_spawn(target):
+     """The 2026-09 advanced spawn keeps the mandatory staging corridor."""
+     route = dynamic_gate_waypoints((13.2, -0.95), target)
+-    assert len(route) == 4
++    assert len(route) == 6
+     assert (route[0].x, route[0].y) == pytest.approx((12.6, -0.6))
+-    assert (route[1].x, route[1].y) == pytest.approx((12.6, -0.1))
+-    assert (route[2].x, route[2].y) == pytest.approx((9.8, 0.15))
+-    assert (route[3].x, route[3].y) == pytest.approx((0.0, 0.0))
++    assert (route[1].x, route[1].y) == pytest.approx((12.6, 0.45))
++    assert (route[2].x, route[2].y) == pytest.approx((9.8, 0.45))
++    assert (route[-1].x, route[-1].y) == pytest.approx((0.0, 0.0))
+ 
+ 
+ def test_dynamic_gate_waypoints_omit_same_side_route():
+diff --git a/tools_demo/tools_demo/navigation_math.py b/tools_demo/tools_demo/navigation_math.py
+index fac001f..84fb876 100644
+--- a/tools_demo/tools_demo/navigation_math.py
++++ b/tools_demo/tools_demo/navigation_math.py
+@@ -385,9 +385,9 @@ UNIVERSAL_SPAWN_MAX_Y = -0.80
+ UNIVERSAL_CORRIDOR_ENTRY_X = 12.60
+ UNIVERSAL_CORRIDOR_ENTRY_Y = -0.60
+ UNIVERSAL_WALL_TIP_CLEAR_X = 12.60
+-UNIVERSAL_WALL_TIP_CLEAR_Y = -0.10
++UNIVERSAL_WALL_TIP_CLEAR_Y = 0.45
+ UNIVERSAL_EAST_WAIT_X = 9.80
+-UNIVERSAL_EAST_WAIT_Y = 0.15
++UNIVERSAL_EAST_WAIT_Y = 0.45
+ UNIVERSAL_SPAWN_EXIT_X = 0.00
+ UNIVERSAL_SPAWN_EXIT_Y = 0.00
+ TRAY_CROSSING_CLEARANCE = 0.65
+@@ -574,6 +574,9 @@ def dynamic_gate_waypoints(
+             UNIVERSAL_EAST_WAIT_Y,
+             math.pi,
+         ),
++        # Hold the same wall-clear Y lane across both original patrols.
++        ZonePose("universal_mover_1_clear", 7.25, 0.45, math.pi),
++        ZonePose("universal_mover_2_clear", 3.80, 0.45, math.pi),
+         ZonePose(
+             "universal_origin_staging",
+             UNIVERSAL_SPAWN_EXIT_X,
+@@ -1111,3 +1114,19 @@ def corridor_crossing_clear(
+             y_value = 0.2 - y_value
+             velocity = -abs(velocity)
+     return True
++
++
++def layout_a_sweep_waypoints(
++    start_x: float, start_y: float,
++) -> Sequence[ZonePose]:
++    """Stage the V2 west-tip bottleneck between wall 1 and the red1 alcove."""
++    if not all(math.isfinite(value) for value in (start_x, start_y)):
++        return ()
++    if not (-7.5 < start_x < -4.7 and 1.6 < start_y < 4.6):
++        return ()
++    # The upper static alcove wall blocks a northern tray crossing. The
++    # y=2.50 channel keeps the vehicle between that wall and the swept band.
++    west = ZonePose("A_SWEEP_WEST_CLEAR", -7.60, 2.50, math.pi)
++    if start_x <= -6.1:
++        return (west,)
++    return (ZonePose("A_SWEEP_ENTRY", -5.55, 2.50, math.pi), west)
+diff --git a/tools_demo/tools_demo/task_navigator.py b/tools_demo/tools_demo/task_navigator.py
+index e6a3c80..7cf999e 100644
+--- a/tools_demo/tools_demo/task_navigator.py
++++ b/tools_demo/tools_demo/task_navigator.py
+@@ -59,6 +59,7 @@ from tools_demo.navigation_math import pickup_dock_velocity
+ from tools_demo.navigation_math import choose_approach
+ from tools_demo.navigation_math import CUBE_APPROACH_SIDES
+ from tools_demo.navigation_math import dynamic_gate_waypoints
++from tools_demo.navigation_math import layout_a_sweep_waypoints
+ from tools_demo.navigation_math import tray_crossing_waypoints
+ from tools_demo.navigation_math import CUBE_DOCK_STANDOFF
+ from tools_demo.navigation_math import normalize_location
+@@ -1040,6 +1041,15 @@ class TaskNavigator(Node):
+         route_zone = self.active_route_zone or self.active_return_zone
+         # Once a stage has been popped, remaining poses mean the current
+         # Nav2 goal is an intermediate turn, rather than a final dock.
++        goal = getattr(self, "nav_goal_pose", None)
++        if (goal is not None and goal.zone.startswith("universal_")
++                and self.pending_poses):
++            return min(self.nav_handoff_distance, 0.08)
++        if (not getattr(self, "use_legacy_layout_routes", True)
++                and route_zone == "A" and self.pending_poses
++                and getattr(self, "nav_goal_pose", None) is not None
++                and self.nav_goal_pose.zone.startswith("A_SWEEP_")):
++            return min(self.nav_handoff_distance, 0.08)
+         if route_zone in self.route_profiles and self.pending_poses:
+             configured = self.route_profiles.get(route_zone, {}).get(
+                 "staged_handoff_distance"
+@@ -1132,6 +1142,13 @@ class TaskNavigator(Node):
+         self.b_northeast_route_active = False
+         self.c_east_wall_descent_active = False
+         if not getattr(self, "use_legacy_layout_routes", True):
++            if (zone == "A" and self.latest_x is not None
++                    and self.latest_y is not None):
++                guides = list(layout_a_sweep_waypoints(
++                    self.latest_x, self.latest_y))
++                if guides:
++                    self.pending_poses = guides + [place]
++                    self.get_logger().info("A_sweep_clearance_route active")
+             return
+         # The user run stalled near (-2.83, 0.53) on a diagonal A approach.
+         # Use the existing north/south passage to approach A from below.
+@@ -1262,9 +1279,15 @@ class TaskNavigator(Node):
+         if zone not in VALID_ZONES or self.active_route != "primary":
+             return False
+         backup = self._route_waypoints(zone, "backup_waypoints")
++        if (not backup and not getattr(self, "use_legacy_layout_routes", True)
++                and zone == "A" and self.latest_x is not None
++                and self.latest_y is not None):
++            backup = list(layout_a_sweep_waypoints(
++                self.latest_x, self.latest_y))
+         if not backup:
+             return False
+         self._configure_delivery_route(zone, backup=True)
++        self.pending_poses = backup + [self.dock_pose]
+         self.nav_retries = 0
+         self.goal_handle = None
+         self.mover_hold_blocked = False
+@@ -1744,6 +1767,7 @@ class TaskNavigator(Node):
+             self.publish_state("waiting", phase="global_costmap")
+             self.get_logger().info("Navigation deferred until costmap is ready")
+             return
++        self._reset_mover_control_for_command()
+         self.active_zone = zone
+         self.nav_retries = 0
+         if zone in VALID_ZONE_EXITS:
+@@ -3525,6 +3549,19 @@ class TaskNavigator(Node):
+             if client.service_is_ready():
+                 client.call_async(request)
+ 
++    def _reset_mover_control_for_command(self) -> None:
++        """Release only the previous canceled leg's hold for a fresh command."""
++        self.mover_hold_blocked = False
++        self.mover_hold_topic = None
++        self.mover_hold_started_ns = None
++        self.obstacle_reverse_active = False
++        self.obstacle_reverse_state = "none"
++        self.obstacle_reverse_wait_deadline_ns = None
++        self.obstacle_reverse_count = 0
++        self.obstacle_reverse_disabled = False
++        if getattr(self, "_direct_control", False):
++            self._release_direct_control()
++
+     def _publish_direct_velocity(self, command: Twist) -> None:
+         """Acquire the direct owner before docking or obstacle control."""
+         if not self._direct_control:
+@@ -3860,6 +3897,13 @@ class TaskNavigator(Node):
+             if frame is None:
+                 continue
+             _, _, forward, lateral, _, _, speed = frame
++            goal = getattr(self, "nav_goal_pose", None)
++            if goal is not None:
++                ox, _ = self.obstacle_positions[topic]
++                if (self.latest_x - ox) * (goal.x - ox) > 0.0:
++                    # A waiting anchor on this side is not a crossing goal.
++                    # Crossing now would overshoot it and then drive back.
++                    continue
+             if topic in self.mover_admitted:
+                 if (forward < -self.mover_hold_lateral
+                         or forward > 2.0 or abs(lateral) > 1.5):

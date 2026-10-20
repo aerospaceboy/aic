@@ -1,0 +1,116 @@
+[
+  {
+    "location": "BLUE_CUBE_1",
+    "side": "east",
+    "state": "succeeded",
+    "seconds": 41.11
+  },
+  {
+    "location": "BLUE_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 1.05
+  },
+  {
+    "location": "B",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 27.84
+  },
+  {
+    "location": "B_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 2.73
+  },
+  {
+    "location": "BLUE_CUBE_4",
+    "side": "east",
+    "state": "succeeded",
+    "seconds": 22.61
+  },
+  {
+    "location": "BLUE_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 1.11
+  },
+  {
+    "location": "B",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 24.86
+  },
+  {
+    "location": "B_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 2.51
+  },
+  {
+    "location": "BLUE_CUBE_5",
+    "side": "west",
+    "state": "succeeded",
+    "seconds": 11.66
+  },
+  {
+    "location": "BLUE_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 1.14
+  },
+  {
+    "location": "B",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 11.86
+  },
+  {
+    "location": "B_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 2.53
+  },
+  {
+    "location": "RED_CUBE_3",
+    "side": "east",
+    "state": "succeeded",
+    "seconds": 16.48
+  },
+  {
+    "location": "RED_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 1.06
+  },
+  {
+    "location": "A",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 5.71
+  },
+  {
+    "location": "A_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 1.79
+  },
+  {
+    "location": "BLUE_CUBE_3",
+    "side": "east",
+    "state": "succeeded",
+    "seconds": 11.83
+  },
+  {
+    "location": "BLUE_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 1.07
+  },
+  {
+    "location": "B",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 19.01
+  }
+]

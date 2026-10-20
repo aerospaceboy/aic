@@ -1,0 +1,116 @@
+[
+  {
+    "location": "BLUE_CUBE_1",
+    "side": "west",
+    "state": "succeeded",
+    "seconds": 47.81
+  },
+  {
+    "location": "BLUE_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 1.11
+  },
+  {
+    "location": "B",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 24.7
+  },
+  {
+    "location": "B_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 2.66
+  },
+  {
+    "location": "BLUE_CUBE_5",
+    "side": "west",
+    "state": "succeeded",
+    "seconds": 12.5
+  },
+  {
+    "location": "BLUE_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 1.15
+  },
+  {
+    "location": "B",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 11.28
+  },
+  {
+    "location": "B_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 2.6
+  },
+  {
+    "location": "RED_CUBE_2",
+    "side": "east",
+    "state": "succeeded",
+    "seconds": 21.48
+  },
+  {
+    "location": "RED_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 1.06
+  },
+  {
+    "location": "A",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 9.39
+  },
+  {
+    "location": "A_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 1.78
+  },
+  {
+    "location": "RED_CUBE_1",
+    "side": "east",
+    "state": "succeeded",
+    "seconds": 9.79
+  },
+  {
+    "location": "RED_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 1.2
+  },
+  {
+    "location": "A",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 10.63
+  },
+  {
+    "location": "A_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 1.9
+  },
+  {
+    "location": "RED_CUBE_3",
+    "side": "east",
+    "state": "succeeded",
+    "seconds": 8.87
+  },
+  {
+    "location": "RED_EXIT",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 1.09
+  },
+  {
+    "location": "A",
+    "side": "auto",
+    "state": "succeeded",
+    "seconds": 7.58
+  }
+]

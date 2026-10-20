@@ -1,0 +1,29 @@
+{
+  "mission": {
+    "color": null,
+    "completed": 0,
+    "cube_name": null,
+    "current_index": 0,
+    "detail": "waiting_for_task",
+    "elapsed_sec": 0.0,
+    "schema_version": "1.0",
+    "skipped": 0,
+    "state": "idle",
+    "target_zone": null,
+    "task_id": null,
+    "total": 0
+  },
+  "parse_result": {
+    "request_id": "repair-66025e86d6ba4d4e9d7dc45accd7ade5",
+    "question": "每个宠物店有5只宠物;有猫、狗两种宠物店;小爱领养25只猫;设猫宠物店数量为x,狗宠物店数量为y,计算x、y分别为多少",
+    "mapping_rules": "x代表蓝色，y代表红色，数量大于等于1的去A区，其他颜色去B区",
+    "schema_version": "1.0",
+    "state": "failed",
+    "model": "qwen3.8-max",
+    "published": false,
+    "task_id": "",
+    "source": "",
+    "plan": null,
+    "error": "Required LLM problem parsing failed: Task count must be between 1 and 10"
+  }
+}

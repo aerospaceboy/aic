@@ -1,0 +1,11 @@
+STATS frames=443 robot_contacts=1329 wall_contacts=0 first_sim=237.202 last_sim=238.086
+STATS frames=5435 robot_contacts=16305 wall_contacts=0 first_sim=237.202 last_sim=248.07
+STATS frames=10433 robot_contacts=31299 wall_contacts=0 first_sim=237.202 last_sim=258.066
+STATS frames=15429 robot_contacts=46287 wall_contacts=0 first_sim=237.202 last_sim=268.058
+STATS frames=19945 robot_contacts=59835 wall_contacts=0 first_sim=237.202 last_sim=277.09
+STATS frames=24445 robot_contacts=73335 wall_contacts=0 first_sim=237.202 last_sim=286.09
+STATS frames=28774 robot_contacts=86322 wall_contacts=0 first_sim=237.202 last_sim=294.748
+STATS frames=33033 robot_contacts=99099 wall_contacts=0 first_sim=237.202 last_sim=303.278
+STATS frames=37865 robot_contacts=113595 wall_contacts=0 first_sim=237.202 last_sim=312.942
+STATS frames=42831 robot_contacts=128493 wall_contacts=0 first_sim=237.202 last_sim=322.874
+FINAL frames=44320 robot_contacts=132960 wall_contacts=0 first_sim=237.202 last_sim=325.852

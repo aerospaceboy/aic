@@ -1,0 +1,16 @@
+{
+  "terminal_navigation_snapshots": 0,
+  "terminal_navigation_with_plan": 0,
+  "persistent_plan_snapshots": 0,
+  "max_plan_age": 0.0,
+  "planned_width": null,
+  "trail_width": null,
+  "snapshots": 0,
+  "planned_snapshots": 0,
+  "trail_snapshots": 0,
+  "max_trail_points": 0,
+  "max_plan_points": 0,
+  "largest_trail_robot_error": 0.0,
+  "plan_endpoint_changes": 0,
+  "trail_endpoint_changes": 0
+}

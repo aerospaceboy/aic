@@ -1,0 +1,15 @@
+[task_navigator-22] [WARN] [1791633049.383137791] [competition_task_navigator]: mover_crossing_hold begin topic=/competition/obstacles/obstacle_1 reason=staged_admission x=9.904 y=0.495
+[task_navigator-22] [WARN] [1791633059.684245602] [competition_task_navigator]: mover_crossing_hold end topic=/competition/obstacles/obstacle_1
+[task_navigator-22] [INFO] [1791633073.746985468] [competition_task_navigator]: mover_crossing finished clear of patrol
+[task_navigator-22] [WARN] [1791633075.202241089] [competition_task_navigator]: mover_crossing_hold begin topic=/competition/obstacles/obstacle_2 reason=predicted_collision x=6.521 y=0.415
+[task_navigator-22] [WARN] [1791633081.579765867] [competition_task_navigator]: mover_crossing_hold end topic=/competition/obstacles/obstacle_2
+[task_navigator-22] [INFO] [1791633087.943771126] [competition_task_navigator]: mover_crossing finished clear of patrol
+[task_navigator-22] [WARN] [1791633127.852448136] [competition_task_navigator]: Bounded recovery #1: hazard=recent_trail escape=(-2.57,-5.39) robot=(-2.26,-5.79)
+[task_navigator-22] [WARN] [1791633130.222741091] [competition_task_navigator]: slow_progress recovery: translation=0.297m window=12.0s
+[mission_coordinator-38] [INFO] [1791633141.745780507] [competition_mission_coordinator]: nav_result state=succeeded elapsed=108.19s
+[mission_coordinator-38] [INFO] [1791633164.070113735] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.29s
+[mission_coordinator-38] [INFO] [1791633189.523477049] [competition_mission_coordinator]: nav_result state=succeeded elapsed=25.45s
+[mission_coordinator-38] [INFO] [1791633196.003815398] [competition_mission_coordinator]: delivery_truth cube=blue_cube_3 zone=A x=-5.4000 y=3.6400 z=0.0349 valid=True slot_error=0.0000 precise=True
+[mission_coordinator-38] [INFO] [1791633198.499794791] [competition_mission_coordinator]: nav_result state=succeeded elapsed=2.49s
+[mission_coordinator-38] [INFO] [1791633225.827032050] [competition_mission_coordinator]: nav_result state=failed elapsed=27.31s
+[mission_coordinator-38] [INFO] [1791633252.008451172] [competition_mission_coordinator]: nav_result state=failed elapsed=26.16s

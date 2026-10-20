@@ -1,0 +1,29 @@
+<!-- Central patrol routes only. Replan against fresh sensor motion without
+     restarting all already-visited wall/obstacle anchors. A goal is retired
+     only inside its unchanged 0.20 m arrival reserve, never a large default
+     RemovePassedGoals radius. No unbounded recovery or blind direct dodge. -->
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="CentralInitialPlanThenTrackValidity">
+      <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="CentralExact"/>
+      <PipelineSequence name="CentralReplanWhileFollowing">
+        <!-- Check arrivals every BT tick, not just at the 2 Hz replanning
+             cadence: a fast base can traverse a 0.20 m anchor in <0.5 s. -->
+        <RemovePassedGoals input_goals="{goals}" output_goals="{goals}"
+                           radius="0.20" robot_base_frame="base_footprint"/>
+        <RateController hz="2.0">
+            <Fallback>
+              <!-- The soft future envelope can cover a mandatory gate at
+                   every phase. Replanning at every soft-risk update made
+                   the base oscillate for 18 s. Retain a valid path until
+                   physical/hard inflated occupancy changes; each new plan
+                   still uses the live directional prediction cost layer. -->
+              <IsPathValid path="{path}"/>
+              <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="CentralExact"/>
+            </Fallback>
+        </RateController>
+        <FollowPath path="{path}" controller_id="CentralTransit" goal_checker_id="central_goal_checker"/>
+      </PipelineSequence>
+    </Sequence>
+  </BehaviorTree>
+</root>

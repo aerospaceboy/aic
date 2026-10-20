@@ -1,0 +1,16 @@
+[task_navigator-22] [WARN] [1791631640.394552361] [competition_task_navigator]: nav_retry_skip_stalled_inflation cost=91
+[task_navigator-22] [WARN] [1791631640.396336101] [competition_task_navigator]: Bounded recovery #1: hazard=recent_trail escape=(11.78,0.27) robot=(11.81,0.77)
+[task_navigator-22] [WARN] [1791631641.267724315] [competition_task_navigator]: slow_progress recovery: translation=0.041m window=8.0s
+[task_navigator-22] [WARN] [1791631655.546921902] [competition_task_navigator]: nav_retry_skip_stalled_inflation cost=68
+[task_navigator-22] [WARN] [1791631655.547843601] [competition_task_navigator]: Bounded recovery #2: hazard=recent_trail escape=(12.49,0.40) robot=(12.86,0.74)
+[task_navigator-22] [WARN] [1791631656.433347663] [competition_task_navigator]: slow_progress recovery: translation=0.423m window=9.0s
+[task_navigator-22] [WARN] [1791631665.719707046] [competition_task_navigator]: slow_progress recovery: translation=0.428m window=9.0s
+[task_navigator-22] [WARN] [1791631675.323332716] [competition_task_navigator]: slow_progress recovery: translation=0.418m window=9.5s
+[task_navigator-22] [WARN] [1791631696.120031000] [competition_task_navigator]: nav_retry_skip_stalled_inflation cost=91
+[task_navigator-22] [WARN] [1791631696.120527155] [competition_task_navigator]: Bounded recovery exhausted after 2 attempts
+[task_navigator-22] [WARN] [1791631696.121070379] [competition_task_navigator]: nav_retry_skip_stalled_inflation cost=91
+[task_navigator-22] [WARN] [1791631696.121446643] [competition_task_navigator]: Bounded recovery exhausted after 2 attempts
+[mission_coordinator-38] [INFO] [1791631696.127893527] [competition_mission_coordinator]: nav_result state=aborted elapsed=73.52s
+[task_navigator-22] [WARN] [1791631715.671479334] [competition_task_navigator]: nav_retry_skip_stalled_inflation cost=58
+[task_navigator-22] [WARN] [1791631715.672846766] [competition_task_navigator]: Bounded recovery exhausted after 2 attempts
+[mission_coordinator-38] [INFO] [1791631715.679555593] [competition_mission_coordinator]: nav_result state=aborted elapsed=19.55s

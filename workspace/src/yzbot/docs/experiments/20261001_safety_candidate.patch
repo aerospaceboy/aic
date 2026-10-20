@@ -1,0 +1,1301 @@
+diff --git a/tools_demo/launch/mission.launch.py b/tools_demo/launch/mission.launch.py
+index 0e03f80..feca1e0 100644
+--- a/tools_demo/launch/mission.launch.py
++++ b/tools_demo/launch/mission.launch.py
+@@ -103,12 +103,8 @@ def generate_launch_description():
+             {
+                 "cmd_vel_in": "/cmd_vel_collision_safe",
+                 "cmd_vel_out": "/cmd_vel_safe",
+-                # This truth guard only covers short scan dropouts. Nav2 and
+-                # Collision Monitor retain ownership of route avoidance.
+-                "danger_radius": 0.70,
+-                "caution_radius": 1.60,
+-                "cone_half_angle_deg": 50.0,
+-                "obstacle_timeout_sec": 0.75,
++                # Safety thresholds are declared by SafetyLimiter. Do not
++                # shadow those defaults with obsolete launch-time values.
+             },
+         ],
+         output="screen",
+diff --git a/tools_demo/test/test_recovery_escape.py b/tools_demo/test/test_recovery_escape.py
+index 8dfb1e4..43cb520 100644
+--- a/tools_demo/test/test_recovery_escape.py
++++ b/tools_demo/test/test_recovery_escape.py
+@@ -12,6 +12,8 @@ import math
+ import pathlib
+ from types import MethodType, SimpleNamespace
+ 
++import yaml
++
+ MODULE_PATH = (
+     pathlib.Path(__file__).resolve().parents[1]
+     / "tools_demo"
+@@ -49,7 +51,7 @@ class FakeNavigator:
+         self.latest_y = y
+         self.latest_yaw = yaw
+         self.recovery_attempts = 0
+-        self.max_recovery_attempts = 2
++        self.max_recovery_attempts = 5
+         self.reverse_max_distance = 0.5
+         self.reverse_speed = 0.15
+         self.risk_zones = {}
+@@ -219,3 +221,42 @@ def test_recovery_stays_inside_the_historical_distance_cap():
+     )
+     assert distance <= MODULE.ESCAPE_MAX_DISTANCE + 1e-6
+     assert MODULE.ESCAPE_MAX_DISTANCE == 0.5
++
++
++def test_recovery_does_not_reverse_into_returning_mover_sweep():
++    """Pin T125522 recovery from (8.47,0.77) toward (8.48,0.27)."""
++    nav = FakeNavigator([], x=8.47, y=0.77, yaw=math.pi / 2)
++    # Isolate the motion-truth seam: a dropped scan presents a free costmap.
++    nav._costmap_cell_free = lambda x, y: True
++    nav._costmap_segment_clear = lambda *args: True
++    nav.obstacle_positions = {'/competition/obstacles/obstacle_1': (8.5, -0.8)}
++    assert nav._try_bounded_recovery()
++    target = nav.recovery_target
++    for step in range(101):
++        fraction = step / 100
++        x = nav.latest_x + fraction * (target.x - nav.latest_x)
++        y = nav.latest_y + fraction * (target.y - nav.latest_y)
++        nearest_y = min(0.1, max(-0.8, y))
++        assert math.hypot(x - 8.5, y - nearest_y) - 0.46 >= 0.10
++
++
++def test_recovery_refuses_when_start_is_inside_mover_sweep():
++    """Do not approve a slow escape through an already unsafe sweep."""
++    nav = FakeNavigator([], x=5.0, y=0.2)
++    nav._costmap_cell_free = lambda x, y: True
++    nav._costmap_segment_clear = lambda *args: True
++    nav.obstacle_positions = {'/competition/obstacles/obstacle_2': (5.0, -0.8)}
++    assert not nav._try_bounded_recovery()
++    assert nav.recovery_attempts == 0
++
++
++def test_sweep_envelope_matches_deployed_actor_configuration():
++    """Fail loudly if the scene no longer matches the conservative envelope."""
++    config = MODULE_PATH.parents[2] / 'bot_navigation/config/competition_zones.yaml'
++    payload = yaml.safe_load(config.read_text())
++    for index in (1, 2):
++        actor = payload[f'competition_moving_obstacle_{index}']['ros__parameters']
++        assert actor['motion_mode'] == 'continuous'
++        assert actor['amplitude_x'] == 0.0
++        assert math.isclose(actor['center_y'] - actor['amplitude_y'], -0.8)
++        assert math.isclose(actor['center_y'] + actor['amplitude_y'], 0.1)
+diff --git a/tools_demo/test/test_safety_limiter.py b/tools_demo/test/test_safety_limiter.py
+index b7c6141..71b5b32 100644
+--- a/tools_demo/test/test_safety_limiter.py
++++ b/tools_demo/test/test_safety_limiter.py
+@@ -33,18 +33,19 @@ def test_obstacle_inside_danger_stops():
+ 
+ def test_obstacle_in_caution_slows_proportionally():
+     """An obstacle in the caution band scales the command down."""
+-    obstacles = {"o": (1.0, 0.0)}
++    # 1.35 m sits past the 1.20 m mover hard stop, inside the caution ramp.
++    obstacles = {"o": (1.35, 0.0)}
+     scale = compute_scale((0.0, 0.0, 0.0), obstacles, 0.7, 1.6)
+-    assert abs(scale - 0.333) < 0.01
++    assert abs(scale - 0.722) < 0.01
+ 
+ 
+-def test_behind_obstacle_ignored_by_narrow_cone():
+-    """An obstacle behind the robot does not slow a forward cone."""
++def test_behind_obstacle_stops_on_close_approach():
++    """A flank actor inside 0.65 m stops even outside the forward cone."""
+     obstacles = {"o": (-0.5, 0.0)}
+     scale = compute_scale(
+-        (0.0, 0.0, 0.0), obstacles, 0.7, 1.6, cone_half_angle=0.5
++        (0.0, 0.0, 0.0), obstacles, 0.85, 1.6, cone_half_angle=0.5
+     )
+-    assert scale == 1.0
++    assert scale == 0.0
+ 
+ 
+ def test_reverse_command_checks_the_rear_cone():
+@@ -62,8 +63,8 @@ def test_reverse_command_checks_the_rear_cone():
+ 
+ 
+ def test_rotation_in_place_is_not_overridden_by_truth_guard():
+-    """The laser collision monitor owns rotation safety."""
+-    obstacles = {"o": (0.4, 0.0)}
++    """The laser collision monitor owns rotation; far obstacles stay at 1.0."""
++    obstacles = {"o": (1.5, 0.0)}
+     scale = compute_scale(
+         (0.0, 0.0, 0.0),
+         obstacles,
+@@ -75,13 +76,27 @@ def test_rotation_in_place_is_not_overridden_by_truth_guard():
+     assert scale == 1.0
+ 
+ 
++def test_close_obstacle_stops_even_without_linear_x():
++    """Strafe / sub-threshold linear.x must still hit the hard stop."""
++    obstacles = {"o": (0.4, 0.0)}
++    scale = compute_scale(
++        (0.0, 0.0, 0.0),
++        obstacles,
++        0.7,
++        1.6,
++        cone_half_angle=0.5,
++        motion_sign=0.0,
++    )
++    assert scale == 0.0
++
++
+ def test_east_gate_waits_at_safe_position_for_southbound_mover():
+     """A crossing waits east of the lane, then opens on fresh retreat data."""
+     harness = SimpleNamespace(
+         robot=(9.6, 0.15, math.pi),
+-        obstacles={"competition_moving_obstacle_1": (8.5, -0.50, 1_000_000_000)},
+-        obstacle_previous_y={"competition_moving_obstacle_1": -0.45},
+-        obstacle_timeout=0.75,
++        obstacles={"competition_moving_obstacle_1": (8.5, -0.75, 1_000_000_000)},
++        obstacle_previous_y={"competition_moving_obstacle_1": -0.70},
++        obstacle_timeout=0.35,
+         east_gate_open=False,
+         get_clock=Mock(return_value=SimpleNamespace(
+             now=Mock(return_value=SimpleNamespace(nanoseconds=1_000_000_000))
+@@ -90,10 +105,12 @@ def test_east_gate_waits_at_safe_position_for_southbound_mover():
+     )
+     assert SafetyLimiter.east_gate_blocked(harness, 1.0)
+     harness.obstacles["competition_moving_obstacle_1"] = (
+-        8.5, -0.70, 1_000_000_000
++        8.5, -0.40, 1_000_000_000
+     )
+-    harness.obstacle_previous_y["competition_moving_obstacle_1"] = -0.66
+-    assert safe_crossing_phase(-0.70, -0.66)
++    harness.obstacle_previous_y["competition_moving_obstacle_1"] = -0.35
++    assert not safe_crossing_phase(-0.73, -0.69)
++    assert not safe_crossing_phase(-0.40, -0.45)
++    assert safe_crossing_phase(-0.40, -0.35)
+     assert not SafetyLimiter.east_gate_blocked(harness, 1.0)
+     assert harness.east_gate_open
+     harness.robot = (8.58, 0.235, math.pi)
+@@ -107,7 +124,7 @@ def test_east_gate_fails_closed_without_fresh_actor_truth():
+     """A missing actor sample cannot release the safe wait position."""
+     harness = SimpleNamespace(
+         robot=(9.6, 0.15, math.pi), obstacles={},
+-        obstacle_previous_y={}, obstacle_timeout=0.75,
++        obstacle_previous_y={}, obstacle_timeout=0.35,
+         east_gate_open=False,
+         get_clock=Mock(return_value=SimpleNamespace(
+             now=Mock(return_value=SimpleNamespace(nanoseconds=1_000_000))
+diff --git a/tools_demo/tools_demo/avoidance_monitor.py b/tools_demo/tools_demo/avoidance_monitor.py
+index 20224b2..0b17c79 100644
+--- a/tools_demo/tools_demo/avoidance_monitor.py
++++ b/tools_demo/tools_demo/avoidance_monitor.py
+@@ -12,6 +12,7 @@ from rclpy.node import Node
+ from rclpy.qos import DurabilityPolicy
+ from rclpy.qos import QoSProfile
+ from rclpy.qos import ReliabilityPolicy
++from std_msgs.msg import Bool
+ from std_msgs.msg import String
+ 
+ 
+@@ -82,6 +83,12 @@ class AvoidanceMonitor(Node):
+             str(self.get_parameter("state_topic").value),
+             retained_qos(),
+         )
++        # Last-resort physical gate: safety_limiter holds the base when this
++        # is True. Truth-based, so it catches boards the laser cannot see.
++        self.base_hold_pub = self.create_publisher(
++            Bool, "/competition/obstacle_hold", 10
++        )
++        self._hold_active = False
+         self.create_subscription(
+             Odometry,
+             str(self.get_parameter("odom_topic").value),
+@@ -150,11 +157,13 @@ class AvoidanceMonitor(Node):
+         if self.robot is None or not self.obstacles:
+             return
+         robot_x, robot_y = self.robot
++        nearest_distance = math.inf
+         for model, (obstacle_x, obstacle_y) in self.obstacles.items():
+             center_distance = math.hypot(
+                 robot_x - obstacle_x,
+                 robot_y - obstacle_y,
+             )
++            nearest_distance = min(nearest_distance, center_distance)
+             clearance = center_distance - (
+                 self.robot_radius + self.obstacle_radius
+             )
+@@ -178,6 +187,16 @@ class AvoidanceMonitor(Node):
+             if center_distance <= self.encounter_distance:
+                 self.encountered_obstacles.add(model)
+             self.sample_count += 1
++        # Preserve the existing gate ownership, but evaluate all actors before
++        # changing the hold. A far second actor must not release a near first.
++        in_gate = 8.5 <= robot_x <= 10.0
++        if in_gate or nearest_distance > 1.15:
++            if self._hold_active:
++                self._hold_active = False
++                self.base_hold_pub.publish(Bool(data=False))
++        elif nearest_distance <= 0.90 and not self._hold_active:
++            self._hold_active = True
++            self.base_hold_pub.publish(Bool(data=True))
+ 
+     def publish_state(self) -> None:
+         """Publish two independently auditable spawn-gate events."""
+diff --git a/tools_demo/tools_demo/navigation_math.py b/tools_demo/tools_demo/navigation_math.py
+index d6fc515..9b4d416 100644
+--- a/tools_demo/tools_demo/navigation_math.py
++++ b/tools_demo/tools_demo/navigation_math.py
+@@ -353,7 +353,8 @@ UNIVERSAL_CORRIDOR_ENTRY_Y = -0.60
+ UNIVERSAL_WALL_TIP_CLEAR_X = 12.60
+ UNIVERSAL_WALL_TIP_CLEAR_Y = -0.10
+ UNIVERSAL_EAST_WAIT_X = 9.80
+-UNIVERSAL_EAST_WAIT_Y = 0.15
++UNIVERSAL_EAST_WAIT_Y = 0.40
++UNIVERSAL_MOVER_1_EXIT_X = 7.20
+ UNIVERSAL_SPAWN_EXIT_X = 0.00
+ UNIVERSAL_SPAWN_EXIT_Y = 0.00
+ TRAY_CROSSING_CLEARANCE = 0.65
+@@ -540,6 +541,16 @@ def dynamic_gate_waypoints(
+             UNIVERSAL_EAST_WAIT_Y,
+             math.pi,
+         ),
++        # Keep the admitted crossing north of the patrol until the chassis
++        # has fully left its x=8.5 sweep. A direct diagonal to (0,0) lowered
++        # y back into the returning actor (20261001T114841). The map's north
++        # wall starts at y=0.95, leaving 0.55 m raw static clearance here.
++        ZonePose(
++            "universal_mover_1_exit",
++            UNIVERSAL_MOVER_1_EXIT_X,
++            UNIVERSAL_EAST_WAIT_Y,
++            math.pi,
++        ),
+         ZonePose(
+             "universal_origin_staging",
+             UNIVERSAL_SPAWN_EXIT_X,
+diff --git a/tools_demo/tools_demo/safety_limiter.py b/tools_demo/tools_demo/safety_limiter.py
+index 2ddcd74..fe7f050 100644
+--- a/tools_demo/tools_demo/safety_limiter.py
++++ b/tools_demo/tools_demo/safety_limiter.py
+@@ -34,10 +34,10 @@ class SafetyLimiter(Node):
+         self.declare_parameter("cmd_vel_in", "/cmd_vel")
+         self.declare_parameter("cmd_vel_out", "/cmd_vel_safe")
+         self.declare_parameter("odom_topic", "/odom")
+-        self.declare_parameter("danger_radius", 0.70)
++        self.declare_parameter("danger_radius", 0.82)
+         self.declare_parameter("caution_radius", 1.60)
+-        self.declare_parameter("cone_half_angle_deg", 50.0)
+-        self.declare_parameter("obstacle_timeout_sec", 0.75)
++        self.declare_parameter("cone_half_angle_deg", 70.0)
++        self.declare_parameter("obstacle_timeout_sec", 0.35)
+         self.declare_parameter(
+             "obstacle_topics",
+             [
+@@ -46,6 +46,7 @@ class SafetyLimiter(Node):
+             ],
+         )
+         self.base_hold = False
++        self.obstacle_hold = False
+ 
+         self.danger = float(self.get_parameter("danger_radius").value)
+         self.caution = float(self.get_parameter("caution_radius").value)
+@@ -61,6 +62,7 @@ class SafetyLimiter(Node):
+         self.obstacles: Dict[str, Tuple[float, float, int]] = {}
+         self.obstacle_previous_y: Dict[str, float] = {}
+         self.east_gate_open = False
++        self.second_gate_open = False
+ 
+         self.publisher = self.create_publisher(
+             Twist,
+@@ -79,7 +81,16 @@ class SafetyLimiter(Node):
+             self.base_hold_callback,
+             10,
+         )
++        self.last_cmd = Twist()
++        self.last_cmd_ns = 0
++        self.create_subscription(
++            Bool,
++            "/competition/obstacle_hold",
++            self.obstacle_hold_callback,
++            10,
++        )
+         self.create_timer(0.05, self.publish_base_hold)
++        self.create_timer(0.05, self.publish_guarded_command)
+         self.create_subscription(
+             Odometry,
+             str(self.get_parameter("odom_topic").value),
+@@ -133,7 +144,7 @@ class SafetyLimiter(Node):
+             for model, (x_value, y_value, stamp) in self.obstacles.items()
+             if 0 <= now - stamp <= timeout_ns
+         }
+-        return compute_scale(
++        scale = compute_scale(
+             self.robot,
+             fresh,
+             self.danger,
+@@ -141,18 +152,60 @@ class SafetyLimiter(Node):
+             self.cone_half,
+             motion_sign,
+         )
++        if scale <= 0.01 and fresh:
++            self.get_logger().info(
++                f"hard_stop robot={self.robot} fresh={fresh}",
++                throttle_duration_sec=0.5,
++            )
++        elif not fresh and self.obstacles:
++            self.get_logger().info(
++                f"obstacle_stale count={len(self.obstacles)}",
++                throttle_duration_sec=1.0,
++            )
++        return scale
+ 
+     def east_gate_blocked(self, motion_sign: float) -> bool:
+-        """Yield east of mover 1 until its southbound phase is observed."""
++        """Yield upstream of each mover before committing to its sweep."""
+         if self.robot is None or motion_sign <= 0.0:
+             return False
+         x_value, y_value, yaw = self.robot
++        if x_value < 4.4:
++            self.second_gate_open = False
++        if (
++            5.7 <= x_value <= 6.3
++            and -1.5 <= y_value <= 1.5
++            and math.cos(yaw) < -0.3
++        ):
++            if self.second_gate_open:
++                return False
++            model = "competition_moving_obstacle_2"
++            actor = self.obstacles.get(model)
++            previous_y = self.obstacle_previous_y.get(model)
++            now_ns = self.get_clock().now().nanoseconds
++            fresh = actor is not None and 0 <= now_ns - actor[2] <= int(
++                self.obstacle_timeout * 1e9
++            )
++            # Unlike mover 1's short north-level crossing, the origin leg
++            # descends. Admit early in retreat, not just before reversal.
++            # Wait at least 0.7 m east of the sweep; never relock inside it.
++            if (
++                fresh and previous_y is not None
++                and -0.50 <= actor[1] <= -0.35
++                and previous_y - actor[1] >= 0.01
++            ):
++                self.second_gate_open = True
++                self.get_logger().info("second mover gate released early southbound")
++                return False
++            return True
+         if x_value < 8.0:
+             self.east_gate_open = False
++        # Wait only east of the mover-1 sweep (x~8.5). Stopping inside
++        # x=8.0-9.0 parks the base in the swept lane and gets clipped.
++        # A wider y band catches more approach paths before commitment.
+         if not (
+-            9.3 <= x_value <= 9.75
+-            and -0.2 <= y_value <= 0.5
+-            and math.cos(yaw) < -0.4
++            8.7 <= x_value <= 9.9
++            and -1.5 <= y_value <= 1.5
++            and math.cos(yaw) < -0.3
+         ):
+             return False
+         actor = self.obstacles.get("competition_moving_obstacle_1")
+@@ -161,9 +214,13 @@ class SafetyLimiter(Node):
+             self.obstacle_timeout * 1e9
+         )
+         if self.east_gate_open:
+-            # Relock only while the base is still well east of the actor.
+-            # Stopping after entry would park it in the swept lane.
+-            if actor_fresh and actor[1] <= -0.5:
++            # Do not commit merely because Nav2 moved off the wait goal.
++            # A delayed/curved approach can miss the admitted window while
++            # still outside the entire patrol. Re-arm there; only retain
++            # admission inside the 0.65 m sweep boundary until x<8.0.
++            if x_value < 9.15:
++                return False
++            if actor_fresh and actor[1] <= -0.35:
+                 return False
+             self.east_gate_open = False
+         if actor_fresh and safe_crossing_phase(
+@@ -178,22 +235,61 @@ class SafetyLimiter(Node):
+     def base_hold_callback(self, message: Bool) -> None:
+         """Enable or release the manipulation-time final velocity gate."""
+         self.base_hold = bool(message.data)
+-        if self.base_hold:
++        if self.base_hold or self.obstacle_hold:
++            self.last_cmd = Twist()
++            self.last_cmd_ns = 0
++            self.publisher.publish(Twist())
++
++    def obstacle_hold_callback(self, message: Bool) -> None:
++        """Keep obstacle and manipulation holds independent; either stops."""
++        self.obstacle_hold = bool(message.data)
++        if self.base_hold or self.obstacle_hold:
++            self.last_cmd = Twist()
++            self.last_cmd_ns = 0
+             self.publisher.publish(Twist())
+ 
+     def publish_base_hold(self) -> None:
+         """Continuously clear velocity retained by the planar plugin."""
+-        if self.base_hold:
++        if self.base_hold or self.obstacle_hold:
+             self.publisher.publish(Twist())
+ 
++    def publish_guarded_command(self) -> None:
++        """Reevaluate the latest input against current truth without aging it."""
++        if self.base_hold or self.obstacle_hold:
++            self.publisher.publish(Twist())
++            return
++        now = self.get_clock().now().nanoseconds
++        age = now - self.last_cmd_ns
++        if not self.last_cmd_ns or not 0 <= age <= int(0.25e9):
++            self.last_cmd = Twist()
++            self.last_cmd_ns = 0
++            self.publisher.publish(Twist())
++            return
++        self._publish_command(self.last_cmd)
++
+     def cmd_vel_callback(self, message: Twist) -> None:
+-        """Scale one velocity command and republish it safely."""
+-        if self.base_hold:
++        """Cache the raw input; only upstream reception refreshes its age."""
++        if self.base_hold or self.obstacle_hold:
++            self.last_cmd = Twist()
++            self.last_cmd_ns = 0
+             self.publisher.publish(Twist())
+             return
++        self.last_cmd = message
++        self.last_cmd_ns = self.get_clock().now().nanoseconds
++        self._publish_command(message)
++
++    def _publish_command(self, message: Twist) -> None:
++        """Apply current gate and obstacle limits without raising their scale."""
+         motion_sign = 0.0
+-        if abs(message.linear.x) >= 0.03:
+-            motion_sign = math.copysign(1.0, message.linear.x)
++        # Use the full planar speed: strafing (linear.y) used to leave
++        # motion_sign at 0 and skip the close-range hard stop.
++        planar = math.hypot(message.linear.x, message.linear.y)
++        if planar >= 0.03:
++            # Prefer x as the heading sign; fall back to y for pure strafe.
++            if abs(message.linear.x) >= 0.03:
++                motion_sign = math.copysign(1.0, message.linear.x)
++            else:
++                motion_sign = math.copysign(1.0, message.linear.y)
+         if self.east_gate_blocked(motion_sign):
+             self.publisher.publish(Twist())
+             self.get_logger().info(
+diff --git a/tools_demo/tools_demo/safety_math.py b/tools_demo/tools_demo/safety_math.py
+index bb85841..0a577f0 100644
+--- a/tools_demo/tools_demo/safety_math.py
++++ b/tools_demo/tools_demo/safety_math.py
+@@ -7,12 +7,17 @@ from typing import Dict, Optional, Sequence, Tuple
+ 
+ 
+ def safe_crossing_phase(current_y: float, previous_y: Optional[float]) -> bool:
+-    """Admit the east corridor only as mover 1 retreats south below -0.65."""
++    """Admit early in the configured mover's southbound safe window.
++
++    Patrol is -0.35 +/-0.45, with reversal at -0.8. Admission near -0.72
++    left too little time for a scaled crossing before the northbound return.
++    A bounded early window rejects both northbound and late retreat samples.
++    """
+     return (
+         previous_y is not None
+         and math.isfinite(current_y)
+         and math.isfinite(previous_y)
+-        and current_y <= -0.65
++        and -0.50 <= current_y <= -0.35
+         and previous_y - current_y >= 0.01
+     )
+ 
+@@ -32,12 +37,24 @@ def compute_scale(
+     ramps linearly from 0 to 1 across the caution band, and stays 1.0 for
+     obstacles farther than ``caution_radius`` or outside the forward cone.
+     """
+-    if robot is None or not obstacles or abs(motion_sign) < 1e-6:
++    if robot is None or not obstacles:
+         return 1.0
+     robot_x, robot_y, yaw = robot
++    best_scale = 1.0
++    # Close-range hard stop runs even when motion_sign is 0 (strafe /
++    # sub-threshold linear.x). Returning 1.0 early used to let mover-1
++    # clip the flank at 0.31 m centre distance.
++    for obstacle_x, obstacle_y in obstacles.values():
++        dist = math.hypot(obstacle_x - robot_x, obstacle_y - robot_y)
++        # Tracked movers only (not static geometry). Contact is at 0.46 m
++        # combined radius; 0.75 m is stop margin without freezing beside a
++        # retreating board.
++        if dist <= 0.65:
++            return 0.0
++    if abs(motion_sign) < 1e-6:
++        return 1.0
+     if motion_sign < 0.0:
+         yaw += math.pi
+-    best_scale = 1.0
+     for obstacle_x, obstacle_y in obstacles.values():
+         dx = obstacle_x - robot_x
+         dy = obstacle_y - robot_y
+@@ -76,3 +93,27 @@ def relative_positions(
+         cos_y * dx + sin_y * dy,
+         -sin_y * dx + cos_y * dy,
+     )
++
++
++def mover_sweep_segment_clear(
++    start: Tuple[float, float],
++    target: Tuple[float, float],
++    obstacles: Dict[str, Tuple[float, float]],
++) -> bool:
++    """Reject recovery paths into the configured continuous movers' sweep.
++
++    Both deployed actors have fixed x, y in [-0.8,0.1]. A slow recovery
++    must clear the entire patrol, not only the last observed actor pose.
++    Sample at <=2cm with a 4cm buffer above the 0.56m acceptance distance.
++    """
++    distance = math.hypot(target[0] - start[0], target[1] - start[1])
++    steps = max(1, math.ceil(distance / 0.02))
++    for index in range(steps + 1):
++        fraction = index / steps
++        x_value = start[0] + fraction * (target[0] - start[0])
++        y_value = start[1] + fraction * (target[1] - start[1])
++        nearest_y = min(0.1, max(-0.8, y_value))
++        for obstacle_x, _ in obstacles.values():
++            if math.hypot(x_value - obstacle_x, y_value - nearest_y) < 0.60:
++                return False
++    return True
+diff --git a/tools_demo/tools_demo/task_navigator.py b/tools_demo/tools_demo/task_navigator.py
+index 24f06e9..c75316d 100644
+--- a/tools_demo/tools_demo/task_navigator.py
++++ b/tools_demo/tools_demo/task_navigator.py
+@@ -65,6 +65,7 @@ from tools_demo.navigation_math import VALID_PICKUPS
+ from tools_demo.navigation_math import VALID_ZONES
+ from tools_demo.navigation_math import VALID_ZONE_EXITS
+ from tools_demo.navigation_math import ZonePose
++from tools_demo.safety_math import mover_sweep_segment_clear
+ 
+ 
+ # Per-cube dock/entry defaults mirroring competition_zones.yaml. Docks
+@@ -226,7 +227,7 @@ class TaskNavigator(Node):
+         )
+         self.declare_parameter("reverse_recovery_speed", 0.25)
+         self.declare_parameter("reverse_recovery_max_distance", 1.5)
+-        self.declare_parameter("max_recovery_attempts", 2)
++        self.declare_parameter("max_recovery_attempts", 5)
+         self.declare_parameter("obstacle_block_distance", 0.60)
+         self.declare_parameter("obstacle_reverse_distance", 0.15)
+         # obstacle_1 (spawn board) reverse is wall-limited; obstacle_2
+@@ -695,6 +696,8 @@ class TaskNavigator(Node):
+         # the very first navigation with "Path is empty".
+         self.global_costmap: Optional[OccupancyGrid] = None
+         self.pending_start_command: Optional[String] = None
++        self.pending_start_at: Optional[float] = None
++        self.pending_recovery_at: Optional[float] = None
+         self.pending_action_retry_ticks = 0
+         self.create_subscription(
+             OccupancyGrid,
+@@ -1133,6 +1136,29 @@ class TaskNavigator(Node):
+                 "zone_C_sweep_west_guide active "
+                 f"start=({self.latest_x:.2f},{self.latest_y:.2f})"
+             )
++        elif (
++            zone == "C"
++            and not backup
++            and self.latest_x is not None
++            and self.latest_y is not None
++            and -2.0 <= self.latest_x <= 0.6
++            and -2.2 <= self.latest_y <= 0.3
++        ):
++            # Center-tray (red_cube_4) starts sit north of wall_57
++            # (x=-3.2, y=-3.4..-0.65), so direct Smac detours around the
++            # north tip and the C leg measured 60 s. Drop through the
++            # validated free x~0.1 column, then run the southern corridor
++            # already used by C_EAST_DESCENT (min clearance 0.40 m).
++            self.pending_poses = [
++                ZonePose("C_CENTER_SOUTH", 0.10, -4.10, -math.pi / 2.0),
++                ZonePose("C_SOUTH_CORRIDOR", -3.05, -7.15, math.pi),
++                ZonePose("C_WEST_CORRIDOR", -7.80, -6.20, math.pi),
++                place,
++            ]
++            self.get_logger().info(
++                "C_center_south_corridor active "
++                f"start=({self.latest_x:.2f},{self.latest_y:.2f})"
++            )
+ 
+     def _switch_to_backup_route(self) -> bool:
+         """Move a failed delivery to its per-zone alternate route once."""
+@@ -1268,15 +1294,28 @@ class TaskNavigator(Node):
+         north of the wall line.
+         """
+         obstacle_2_waypoints: List[ZonePose] = []
++        # Also cover the universal-staging start (0,0): a southbound blue
++        # pickup then cuts across obstacle_2's x~1.0 sweep (3bC_2rB).
++        from_origin_south = (
++            start_x is not None
++            and start_y is not None
++            and -1.5 <= start_x <= 2.5
++            and -1.5 <= start_y <= 1.0
++            and self.dock_pose is not None
++            and self.dock_pose.y < -1.0
++        )
+         if (
+             zone.startswith("BLUE_CUBE_")
+             and start_x is not None
+             and start_y is not None
+-            and start_y >= 1.5
++            and (start_y >= 1.5 or from_origin_south)
+             and self.dock_pose is not None
+             and self.dock_pose.y < 0.5
+         ):
+-            obstacle_2_waypoints = list(OBSTACLE_2_NORTH_SOUTH_GATES)
++            if from_origin_south:
++                obstacle_2_waypoints = [OBSTACLE_2_NORTH_SOUTH_GATES[1]]
++            else:
++                obstacle_2_waypoints = list(OBSTACLE_2_NORTH_SOUTH_GATES)
+             if zone == "BLUE_CUBE_2":
+                 obstacle_2_waypoints.append(OBSTACLE_2_WEST_UPPER_GATE)
+             elif zone == "BLUE_CUBE_3":
+@@ -1408,7 +1447,27 @@ class TaskNavigator(Node):
+             return
+         if self.active_zone is not None:
+             return
++        now = time.monotonic()
++        if getattr(self, "pending_start_at", None) is None:
++            self.pending_start_at = now
++            self.pending_recovery_at = now
++        if now - self.pending_start_at >= 60.0:
++            self.pending_start_command = None
++            self.pending_start_at = None
++            self.pending_recovery_at = None
++            self.publish_error("Navigation prerequisites unavailable for 60s")
++            self.publish_state(
++                "failed", reason="navigation_prerequisites_timeout"
++            )
++            return
+         if not self._global_costmap_ready():
++            last_recovery = getattr(self, "pending_recovery_at", None)
++            if last_recovery is None or now - last_recovery >= 10.0:
++                # No goal is active: ask the static layer to republish after
++                # startup TF/discovery settles, without blocking its callback.
++                self._clear_costmaps()
++                self.pending_recovery_at = now
++                self.get_logger().warn("Retrying first-goal costmap readiness")
+             return
+         if not self.action_client.server_is_ready():
+             # Still waiting on DDS discovery; retry on the next costmap
+@@ -1421,6 +1480,8 @@ class TaskNavigator(Node):
+         self.pending_action_retry_ticks = 0
+         pending = self.pending_start_command
+         self.pending_start_command = None
++        self.pending_start_at = None
++        self.pending_recovery_at = None
+         self.get_logger().info("Prerequisites ready; resuming navigation")
+         self.command_callback(pending)
+ 
+@@ -1532,6 +1593,8 @@ class TaskNavigator(Node):
+                 f"zone={zone} until server is discoverable"
+             )
+             self.pending_start_command = message
++            self.pending_start_at = time.monotonic()
++            self.pending_recovery_at = self.pending_start_at
+             self.pending_action_retry_ticks = 0
+             self.publish_state("waiting", phase="action_server")
+             return
+@@ -1540,6 +1603,8 @@ class TaskNavigator(Node):
+         # the command and let _global_costmap_callback resume it.
+         if not self._global_costmap_ready():
+             self.pending_start_command = message
++            self.pending_start_at = time.monotonic()
++            self.pending_recovery_at = self.pending_start_at
+             self.publish_state("waiting", phase="global_costmap")
+             self.get_logger().info("Navigation deferred until costmap is ready")
+             return
+@@ -2123,8 +2188,49 @@ class TaskNavigator(Node):
+                 self._recreate_action_client()
+         return False
+ 
++    def _wait_for_map_tf(self, timeout_sec: float = 20.0) -> bool:
++        """Block until map->base_link is live so the first goal can plan.
++
++        Stuck-first-pickup rounds (2rA_3bC / 4rB_1bC) logged
++        "Could not find a connection between 'odom' and 'base_footprint'"
++        and never produced a nav_result. Wait out the TF race instead of
++        sending a goal Nav2 cannot start.
++        """
++        deadline = time.monotonic() + timeout_sec
++        attempt = 0
++        while time.monotonic() < deadline:
++            if self.refresh_map_pose():
++                if attempt:
++                    self.get_logger().info(
++                        f"map_tf_ready after {attempt + 1} polls"
++                    )
++                return True
++            attempt += 1
++            self.get_logger().warn(
++                f"map_tf_wait retry={attempt}",
++                throttle_duration_sec=2.0,
++            )
++            time.sleep(0.2)
++        return False
++
+     def _send_next_goal(self) -> None:
+         """Send the next pose in a staged navigation command."""
++        # After a pick the base sits against the tray; a stale inflated cell
++        # makes Smac report "Starting point in lethal space". Clear before
++        # the first departure plan.
++        if (
++            self.active_zone in getattr(self, "departure_routes", ())
++            or self.active_zone in VALID_ZONE_EXITS
++        ):
++            self._clear_costmaps()
++        if not self._wait_for_map_tf():
++            self.publish_error("map/base TF unavailable for navigation")
++            self.publish_state(
++                "failed",
++                reason="tf_unavailable",
++            )
++            self._clear_goal()
++            return
+         if not self._wait_for_action_server():
+             self.publish_error("Navigation action server is unavailable")
+             self.publish_state(
+@@ -2199,6 +2305,25 @@ class TaskNavigator(Node):
+ 
+     def _send_pose(self, pose: ZonePose) -> None:
+         """Send one Nav2 goal for the current zone/stage pose."""
++        # Smac logs "Starting point in lethal space" if we send a goal while
++        # the footprint overlaps inflation. Probe first and back off instead
++        # of handing Nav2 a plan it must fail.
++        if self.latest_x is not None and self.latest_y is not None:
++            start_cost = self._global_cost_at(self.latest_x, self.latest_y)
++            # Unknown cost is treated like lethal: Smac rejects either way.
++            if start_cost is None or start_cost >= 99:
++                self.get_logger().warn(
++                    f"pre_send lethal start cost={start_cost}; "
++                    "clear+backoff before goal"
++                )
++                self._clear_costmaps()
++                command = Twist()
++                command.linear.x = -max(self.reverse_speed, 0.12)
++                self.alignment_velocity_publisher.publish(command)
++                time.sleep(0.55)
++                self.alignment_velocity_publisher.publish(Twist())
++                self._clear_costmaps()
++                self.refresh_map_pose()
+         if not self._wait_for_action_server():
+             self.publish_error("Navigation action server is unavailable")
+             self.publish_state(
+@@ -3122,7 +3247,14 @@ class TaskNavigator(Node):
+                 if candidate is not None
+                 else float("inf")
+             )
+-            if candidate_distance <= self.reverse_max_distance + 1e-6:
++            if (
++                candidate_distance <= self.reverse_max_distance + 1e-6
++                and candidate is not None
++                and mover_sweep_segment_clear(
++                    (self.latest_x, self.latest_y), (candidate.x, candidate.y),
++                    getattr(self, "obstacle_positions", {}),
++                )
++            ):
+                 escape = candidate
+                 recovery_label = hazard
+         if escape is None:
+@@ -3152,6 +3284,11 @@ class TaskNavigator(Node):
+                     )
+                     if not self._costmap_cell_free(candidate.x, candidate.y):
+                         continue
++                    if not mover_sweep_segment_clear(
++                        (self.latest_x, self.latest_y), (candidate.x, candidate.y),
++                        getattr(self, "obstacle_positions", {}),
++                    ):
++                        continue
+                     if not self._costmap_segment_clear(
+                         self.latest_x,
+                         self.latest_y,
+@@ -3503,10 +3640,30 @@ class TaskNavigator(Node):
+ 
+     def _begin_obstacle_reverse(self, topic: str) -> None:
+         """Cancel Nav2 and start backing the base off the obstacle track."""
+-        self.obstacle_reverse_count += 1
+-        self.obstacle_reverse_active_distance = (
+-            self._obstacle_reverse_distance_for(topic)
++        distance = self._obstacle_reverse_distance_for(topic)
++        if (
++            self.latest_x is None or self.latest_y is None
++            or self.latest_yaw is None
++        ):
++            return
++        target = (
++            self.latest_x - distance * math.cos(self.latest_yaw),
++            self.latest_y - distance * math.sin(self.latest_yaw),
+         )
++        if not mover_sweep_segment_clear(
++            (self.latest_x, self.latest_y), target,
++            getattr(self, "obstacle_positions", {}),
++        ):
++            # Do not take control away from Nav2 for a slow escape that
++            # truth hold can block while the actor returns into the base.
++            self.obstacle_reverse_disabled = True
++            self.get_logger().warn(
++                "obstacle_reverse rejected: path intersects mover patrol; "
++                "retaining Nav2 control"
++            )
++            return
++        self.obstacle_reverse_count += 1
++        self.obstacle_reverse_active_distance = distance
+         if self.obstacle_reverse_count > self.obstacle_max_reverses:
+             self.obstacle_reverse_disabled = True
+             self.get_logger().warn(
+diff --git a/tools_demo/test/test_delayed_gate_commitment.py b/tools_demo/test/test_delayed_gate_commitment.py
+new file mode 100644
+index 0000000..30cc6db
+--- /dev/null
++++ b/tools_demo/test/test_delayed_gate_commitment.py
+@@ -0,0 +1,30 @@
++"""Replay premature gate commitment from T133405's actual delayed crossing."""
++
++from types import SimpleNamespace
++from unittest.mock import Mock
++
++import pytest
++
++from tools_demo.safety_limiter import SafetyLimiter
++
++
++@pytest.mark.parametrize('x,y,yaw', [
++    (9.228927425292413, 0.0023841219318847216, 2.652446559246695),
++    (9.218758986237573, 0.3893873809311706, -3.106316011510525),
++    (9.1773018408817, 0.39122705669758145, -3.0270360283655195),
++])
++def test_delayed_crossing_rearms_while_outside_swept_lane(x, y, yaw):
++    """An old admission must not survive a missed window at a safe wait pose."""
++    node = SimpleNamespace(
++        robot=(x, y, yaw), east_gate_open=True, second_gate_open=False,
++        obstacle_timeout=0.35,
++        obstacles={'competition_moving_obstacle_1': (8.5, -0.305, 1_000_000_000)},
++        obstacle_previous_y={'competition_moving_obstacle_1': -0.35},
++        get_logger=Mock(return_value=Mock()),
++    )
++    node.get_clock = lambda: SimpleNamespace(
++        now=lambda: SimpleNamespace(nanoseconds=1_000_000_000))
++    # Entire patrol remains clear here, so stopping before recommitment is safe.
++    assert x - 8.5 > 0.65
++    assert SafetyLimiter.east_gate_blocked(node, 1.0)
++    assert not node.east_gate_open
+diff --git a/tools_demo/test/test_first_mover_phase.py b/tools_demo/test/test_first_mover_phase.py
+new file mode 100644
+index 0000000..8af5da8
+--- /dev/null
++++ b/tools_demo/test/test_first_mover_phase.py
+@@ -0,0 +1,45 @@
++"""Exercise real first-gate admission at slow crossing speeds and 5Hz truth."""
++
++import math
++from types import SimpleNamespace
++from unittest.mock import Mock
++
++import pytest
++
++from tools_demo.safety_limiter import SafetyLimiter
++from tools_demo.safety_math import compute_scale
++
++
++@pytest.mark.parametrize('speed', [0.6, 0.9, 1.4, 1.8])
++@pytest.mark.parametrize('phase', range(8))
++def test_first_gate_does_not_admit_at_end_of_safe_window(speed, phase):
++    """Catch the returning-actor flank stop absent from the admitted replay."""
++    x, y = 9.8, 0.4
++    minimum = math.inf
++    node = SimpleNamespace(
++        robot=None, obstacles={}, obstacle_previous_y={}, now_ns=1_000_000_000,
++        east_gate_open=False, second_gate_open=False, obstacle_timeout=0.35,
++        get_logger=Mock(return_value=Mock()),
++    )
++    node.get_clock = lambda: SimpleNamespace(
++        now=lambda: SimpleNamespace(nanoseconds=node.now_ns))
++    model = 'competition_moving_obstacle_1'
++    for tick in range(1600):
++        elapsed = tick * 0.05
++        node.now_ns = 1_000_000_000 + int(elapsed * 1e9)
++        if tick % 4 == 0:
++            actor_y = -0.8 + abs((elapsed + phase) % 8.0 - 4.0) * 0.225
++            if model in node.obstacles:
++                node.obstacle_previous_y[model] = node.obstacles[model][1]
++            node.obstacles[model] = (8.5, actor_y, node.now_ns)
++        minimum = min(minimum, math.hypot(x - 8.5, y - actor_y) - 0.46)
++        node.robot = (x, y, math.pi)
++        scale = compute_scale(node.robot, {model: (8.5, actor_y)},
++                              0.82, 1.6, math.radians(70), 1.0)
++        if SafetyLimiter.east_gate_blocked(node, 1.0):
++            scale = 0.0
++        x -= speed * scale * 0.05
++        if x < 7.6:
++            break
++    assert minimum >= 0.10, (speed, phase, minimum)
++    assert x < 7.6, (speed, phase, x)
+diff --git a/tools_demo/test/test_navigation_prerequisite_deadline.py b/tools_demo/test/test_navigation_prerequisite_deadline.py
+new file mode 100644
+index 0000000..d7f546a
+--- /dev/null
++++ b/tools_demo/test/test_navigation_prerequisite_deadline.py
+@@ -0,0 +1,48 @@
++"""Bound and recover the deferred-first-goal costmap wait."""
++
++from types import SimpleNamespace
++from unittest.mock import Mock
++
++from tools_demo.task_navigator import TaskNavigator
++import tools_demo.task_navigator as navigator
++
++
++def waiting_node():
++    """Represent a received command with an unavailable initial costmap."""
++    return SimpleNamespace(
++        pending_start_command=object(), active_zone=None,
++        pending_start_at=100.0, pending_recovery_at=100.0,
++        _global_costmap_ready=Mock(return_value=False),
++        _clear_costmaps=Mock(), publish_error=Mock(), publish_state=Mock(),
++        get_logger=Mock(return_value=Mock()), command_callback=Mock(),
++        action_client=SimpleNamespace(server_is_ready=lambda: True),
++        pending_action_retry_ticks=0,
++    )
++
++
++def test_unready_costmap_gets_bounded_recovery(monkeypatch):
++    node = waiting_node()
++    monkeypatch.setattr(navigator.time, 'monotonic', lambda: 111.0)
++    TaskNavigator._retry_pending_command(node)
++    node._clear_costmaps.assert_called_once()
++    assert node.pending_start_command is not None
++
++
++def test_missing_prerequisites_cannot_wait_forever(monkeypatch):
++    node = waiting_node()
++    monkeypatch.setattr(navigator.time, 'monotonic', lambda: 161.0)
++    TaskNavigator._retry_pending_command(node)
++    assert node.pending_start_command is None
++    node.publish_state.assert_called_once_with(
++        'failed', reason='navigation_prerequisites_timeout')
++
++
++def test_ready_command_resumes_exactly_once(monkeypatch):
++    node = waiting_node()
++    original = node.pending_start_command
++    node._global_costmap_ready.return_value = True
++    monkeypatch.setattr(navigator.time, 'monotonic', lambda: 105.0)
++    TaskNavigator._retry_pending_command(node)
++    TaskNavigator._retry_pending_command(node)
++    node.command_callback.assert_called_once_with(original)
++    assert node.pending_start_at is None
+diff --git a/tools_demo/test/test_obstacle_hold_isolation.py b/tools_demo/test/test_obstacle_hold_isolation.py
+new file mode 100644
+index 0000000..17812d0
+--- /dev/null
++++ b/tools_demo/test/test_obstacle_hold_isolation.py
+@@ -0,0 +1,33 @@
++"""Keep physical obstacle holds independent of manipulation locks."""
++
++from types import SimpleNamespace
++from unittest.mock import Mock
++
++from geometry_msgs.msg import Twist
++from tools_demo.avoidance_monitor import AvoidanceMonitor
++from tools_demo.safety_limiter import SafetyLimiter
++
++
++def test_far_obstacle_cannot_release_hold_for_near_obstacle():
++    node = SimpleNamespace(
++        robot=(0.0, 0.0), obstacles={'near': (0.7, 0.0), 'far': (3.0, 0.0)},
++        robot_radius=0.28, obstacle_radius=0.18, minimum_clearance=None,
++        minimum_event=None, collision_detected=False, encounter_distance=1.6,
++        encountered_obstacles=set(), sample_count=0, _hold_active=False,
++        base_hold_pub=Mock(),
++    )
++    AvoidanceMonitor.evaluate(node)
++    assert node._hold_active
++    assert [c.args[0].data for c in node.base_hold_pub.publish.call_args_list] == [True]
++    node.obstacles = {'near': (1.3, 0.0), 'far': (3.0, 0.0)}
++    AvoidanceMonitor.evaluate(node)
++    assert not node._hold_active
++
++
++def test_obstacle_release_cannot_release_manipulation_hold():
++    node = SimpleNamespace(base_hold=True, obstacle_hold=True,
++                           last_cmd=Twist(), last_cmd_ns=100, publisher=Mock())
++    SafetyLimiter.obstacle_hold_callback(node, SimpleNamespace(data=False))
++    assert node.base_hold
++    assert not node.obstacle_hold
++    assert node.publisher.publish.call_args.args[0].linear.x == 0.0
+diff --git a/tools_demo/test/test_obstacle_reverse_admission.py b/tools_demo/test/test_obstacle_reverse_admission.py
+new file mode 100644
+index 0000000..1971512
+--- /dev/null
++++ b/tools_demo/test/test_obstacle_reverse_admission.py
+@@ -0,0 +1,45 @@
++"""Keep unsafe obstacle reverse from canceling Nav2 and deadlocking its hold."""
++
++import math
++from types import SimpleNamespace
++from unittest.mock import Mock
++
++from tools_demo.task_navigator import TaskNavigator
++
++
++def harness(x, y, yaw):
++    """Bind the actual reverse acquisition with the captured mover state."""
++    return SimpleNamespace(
++        latest_x=x, latest_y=y, latest_yaw=yaw,
++        obstacle_positions={'/competition/obstacles/obstacle_2': (5.0, -0.8)},
++        obstacle_reverse_count=0, obstacle_max_reverses=1,
++        obstacle_reverse_disabled=False, obstacle_reverse_active=False,
++        obstacle_reverse_state='none', obstacle_reverse_speed=0.25,
++        _obstacle_reverse_distance_for=Mock(return_value=0.5),
++        goal_handle=Mock(), nav_handoff_requested=False,
++        _publish_obstacle_velocity=Mock(), get_logger=Mock(return_value=Mock()),
++    )
++
++
++def test_unsafe_sweep_reverse_does_not_cancel_nav2():
++    """T131534 stopped at (4.614,0.369); a return can hit before escape."""
++    node = harness(4.614, 0.369, 0.0)
++    handle = node.goal_handle
++    TaskNavigator._begin_obstacle_reverse(node, '/competition/obstacles/obstacle_2')
++    assert node.goal_handle is handle
++    handle.cancel_goal_async.assert_not_called()
++    assert not node.obstacle_reverse_active
++    assert node.obstacle_reverse_state == 'none'
++    node._publish_obstacle_velocity.assert_not_called()
++
++
++def test_safe_reverse_still_cancels_and_moves_away():
++    """Preserve reverse recovery when its entire path clears the patrol."""
++    node = harness(6.4, 0.4, math.pi)
++    handle = node.goal_handle
++    TaskNavigator._begin_obstacle_reverse(node, '/competition/obstacles/obstacle_2')
++    handle.cancel_goal_async.assert_called_once()
++    assert node.goal_handle is None
++    assert node.obstacle_reverse_active
++    assert node.obstacle_reverse_state == 'reversing'
++    node._publish_obstacle_velocity.assert_called_once_with(-0.25)
+diff --git a/tools_demo/test/test_safety_command_refresh.py b/tools_demo/test/test_safety_command_refresh.py
+new file mode 100644
+index 0000000..e01b873
+--- /dev/null
++++ b/tools_demo/test/test_safety_command_refresh.py
+@@ -0,0 +1,100 @@
++"""Exercise the final velocity guard with changing obstacle observations."""
++
++import ast
++from pathlib import Path
++from types import SimpleNamespace
++from unittest.mock import Mock
++
++from geometry_msgs.msg import Twist
++from tools_demo.safety_limiter import SafetyLimiter
++
++
++def harness():
++    """Bind the real callbacks without starting a ROS graph."""
++    node = SimpleNamespace(
++        base_hold=False, obstacle_hold=False,
++        last_cmd=Twist(), last_cmd_ns=1_000_000_000,
++        east_gate_open=False, robot=(10.0, 0.0, 0.0),
++        publisher=Mock(), scale_for_obstacles=Mock(return_value=1.0),
++        east_gate_blocked=Mock(return_value=False),
++        get_logger=Mock(return_value=Mock()),
++        get_clock=Mock(return_value=SimpleNamespace(
++            now=lambda: SimpleNamespace(nanoseconds=node.now_ns))),
++        now_ns=1_000_000_000,
++    )
++    node.cmd_vel_callback = lambda cmd: SafetyLimiter.cmd_vel_callback(node, cmd)
++    node._publish_command = lambda cmd: SafetyLimiter._publish_command(node, cmd)
++    node.publish_guarded_command = lambda: SafetyLimiter.publish_guarded_command(node)
++    return node
++
++
++def test_timer_rechecks_new_obstacle_before_republishing():
++    node = harness()
++    cmd = Twist()
++    cmd.linear.x = 0.8
++    node.cmd_vel_callback(cmd)
++    node.scale_for_obstacles.return_value = 0.0
++    node.now_ns += 50_000_000
++    node.publish_guarded_command()
++    assert node.publisher.publish.call_args.args[0].linear.x == 0.0
++
++
++def test_timer_does_not_compound_slowdown_or_refresh_input_age():
++    node = harness()
++    node.scale_for_obstacles.return_value = 0.5
++    cmd = Twist()
++    cmd.linear.x = 0.8
++    node.cmd_vel_callback(cmd)
++    node.now_ns += 50_000_000
++    node.publish_guarded_command()
++    assert node.publisher.publish.call_args.args[0].linear.x == 0.4
++    assert node.last_cmd_ns == 1_000_000_000
++    node.now_ns += 250_000_000
++    node.publish_guarded_command()
++    assert node.publisher.publish.call_args.args[0].linear.x == 0.0
++
++
++def test_clock_rewind_invalidates_cached_command():
++    node = harness()
++    node.last_cmd.linear.x = 0.8
++    node.now_ns = 900_000_000
++    node.publish_guarded_command()
++    assert node.publisher.publish.call_args.args[0].linear.x == 0.0
++
++
++def test_base_hold_discards_command_instead_of_replaying_after_release():
++    node = harness()
++    node.last_cmd.linear.x = 0.8
++    SafetyLimiter.base_hold_callback(node, SimpleNamespace(data=True))
++    SafetyLimiter.base_hold_callback(node, SimpleNamespace(data=False))
++    node.publish_guarded_command()
++    assert node.publisher.publish.call_args.args[0].linear.x == 0.0
++
++
++def test_east_gate_never_raises_safety_scale():
++    node = harness()
++    node.east_gate_open = True
++    node.robot = (8.8, 0.15, 3.14)
++    node.scale_for_obstacles.return_value = 0.1
++    cmd = Twist()
++    cmd.linear.x = 1.0
++    node.cmd_vel_callback(cmd)
++    assert node.publisher.publish.call_args.args[0].linear.x <= 0.1
++
++
++def test_mission_launch_does_not_shadow_safety_defaults():
++    path = Path(__file__).resolve().parents[1] / 'launch/mission.launch.py'
++    tree = ast.parse(path.read_text())
++    for node in ast.walk(tree):
++        if not isinstance(node, ast.Call):
++            continue
++        if not any(k.arg == 'executable' and isinstance(k.value, ast.Constant)
++                   and k.value.value == 'safety_limiter' for k in node.keywords):
++            continue
++        params = next(k.value for k in node.keywords if k.arg == 'parameters')
++        keys = {key.value for item in ast.walk(params) if isinstance(item, ast.Dict)
++                for key in item.keys if isinstance(key, ast.Constant)}
++        assert not keys & {'danger_radius', 'cone_half_angle_deg',
++                           'obstacle_timeout_sec', 'caution_radius'}
++        return
++    raise AssertionError('Safety limiter missing from mission launch')
+diff --git a/tools_demo/test/test_second_mover_crossing.py b/tools_demo/test/test_second_mover_crossing.py
+new file mode 100644
+index 0000000..abf4a96
+--- /dev/null
++++ b/tools_demo/test/test_second_mover_crossing.py
+@@ -0,0 +1,75 @@
++"""Replay the second-mover collision and hold chain with real guard methods."""
++
++import math
++from types import SimpleNamespace
++from unittest.mock import Mock
++
++import pytest
++
++from tools_demo.avoidance_monitor import AvoidanceMonitor
++from tools_demo.safety_limiter import SafetyLimiter
++from tools_demo.safety_math import compute_scale
++
++
++@pytest.mark.parametrize('speed', [0.9, 1.4, 1.8])
++@pytest.mark.parametrize('phase', range(8))
++def test_second_mover_crossing_clearance_and_progress(speed, phase):
++    """Exercise phase gating, truth hold, and scaling on the deployed diagonal."""
++    x, y = 7.2, 0.4
++    guard = SimpleNamespace(
++        robot=(x, y, math.pi), obstacles={}, obstacle_previous_y={},
++        east_gate_open=False, second_gate_open=False, obstacle_timeout=0.35,
++        get_logger=Mock(return_value=Mock()), now_ns=1_000_000_000,
++    )
++    guard.get_clock = lambda: SimpleNamespace(
++        now=lambda: SimpleNamespace(nanoseconds=guard.now_ns))
++    monitor = SimpleNamespace(
++        robot=(x, y), obstacles={}, robot_radius=0.28, obstacle_radius=0.18,
++        minimum_clearance=None, minimum_event=None, collision_detected=False,
++        encounter_distance=1.6, encountered_obstacles=set(), sample_count=0,
++        _hold_active=False, base_hold_pub=Mock(),
++    )
++    model = 'competition_moving_obstacle_2'
++    for tick in range(1600):
++        elapsed = tick * 0.05
++        guard.now_ns = 1_000_000_000 + int(elapsed * 1e9)
++        if tick % 4 == 0:
++            actor_y = -0.8 + abs((elapsed + phase) % 8.0 - 4.0) * 0.225
++            if model in guard.obstacles:
++                guard.obstacle_previous_y[model] = guard.obstacles[model][1]
++            guard.obstacles[model] = (5.0, actor_y, guard.now_ns)
++        monitor.robot = (x, y)
++        monitor.obstacles = {model: (5.0, actor_y)}
++        AvoidanceMonitor.evaluate(monitor)
++        yaw = math.atan2(-y, -x)
++        guard.robot = (x, y, yaw)
++        blocked = SafetyLimiter.east_gate_blocked(guard, 1.0)
++        scale = compute_scale((x, y, yaw), monitor.obstacles,
++                              0.82, 1.6, math.radians(70), 1.0)
++        if blocked or monitor._hold_active:
++            scale = 0.0
++        x += math.cos(yaw) * speed * scale * 0.05
++        y += math.sin(yaw) * speed * scale * 0.05
++        if x < 3.5:
++            break
++    assert monitor.minimum_clearance >= 0.10, (speed, phase, monitor.minimum_event)
++    assert x < 3.5, (speed, phase, x, y, monitor._hold_active)
++
++
++def test_second_gate_refuses_stale_truth_and_late_south_phase():
++    """Do not admit near the reversal or on missing/stale actor evidence."""
++    node = SimpleNamespace(
++        robot=(6.2, 0.34, math.pi), obstacles={}, obstacle_previous_y={},
++        east_gate_open=False, second_gate_open=False, obstacle_timeout=0.35,
++        get_clock=lambda: SimpleNamespace(
++            now=lambda: SimpleNamespace(nanoseconds=1_000_000_000)),
++        get_logger=Mock(return_value=Mock()),
++    )
++    assert SafetyLimiter.east_gate_blocked(node, 1.0)
++    model = 'competition_moving_obstacle_2'
++    node.obstacles[model] = (5.0, -0.4, 100_000_000)
++    node.obstacle_previous_y[model] = -0.38
++    assert SafetyLimiter.east_gate_blocked(node, 1.0)
++    node.obstacles[model] = (5.0, -0.75, 1_000_000_000)
++    node.obstacle_previous_y[model] = -0.73
++    assert SafetyLimiter.east_gate_blocked(node, 1.0)
+diff --git a/tools_demo/test/test_spawn_crossing_replay.py b/tools_demo/test/test_spawn_crossing_replay.py
+new file mode 100644
+index 0000000..7ee9716
+--- /dev/null
++++ b/tools_demo/test/test_spawn_crossing_replay.py
+@@ -0,0 +1,36 @@
++"""Replay the admitted south-phase crossing against the deployed route."""
++
++import math
++
++import pytest
++
++from tools_demo.navigation_math import dynamic_gate_waypoints
++from tools_demo.safety_math import compute_scale
++
++
++@pytest.mark.parametrize('speed', [0.9, 1.4, 1.8])
++def test_admitted_crossing_does_not_stop_inside_returning_actor(speed):
++    """Pin the 20261001T114841 east-gate stop/return collision pattern."""
++    route = dynamic_gate_waypoints((13.2, -0.95), (-3.1, 3.0))
++    wait_index = next(i for i, p in enumerate(route)
++                      if p.zone == 'universal_east_wait')
++    wait = route[wait_index]
++    exit_pose = route[wait_index + 1]
++    x, y = 9.6, wait.y
++    minimum = float('inf')
++    for tick in range(500):
++        elapsed = tick * 0.05
++        # Config: center_y=-0.35, amplitude=0.45, period=8 s.
++        # Start southbound at -0.73025; then reverse at -0.8.
++        actor_y = -0.8 + abs((elapsed + 3.69) % 8.0 - 4.0) * 0.225
++        clearance = math.hypot(x - 8.5, y - actor_y) - 0.46
++        minimum = min(minimum, clearance)
++        yaw = math.atan2(exit_pose.y - y, exit_pose.x - x)
++        scale = compute_scale((x, y, yaw), {'mover': (8.5, actor_y)},
++                              0.82, 1.6, math.radians(70), 1.0)
++        x += math.cos(yaw) * speed * scale * 0.05
++        y += math.sin(yaw) * speed * scale * 0.05
++        if x < 7.6:
++            break
++    assert minimum >= 0.10, (speed, minimum, x, y)
++    assert x < 7.6

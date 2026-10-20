@@ -1,0 +1,16 @@
+{
+  "terminal_navigation_snapshots": 267,
+  "terminal_navigation_with_plan": 0,
+  "persistent_plan_snapshots": 520,
+  "max_plan_age": 22.441420507000203,
+  "planned_width": 0.14,
+  "trail_width": 0.035,
+  "snapshots": 1271,
+  "planned_snapshots": 800,
+  "trail_snapshots": 1261,
+  "max_trail_points": 657,
+  "max_plan_points": 651,
+  "largest_trail_robot_error": 0.05914483180670096,
+  "plan_endpoint_changes": 16,
+  "trail_endpoint_changes": 655
+}

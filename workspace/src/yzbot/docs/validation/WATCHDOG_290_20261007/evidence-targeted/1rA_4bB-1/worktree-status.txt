@@ -1,0 +1,9 @@
+ M bot_navigation/launch/competition_navigation.launch.py
+ M gazebo_debug_gui/src/gazebo_debug_gui_plugin.cpp
+ M tools_demo/test/test_navigation_contract.py
+ M tools_demo/tools_demo/task_navigator.py
+?? docs/AGENT_HISTORY_20260823.md
+?? docs/HANDOFF_PROMPT_V5.md
+?? docs/HANDOFF_PROMPT_V6.md
+?? docs/HANDOFF_PROMPT_V7.md
+?? mybot_description/worlds/competition_complex_preview.world

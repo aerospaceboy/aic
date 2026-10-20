@@ -1,0 +1,1 @@
+Canceled by operator after Nav2 lifecycle startup failure. Observer did not capture a terminal message before restart. No completed task claim. API independently solved 2 red C / 3 blue A.

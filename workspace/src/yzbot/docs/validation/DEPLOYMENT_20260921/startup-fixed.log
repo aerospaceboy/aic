@@ -1,0 +1,6 @@
+停止上一轮竞赛进程...
+MANUAL_PROBLEM_MODE=PASS
+CoStudio: ws://192.168.153.128:21274
+在旧版“题目与大模型解析”面板填写题目和映射规则后提交。
+网页面板未启用；需要时设置 COSTUDIO_DASHBOARD=True 后启动。
+日志: /home/ros/runs/manual-20260921T185609/launch.log

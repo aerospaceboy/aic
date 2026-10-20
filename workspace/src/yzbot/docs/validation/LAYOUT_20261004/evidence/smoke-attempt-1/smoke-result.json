@@ -1,0 +1,100 @@
+{
+  "purpose": "one-block smoke; not five-block competition acceptance",
+  "question": "Move 1 red cube to zone B.",
+  "forced_entity_side": "red_cube_4:west",
+  "preflight": true,
+  "terminal_seen": true,
+  "wall_elapsed_sec": 182.09998869800074,
+  "mission": {
+    "color": "red",
+    "completed": 0,
+    "cube_name": "red_cube_4",
+    "current_index": 1,
+    "detail": "destination_navigation_failed:holding_cube",
+    "elapsed_sec": 182.1,
+    "schema_version": "1.0",
+    "skipped": 0,
+    "state": "failed",
+    "target_zone": "B",
+    "task_id": "88a56a6e7e874c6e",
+    "total": 1
+  },
+  "avoidance": {
+    "additional_avoidance_events": [],
+    "avoidance_demonstrated": false,
+    "avoidance_event_count": 0,
+    "avoidance_events": [],
+    "box_obstacles": {
+      "preview_moving_partition_1": [
+        1.6,
+        0.12
+      ],
+      "preview_moving_partition_2": [
+        0.12,
+        1.6
+      ]
+    },
+    "collision_detected": false,
+    "encountered_obstacles": [
+      "preview_moving_partition_2"
+    ],
+    "minimum_clearance": 0.4741,
+    "minimum_clearance_by_model": {
+      "competition_moving_obstacle_1": 3.477681164124054,
+      "competition_moving_obstacle_2": 5.601954059560634,
+      "preview_moving_partition_1": 14.344858916027869,
+      "preview_moving_partition_2": 0.4740962402196087
+    },
+    "minimum_event": {
+      "model": "preview_moving_partition_2",
+      "obstacle": [
+        7.9,
+        -5.5
+      ],
+      "robot": [
+        8.714,
+        -5.763
+      ]
+    },
+    "obstacle_updates": {
+      "competition_moving_obstacle_1": 1659,
+      "competition_moving_obstacle_2": 1658,
+      "preview_moving_partition_1": 1660,
+      "preview_moving_partition_2": 1671
+    },
+    "obstacles": {
+      "competition_moving_obstacle_1": [
+        8.5,
+        0.01
+      ],
+      "competition_moving_obstacle_2": [
+        5.0,
+        -0.665
+      ],
+      "preview_moving_partition_1": [
+        -5.08,
+        1.9
+      ],
+      "preview_moving_partition_2": [
+        7.58,
+        -5.5
+      ]
+    },
+    "obstacles_seen": 4,
+    "required_clearance": 0.1,
+    "response_kinds": {},
+    "response_obstacles": [],
+    "robot_speed": 1.25,
+    "safe": true,
+    "sample_count": 66440,
+    "schema_version": "1.0"
+  },
+  "dynamic_cloud": {
+    "messages": 639,
+    "nonempty": 605,
+    "max_points": 90
+  },
+  "collision_chain_faults": [],
+  "one_block_completed": false,
+  "two_dynamic_responses": false
+}

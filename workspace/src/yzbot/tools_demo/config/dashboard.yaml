@@ -1,0 +1,26 @@
+competition_dashboard:
+  ros__parameters:
+    use_sim_time: true
+    bind_address: 0.0.0.0
+    port: 8080
+    maximum_path_points: 240
+    maximum_trail_points: 900
+    trail_minimum_distance: 0.04
+    question_topic: /competition/task/question
+    plan_topic: /competition/task/plan
+    llm_status_topic: /competition/task/llm_status
+    mission_topic: /competition/mission/state
+    navigation_topic: /competition/navigation/state
+    perception_topic: /competition/perception/targets
+    avoidance_topic: /competition/avoidance/state
+    # Both universal gate pairs must appear on the panel. Keep this list
+    # aligned with competition_moving_obstacle_* in competition_zones.yaml.
+    obstacle_topics:
+      - /competition/obstacles/obstacle_1
+      - /competition/obstacles/obstacle_2
+      - /competition/obstacles/crossing_cart_1
+      - /competition/obstacles/crossing_cart_2
+    gripper_topic: /competition/gripper/state
+    path_topic: /plan
+    local_path_topic: /local_plan
+    robot_pose_topic: /amcl_pose

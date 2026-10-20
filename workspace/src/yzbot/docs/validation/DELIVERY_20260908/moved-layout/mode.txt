@@ -1,0 +1,1 @@
+motion-only; headless=true; LLM=false; dashboard=false; moving_obstacle=true

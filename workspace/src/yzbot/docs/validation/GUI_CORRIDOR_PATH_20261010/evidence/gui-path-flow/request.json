@@ -1,0 +1,5 @@
+{
+  "question": "请先将2个红色方块送到B区，再将3个蓝色方块送到A区。",
+  "mapping_rules": "按题目指定颜色、数量和目的区域搬运，共5个，不要求执行颜色先后顺序。",
+  "task_id": "repair-6fdadc6bde9a4c21932ecd3e72b17d7e"
+}

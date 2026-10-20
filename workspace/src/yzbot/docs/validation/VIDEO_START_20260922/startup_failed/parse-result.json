@@ -1,0 +1,40 @@
+{
+  "request_id": "video-bdf7eb5550c2442380ff121e4fca2dd6",
+  "question": "题目: 每个宠物店有5只宠物;有猫、狗两种宠物店;小爱领养2只猫,5只狗;小宠、小动都领养2只猫;小乐领养3只猫,5只狗;小欢领养4只狗。设猫宠物店数量为x,狗宠物店数量为y,计算x、y分别为多少",
+  "mapping_rules": "x代表红色,y代表蓝色,数量大于等于3的去A区,其他颜色去C区",
+  "schema_version": "1.0",
+  "state": "published",
+  "model": "qwen3.7-plus",
+  "published": true,
+  "task_id": "video-bdf7eb5550c2442380ff121e4fca2dd6",
+  "source": "llm",
+  "plan": {
+    "schema_version": "1.0",
+    "task_id": "video-bdf7eb5550c2442380ff121e4fca2dd6",
+    "source": "llm",
+    "items": [
+      {
+        "color": "red",
+        "count": 2,
+        "target_zone": "C"
+      },
+      {
+        "color": "blue",
+        "count": 3,
+        "target_zone": "A"
+      }
+    ],
+    "counts": {
+      "red": 2,
+      "blue": 3
+    },
+    "execution_order": [
+      "red",
+      "red",
+      "blue",
+      "blue",
+      "blue"
+    ]
+  },
+  "error": ""
+}

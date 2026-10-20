@@ -1,0 +1,118 @@
+[
+  {
+    "case": "b-regression",
+    "evidence": "/home/ros/dev_ws/delivery-20260908/b-regression/20260908T015235Z-3A1KPo",
+    "elapsed_sec": 269.3,
+    "minimum_clearance": 0.2612,
+    "strict_pass": true,
+    "strict_motion_under300": true,
+    "elapsed_below300": true,
+    "dual_yield": true,
+    "order_verified": true,
+    "pick_entities": [
+      "red_cube_3",
+      "red_cube_1",
+      "red_cube_4",
+      "red_cube_2",
+      "blue_cube_1"
+    ],
+    "arm_anchor_guard": false
+  },
+  {
+    "case": "moved-layout",
+    "evidence": "/home/ros/dev_ws/delivery-20260908/moved-layout/20260908T020008Z-IJx8Rf",
+    "elapsed_sec": 279.1,
+    "minimum_clearance": 0.2042,
+    "strict_pass": true,
+    "strict_motion_under300": true,
+    "elapsed_below300": true,
+    "dual_yield": true,
+    "order_verified": true,
+    "pick_entities": [
+      "red_cube_1",
+      "blue_cube_2",
+      "blue_cube_4",
+      "blue_cube_1",
+      "blue_cube_5"
+    ],
+    "arm_anchor_guard": false
+  },
+  {
+    "case": "b-repeat",
+    "evidence": "/home/ros/dev_ws/delivery-20260908/b-repeat/20260908T020613Z-7d8v8u",
+    "elapsed_sec": 327.8,
+    "minimum_clearance": 0.2429,
+    "strict_pass": false,
+    "strict_motion_under300": false,
+    "elapsed_below300": false,
+    "dual_yield": true,
+    "order_verified": false,
+    "pick_entities": [
+      "red_cube_3",
+      "red_cube_1",
+      "red_cube_4",
+      "red_cube_2",
+      "red_cube_5",
+      "blue_cube_1"
+    ],
+    "arm_anchor_guard": false
+  },
+  {
+    "case": "final-b",
+    "evidence": "/home/ros/dev_ws/delivery-20260908/final-b/20260908T044340Z-d4KBxN",
+    "elapsed_sec": 326.4,
+    "minimum_clearance": 0.2756,
+    "strict_pass": false,
+    "strict_motion_under300": false,
+    "elapsed_below300": false,
+    "dual_yield": true,
+    "order_verified": false,
+    "pick_entities": [
+      "red_cube_3",
+      "red_cube_1",
+      "red_cube_4",
+      "red_cube_2",
+      "red_cube_5",
+      "blue_cube_1"
+    ],
+    "arm_anchor_guard": true
+  },
+  {
+    "case": "delivery-b",
+    "evidence": "/home/ros/dev_ws/delivery-20260908/delivery-b/20260908T045035Z-4hcp8b",
+    "elapsed_sec": 264.4,
+    "minimum_clearance": 0.1178,
+    "strict_pass": false,
+    "strict_motion_under300": false,
+    "elapsed_below300": true,
+    "dual_yield": false,
+    "order_verified": true,
+    "pick_entities": [
+      "red_cube_3",
+      "red_cube_1",
+      "red_cube_4",
+      "red_cube_2",
+      "blue_cube_1"
+    ],
+    "arm_anchor_guard": false
+  },
+  {
+    "case": "delivery-c",
+    "evidence": "/home/ros/dev_ws/delivery-20260908/delivery-c/20260908T045622Z-0m88El",
+    "elapsed_sec": 282.0,
+    "minimum_clearance": 0.2122,
+    "strict_pass": true,
+    "strict_motion_under300": true,
+    "elapsed_below300": true,
+    "dual_yield": true,
+    "order_verified": true,
+    "pick_entities": [
+      "red_cube_1",
+      "blue_cube_2",
+      "blue_cube_4",
+      "blue_cube_1",
+      "blue_cube_5"
+    ],
+    "arm_anchor_guard": false
+  }
+]

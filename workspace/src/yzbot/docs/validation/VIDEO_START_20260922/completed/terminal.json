@@ -1,0 +1,398 @@
+{
+  "wall_elapsed_sec": 241.8074796699998,
+  "question": "题目: 每个衣柜有5件衣物;有T恤、裤子两种衣柜;小美需要2件T恤,1条裤子;小帅、小丽都需要7件T恤;小娜需要2件T恤,1条裤子;小杰需要1条裤子。设T恤衣柜数量为x,裤子衣柜数量为y,计算x、y分别为多少。",
+  "plan": {
+    "counts": {
+      "blue": 1,
+      "red": 4
+    },
+    "execution_order": [
+      "red",
+      "red",
+      "red",
+      "red",
+      "blue"
+    ],
+    "items": [
+      {
+        "color": "red",
+        "count": 4,
+        "target_zone": "A"
+      },
+      {
+        "color": "blue",
+        "count": 1,
+        "target_zone": "C"
+      }
+    ],
+    "schema_version": "1.0",
+    "source": "llm",
+    "task_id": "video-8c16cc0f9faa4527b8bd730f04048e54"
+  },
+  "parse_result": {
+    "request_id": "video-8c16cc0f9faa4527b8bd730f04048e54",
+    "question": "题目: 每个衣柜有5件衣物;有T恤、裤子两种衣柜;小美需要2件T恤,1条裤子;小帅、小丽都需要7件T恤;小娜需要2件T恤,1条裤子;小杰需要1条裤子。设T恤衣柜数量为x,裤子衣柜数量为y,计算x、y分别为多少。",
+    "mapping_rules": "x代表红色,y代表蓝色,数量大于等于3的去A区,其他颜色去C区",
+    "schema_version": "1.0",
+    "state": "published",
+    "model": "qwen3.7-plus",
+    "published": true,
+    "task_id": "video-8c16cc0f9faa4527b8bd730f04048e54",
+    "source": "llm",
+    "plan": {
+      "schema_version": "1.0",
+      "task_id": "video-8c16cc0f9faa4527b8bd730f04048e54",
+      "source": "llm",
+      "items": [
+        {
+          "color": "red",
+          "count": 4,
+          "target_zone": "A"
+        },
+        {
+          "color": "blue",
+          "count": 1,
+          "target_zone": "C"
+        }
+      ],
+      "counts": {
+        "red": 4,
+        "blue": 1
+      },
+      "execution_order": [
+        "red",
+        "red",
+        "red",
+        "red",
+        "blue"
+      ]
+    },
+    "error": ""
+  },
+  "llm": {
+    "available": true,
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "detail": "validated_model_problem_solution",
+    "latency_sec": 7.733,
+    "model": "qwen3.7-plus",
+    "required": true,
+    "schema_version": "1.0",
+    "source": "llm"
+  },
+  "mission": {
+    "color": null,
+    "completed": 5,
+    "cube_name": "blue_cube_2",
+    "current_index": 5,
+    "detail": "completed=5,skipped=0",
+    "elapsed_sec": 233.2,
+    "schema_version": "1.0",
+    "skipped": 0,
+    "state": "completed",
+    "target_zone": null,
+    "task_id": "video-8c16cc0f9faa4527b8bd730f04048e54",
+    "total": 5
+  },
+  "navigation": {
+    "alignment_error": 0.0398,
+    "recovery_attempts": 0,
+    "return_route_zone": null,
+    "route": "primary",
+    "route_zone": "C",
+    "state": "succeeded",
+    "status_code": 4,
+    "zone": "C"
+  },
+  "perception": {
+    "frame_id": "base_link",
+    "schema_version": "1.0",
+    "source_frame": "camera_rgbd_frame_optical",
+    "stamp": {
+      "nanosec": 896000000,
+      "sec": 567
+    },
+    "targets": []
+  },
+  "avoidance": {
+    "avoidance_demonstrated": true,
+    "avoidance_event_count": 2,
+    "avoidance_events": [
+      "spawn_avoidance_1",
+      "spawn_avoidance_2"
+    ],
+    "collision_detected": false,
+    "encountered_obstacles": [
+      "competition_moving_obstacle_1",
+      "competition_moving_obstacle_2"
+    ],
+    "minimum_clearance": 0.2854,
+    "minimum_event": {
+      "model": "competition_moving_obstacle_2",
+      "obstacle": [
+        5.0,
+        -0.62
+      ],
+      "robot": [
+        5.026,
+        0.125
+      ]
+    },
+    "obstacle_updates": {
+      "competition_moving_obstacle_1": 1450,
+      "competition_moving_obstacle_2": 1449
+    },
+    "obstacles": {
+      "competition_moving_obstacle_1": [
+        8.5,
+        -0.44
+      ],
+      "competition_moving_obstacle_2": [
+        5.0,
+        -0.215
+      ]
+    },
+    "obstacles_seen": 2,
+    "required_clearance": 0.1,
+    "response_kinds": {
+      "competition_moving_obstacle_1": "yield",
+      "competition_moving_obstacle_2": "yield"
+    },
+    "response_obstacles": [
+      "competition_moving_obstacle_1",
+      "competition_moving_obstacle_2"
+    ],
+    "robot_speed": 0.0,
+    "safe": true,
+    "sample_count": 22800,
+    "schema_version": "1.0"
+  },
+  "obstacles": {
+    "competition_moving_obstacle_1": [
+      8.5,
+      -0.395
+    ],
+    "competition_moving_obstacle_2": [
+      5.0,
+      -0.26
+    ]
+  },
+  "layout": {
+    "source": "/home/ros/dev_ws/install/mybot_description/share/mybot_description/worlds/offic_room.world",
+    "pickups": [
+      {
+        "name": "competition_red_pickup_tray",
+        "x": -4.0,
+        "y": 3.0,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_red_pickup_tray_2",
+        "x": 0.0,
+        "y": 3.0,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_red_pickup_tray_3",
+        "x": -6.0,
+        "y": -2.5,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_red_pickup_tray_4",
+        "x": 0.0,
+        "y": -1.0,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_red_pickup_tray_5",
+        "x": -4.0,
+        "y": -11.0,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray",
+        "x": 4.36,
+        "y": 1.91,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray_2",
+        "x": -10.0,
+        "y": -3.0,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray_3",
+        "x": -6.0,
+        "y": -7.0,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray_4",
+        "x": 1.4,
+        "y": -3.9,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray_5",
+        "x": 2.6,
+        "y": -5.8,
+        "width": 0.24,
+        "height": 0.24
+      }
+    ],
+    "zones": [
+      {
+        "name": "zone_a",
+        "x": -2.01,
+        "y": 2.99,
+        "width": 1.0,
+        "height": 0.5,
+        "label": "A"
+      },
+      {
+        "name": "zone_b",
+        "x": 0.0,
+        "y": -12.0,
+        "width": 1.0,
+        "height": 0.5,
+        "label": "B"
+      },
+      {
+        "name": "zone_c",
+        "x": -9.0,
+        "y": -7.0,
+        "width": 1.0,
+        "height": 0.5,
+        "label": "C"
+      }
+    ],
+    "cubes": [
+      {
+        "name": "red_cube_1",
+        "x": -4.0,
+        "y": 3.0
+      },
+      {
+        "name": "red_cube_2",
+        "x": 0.0,
+        "y": 3.0
+      },
+      {
+        "name": "red_cube_3",
+        "x": -6.0,
+        "y": -2.5
+      },
+      {
+        "name": "red_cube_4",
+        "x": 0.0,
+        "y": -1.0
+      },
+      {
+        "name": "red_cube_5",
+        "x": -4.0,
+        "y": -11.0
+      },
+      {
+        "name": "blue_cube_1",
+        "x": 4.36,
+        "y": 1.91
+      },
+      {
+        "name": "blue_cube_2",
+        "x": -10.0,
+        "y": -3.0
+      },
+      {
+        "name": "blue_cube_3",
+        "x": -6.0,
+        "y": -7.0
+      },
+      {
+        "name": "blue_cube_4",
+        "x": 1.4,
+        "y": -3.9
+      },
+      {
+        "name": "blue_cube_5",
+        "x": 2.6,
+        "y": -5.8
+      }
+    ],
+    "bounds": {
+      "minX": -11.2,
+      "maxX": 5.5600000000000005,
+      "minY": -13.2,
+      "maxY": 4.2
+    }
+  },
+  "gripper": "released:blue_cube_2",
+  "path": [],
+  "local_path": [],
+  "path_updated_at": 1790042060.9578364,
+  "local_path_updated_at": 0.0,
+  "robot": {
+    "x": -9.4607,
+    "y": -7.0046,
+    "yaw": -0.0389
+  },
+  "robot_updated_at": 1790042077.1036627,
+  "obstacles_updated_at": 1790042077.0051622,
+  "rounds": [
+    {
+      "index": 1,
+      "color": "red",
+      "cube_name": "red_cube_5",
+      "target_zone": "A",
+      "result": "completed",
+      "detail": "leaving_zone_A",
+      "elapsed_sec": 82.1
+    },
+    {
+      "index": 2,
+      "color": "red",
+      "cube_name": "red_cube_1",
+      "target_zone": "A",
+      "result": "completed",
+      "detail": "leaving_zone_A",
+      "elapsed_sec": 106.9
+    },
+    {
+      "index": 3,
+      "color": "red",
+      "cube_name": "red_cube_3",
+      "target_zone": "A",
+      "result": "completed",
+      "detail": "leaving_zone_A",
+      "elapsed_sec": 155.9
+    },
+    {
+      "index": 4,
+      "color": "red",
+      "cube_name": "red_cube_2",
+      "target_zone": "A",
+      "result": "completed",
+      "detail": "leaving_zone_A",
+      "elapsed_sec": 184.8
+    },
+    {
+      "index": 5,
+      "color": "blue",
+      "cube_name": "blue_cube_2",
+      "target_zone": "C",
+      "result": "completed",
+      "detail": "completed=5,skipped=0",
+      "elapsed_sec": 233.2
+    }
+  ],
+  "updated_at": 1790042077.1036627
+}

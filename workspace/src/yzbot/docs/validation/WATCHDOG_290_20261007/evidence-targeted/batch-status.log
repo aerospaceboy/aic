@@ -1,0 +1,17 @@
+VERSION=a74ec29051cad0da60609847bffaade475288f488dd59c6883432b2f1c2f68e9
+RUN 4bB_1rA#1 2026-10-07T02:46:10Z
+DONE 4bB_1rA#1 rc=0 evidence=/home/ros/dev_ws/experiments/targeted290-watchdog-20261007/4bB_1rA-1/20261007T024610Z-j7oGlM
+SCORE 4bB_1rA#1 el=265.3 clr=0.2868 u290=True func=True accepted=None resp2=True collision=None
+RUN 4bB_1rA#2 2026-10-07T02:52:23Z
+DONE 4bB_1rA#2 rc=0 evidence=/home/ros/dev_ws/experiments/targeted290-watchdog-20261007/4bB_1rA-2/20261007T025223Z-SejRPP
+SCORE 4bB_1rA#2 el=269.6 clr=0.2151 u290=True func=True accepted=None resp2=True collision=None
+RUN 2rB_3bA#1 2026-10-07T02:58:38Z
+DONE 2rB_3bA#1 rc=0 evidence=/home/ros/dev_ws/experiments/targeted290-watchdog-20261007/2rB_3bA-1/20261007T025838Z-QyrqZ1
+SCORE 2rB_3bA#1 el=256.7 clr=0.3361 u290=True func=True accepted=None resp2=True collision=None
+RUN 3bA_2rC#1 2026-10-07T03:04:43Z
+DONE 3bA_2rC#1 rc=0 evidence=/home/ros/dev_ws/experiments/targeted290-watchdog-20261007/3bA_2rC-1/20261007T030443Z-Yxhmc0
+SCORE 3bA_2rC#1 el=264.3 clr=0.3898 u290=True func=True accepted=None resp2=True collision=None
+RUN 1rA_4bB#1 2026-10-07T03:10:54Z
+DONE 1rA_4bB#1 rc=0 evidence=/home/ros/dev_ws/experiments/targeted290-watchdog-20261007/1rA_4bB-1/20261007T031054Z-kC9GoF
+SCORE 1rA_4bB#1 el=269.8 clr=0.2589 u290=True func=True accepted=None resp2=True collision=None
+BATCH_DONE

@@ -1,0 +1,376 @@
+{
+  "question": "每个宠物店有5只宠物;有猫、狗两种宠物店;小爱领养25只狗;设猫宠物店数量为x,狗宠物店数量为y,计算x、y分别为多少",
+  "plan": {
+    "counts": {
+      "blue": 5,
+      "red": 0
+    },
+    "execution_order": [
+      "blue",
+      "blue",
+      "blue",
+      "blue",
+      "blue"
+    ],
+    "items": [
+      {
+        "color": "blue",
+        "count": 5,
+        "target_zone": "A"
+      }
+    ],
+    "schema_version": "1.0",
+    "source": "llm",
+    "task_id": "repair-08913e7031534ba8ab95a40ce2b1eeb3"
+  },
+  "parse_result": {
+    "request_id": "repair-08913e7031534ba8ab95a40ce2b1eeb3",
+    "question": "每个宠物店有5只宠物;有猫、狗两种宠物店;小爱领养25只狗;设猫宠物店数量为x,狗宠物店数量为y,计算x、y分别为多少",
+    "mapping_rules": "x代表红色，y代表蓝色，数量大于等于1的去A区，其他颜色去B区",
+    "schema_version": "1.0",
+    "state": "published",
+    "model": "qwen3.8-max",
+    "published": true,
+    "task_id": "repair-08913e7031534ba8ab95a40ce2b1eeb3",
+    "source": "llm",
+    "plan": {
+      "schema_version": "1.0",
+      "task_id": "repair-08913e7031534ba8ab95a40ce2b1eeb3",
+      "source": "llm",
+      "items": [
+        {
+          "color": "blue",
+          "count": 5,
+          "target_zone": "A"
+        }
+      ],
+      "counts": {
+        "red": 0,
+        "blue": 5
+      },
+      "execution_order": [
+        "blue",
+        "blue",
+        "blue",
+        "blue",
+        "blue"
+      ]
+    },
+    "error": ""
+  },
+  "llm": {
+    "available": true,
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "detail": "validated_model_problem_solution",
+    "latency_sec": 1.401,
+    "model": "qwen3.8-max",
+    "required": true,
+    "schema_version": "1.0",
+    "source": "llm"
+  },
+  "mission": {
+    "color": "blue",
+    "completed": 0,
+    "cube_name": "blue_cube_5",
+    "current_index": 1,
+    "detail": "going_to_blue_pickup",
+    "elapsed_sec": 0.0,
+    "schema_version": "1.0",
+    "skipped": 0,
+    "state": "navigating_pickup",
+    "target_zone": "A",
+    "task_id": "repair-08913e7031534ba8ab95a40ce2b1eeb3",
+    "total": 5
+  },
+  "navigation": {
+    "phase": "navigation_prerequisites",
+    "recovery_attempts": 0,
+    "return_route_zone": null,
+    "route": "primary",
+    "route_zone": null,
+    "state": "failed",
+    "zone": null
+  },
+  "perception": {
+    "frame_id": "base_link",
+    "schema_version": "1.0",
+    "source_frame": "camera_rgbd_frame_optical",
+    "stamp": {
+      "nanosec": 536000000,
+      "sec": 616
+    },
+    "targets": []
+  },
+  "avoidance": {
+    "additional_avoidance_events": [],
+    "avoidance_demonstrated": false,
+    "avoidance_event_count": 0,
+    "avoidance_events": [],
+    "avoidance_policy": "two_distinct_effective_movers",
+    "box_obstacles": {
+      "preview_moving_partition_1": [
+        1.6,
+        0.12
+      ],
+      "preview_moving_partition_2": [
+        0.12,
+        1.6
+      ]
+    },
+    "collision_detected": false,
+    "encountered_obstacles": [],
+    "minimum_clearance": 4.2424,
+    "minimum_clearance_by_model": {
+      "competition_moving_obstacle_1": 4.242439507288058,
+      "competition_moving_obstacle_2": 7.741432429314995,
+      "preview_moving_partition_1": 16.94747528530823,
+      "preview_moving_partition_2": 6.16366078851003
+    },
+    "minimum_event": {
+      "model": "competition_moving_obstacle_1",
+      "obstacle": [
+        8.5,
+        -0.8
+      ],
+      "robot": [
+        13.2,
+        -0.95
+      ]
+    },
+    "obstacle_updates": {
+      "competition_moving_obstacle_1": 1692,
+      "competition_moving_obstacle_2": 1696,
+      "preview_moving_partition_1": 1696,
+      "preview_moving_partition_2": 1695
+    },
+    "obstacles": {
+      "competition_moving_obstacle_1": [
+        8.5,
+        -0.35
+      ],
+      "competition_moving_obstacle_2": [
+        5.0,
+        -0.53
+      ],
+      "preview_moving_partition_1": [
+        -5.453,
+        1.9
+      ],
+      "preview_moving_partition_2": [
+        7.34,
+        -5.5
+      ]
+    },
+    "obstacles_seen": 4,
+    "original_gate_events": [],
+    "original_pair_demonstrated": false,
+    "required_clearance": 0.1,
+    "response_kinds": {},
+    "response_obstacles": [],
+    "robot_speed": 0.0,
+    "safe": true,
+    "sample_count": 66869,
+    "schema_version": "1.0"
+  },
+  "obstacles": {
+    "competition_moving_obstacle_1": [
+      8.5,
+      -0.305
+    ],
+    "competition_moving_obstacle_2": [
+      5.0,
+      -0.575
+    ],
+    "preview_moving_partition_1": [
+      -5.347,
+      1.9
+    ],
+    "preview_moving_partition_2": [
+      7.34,
+      -5.5
+    ]
+  },
+  "layout": {
+    "source": "$WORKSPACE/install/mybot_description/share/mybot_description/worlds/offic_room.world",
+    "pickups": [
+      {
+        "name": "competition_red_pickup_tray",
+        "x": -7.5,
+        "y": -2.8,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_red_pickup_tray_2",
+        "x": 1.0,
+        "y": -5.4,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_red_pickup_tray_3",
+        "x": 0.0,
+        "y": 3.8,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_red_pickup_tray_4",
+        "x": 11.4,
+        "y": -9.8,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_red_pickup_tray_5",
+        "x": -4.7,
+        "y": -12.4,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray",
+        "x": 7.4,
+        "y": 3.6,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray_2",
+        "x": -11.0,
+        "y": -5.6,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray_3",
+        "x": -2.0,
+        "y": -6.0,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray_4",
+        "x": -0.5,
+        "y": -8.8,
+        "width": 0.24,
+        "height": 0.24
+      },
+      {
+        "name": "competition_blue_pickup_tray_5",
+        "x": 11.8,
+        "y": -13.0,
+        "width": 0.24,
+        "height": 0.24
+      }
+    ],
+    "zones": [
+      {
+        "name": "zone_a",
+        "x": -5.4,
+        "y": 3.8,
+        "width": 1.0,
+        "height": 0.5,
+        "label": "A"
+      },
+      {
+        "name": "zone_b",
+        "x": 11.7,
+        "y": -5.0,
+        "width": 1.0,
+        "height": 0.5,
+        "label": "B"
+      },
+      {
+        "name": "zone_c",
+        "x": 3.3,
+        "y": -12.1,
+        "width": 1.0,
+        "height": 0.5,
+        "label": "C"
+      }
+    ],
+    "cubes": [
+      {
+        "name": "red_cube_1",
+        "x": -7.5,
+        "y": -2.8
+      },
+      {
+        "name": "red_cube_2",
+        "x": 1.0,
+        "y": -5.4
+      },
+      {
+        "name": "red_cube_3",
+        "x": 0.0,
+        "y": 3.8
+      },
+      {
+        "name": "red_cube_4",
+        "x": 11.4,
+        "y": -9.8
+      },
+      {
+        "name": "red_cube_5",
+        "x": -4.7,
+        "y": -12.4
+      },
+      {
+        "name": "blue_cube_1",
+        "x": 7.4,
+        "y": 3.6
+      },
+      {
+        "name": "blue_cube_2",
+        "x": -11.0,
+        "y": -5.6
+      },
+      {
+        "name": "blue_cube_3",
+        "x": -2.0,
+        "y": -6.0
+      },
+      {
+        "name": "blue_cube_4",
+        "x": -0.5,
+        "y": -8.8
+      },
+      {
+        "name": "blue_cube_5",
+        "x": 11.8,
+        "y": -13.0
+      }
+    ],
+    "bounds": {
+      "minX": -12.2,
+      "maxX": 13.0,
+      "minY": -14.2,
+      "maxY": 5.0
+    }
+  },
+  "gripper": "unknown",
+  "path": [],
+  "local_path": [],
+  "path_updated_at": 0.0,
+  "local_path_updated_at": 0.0,
+  "robot": {
+    "x": 13.2005,
+    "y": -0.95,
+    "yaw": 3.1416
+  },
+  "robot_updated_at": 1791639589.5734665,
+  "obstacles_updated_at": 1791639589.5781982,
+  "rounds": [
+    {
+      "index": 1,
+      "color": "blue",
+      "cube_name": "blue_cube_5",
+      "target_zone": "A",
+      "result": "active",
+      "detail": "going_to_blue_pickup",
+      "elapsed_sec": 0.0
+    }
+  ],
+  "updated_at": 1791639589.5781982
+}

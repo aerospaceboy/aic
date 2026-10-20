@@ -1,0 +1,128 @@
+competition_mission_coordinator:
+  ros__parameters:
+    use_sim_time: true
+    cube_approach_allowlist: ["red_cube_1:east", "red_cube_2:east", "red_cube_3:east", "red_cube_4:east", "red_cube_5:east", "blue_cube_1:west", "blue_cube_1:east", "blue_cube_2:west", "blue_cube_2:east", "blue_cube_3:east", "blue_cube_4:east", "blue_cube_5:west", "blue_cube_5:east"]
+    # Updated scoring: colors may interleave; goods requirements stay exact.
+    enforce_color_order: false
+    use_legacy_selection_costs: false
+    cube_order_policy_file: ""
+    plan_topic: /competition/task/plan
+    perception_topic: /competition/perception/targets
+    navigation_goal_topic: /competition/navigation/goal
+    navigation_cancel_topic: /competition/navigation/cancel
+    navigation_state_topic: /competition/navigation/state
+    mission_state_topic: /competition/mission/state
+    mission_error_topic: /competition/mission/error
+    mission_cancel_topic: /competition/mission/cancel
+    maximum_retries: 1
+    # A failed grasp invalidates the cache. Allow one fresh RGB-D retry;
+    # this changes only the recovery path and never repeats a stale pose.
+    maximum_perception_retries: 1
+    maximum_cubes_per_color: 5
+    # Soft delivery-zone group preference (C->upper, A/B->lower), metres.
+    # Soft delivery-zone group preference (C->upper, A/B->lower), metres.
+    cube_group_preference_bonus: 0.0
+    # Detector publishes continuously. One second covers multiple camera
+    # frames; one same-pose retry plus one realigned scan still precedes the
+    # guarded reachable-slot fallback, without repeating an unchanged scan
+    # pose for 8--10 seconds when a tray is outside the wrist-camera FOV.
+    perception_timeout_sec: 1.0
+    # Realign and scan up to five times after the normal detector retry. One
+    # bounded realign moves the base ~0.023 m, while measured dock errors reach
+    # 0.19 m and the fallback grasp band is 0.10 m, so a single cycle cannot
+    # recover a large dock error. Each cycle keeps the validated realign caps;
+    # the fallback is accepted only when the Gazebo-relative slot stays inside
+    # the strict grasp window, and a failed grasp still invalidates the cache.
+    perception_recovery_rescans: 5
+    # A cancel that waits for a manipulation release must not gate the mission
+    # watchdog forever; finish the cancel anyway after this long.
+    cancel_timeout_sec: 15.0
+    manipulation_timeout_sec: 150.0
+    # The runtime itself must enforce the same five-minute contest limit as
+    # acceptance. A longer validation-only timeout allowed a 327.7 s round to
+    # keep running after it had already lost the scored contract.
+    mission_timeout_sec: 300.0
+    manipulation_velocity_scaling: 1.0
+    manipulation_acceleration_scaling: 1.0
+    manipulation_cartesian_duration: 0.6
+    manipulation_gripper_duration: 0.35
+    # Keep the grasp height and retract horizontally to 0.28 m. This was the
+    # lowest pose that repeatedly transported a cube without the chassis hop
+    # observed at 0.20 m; the centred lidar keeps the low payload inside its
+    # existing 0.38 m self mask without weakening any collision boundary.
+    manipulation_transport_x: 0.280
+    manipulation_transport_duration: 1.1
+    # Retained for recovery/cycle compatibility; pick-only transport does not
+    # perform the former vertical clearance lift.
+    manipulation_pick_transit_height: 0.200
+    manipulation_pick_lift_duration: 1.1
+    # Reject the near red shelf/lip reflection observed at x≈0.257 m.
+    # Real cube centers at the validated scan pose remain x>=0.30 m.
+    reachable_minimum_x: 0.285
+    reachable_maximum_x: 0.430
+    reachable_maximum_abs_y: 0.30
+    reachable_minimum_z: 0.005
+    # The bounded direct dock centers the chassis on the named shelf.
+    # Select inventory center-out so detections match cube_1..cube_5.
+    pickup_preferred_y: 0.0
+    # Two clean reproductions measured the cube at y=-9 mm before closing;
+    # remove that lateral miss without changing the validated X/Z approach.
+    pick_tool_offset: [0.010, 0.001, 0.025]
+    pick_safe_lift: 0.070
+    scan_pose: [0.300, -0.030, 0.390]
+    # Wrist RGB-D optical axis aimed at the shelf center from scan_pose.
+    scan_tool_orientation: [-0.2369, 0.9667, 0.0225, 0.0946]
+    pick_tool_orientation: [0.0, 1.0, 0.0, 0.0]
+    # X/Y are a safe fallback only. At runtime the current odometry pose is
+    # transformed against each world-fixed slot to cancel Nav2 dock error.
+    place_pose: [0.350, 0.000, 0.160]
+    place_safe_pose: [0.350, 0.000, 0.200]
+    place_slot_spacing: 0.080
+    # Keep odometry compensation inside the repeatedly validated IK region.
+    # Worst observed docking error still leaves < 6 cm world-slot error.
+    place_minimum_x: 0.290
+    place_maximum_x: 0.350
+    place_maximum_abs_y: 0.160
+    # Keep scoring/release truth identical to the visible world models.
+    zone_a_center: [-5.4, 3.8]
+    zone_b_center: [11.7, -5.0]
+    zone_c_center: [3.3, -12.1]
+    # The painted regions are 1.00 x 0.50 m. Subtract the 15 mm cube
+    # half-width so a released cube remains fully inside the region.
+    zone_half_extent: [0.485, 0.235]
+    delivery_surface_z: 0.020
+    delivery_cube_half_height: 0.015
+    delivery_height_tolerance: 0.10
+    delivery_precision_tolerance: 0.06
+    ros2_executable: ros2
+    manipulation_package: mybot
+    manipulation_executable: pick_place_moveit
+    # Dynamic cube-selection planning poses (map frame).
+    pickup_red_dock: [-2.40, -1.00, 0.0]
+    pickup_blue_dock: [-0.40, -1.00, 0.0]
+    # Per-cube docks used by cube selection: west approach, yaw 0, cube
+    # 0.36 m ahead of base_link. Must stay identical to the task navigator
+    # docks in bot_navigation/config/competition_zones.yaml.
+    red_cube_1_dock: [-7.86, -2.8, 0.0]
+    red_cube_2_dock: [-0.44, 0.8, 3.141592653589793]
+    red_cube_3_dock: [-0.36, 3.8, 0.0]
+    red_cube_4_dock: [11.04, -9.8, 0.0]
+    red_cube_5_dock: [-5.06, -12.4, 0.0]
+    blue_cube_1_dock: [7.04, 3.6, 0.0]
+    blue_cube_2_dock: [-11.36, -5.6, 0.0]
+    blue_cube_3_dock: [-2.36, -6.0, 0.0]
+    blue_cube_4_dock: [-0.86, -8.8, 0.0]
+    blue_cube_5_dock: [11.44, -13.0, 0.0]
+    # Inner (east-side) docks: the open area east of the blue shelf lets the
+    # robot grasp blue cubes without threading the tight shelf corridor.
+    # yaw pi faces west toward the cube.
+    blue_cube_1_dock_inner: [7.76, 3.6, 3.141592653589793]
+    blue_cube_2_dock_inner: [-10.64, -5.6, 3.141592653589793]
+    blue_cube_3_dock_inner: [-1.64, -6.0, 3.141592653589793]
+    blue_cube_4_dock_inner: [-0.14, -8.8, 3.141592653589793]
+    blue_cube_5_dock_inner: [12.16, -13.0, 3.141592653589793]
+    pickup_red_exit_clear: [-1.50, 0.00, 0.0]
+    pickup_blue_exit_clear: [-0.50, 0.00, 0.0]
+    zone_a_nav: [-5.0, 3.8, 3.141592653589793]
+    zone_b_nav: [11.3, -5.0, 0.0]
+    zone_c_nav: [2.9, -12.1, 0.0]

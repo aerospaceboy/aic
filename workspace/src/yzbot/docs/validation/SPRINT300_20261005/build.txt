@@ -1,0 +1,10 @@
+Starting >>> mybot_description
+Finished <<< mybot_description [1.06s]
+Starting >>> mybot
+Finished <<< mybot [0.11s]
+Starting >>> tools_demo
+Finished <<< tools_demo [1.12s]
+Starting >>> bot_navigation
+Finished <<< bot_navigation [0.10s]
+
+Summary: 4 packages finished [2.81s]

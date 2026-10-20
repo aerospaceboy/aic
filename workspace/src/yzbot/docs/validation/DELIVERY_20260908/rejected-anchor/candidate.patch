@@ -1,0 +1,81 @@
+diff --git a/mybot/pick_place_moveit.py b/mybot/pick_place_moveit.py
+index 3ac6e0a..0a51dc8 100644
+--- a/mybot/pick_place_moveit.py
++++ b/mybot/pick_place_moveit.py
+@@ -1585,7 +1585,8 @@ class MoveItPickPlace(Node):
+     ) -> Optional[Tuple[float, float, float]]:
+         """Recover when Gazebo creates a fixed joint at a bad anchor pose."""
+         original_pose = self.get_entity_pose(self.cube_name, "world")
+-        if original_pose is None:
++        original_reference = self.validate_carry_window()
++        if original_pose is None or original_reference is None:
+             return None
+         for attempt in range(attempts):
+             if self.attach_cube():
+@@ -1593,6 +1594,11 @@ class MoveItPickPlace(Node):
+                 if (
+                     reference is not None
+                     and attachment_anchor_within_window(reference)
++                    # A stable joint may still have jumped during attachment.
++                    # Rebuild it before retraction using the existing 20 mm
++                    # drift bound; the absolute carry window is unchanged.
++                    and point_distance(original_reference, reference)
++                    <= MAX_ATTACHED_DRIFT
+                 ):
+                     return reference
+                 if reference is not None:
+diff --git a/mybot/test/test_pick_place_math.py b/mybot/test/test_pick_place_math.py
+index b160a11..d2c08d8 100644
+--- a/mybot/test/test_pick_place_math.py
++++ b/mybot/test/test_pick_place_math.py
+@@ -439,3 +439,50 @@ def test_limit_guard_keeps_the_validated_safety_windows():
+     assert MODULE.CARRY_XY_LIMIT == 0.060
+     assert MODULE.CARRY_Z_LIMITS == (-0.030, 0.080)
+     assert MODULE.MAX_ATTACHED_DRIFT == 0.020
++
++
++def test_attachment_rebuilds_stable_but_shifted_joint(monkeypatch):
++    """Reject the measured red2 Z jump despite a valid absolute window."""
++    from types import SimpleNamespace
++
++    initial = (0.01488, -0.00003, 0.03575)
++    bad = (0.01237, 0.00362, 0.06851)
++    good = (0.01480, 0.00010, 0.03580)
++    assert MODULE.attachment_anchor_within_window(bad)
++    samples = iter([bad, good])
++    events = []
++    node = SimpleNamespace(
++        cube_name="red_cube_2", attached=True,
++        get_entity_pose=lambda *args: "original-pose",
++        validate_carry_window=lambda: initial,
++        attach_cube=lambda: events.append("attach") or True,
++        confirm_attachment_constraint=lambda: next(samples),
++        detach_cube=lambda: events.append("detach") or True,
++        set_entity_pose=lambda *args: events.append(args) or True,
++        get_logger=lambda: SimpleNamespace(warn=lambda *args: None),
++    )
++    monkeypatch.setattr(MODULE.time, "sleep", lambda seconds: None)
++    result = MODULE.MoveItPickPlace.attach_cube_with_stability_retry(node)
++    assert result == good
++    assert events == ["attach", "detach", ("red_cube_2", "original-pose"), "attach"]
++
++
++def test_attachment_shift_retries_are_bounded(monkeypatch):
++    """A persistent bad joint must fail without permitting arm retraction."""
++    from types import SimpleNamespace
++
++    attempts = []
++    node = SimpleNamespace(
++        cube_name="red_cube_2", attached=True,
++        get_entity_pose=lambda *args: "original-pose",
++        validate_carry_window=lambda: (0.01488, -0.00003, 0.03575),
++        attach_cube=lambda: attempts.append(1) or True,
++        confirm_attachment_constraint=lambda: (0.01237, 0.00362, 0.06851),
++        detach_cube=lambda: True,
++        set_entity_pose=lambda *args: True,
++        get_logger=lambda: SimpleNamespace(
++            warn=lambda *args: None, error=lambda *args: None),
++    )
++    monkeypatch.setattr(MODULE.time, "sleep", lambda seconds: None)
++    assert MODULE.MoveItPickPlace.attach_cube_with_stability_retry(node) is None
++    assert len(attempts) == 3

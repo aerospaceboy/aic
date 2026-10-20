@@ -1,0 +1,76 @@
+[task_navigator-22] [INFO] [1791639695.982632091] [competition_task_navigator]: nav_stage_speed_limit limit=0.60 stage=universal_corridor_entry
+[task_navigator-22] [INFO] [1791639700.916690310] [competition_task_navigator]: nav_stage_speed_limit limit=0.60 stage=universal_wall_tip_clear
+[task_navigator-22] [INFO] [1791639704.607188220] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=universal_east_wait
+[task_navigator-22] [WARN] [1791639706.635865302] [competition_task_navigator]: mover_crossing_hold begin topic=/competition/obstacles/obstacle_1 reason=staged_admission x=9.909 y=0.498
+[task_navigator-22] [WARN] [1791639712.868184327] [competition_task_navigator]: mover_crossing_hold end topic=/competition/obstacles/obstacle_1
+[task_navigator-22] [INFO] [1791639715.885909708] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=universal_mover_1_clear
+[task_navigator-22] [INFO] [1791639716.442566180] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=universal_mover_2_clear
+[task_navigator-22] [WARN] [1791639717.298882024] [competition_task_navigator]: mover_crossing_hold begin topic=/competition/obstacles/obstacle_2 reason=predicted_collision x=6.418 y=0.364
+[task_navigator-22] [WARN] [1791639723.146161993] [competition_task_navigator]: mover_crossing_hold end topic=/competition/obstacles/obstacle_2
+[task_navigator-22] [INFO] [1791639727.381694034] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=universal_mover_2_clear
+[task_navigator-22] [INFO] [1791639729.298629046] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=universal_origin_staging
+[task_navigator-22] [INFO] [1791639733.431040158] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=BLUE_CUBE_5_ENTRY
+[task_navigator-22] [INFO] [1791639747.464505904] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639747.466007185] [competition_mission_coordinator]: nav_result state=succeeded elapsed=51.56s
+[task_navigator-22] [INFO] [1791639757.339886531] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639757.343579927] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.18s
+[task_navigator-22] [INFO] [1791639758.649324031] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=lower_east_bay_gate
+[task_navigator-22] [INFO] [1791639770.849254915] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=lower_east_lane
+[task_navigator-22] [INFO] [1791639776.341778511] [competition_task_navigator]: nav_stage_speed_limit limit=1.20 stage=A_WALL_SOUTH_CLEAR
+[task_navigator-22] [INFO] [1791639784.783042013] [competition_task_navigator]: nav_stage_speed_limit limit=0.60 stage=A_WALL_NORTH_CLEAR
+[task_navigator-22] [INFO] [1791639790.641826637] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=A_place_pose
+[task_navigator-22] [INFO] [1791639793.667555183] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639793.668608015] [competition_mission_coordinator]: nav_result state=succeeded elapsed=36.32s
+[mission_coordinator-38] [INFO] [1791639798.043801721] [competition_mission_coordinator]: delivery_truth cube=blue_cube_5 zone=A x=-5.4000 y=3.6400 z=0.0346 valid=True slot_error=0.0000 precise=True
+[task_navigator-22] [INFO] [1791639799.718745285] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639799.720924367] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.68s
+[task_navigator-22] [INFO] [1791639802.041698644] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=BLUE_CUBE_1_ENTRY
+[task_navigator-22] [INFO] [1791639811.228453635] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639811.230671754] [competition_mission_coordinator]: nav_result state=succeeded elapsed=11.51s
+[task_navigator-22] [INFO] [1791639820.189651310] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639820.193597367] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.02s
+[task_navigator-22] [INFO] [1791639823.111484620] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=A_place_pose
+[task_navigator-22] [INFO] [1791639831.161500779] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639831.164249135] [competition_mission_coordinator]: nav_result state=succeeded elapsed=10.97s
+[mission_coordinator-38] [INFO] [1791639835.515403503] [competition_mission_coordinator]: delivery_truth cube=blue_cube_1 zone=A x=-5.4000 y=3.7200 z=0.0350 valid=True slot_error=0.0000 precise=True
+[task_navigator-22] [INFO] [1791639837.295785196] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639837.301638199] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.78s
+[task_navigator-22] [INFO] [1791639838.308590569] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=BLUE_CUBE_2
+[task_navigator-22] [INFO] [1791639852.733431673] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639852.734631053] [competition_mission_coordinator]: nav_result state=succeeded elapsed=15.43s
+[task_navigator-22] [INFO] [1791639862.698902281] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639862.700511684] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.06s
+[task_navigator-22] [INFO] [1791639865.470872048] [competition_task_navigator]: nav_stage_speed_limit limit=0.80 stage=A_WALL_WEST_CLEAR
+[task_navigator-22] [INFO] [1791639875.139026625] [competition_task_navigator]: nav_stage_speed_limit limit=0.60 stage=A_WALL_SOUTH_TIP_CLEAR
+[task_navigator-22] [INFO] [1791639881.834393488] [competition_task_navigator]: nav_stage_speed_limit limit=1.20 stage=A_WALL_SOUTH_CLEAR
+[task_navigator-22] [INFO] [1791639889.663870092] [competition_task_navigator]: nav_stage_speed_limit limit=0.60 stage=A_WALL_NORTH_CLEAR
+[task_navigator-22] [INFO] [1791639895.908749354] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=A_place_pose
+[task_navigator-22] [INFO] [1791639898.935621091] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639898.941303807] [competition_mission_coordinator]: nav_result state=succeeded elapsed=36.24s
+[mission_coordinator-38] [INFO] [1791639903.402042266] [competition_mission_coordinator]: delivery_truth cube=blue_cube_2 zone=A x=-5.4000 y=3.8000 z=0.0349 valid=True slot_error=0.0000 precise=True
+[task_navigator-22] [INFO] [1791639905.204202141] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639905.206875874] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.80s
+[task_navigator-22] [INFO] [1791639906.821008616] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=BLUE_CUBE_3
+[task_navigator-22] [INFO] [1791639916.199768972] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639916.201552448] [competition_mission_coordinator]: nav_result state=succeeded elapsed=10.99s
+[task_navigator-22] [INFO] [1791639925.285820746] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639925.285849781] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.06s
+[task_navigator-22] [INFO] [1791639926.596404235] [competition_task_navigator]: nav_stage_speed_limit limit=1.20 stage=A_WALL_SOUTH_CLEAR
+[task_navigator-22] [INFO] [1791639931.892511491] [competition_task_navigator]: nav_stage_speed_limit limit=0.60 stage=A_WALL_NORTH_CLEAR
+[task_navigator-22] [INFO] [1791639938.012785528] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=A_place_pose
+[task_navigator-22] [INFO] [1791639941.040467752] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639941.043671617] [competition_mission_coordinator]: nav_result state=succeeded elapsed=15.76s
+[mission_coordinator-38] [INFO] [1791639945.437775026] [competition_mission_coordinator]: delivery_truth cube=blue_cube_3 zone=A x=-5.4000 y=3.8800 z=0.0350 valid=True slot_error=0.0000 precise=True
+[task_navigator-22] [INFO] [1791639947.212828297] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639947.216727504] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.78s
+[task_navigator-22] [INFO] [1791639948.819876303] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=BLUE_CUBE_4
+[task_navigator-22] [INFO] [1791639960.747306863] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639960.748839861] [competition_mission_coordinator]: nav_result state=succeeded elapsed=13.53s
+[task_navigator-22] [INFO] [1791639967.896818620] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639967.899246661] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.05s
+[task_navigator-22] [INFO] [1791639969.112811235] [competition_task_navigator]: nav_stage_speed_limit limit=1.20 stage=A_WALL_SOUTH_CLEAR
+[task_navigator-22] [INFO] [1791639977.066041619] [competition_task_navigator]: nav_stage_speed_limit limit=0.60 stage=A_WALL_NORTH_CLEAR
+[task_navigator-22] [INFO] [1791639982.434859574] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=A_place_pose
+[task_navigator-22] [INFO] [1791639985.466166661] [competition_task_navigator]: nav_stage_speed_limit limit=0.00 stage=released
+[mission_coordinator-38] [INFO] [1791639985.469591127] [competition_mission_coordinator]: nav_result state=succeeded elapsed=17.57s
+[mission_coordinator-38] [INFO] [1791639989.834335614] [competition_mission_coordinator]: delivery_truth cube=blue_cube_4 zone=A x=-5.4000 y=3.9600 z=0.0350 valid=True slot_error=0.0000 precise=True

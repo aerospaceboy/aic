@@ -1,0 +1,88 @@
+{
+  "question": "Move 1 blue cube to zone C and 4 red cubes to zone B.",
+  "expected": [
+    [
+      "blue",
+      "C"
+    ],
+    [
+      "red",
+      "B"
+    ],
+    [
+      "red",
+      "B"
+    ],
+    [
+      "red",
+      "B"
+    ],
+    [
+      "red",
+      "B"
+    ]
+  ],
+  "pick_entities": [
+    "red_cube_3",
+    "red_cube_4",
+    "blue_cube_5",
+    "red_cube_5",
+    "red_cube_2"
+  ],
+  "delivery_truth": [
+    [
+      "red_cube_3",
+      "B",
+      "True",
+      "0.0000",
+      "True"
+    ],
+    [
+      "red_cube_4",
+      "B",
+      "True",
+      "0.0000",
+      "True"
+    ],
+    [
+      "blue_cube_5",
+      "C",
+      "True",
+      "0.0000",
+      "True"
+    ],
+    [
+      "red_cube_5",
+      "B",
+      "True",
+      "0.0000",
+      "True"
+    ],
+    [
+      "red_cube_2",
+      "B",
+      "True",
+      "0.0000",
+      "True"
+    ]
+  ],
+  "order_verified": false,
+  "color_order_required": false,
+  "requirements_verified": true,
+  "pickup_delivery_consistent": true,
+  "goods_score": 20,
+  "truth_precise": true,
+  "dual_yield": true,
+  "two_dynamic_responses": true,
+  "minimum_clearance": 0.4426,
+  "elapsed_sec": 242.3,
+  "motion_functional_pass": true,
+  "motion_under_300": true,
+  "motion_under_290": true,
+  "full_competition_acceptance": "not_tested",
+  "limits": [
+    "LLM/question-generation/dashboard timing excluded",
+    "truth may follow existing entity-pose stabilization",
+    "repeated manipulation attempts require manual review"
+  ]
+}

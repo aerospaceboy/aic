@@ -1,0 +1,750 @@
+amcl:
+  ros__parameters:
+    use_sim_time: true
+    alpha1: 0.2
+    alpha2: 0.2
+    alpha3: 0.2
+    alpha4: 0.2
+    alpha5: 0.2
+    base_frame_id: "base_footprint"
+    beam_skip_distance: 0.5
+    beam_skip_error_threshold: 0.9
+    beam_skip_threshold: 0.3
+    do_beamskip: false
+    global_frame_id: "map"
+    lambda_short: 0.1
+    laser_likelihood_max_dist: 2.0
+    laser_max_range: 100.0
+    laser_min_range: -1.0
+    laser_model_type: "likelihood_field"
+    max_beams: 60
+    max_particles: 2000
+    min_particles: 500
+    odom_frame_id: "odom"
+    pf_err: 0.05
+    pf_z: 0.99
+    recovery_alpha_fast: 0.0
+    recovery_alpha_slow: 0.0
+    resample_interval: 1
+    robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    save_pose_rate: 0.5
+    sigma_hit: 0.2
+    # Gazebo's world-sourced odometry is drift-free, so competition launch
+    # provides the map -> odom transform and AMCL must not compete with it.
+    tf_broadcast: false
+    transform_tolerance: 1.0
+    update_min_a: 0.2
+    update_min_d: 0.25
+    set_initial_pose: true
+    always_reset_initial_pose: false
+    initial_pose:
+      x: 13.2
+      y: -0.95
+      z: 0.0
+      yaw: 3.14159
+    z_hit: 0.5
+    z_max: 0.05
+    z_rand: 0.5
+    z_short: 0.05
+    scan_topic: scan
+
+bt_navigator:
+  ros__parameters:
+    use_sim_time: true
+    global_frame: map
+    robot_base_frame: base_footprint
+    odom_topic: /odom
+    bt_loop_duration: 10
+    default_server_timeout: 20
+    wait_for_service_timeout: 1000
+    action_server_result_timeout: 900.0
+    navigators: ["navigate_to_pose", "navigate_through_poses"]
+    navigate_to_pose:
+      plugin: "nav2_bt_navigator/NavigateToPoseNavigator"
+    navigate_through_poses:
+      plugin: "nav2_bt_navigator/NavigateThroughPosesNavigator"
+    # 'default_nav_through_poses_bt_xml' and 'default_nav_to_pose_bt_xml' are use defaults:
+    # nav2_bt_navigator/navigate_to_pose_w_replanning_and_recovery.xml
+    # nav2_bt_navigator/navigate_through_poses_w_replanning_and_recovery.xml
+    # They can be set here or via a RewrittenYaml remap from a parent launch file to Nav2.
+
+    # Humble REPLACES the default plugin list when this parameter is set.
+    # Preserve the shipped default library list and append only our condition.
+    plugin_lib_names:
+      - nav2_compute_path_to_pose_action_bt_node
+      - nav2_compute_path_through_poses_action_bt_node
+      - nav2_smooth_path_action_bt_node
+      - nav2_follow_path_action_bt_node
+      - nav2_spin_action_bt_node
+      - nav2_wait_action_bt_node
+      - nav2_assisted_teleop_action_bt_node
+      - nav2_back_up_action_bt_node
+      - nav2_drive_on_heading_bt_node
+      - nav2_clear_costmap_service_bt_node
+      - nav2_is_stuck_condition_bt_node
+      - nav2_goal_reached_condition_bt_node
+      - nav2_goal_updated_condition_bt_node
+      - nav2_globally_updated_goal_condition_bt_node
+      - nav2_is_path_valid_condition_bt_node
+      - nav2_initial_pose_received_condition_bt_node
+      - nav2_reinitialize_global_localization_service_bt_node
+      - nav2_rate_controller_bt_node
+      - nav2_distance_controller_bt_node
+      - nav2_speed_controller_bt_node
+      - nav2_truncate_path_action_bt_node
+      - nav2_truncate_path_local_action_bt_node
+      - nav2_goal_updater_node_bt_node
+      - nav2_recovery_node_bt_node
+      - nav2_pipeline_sequence_bt_node
+      - nav2_round_robin_node_bt_node
+      - nav2_transform_available_condition_bt_node
+      - nav2_time_expired_condition_bt_node
+      - nav2_path_expiring_timer_condition
+      - nav2_distance_traveled_condition_bt_node
+      - nav2_single_trigger_bt_node
+      - nav2_goal_updated_controller_bt_node
+      - nav2_is_battery_low_condition_bt_node
+      - nav2_navigate_through_poses_action_bt_node
+      - nav2_navigate_to_pose_action_bt_node
+      - nav2_remove_passed_goals_action_bt_node
+      - nav2_planner_selector_bt_node
+      - nav2_controller_selector_bt_node
+      - nav2_goal_checker_selector_bt_node
+      - nav2_controller_cancel_bt_node
+      - nav2_path_longer_on_approach_bt_node
+      - nav2_wait_cancel_bt_node
+      - nav2_spin_cancel_bt_node
+      - nav2_back_up_cancel_bt_node
+      - nav2_assisted_teleop_cancel_bt_node
+      - nav2_drive_on_heading_cancel_bt_node
+      - nav2_is_battery_charging_condition_bt_node
+      - dynamic_prediction_path_clear
+    # Bounded-recovery behavior tree: the default 6-retry recovery cycle
+    # burned ~190 s on a stuck base before failing the goal (see
+    # navigate_to_pose_recovery.xml). Fail after 2 cycles so the task
+    # navigator's own retry/backup-route/bounded-recovery handles it.
+    default_nav_to_pose_bt_xml: /home/ros/dev_ws/src/yzbot/bot_navigation/config/navigate_to_pose_recovery.xml
+
+    error_code_names:
+      - compute_path_error_code
+      - follow_path_error_code
+
+bt_navigator_navigate_through_poses_rclcpp_node:
+  ros__parameters:
+    use_sim_time: true
+
+bt_navigator_navigate_to_pose_rclcpp_node:
+  ros__parameters:
+    use_sim_time: true
+
+controller_server:
+  ros__parameters:
+    use_sim_time: true
+    controller_frequency: 15.0
+    min_x_velocity_threshold: 0.001
+    min_y_velocity_threshold: 0.5
+    min_theta_velocity_threshold: 0.001
+    # A moving obstacle or wall-corner scan can make RPP withhold a command
+    # briefly. Allow the 10 Hz local costmap to clear transient observations,
+    # but fail into the bounded clear/wait/replan tree before an invalid path
+    # leaves the robot parked beside a wall for many seconds.
+    failure_tolerance: 2.0
+    progress_checker_plugins: ["progress_checker"]
+    goal_checker_plugins: ["general_goal_checker", "central_goal_checker", "corridor_wait_goal_checker"]
+    controller_plugins: ["FollowPath", "CentralTransit"]
+    use_realtime_priority: false
+
+    # Progress checker parameters
+    progress_checker:
+      # Rotation-only DWB oscillation must not reset the recovery timer.
+      # Rotation Shim completes legitimate path alignment well within the
+      # bounded window, while final yaw is handled outside Nav2.
+      plugin: "nav2_controller::SimpleProgressChecker"
+      required_movement_radius: 0.10
+      # A blocked moving obstacle is handled by the safety limiter; do not
+      # spend repeated 18 s windows at a wall before replanning.
+      movement_time_allowance: 12.0
+    # Goal checker parameters
+    #precise_goal_checker:
+    #  plugin: "nav2_controller/SimpleGoalChecker"
+    #  xy_goal_tolerance: 0.25
+    #  yaw_goal_tolerance: 0.25
+    #  stateful: True
+    general_goal_checker:
+      stateful: True
+      plugin: "nav2_controller::SimpleGoalChecker"
+      # Nav2 owns obstacle-aware transit through the final approach. Direct
+      # docking is restricted to the last 0.20 m precision zone.
+      xy_goal_tolerance: 0.20
+      # TaskNavigator performs a final bounded yaw alignment after Nav2
+      # reaches the XY goal, avoiding DWB rotation stalls beside shelves.
+      yaw_goal_tolerance: 6.28
+    central_goal_checker:
+      stateful: True
+      plugin: "nav2_controller::SimpleGoalChecker"
+      # Keep the navigator's actual 0.20 m safety proof unchanged. Stop
+      # 0.05 m inside it to absorb controller/odometry callback timing skew.
+      xy_goal_tolerance: 0.15
+      yaw_goal_tolerance: 6.28
+    corridor_wait_goal_checker:
+      stateful: True
+      plugin: "nav2_controller::SimpleGoalChecker"
+      # Only the first patrol waiting anchor: a 0.20m early arrival can
+      # erase the complete slow/fast crossing window. Ordinary goals keep
+      # their original checker. Heading is still confirmed by admission.
+      # Smac endpoints are 0.05m cell centers: allow at most 0.03536m
+      # quantization plus 0.003m tracking, inside the 0.04m arrival proof.
+      xy_goal_tolerance: 0.003
+      yaw_goal_tolerance: 6.28
+    FollowPath:
+      transform_tolerance: 1.0
+      # Align once to the global path, then use RPP to carry speed along its
+      # centerline. Cost regulation and forward collision prediction remain
+      # active in addition to the independent Collision Monitor chain.
+      plugin: "nav2_rotation_shim_controller::RotationShimController"
+      primary_controller: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      # Hand turns above 26 degrees back to the rotation shim. At the narrow
+      # obstacle-2/wall mouth, allowing RPP to blend up to 40 degrees cut the
+      # corner into inflated cost and left collision prediction unable to
+      # advance. The proven 0.45 threshold retains all collision envelopes.
+      angular_dist_threshold: 0.45
+      angular_disengage_threshold: 0.20
+      forward_sampling_distance: 0.50
+      simulate_ahead_time: 1.0
+      debug_trajectory_details: false
+      # The low 0.28 m carry pose passed the 0.15 rad attitude envelope at
+      # 1.50 m/s. A bounded 10% cruise increase keeps the same 5.0 m/s^2
+      # acceleration and all independent cost/collision regulation.
+      # 1.65 -> 1.78 on 2026-10-06: the B-zone families (four cubes to
+      # the far south-east room) sat at 281-292 s against the 300 s
+      # motion bound, and the lane-2 gate plus keepout add ~8 s. The
+      # smoother still caps at 2.30 m/s and the risk zones, collision
+      # monitor and safety gates are unchanged.
+      desired_linear_vel: 1.78
+      lookahead_dist: 0.70
+      min_lookahead_dist: 0.60
+      # A shorter interpolated carrot follows the Smac centreline instead of
+      # cutting into the measured 0.335-0.355 m wall-tip clearances.
+      max_lookahead_dist: 1.20
+      lookahead_time: 0.80
+      use_velocity_scaled_lookahead_dist: true
+      min_approach_linear_velocity: 0.10
+      approach_velocity_scaling_dist: 0.80
+      use_regulated_linear_velocity_scaling: true
+      regulated_linear_scaling_min_radius: 0.90
+      regulated_linear_scaling_min_speed: 0.25
+      use_cost_regulated_linear_velocity_scaling: true
+      cost_scaling_dist: 0.45
+      cost_scaling_gain: 1.0
+      inflation_cost_scaling_factor: 10.0
+      # Preserve the original continuous follower. Corner clearance belongs
+      # to the global planning envelope below, not a new rotation policy.
+      use_rotate_to_heading: false
+      rotate_to_heading_angular_vel: 1.40
+      rotate_to_heading_min_angle: 0.45
+      max_angular_accel: 5.0
+      allow_reversing: false
+      use_collision_detection: true
+      # BodyStop and NearSlow remain the independent physical guard; keep
+      # RPP prediction on the accurately tracked near-corner path segment.
+      max_allowed_time_to_collision_up_to_carrot: 0.65
+      max_robot_pose_search_dist: 10.0
+      use_interpolation: true
+
+    # Only the short central gates use this tighter path follower. Preserve
+    # the complete 0.65 s collision projection at the existing <=1.0 m/s
+    # stage cap (including 0.05 m/s tracking allowance), and all hard guards.
+    # The ordinary long-route controller above is unchanged.
+    CentralTransit:
+      transform_tolerance: 1.0
+      plugin: "nav2_rotation_shim_controller::RotationShimController"
+      primary_controller: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      angular_dist_threshold: 0.45
+      angular_disengage_threshold: 0.20
+      forward_sampling_distance: 0.50
+      simulate_ahead_time: 1.0
+      debug_trajectory_details: false
+      desired_linear_vel: 1.0
+      lookahead_dist: 0.50
+      min_lookahead_dist: 0.35
+      max_lookahead_dist: 0.70
+      lookahead_time: 0.70
+      use_velocity_scaled_lookahead_dist: true
+      min_approach_linear_velocity: 0.10
+      approach_velocity_scaling_dist: 0.80
+      use_regulated_linear_velocity_scaling: true
+      regulated_linear_scaling_min_radius: 0.90
+      regulated_linear_scaling_min_speed: 0.25
+      use_cost_regulated_linear_velocity_scaling: true
+      cost_scaling_dist: 0.45
+      cost_scaling_gain: 1.0
+      inflation_cost_scaling_factor: 10.0
+      use_rotate_to_heading: false
+      rotate_to_heading_angular_vel: 1.40
+      rotate_to_heading_min_angle: 0.45
+      max_angular_accel: 5.0
+      allow_reversing: false
+      use_collision_detection: true
+      max_allowed_time_to_collision_up_to_carrot: 0.65
+      max_robot_pose_search_dist: 10.0
+      use_interpolation: true
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      use_sim_time: true
+      update_frequency: 10.0
+      publish_frequency: 5.0
+      global_frame: odom
+      robot_base_frame: base_footprint
+      rolling_window: true
+      width: 4
+      height: 4
+      resolution: 0.05
+      transform_tolerance: 1.0
+      # 0.226 m chassis half diagonal plus the scored 5 cm clearance.
+      robot_radius: 0.28
+      # The 0.10 m pickup trays sit below the lidar plane, so the obstacle
+      # layer alone cannot see them and DWB drifts into a tray mid-leg. The
+      # static layer adds the trays/walls for obstacle-aware velocity; the
+      # robot's own footprint is cleared so close dock positions stay usable
+      # (the global planner also clears it, see global_costmap).
+      plugins: ["obstacle_layer", "static_layer", "prediction_layer", "inflation_layer"]
+      prediction_layer:
+        plugin: "bot_navigation::PredictionLayer"
+        enabled: true
+        timeout: 0.5
+        # Prediction must not make NavFn's current start cell unplannable.
+        # Physical lidar/collision monitoring and the 0.75 m actor guard stay.
+        robot_egress_radius: 0.33
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        # Extend only the soft gradient across the measured 0.11 m map/world
+        # edge mismatch. Robot radius remains 0.28 m, so narrow aisles stay
+        # traversable while DWB is biased away from wall tips. A steeper
+        # falloff (10.0) and tighter soft envelope (0.45) let the base carry
+        # more speed past wall corners and shelf ends without shrinking the
+        # lethal 0.28 m radius.
+        cost_scaling_factor: 10.0
+        inflation_radius: 0.45
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: True
+        footprint_clearing_enabled: True
+        track_unknown_space: True
+        max_obstacle_height: 2.0
+        observation_sources: scan placed_cubes
+        scan:
+          # /scan_payload_masked is /scan with the carried payload's own
+          # returns removed while the mission holds a cube. The height filter
+          # below cannot do that: a 2D lidar places every return at the
+          # sensor's own height (~0.25 m), above min_obstacle_height, so the
+          # payload return (~0.40 m range, just past range_min) marked the
+          # robot's own box and RPP spent its patience on "collision ahead".
+          # The mask node in competition_navigation.launch.py must be running
+          # for this source to see any data.
+          topic: /scan_payload_masked
+          # The carried cube rides 0.28 m ahead of the base with its top edge
+          # at 0.10-0.18 m, inside the lidar's field, so the laser marked the
+          # robot's own payload as an obstacle and RPP refused to move: BC72
+          # (2026-09-12) crept 0.087 m in 8 s, aborted two retries and timed
+          # out after 311 s. Static obstacles (including the 0.10 m trays) come
+          # from the map layer and the placed cubes from /competition/
+          # placed_cubes, so filtering the laser below 0.20 m keeps every real
+          # obstacle marked.
+          min_obstacle_height: 0.20
+          max_obstacle_height: 2.0
+          clearing: True
+          marking: True
+          data_type: "LaserScan"
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 4.0
+          obstacle_min_range: 0.0
+        placed_cubes:
+          topic: /competition/placed_cubes
+          data_type: "PointCloud2"
+          min_obstacle_height: 0.0
+          max_obstacle_height: 0.30
+          obstacle_max_range: 30.0
+          clearing: False
+          marking: True
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_subscribe_transient_local: True
+        footprint_clearing_enabled: True
+      always_send_full_costmap: False
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      use_sim_time: true
+      update_frequency: 5.0
+      publish_frequency: 2.0
+      global_frame: map
+      robot_base_frame: base_footprint
+      # Planning-only envelope: existing allowed .35m payload + half a .05m
+      # cell, rounded up. A body-only .28m global path proved untrackable at
+      # the B rock and red4 corner. Local body/stop checks stay unchanged.
+      robot_radius: 0.38
+      resolution: 0.05
+      track_unknown_space: true
+      # Only static-map-filtered live returns mark the separate dynamic
+      # layer. Raw rays clear its old marks; static walls are never duplicated.
+      plugins: ["static_layer", "obstacle_layer", "dynamic_layer", "prediction_layer", "sweep_band_layer", "inflation_layer"]
+      prediction_layer:
+        plugin: "bot_navigation::PredictionLayer"
+        enabled: true
+        timeout: 0.5
+        robot_egress_radius: 0.33
+      dynamic_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        observation_sources: scan_clear dynamic_points
+        scan_clear:
+          # Masked scan: while the payload return is not removed here, the
+          # short ray also stops the raytrace clearing behind the robot's own
+          # payload and leaves stale dynamic marks on the robot's trail.
+          topic: /scan_payload_masked
+          data_type: LaserScan
+          marking: false
+          clearing: true
+          inf_is_valid: true
+          min_obstacle_height: 0.20
+          max_obstacle_height: 2.0
+          raytrace_max_range: 4.5
+          raytrace_min_range: 0.0
+        dynamic_points:
+          topic: /competition/dynamic_obstacles
+          data_type: PointCloud2
+          marking: true
+          clearing: false
+          min_obstacle_height: 0.20
+          max_obstacle_height: 2.0
+          obstacle_max_range: 4.0
+          obstacle_min_range: 0.0
+      sweep_band_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        # Only the original mover-2 unsafe pocket and static diagonal-wall
+        # protections remain. New carts have live, expiring predictions;
+        # permanently banning their whole sweep would eliminate avoidance.
+        footprint_clearing_enabled: true
+        observation_sources: keepout_points
+        keepout_points:
+          topic: /competition/sweep_band_keepout
+          data_type: PointCloud2
+          marking: true
+          clearing: false
+          min_obstacle_height: 0.0
+          max_obstacle_height: 2.0
+          obstacle_max_range: 30.0
+          obstacle_min_range: 0.0
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: True
+        # Same treatment the static layer already gets below, and for the same
+        # symptom. /competition/placed_cubes marks every cube the mission has
+        # put down, at floor height (min_obstacle_height 0.0), and the robot
+        # finishes a placement standing right beside the cube it just set
+        # down. The mark lands on or next to the robot's own cell, NavFn then
+        # refuses the next leg with "Starting point in lethal space", and RPP
+        # spends its patience on "collision ahead" first. Measured on
+        # 2026-10-04, round 1rA_4bB of the verify_lethal batch:
+        #
+        #   nav_goal zone=B  ...  three refusals, lethal start x3
+        #
+        # The static layer's footprint_clearing_enabled does not cover this,
+        # because the mark comes from this layer, not from the map.
+        footprint_clearing_enabled: True
+        observation_sources: placed_cubes
+        placed_cubes:
+          topic: /competition/placed_cubes
+          data_type: "PointCloud2"
+          min_obstacle_height: 0.0
+          max_obstacle_height: 0.30
+          obstacle_max_range: 30.0
+          clearing: False
+          marking: True
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_subscribe_transient_local: True
+        # Docks sit 0.24 m from a tray face (inside the 0.33 m inscribed
+        # zone), so the planner saw the robot's own dock cell as lethal and
+        # the next leg stalled ("Starting point in lethal space"). Clear the
+        # robot's current footprint so the start cell is free while the
+        # trays elsewhere stay obstacles for planning.
+        footprint_clearing_enabled: True
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        cost_scaling_factor: 10.0
+        # Prefer trackable clearance before the RPP preview reaches a corner.
+        # The planning-only envelope above covers payload/grid error; local
+        # physical body geometry and every stop check remain unchanged.
+        inflation_radius: 0.65
+      always_send_full_costmap: False
+
+# The yaml_filename does not need to be specified since it going to be set by defaults in launch.
+# If you'd rather set it in the yaml, remove the default "map" value in the tb3_simulation_launch.py
+# file & provide full path to map below. If CLI map configuration or launch default is provided, that will be used.
+map_server:
+  ros__parameters:
+    yaml_filename: ""
+    use_sim_time: true
+
+map_saver:
+  ros__parameters:
+    use_sim_time: true
+    save_map_timeout: 5.0
+    free_thresh_default: 0.25
+    occupied_thresh_default: 0.65
+    map_subscribe_transient_local: True
+
+planner_server:
+  ros__parameters:
+    use_sim_time: true
+    expected_planner_frequency: 1.0
+    planner_plugins: ["GridBased", "CentralExact", "CorridorWaitExact"]
+    # SmacPlanner2D replaces NavFn: NavFn (nav2_navfn_planner) has a known
+    # bug (navigation2 #4655) where it randomly fails to create a plan for
+    # a clearly reachable goal ("failed to create plan with tolerance").
+    GridBased:
+      plugin: "nav2_smac_planner/SmacPlanner2D"
+      tolerance: 0.5
+      downsample_costmap: false
+      allow_unknown: true
+      max_iterations: 1000000
+      max_on_approach_iterations: 1000
+      # Smac2D uses inflated costs during search. A value of 8 keeps paths
+      # away from wall tips: at 5, the east-corridor route reached only
+      # 0.42 m from the (3.6, -6.0) corner and RPP could not follow its arc.
+      # Inflation remains non-lethal, so narrow aisles stay traversable.
+      cost_travel_multiplier: 8.0
+      smooth_paths: true
+      minimum_turning_radius: 0.2
+      use_astar: true
+      debug_visualizations: false
+
+    # The corridor waiting proof cannot accept the ordinary 0.50m fallback.
+    # All ordinary cost preferences and physical collision checks remain.
+    CorridorWaitExact:
+      plugin: "nav2_smac_planner/SmacPlanner2D"
+      tolerance: 0.0
+      downsample_costmap: false
+      allow_unknown: true
+      max_iterations: 1000000
+      max_on_approach_iterations: 1000
+      cost_travel_multiplier: 8.0
+      smooth_paths: true
+      minimum_turning_radius: 0.2
+      use_astar: true
+      debug_visualizations: false
+
+    # The ordinary 0.50 m near-goal fallback can report success at a point
+    # beside the red-2 tray instead of at the safety gate. Only central gates
+    # require an exact endpoint; the ordinary planner and all lethal-cell
+    # collision rules remain unchanged.
+    CentralExact:
+      plugin: "nav2_smac_planner/SmacPlanner2D"
+      tolerance: 0.0
+      downsample_costmap: false
+      allow_unknown: true
+      max_iterations: 1000000
+      max_on_approach_iterations: 1000
+      # These short segments already stay outside the complete cart patrol.
+      # Keep a positive prediction-cost preference, but do not make a soft
+      # future reach cost dominate distance so strongly that the path loops
+      # south into the adjacent pickup tray. Physical lethal cells, collision
+      # prediction and the final speed/stop guards are unchanged.
+      cost_travel_multiplier: 0.1
+      smooth_paths: true
+      minimum_turning_radius: 0.2
+      use_astar: true
+      debug_visualizations: false
+
+smoother_server:
+  ros__parameters:
+    use_sim_time: true
+    smoother_plugins: ["simple_smoother"]
+    simple_smoother:
+      plugin: "nav2_smoother::SimpleSmoother"
+      tolerance: 1.0e-10
+      max_its: 1000
+      do_refinement: True
+
+behavior_server:
+  ros__parameters:
+    use_sim_time: true
+    local_costmap_topic: local_costmap/costmap_raw
+    global_costmap_topic: global_costmap/costmap_raw
+    local_footprint_topic: local_costmap/published_footprint
+    global_footprint_topic: global_costmap/published_footprint
+    cycle_frequency: 10.0
+    behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait"]
+    spin:
+      plugin: "nav2_behaviors/Spin"
+    backup:
+      plugin: "nav2_behaviors/BackUp"
+    drive_on_heading:
+      plugin: "nav2_behaviors/DriveOnHeading"
+    wait:
+      plugin: "nav2_behaviors/Wait"
+    assisted_teleop:
+      plugin: "nav2_behaviors/AssistedTeleop"
+    local_frame: odom
+    global_frame: map
+    robot_base_frame: base_footprint
+    transform_tolerance: 0.1
+    simulate_ahead_time: 2.0
+    max_rotational_vel: 0.5
+    min_rotational_vel: 0.1
+    rotational_acc_lim: 0.8
+
+waypoint_follower:
+  ros__parameters:
+    use_sim_time: true
+    loop_rate: 20
+    stop_on_failure: false
+    action_server_result_timeout: 900.0
+    waypoint_task_executor_plugin: "wait_at_waypoint"
+    wait_at_waypoint:
+      plugin: "nav2_waypoint_follower::WaitAtWaypoint"
+      enabled: True
+      waypoint_pause_duration: 200
+
+velocity_smoother:
+  ros__parameters:
+    use_sim_time: true
+    smoothing_frequency: 20.0
+    scale_velocities: False
+    feedback: "OPEN_LOOP"
+    # The Gazebo base is the holonomic planar-move plugin, and the docking
+    # code (mission_coordinator._center_target_laterally / dock realign)
+    # commands linear.y with closed-loop odometry feedback. A zero y cap
+    # silently dropped every lateral correction: the 2026-10-06 distributed
+    # layout run measured centering_result residual_y=0.0384 after a 0.20 m/s
+    # lateral command (moved=9.7e-05 m), and the following pick failed its
+    # Cartesian descend / IK and had to be retried. Forward and yaw limits are
+    # untouched; only the small lateral channel used by centred docking is
+    # enabled, and the collision monitor plus the safety limiter still gate it.
+    max_velocity: [2.30, 0.22, 3.2]
+    # Direct competition docking intentionally reverses on east-to-west
+    # returns.  Do not throttle that safe 0.65 m/s command to 0.20 m/s.
+    # Symmetric yaw limits avoid spending several seconds on every westbound
+    # pre-alignment merely because the shortest turn is negative.
+    min_velocity: [-0.80, -0.22, -3.2]
+    max_accel: [5.0, 1.0, 5.0]
+    max_decel: [-4.5, -1.0, -4.0]
+    odom_topic: "odom"
+    odom_duration: 0.1
+    deadband_velocity: [0.0, 0.0, 0.0]
+    velocity_timeout: 1.0
+
+collision_monitor:
+  ros__parameters:
+    use_sim_time: true
+    base_frame_id: "base_footprint"
+    odom_frame_id: "odom"
+    cmd_vel_in_topic: "/cmd_vel"
+    cmd_vel_out_topic: "/cmd_vel_collision_safe"
+    state_topic: "collision_monitor_state"
+    # Gazebo occasionally publishes scan stamps 0.2-0.4 s ahead of the most
+    # recent odom TF. Keep the safety watchdog enabled, but tolerate that
+    # normal simulation skew so valid velocity commands are not dropped.
+    transform_tolerance: 0.5
+    source_timeout: 1.0
+    # The planar base and lidar share a rigid transform. Avoid odom-based
+    # source shifting because delayed simulation TF otherwise drops the final
+    # velocity stream while the VM is under load.
+    base_shift_correction: False
+    stop_pub_timeout: 2.0
+    # Use measured distance zones as the final physical guard. Trajectory
+    # prediction used to mark ordinary wall-corner turns as future collisions
+    # and held /cmd_vel_collision_safe at zero before DWB could steer away.
+    polygons: ["BodyStop", "NearSlow"]
+    BodyStop:
+      type: "circle"
+      # Keep a small but non-zero margin over the 0.226 m chassis half
+      # diagonal without blocking narrow aisles (0.28 m stalled the base
+      # against corner obstacles on some delivery legs).
+      radius: 0.26
+      action_type: "stop"
+      max_points: 2
+      visualize: False
+      enabled: True
+    NearSlow:
+      type: "circle"
+      # Slow before the hard stop without suppressing steering throughout a
+      # narrow aisle. The costmaps still plan with a 0.45 m inflated margin.
+      radius: 0.38
+      action_type: "slowdown"
+      max_points: 3
+      # 0.70: keep more speed through the spawn-gate crossing and wall corners
+      # (0.38 m slowdown zone) while BodyStop (0.26 m) remains the hard stop.
+      # NOTE: 0.85 was tested and reverted -- it did not speed up the y=1.5
+      # wall crossing (blue->C stayed ~40 s) and let blue_cube_3's delivery
+      # nav fail (safety_release -> skipped=2, completed=3). 0.70 is the
+      # validated stable value.
+      slowdown_ratio: 0.70
+      visualize: False
+      enabled: True
+    observation_sources: ["scan"]
+    scan:
+      type: "scan"
+      # Masked scan (see the local costmap note): the payload return sits past
+      # range_min at the sensor height, so min_height cannot exclude it and it
+      # landed inside the 0.26 m BodyStop / 0.38 m NearSlow circles.
+      topic: /scan_payload_masked
+      # Above the carried payload (top edge 0.10-0.18 m) for the same reason
+      # as the costmap source: the robot's own cube otherwise sat inside the
+      # 0.26 m BodyStop / 0.38 m NearSlow circles.
+      min_height: 0.20
+      max_height: 2.0
+      enabled: True
+
+docking_server:
+  ros__parameters:
+    use_sim_time: true
+    controller_frequency: 50.0
+    initial_perception_timeout: 5.0
+    wait_charge_timeout: 5.0
+    dock_approach_timeout: 30.0
+    undock_linear_tolerance: 0.05
+    undock_angular_tolerance: 0.1
+    max_retries: 3
+    base_frame: "base_link"
+    fixed_frame: "odom"
+    dock_backwards: false
+    dock_prestaging_tolerance: 0.5
+
+    # Types of docks
+    dock_plugins: ['simple_charging_dock']
+    simple_charging_dock:
+      plugin: 'opennav_docking/SimpleChargingDock'
+      docking_threshold: 0.05
+      staging_x_offset: -0.7
+      use_external_detection_pose: true
+      use_battery_status: false # true
+      use_stall_detection: false # true
+
+      external_detection_timeout: 1.0
+      external_detection_translation_x: -0.18
+      external_detection_translation_y: 0.0
+      external_detection_rotation_roll: -1.57
+      external_detection_rotation_pitch: -1.57
+      external_detection_rotation_yaw: 0.0
+      filter_coef: 0.1
+
+    # Dock instances
+    # The following example illustrates configuring dock instances.
+    # docks: ['home_dock']  # Input your docks here
+    # home_dock:
+    #   type: 'simple_charging_dock'
+    #   frame: map
+    #   pose: [0.0, 0.0, 0.0]
+
+    controller:
+      k_phi: 3.0
+      k_delta: 2.0
+      v_linear_min: 0.15
+      v_linear_max: 0.15

@@ -1,0 +1,236 @@
+STATS frames=443 robot_contacts=1329 wall_contacts=0 first_sim=310.672 last_sim=311.556
+STATS frames=5418 robot_contacts=16254 wall_contacts=0 first_sim=310.672 last_sim=321.506
+STATS frames=10085 robot_contacts=30255 wall_contacts=0 first_sim=310.672 last_sim=330.84
+STATS frames=15047 robot_contacts=45141 wall_contacts=0 first_sim=310.672 last_sim=340.764
+STATS frames=20010 robot_contacts=60030 wall_contacts=0 first_sim=310.672 last_sim=350.69
+STATS frames=24973 robot_contacts=74919 wall_contacts=0 first_sim=310.672 last_sim=360.616
+STATS frames=29920 robot_contacts=89760 wall_contacts=0 first_sim=310.672 last_sim=370.51
+CONTACT t=375.84 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__camera_link_collision_2 depth=0.000214446 count=1
+CONTACT t=375.842 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__camera_link_collision_2 depth=0.000211825 count=2
+CONTACT t=375.844 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__camera_link_collision_2 depth=0.000211819 count=3
+CONTACT t=375.846 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__camera_link_collision_2 depth=0.00021086 count=4
+CONTACT t=375.848 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__camera_link_collision_2 depth=0.000210837 count=5
+CONTACT t=376.338 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__camera_link_collision_2 depth=0.000163178 count=250
+STATS frames=34886 robot_contacts=105151 wall_contacts=0 first_sim=310.672 last_sim=380.442
+CONTACT t=381.818 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.00052265 count=1
+CONTACT t=381.818 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000544474 count=1
+CONTACT t=381.82 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.000589259 count=2
+CONTACT t=381.82 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000578558 count=2
+CONTACT t=381.822 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.000612463 count=3
+CONTACT t=381.822 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000599515 count=3
+CONTACT t=381.824 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.000630192 count=4
+CONTACT t=381.824 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000613486 count=4
+CONTACT t=381.826 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.000607907 count=5
+CONTACT t=381.826 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000675092 count=5
+CONTACT t=382.038 pair=blue_cube_5::link::collision | six_arm::link6::link6_collision depth=0.000113516 count=1
+CONTACT t=382.044 pair=blue_cube_5::link::collision | six_arm::link6::link6_collision depth=9.73316e-05 count=2
+CONTACT t=382.046 pair=blue_cube_5::link::collision | six_arm::link6::link6_collision depth=1.63306e-05 count=3
+CONTACT t=382.048 pair=blue_cube_5::link::collision | six_arm::link6::link6_collision depth=0.000628831 count=4
+CONTACT t=382.05 pair=blue_cube_5::link::collision | six_arm::link6::link6_collision depth=0.000321859 count=5
+CONTACT t=382.316 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.0350575 count=250
+CONTACT t=382.316 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.0324838 count=250
+CONTACT t=382.33 pair=blue_cube_5::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000502628 count=1
+CONTACT t=382.34 pair=blue_cube_5::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.00096816 count=2
+CONTACT t=382.35 pair=blue_cube_5::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.00134498 count=3
+CONTACT t=382.352 pair=blue_cube_5::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000326296 count=4
+CONTACT t=382.354 pair=blue_cube_5::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000113078 count=5
+CONTACT t=382.54 pair=blue_cube_5::link::collision | six_arm::link6::link6_collision depth=0.00159691 count=250
+CONTACT t=382.816 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.0385256 count=500
+CONTACT t=382.816 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.0357826 count=500
+CONTACT t=384.216 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.0149629 count=750
+CONTACT t=384.216 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.0138457 count=750
+CONTACT t=384.716 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.0144516 count=1000
+CONTACT t=384.716 pair=competition_blue_pickup_tray_5::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.0133909 count=1000
+STATS frames=39848 robot_contacts=122617 wall_contacts=0 first_sim=310.672 last_sim=390.366
+STATS frames=44803 robot_contacts=137482 wall_contacts=0 first_sim=310.672 last_sim=400.276
+STATS frames=49752 robot_contacts=152329 wall_contacts=0 first_sim=310.672 last_sim=410.174
+STATS frames=54705 robot_contacts=167188 wall_contacts=0 first_sim=310.672 last_sim=420.08
+STATS frames=59668 robot_contacts=182077 wall_contacts=0 first_sim=310.672 last_sim=430.006
+CONTACT t=438.958 pair=competition_blue_pickup_tray::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__left_wheel_link_collision_4 depth=0.000305722 count=1
+CONTACT t=438.96 pair=competition_blue_pickup_tray::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__left_wheel_link_collision_4 depth=0.000479477 count=2
+CONTACT t=438.962 pair=competition_blue_pickup_tray::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__left_wheel_link_collision_4 depth=0.000521914 count=3
+CONTACT t=438.964 pair=competition_blue_pickup_tray::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__left_wheel_link_collision_4 depth=0.000536667 count=4
+CONTACT t=438.966 pair=competition_blue_pickup_tray::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__left_wheel_link_collision_4 depth=0.000541898 count=5
+CONTACT t=438.974 pair=competition_blue_pickup_tray::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__camera_link_collision_2 depth=0.000260659 count=1
+CONTACT t=438.976 pair=competition_blue_pickup_tray::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__camera_link_collision_2 depth=0.000259617 count=2
+CONTACT t=438.978 pair=competition_blue_pickup_tray::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__camera_link_collision_2 depth=0.000259612 count=3
+CONTACT t=438.98 pair=competition_blue_pickup_tray::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__camera_link_collision_2 depth=0.000251111 count=4
+CONTACT t=438.982 pair=competition_blue_pickup_tray::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__camera_link_collision_2 depth=0.000241368 count=5
+STATS frames=64619 robot_contacts=197056 wall_contacts=0 first_sim=310.672 last_sim=439.908
+CONTACT t=444.288 pair=competition_blue_pickup_tray::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.00113833 count=1
+CONTACT t=444.288 pair=competition_blue_pickup_tray::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.00127212 count=1
+CONTACT t=444.29 pair=competition_blue_pickup_tray::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.00113385 count=2
+CONTACT t=444.29 pair=competition_blue_pickup_tray::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.00113537 count=2
+CONTACT t=444.292 pair=competition_blue_pickup_tray::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.00109486 count=3
+CONTACT t=444.292 pair=competition_blue_pickup_tray::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.00108208 count=3
+CONTACT t=444.294 pair=competition_blue_pickup_tray::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.00106093 count=4
+CONTACT t=444.294 pair=competition_blue_pickup_tray::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.00104456 count=4
+CONTACT t=444.296 pair=competition_blue_pickup_tray::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.0010357 count=5
+CONTACT t=444.296 pair=competition_blue_pickup_tray::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.00101665 count=5
+CONTACT t=444.488 pair=blue_cube_1::link::collision | six_arm::link6::link6_collision depth=0.000219826 count=1
+CONTACT t=444.49 pair=blue_cube_1::link::collision | six_arm::link6::link6_collision depth=0.000357516 count=2
+CONTACT t=444.492 pair=blue_cube_1::link::collision | six_arm::link6::link6_collision depth=0.000236553 count=3
+CONTACT t=444.494 pair=blue_cube_1::link::collision | six_arm::link6::link6_collision depth=0.000398903 count=4
+CONTACT t=444.496 pair=blue_cube_1::link::collision | six_arm::link6::link6_collision depth=0.000509945 count=5
+CONTACT t=444.786 pair=competition_blue_pickup_tray::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.0358022 count=250
+CONTACT t=444.786 pair=competition_blue_pickup_tray::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.0334235 count=250
+CONTACT t=444.808 pair=blue_cube_1::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000104336 count=1
+CONTACT t=444.81 pair=blue_cube_1::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000143956 count=2
+CONTACT t=444.812 pair=blue_cube_1::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000247521 count=3
+CONTACT t=444.814 pair=blue_cube_1::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.00011622 count=4
+CONTACT t=444.816 pair=blue_cube_1::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000153363 count=5
+CONTACT t=444.986 pair=blue_cube_1::link::collision | six_arm::link6::link6_collision depth=0.00305568 count=250
+CONTACT t=445.286 pair=competition_blue_pickup_tray::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.0350401 count=500
+CONTACT t=445.286 pair=competition_blue_pickup_tray::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.0328811 count=500
+CONTACT t=446.716 pair=competition_blue_pickup_tray::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.0150971 count=750
+CONTACT t=446.716 pair=competition_blue_pickup_tray::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.0141323 count=750
+STATS frames=69587 robot_contacts=214422 wall_contacts=0 first_sim=310.672 last_sim=449.844
+STATS frames=74554 robot_contacts=229323 wall_contacts=0 first_sim=310.672 last_sim=459.778
+STATS frames=79521 robot_contacts=244224 wall_contacts=0 first_sim=310.672 last_sim=469.712
+STATS frames=84475 robot_contacts=259086 wall_contacts=0 first_sim=310.672 last_sim=479.62
+CONTACT t=480.23 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__right_wheel_link_collision_6 depth=0.000611323 count=1
+CONTACT t=480.232 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__right_wheel_link_collision_6 depth=0.000726078 count=2
+CONTACT t=480.234 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__right_wheel_link_collision_6 depth=0.000729799 count=3
+CONTACT t=480.236 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__right_wheel_link_collision_6 depth=0.00070021 count=4
+CONTACT t=480.238 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__right_wheel_link_collision_6 depth=0.000745843 count=5
+CONTACT t=486.348 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.00153912 count=1
+CONTACT t=486.348 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.00160065 count=1
+CONTACT t=486.35 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.00158133 count=2
+CONTACT t=486.35 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.00156256 count=2
+CONTACT t=486.352 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.00161595 count=3
+CONTACT t=486.352 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.00158998 count=3
+CONTACT t=486.354 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.00165953 count=4
+CONTACT t=486.354 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.00161874 count=4
+CONTACT t=486.356 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.00170306 count=5
+CONTACT t=486.356 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.00164003 count=5
+CONTACT t=486.59 pair=blue_cube_2::link::collision | six_arm::link6::link6_collision depth=6.29198e-05 count=1
+CONTACT t=486.592 pair=blue_cube_2::link::collision | six_arm::link6::link6_collision depth=0.000132447 count=2
+CONTACT t=486.594 pair=blue_cube_2::link::collision | six_arm::link6::link6_collision depth=1.45354e-05 count=3
+CONTACT t=486.596 pair=blue_cube_2::link::collision | six_arm::link6::link6_collision depth=9.6378e-05 count=4
+CONTACT t=486.598 pair=blue_cube_2::link::collision | six_arm::link6::link6_collision depth=0.00020422 count=5
+CONTACT t=486.846 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.0333383 count=250
+CONTACT t=486.846 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.0306699 count=250
+CONTACT t=486.878 pair=blue_cube_2::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000101179 count=1
+CONTACT t=486.88 pair=blue_cube_2::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000222389 count=2
+CONTACT t=486.882 pair=blue_cube_2::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000178939 count=3
+CONTACT t=486.884 pair=blue_cube_2::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000130677 count=4
+CONTACT t=486.886 pair=blue_cube_2::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000156215 count=5
+CONTACT t=487.092 pair=blue_cube_2::link::collision | six_arm::link6::link6_collision depth=0.000258449 count=250
+CONTACT t=487.346 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.03424 count=500
+CONTACT t=487.346 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.0316625 count=500
+CONTACT t=488.776 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.015543 count=750
+CONTACT t=488.776 pair=competition_blue_pickup_tray_2::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.0142566 count=750
+STATS frames=89392 robot_contacts=276251 wall_contacts=0 first_sim=310.672 last_sim=489.454
+STATS frames=93375 robot_contacts=288200 wall_contacts=0 first_sim=310.672 last_sim=497.42
+STATS frames=96032 robot_contacts=296171 wall_contacts=0 first_sim=310.672 last_sim=509.418
+STATS frames=100976 robot_contacts=311003 wall_contacts=0 first_sim=310.672 last_sim=519.306
+STATS frames=105921 robot_contacts=325838 wall_contacts=0 first_sim=310.672 last_sim=529.196
+STATS frames=110873 robot_contacts=340694 wall_contacts=0 first_sim=310.672 last_sim=539.1
+CONTACT t=547.528 pair=competition_blue_pickup_tray_3::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.00049537 count=1
+CONTACT t=547.528 pair=competition_blue_pickup_tray_3::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000574801 count=1
+CONTACT t=547.53 pair=competition_blue_pickup_tray_3::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.000522302 count=2
+CONTACT t=547.53 pair=competition_blue_pickup_tray_3::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000519838 count=2
+CONTACT t=547.532 pair=competition_blue_pickup_tray_3::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.000524626 count=3
+CONTACT t=547.532 pair=competition_blue_pickup_tray_3::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000520219 count=3
+CONTACT t=547.534 pair=competition_blue_pickup_tray_3::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.000529748 count=4
+CONTACT t=547.534 pair=competition_blue_pickup_tray_3::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000524983 count=4
+CONTACT t=547.536 pair=competition_blue_pickup_tray_3::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.000535531 count=5
+CONTACT t=547.536 pair=competition_blue_pickup_tray_3::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000531251 count=5
+CONTACT t=547.76 pair=blue_cube_3::link::collision | six_arm::link6::link6_collision depth=4.11788e-05 count=1
+CONTACT t=547.764 pair=blue_cube_3::link::collision | six_arm::link6::link6_collision depth=4.46898e-05 count=2
+CONTACT t=547.766 pair=blue_cube_3::link::collision | six_arm::link6::link6_collision depth=0.00011815 count=3
+CONTACT t=547.768 pair=blue_cube_3::link::collision | six_arm::link6::link6_collision depth=0.000410131 count=4
+CONTACT t=547.77 pair=blue_cube_3::link::collision | six_arm::link6::link6_collision depth=0.000285897 count=5
+CONTACT t=548.026 pair=competition_blue_pickup_tray_3::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.0343282 count=250
+CONTACT t=548.026 pair=competition_blue_pickup_tray_3::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.0319435 count=250
+CONTACT t=548.068 pair=blue_cube_3::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000131019 count=1
+CONTACT t=548.07 pair=blue_cube_3::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000264179 count=2
+CONTACT t=548.072 pair=blue_cube_3::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000222736 count=3
+CONTACT t=548.074 pair=blue_cube_3::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000215389 count=4
+CONTACT t=548.076 pair=blue_cube_3::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000177462 count=5
+CONTACT t=548.26 pair=blue_cube_3::link::collision | six_arm::link6::link6_collision depth=0.00117355 count=250
+CONTACT t=548.526 pair=competition_blue_pickup_tray_3::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.033574 count=500
+CONTACT t=548.526 pair=competition_blue_pickup_tray_3::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.0314462 count=500
+STATS frames=115831 robot_contacts=357221 wall_contacts=0 first_sim=310.672 last_sim=549.016
+CONTACT t=549.956 pair=competition_blue_pickup_tray_3::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.0151695 count=750
+CONTACT t=549.956 pair=competition_blue_pickup_tray_3::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.0141448 count=750
+STATS frames=120784 robot_contacts=372940 wall_contacts=0 first_sim=310.672 last_sim=558.922
+STATS frames=125734 robot_contacts=387790 wall_contacts=0 first_sim=310.672 last_sim=568.822
+STATS frames=130682 robot_contacts=402634 wall_contacts=0 first_sim=310.672 last_sim=578.718
+STATS frames=135636 robot_contacts=417496 wall_contacts=0 first_sim=310.672 last_sim=588.626
+CONTACT t=589.728 pair=competition_blue_pickup_tray_4::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.000147072 count=1
+CONTACT t=589.728 pair=competition_blue_pickup_tray_4::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000135065 count=1
+CONTACT t=589.73 pair=competition_blue_pickup_tray_4::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.000117683 count=2
+CONTACT t=589.73 pair=competition_blue_pickup_tray_4::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000115552 count=2
+CONTACT t=589.732 pair=competition_blue_pickup_tray_4::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=9.41892e-05 count=3
+CONTACT t=589.732 pair=competition_blue_pickup_tray_4::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=8.88432e-05 count=3
+CONTACT t=589.734 pair=competition_blue_pickup_tray_4::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=7.54623e-05 count=4
+CONTACT t=589.734 pair=competition_blue_pickup_tray_4::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=7.50144e-05 count=4
+CONTACT t=589.736 pair=competition_blue_pickup_tray_4::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=7.44823e-05 count=5
+CONTACT t=589.736 pair=competition_blue_pickup_tray_4::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=7.42801e-05 count=5
+CONTACT t=589.978 pair=blue_cube_4::link::collision | six_arm::link6::link6_collision depth=0.000107561 count=1
+CONTACT t=589.98 pair=blue_cube_4::link::collision | six_arm::link6::link6_collision depth=0.000172907 count=2
+CONTACT t=589.982 pair=blue_cube_4::link::collision | six_arm::link6::link6_collision depth=2.52342e-05 count=3
+CONTACT t=589.984 pair=blue_cube_4::link::collision | six_arm::link6::link6_collision depth=8.50187e-05 count=4
+CONTACT t=589.986 pair=blue_cube_4::link::collision | six_arm::link6::link6_collision depth=0.000130205 count=5
+CONTACT t=590.226 pair=competition_blue_pickup_tray_4::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.0333325 count=250
+CONTACT t=590.226 pair=competition_blue_pickup_tray_4::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.0310899 count=250
+CONTACT t=590.31 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=2.86394e-05 count=1
+CONTACT t=590.316 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=4.85407e-07 count=2
+CONTACT t=590.318 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.00025577 count=3
+CONTACT t=590.32 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000211502 count=4
+CONTACT t=590.322 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.000238706 count=5
+CONTACT t=590.476 pair=blue_cube_4::link::collision | six_arm::link6::link6_collision depth=0.000357917 count=250
+CONTACT t=590.726 pair=competition_blue_pickup_tray_4::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.0369188 count=500
+CONTACT t=590.726 pair=competition_blue_pickup_tray_4::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.0341031 count=500
+CONTACT t=590.82 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=1.21978e-05 count=250
+CONTACT t=591.788 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.11165e-05 count=500
+CONTACT t=592.166 pair=competition_blue_pickup_tray_4::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 depth=0.0143135 count=750
+CONTACT t=592.166 pair=competition_blue_pickup_tray_4::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=0.0133589 count=750
+CONTACT t=592.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.13767e-05 count=750
+CONTACT t=593.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.12144e-05 count=1000
+CONTACT t=594.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.09315e-05 count=1250
+CONTACT t=595.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.09995e-05 count=1500
+CONTACT t=596.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.08738e-05 count=1750
+CONTACT t=597.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.08834e-05 count=2000
+STATS frames=140593 robot_contacts=436871 wall_contacts=0 first_sim=310.672 last_sim=598.54
+CONTACT t=598.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.0848e-05 count=2250
+CONTACT t=599.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.08527e-05 count=2500
+CONTACT t=600.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.09009e-05 count=2750
+CONTACT t=601.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.08931e-05 count=3000
+CONTACT t=602.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.09229e-05 count=3250
+CONTACT t=603.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.09264e-05 count=3500
+CONTACT t=604.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.09001e-05 count=3750
+CONTACT t=605.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.08567e-05 count=4000
+CONTACT t=606.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.08319e-05 count=4250
+CONTACT t=607.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.09905e-05 count=4500
+STATS frames=145545 robot_contacts=454203 wall_contacts=0 first_sim=310.672 last_sim=608.444
+CONTACT t=608.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.09525e-05 count=4750
+CONTACT t=609.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.10107e-05 count=5000
+CONTACT t=610.76 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.10894e-05 count=5250
+CONTACT t=611.758 pair=blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision depth=6.13639e-05 count=5500
+FINAL frames=149496 robot_contacts=467049 wall_contacts=0 first_sim=310.672 last_sim=616.346
+PAIR blue_cube_1::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=180
+PAIR blue_cube_1::link::collision | six_arm::link6::link6_collision count=379
+PAIR blue_cube_2::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=179
+PAIR blue_cube_2::link::collision | six_arm::link6::link6_collision count=351
+PAIR blue_cube_3::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=173
+PAIR blue_cube_3::link::collision | six_arm::link6::link6_collision count=370
+PAIR blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=5664
+PAIR blue_cube_4::link::collision | six_arm::link6::link6_collision count=365
+PAIR blue_cube_5::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=177
+PAIR blue_cube_5::link::collision | six_arm::link6::link6_collision count=374
+PAIR competition_blue_pickup_tray::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__camera_link_collision_2 count=57
+PAIR competition_blue_pickup_tray::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__left_wheel_link_collision_4 count=69
+PAIR competition_blue_pickup_tray::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=951
+PAIR competition_blue_pickup_tray::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 count=952
+PAIR competition_blue_pickup_tray_2::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__right_wheel_link_collision_6 count=39
+PAIR competition_blue_pickup_tray_2::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=965
+PAIR competition_blue_pickup_tray_2::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 count=966
+PAIR competition_blue_pickup_tray_3::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=984
+PAIR competition_blue_pickup_tray_3::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 count=986
+PAIR competition_blue_pickup_tray_4::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=971
+PAIR competition_blue_pickup_tray_4::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 count=973
+PAIR competition_blue_pickup_tray_5::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__camera_link_collision_2 count=493
+PAIR competition_blue_pickup_tray_5::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=1019
+PAIR competition_blue_pickup_tray_5::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 count=1020

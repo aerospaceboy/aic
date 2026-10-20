@@ -1,0 +1,35 @@
+{
+  "question": "Move 1 red cube to zone A.",
+  "expected": [
+    [
+      "red",
+      "A"
+    ]
+  ],
+  "pick_entities": [
+    "red_cube_1"
+  ],
+  "delivery_truth": [
+    [
+      "red_cube_1",
+      "A",
+      "True",
+      "0.0000",
+      "True"
+    ]
+  ],
+  "order_verified": true,
+  "truth_precise": true,
+  "dual_yield": true,
+  "two_dynamic_responses": true,
+  "minimum_clearance": 0.2038,
+  "elapsed_sec": 102.9,
+  "motion_functional_pass": false,
+  "motion_under_300": false,
+  "full_competition_acceptance": "not_tested",
+  "limits": [
+    "LLM/question-generation/dashboard timing excluded",
+    "truth may follow existing entity-pose stabilization",
+    "repeated manipulation attempts require manual review"
+  ]
+}

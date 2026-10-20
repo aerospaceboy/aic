@@ -1,0 +1,3 @@
+task,requested_color,target_zone,state,completed,skipped,motion_seconds,submit_to_terminal_seconds,requirements_match,truth_valid_precise,truth_count,obstacles_seen,original_pair_demonstrated,minimum_dynamic_clearance,dynamic_collision_detected,llm_source,llm_model,control_base_commit,worktree_patch_sha256,display_navigation_state_wired
+five-red-B,red,B,completed,5,0,270.4,273.089,True,True,5,4,True,0.5223,False,llm,qwen3.8-max,c6d5cbe31f6687ffe96da239032a1d43bcc16b23,170ed575d217bd366ea89385022e6a2cf7625838e2ad2d6766195fc65f5d437d,False
+five-blue-A-retry,blue,A,completed,5,0,270.2,271.824,True,True,5,4,True,0.3846,False,llm,qwen3.8-max,c6d5cbe31f6687ffe96da239032a1d43bcc16b23,75818ceb8807de29142f58b932e27b536868fbb508029a4c1cb6c5a85eea6f18,True

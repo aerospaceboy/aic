@@ -1,0 +1,1230 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>月面仓储智能作业控制台</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #071018;
+      --panel: rgba(16, 29, 40, 0.88);
+      --panel-strong: #102332;
+      --line: rgba(153, 196, 220, 0.16);
+      --text: #edf7fb;
+      --muted: #8ca7b6;
+      --cyan: #41d6d3;
+      --cyan-soft: rgba(65, 214, 211, 0.14);
+      --amber: #ffc66d;
+      --red: #ff6b68;
+      --blue: #5aa9ff;
+      --green: #63df98;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+      font-family:
+        Inter, "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 16% 0%, rgba(46, 125, 160, 0.20), transparent 32rem),
+        radial-gradient(circle at 92% 84%, rgba(50, 144, 132, 0.12), transparent 34rem),
+        linear-gradient(145deg, #061019 0%, #09131c 52%, #071018 100%);
+    }
+
+    body::before {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      content: "";
+      opacity: 0.28;
+      background-image:
+        linear-gradient(rgba(115, 170, 194, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(115, 170, 194, 0.035) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, black, transparent 85%);
+    }
+
+    .shell {
+      width: min(1540px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 28px 0 44px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 48px;
+      height: 48px;
+      place-items: center;
+      border: 1px solid rgba(65, 214, 211, 0.36);
+      border-radius: 15px;
+      color: var(--cyan);
+      background: var(--cyan-soft);
+      box-shadow: inset 0 0 18px rgba(65, 214, 211, 0.08);
+      font-weight: 800;
+      letter-spacing: -0.08em;
+    }
+
+    h1, h2, p { margin: 0; }
+
+    h1 {
+      font-size: clamp(20px, 2.1vw, 30px);
+      font-weight: 690;
+      letter-spacing: 0.01em;
+    }
+
+    .eyebrow {
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .status-strip {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(4, 12, 18, 0.48);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      box-shadow: 0 0 0 4px rgba(140, 167, 182, 0.08);
+    }
+
+    .live .dot {
+      background: var(--green);
+      box-shadow: 0 0 0 4px rgba(99, 223, 152, 0.10), 0 0 14px var(--green);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.65fr) minmax(330px, 0.75fr);
+      gap: 18px;
+    }
+
+    .stack {
+      display: grid;
+      align-content: start;
+      gap: 18px;
+    }
+
+    .panel {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 18px 20px 0;
+    }
+
+    .panel-title {
+      color: #cde1e9;
+      font-size: 13px;
+      font-weight: 650;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .panel-meta {
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 11px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      min-height: 106px;
+      padding: 17px 18px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(17, 37, 50, 0.90), rgba(10, 23, 33, 0.78));
+      box-shadow: var(--shadow);
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric-value {
+      margin-top: 10px;
+      font-size: clamp(26px, 3vw, 38px);
+      font-weight: 680;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric-unit {
+      margin-left: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .accent-red { color: var(--red); }
+    .accent-blue { color: var(--blue); }
+    .accent-cyan { color: var(--cyan); }
+    .accent-amber { color: var(--amber); }
+
+    .question {
+      padding: 20px;
+    }
+
+    .question-text {
+      min-height: 52px;
+      color: #f4fbfd;
+      font-size: clamp(16px, 1.8vw, 22px);
+      font-weight: 560;
+      line-height: 1.52;
+    }
+
+    .order-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .order-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 76px;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: #cbdde5;
+      background: rgba(4, 12, 18, 0.42);
+      font-size: 12px;
+    }
+
+    .order-chip::before {
+      width: 8px;
+      height: 8px;
+      border-radius: 3px;
+      content: "";
+      background: var(--muted);
+    }
+
+    .order-chip.red::before { background: var(--red); }
+    .order-chip.blue::before { background: var(--blue); }
+    .order-chip.active {
+      border-color: rgba(65, 214, 211, 0.42);
+      background: var(--cyan-soft);
+    }
+
+    .map-wrap {
+      position: relative;
+      padding: 14px 18px 18px;
+    }
+
+    #map {
+      display: block;
+      width: 100%;
+      height: 420px;
+      border: 1px solid rgba(130, 181, 205, 0.16);
+      border-radius: 15px;
+      background: #08141d;
+    }
+
+    .map-legend {
+      position: absolute;
+      right: 30px;
+      bottom: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 12px;
+      max-width: calc(100% - 60px);
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--muted);
+      background: rgba(5, 14, 21, 0.80);
+      font-size: 10px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .legend-swatch {
+      width: 14px;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--cyan);
+    }
+
+    .legend-swatch.robot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--amber);
+    }
+
+    .legend-swatch.actual { background: #6ee7a8; }
+    .legend-swatch.local { background: #ffd166; }
+
+    .legend-swatch.obstacle-one,
+    .legend-swatch.obstacle-two {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #ff7a32;
+    }
+
+    .legend-swatch.obstacle-two { background: #d96cff; }
+    .legend-swatch.obstacle-three { background: #ffd166; }
+
+    .progress-panel { padding-bottom: 18px; }
+
+    .progress-track {
+      display: grid;
+      gap: 0;
+      padding: 18px 20px 0;
+    }
+
+    .stage {
+      position: relative;
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr);
+      gap: 12px;
+      min-height: 47px;
+      color: #67808e;
+      font-size: 13px;
+    }
+
+    .stage:not(:last-child)::before {
+      position: absolute;
+      top: 19px;
+      bottom: -2px;
+      left: 6px;
+      width: 1px;
+      content: "";
+      background: rgba(140, 167, 182, 0.18);
+    }
+
+    .stage-node {
+      position: relative;
+      z-index: 1;
+      width: 13px;
+      height: 13px;
+      margin-top: 3px;
+      border: 2px solid #3c5563;
+      border-radius: 50%;
+      background: #10202c;
+    }
+
+    .stage.done { color: #afc6d0; }
+    .stage.done .stage-node {
+      border-color: var(--green);
+      background: var(--green);
+    }
+
+    .stage.active {
+      color: var(--text);
+      font-weight: 620;
+    }
+
+    .stage.active .stage-node {
+      border-color: var(--cyan);
+      background: var(--cyan);
+      box-shadow: 0 0 0 5px rgba(65, 214, 211, 0.11), 0 0 16px rgba(65, 214, 211, 0.44);
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      padding: 18px 20px 0;
+    }
+
+    .detail {
+      min-height: 76px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(5, 14, 21, 0.36);
+    }
+
+    .detail-label {
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .detail-value {
+      overflow: hidden;
+      margin-top: 9px;
+      color: #dcebf0;
+      font-size: 13px;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bar {
+      height: 7px;
+      margin: 16px 20px 0;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(140, 167, 182, 0.12);
+    }
+
+    .bar-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #2ca9b6, var(--cyan));
+      transition: width 350ms ease;
+    }
+
+    .empty {
+      color: #65808e;
+      font-style: italic;
+    }
+
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #map { height: 360px; }
+    }
+
+    @media (max-width: 580px) {
+      .shell { width: min(100% - 20px, 1540px); padding-top: 18px; }
+      header { align-items: flex-start; flex-direction: column; }
+      .metrics { gap: 8px; }
+      .metric { min-height: 92px; padding: 14px; }
+      .detail-grid { grid-template-columns: 1fr; }
+      #map { height: 310px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">月</div>
+        <div>
+          <div class="eyebrow">Lunar warehouse operations</div>
+          <h1>月面仓储智能作业控制台</h1>
+        </div>
+      </div>
+      <div class="status-strip">
+        <span id="clock">--:--:--</span>
+        <span id="connection" class="live-pill">
+          <span class="dot"></span>
+          <span id="connectionText">等待 ROS 数据</span>
+        </span>
+      </div>
+    </header>
+
+    <section class="metrics" aria-label="任务关键指标">
+      <article class="metric">
+        <div class="metric-label">红色资源</div>
+        <div class="metric-value accent-red"><span id="redCount">0</span><span class="metric-unit">件</span></div>
+      </article>
+      <article class="metric">
+        <div class="metric-label">蓝色资源</div>
+        <div class="metric-value accent-blue"><span id="blueCount">0</span><span class="metric-unit">件</span></div>
+      </article>
+      <article class="metric">
+        <div class="metric-label">完成进度</div>
+        <div class="metric-value accent-cyan"><span id="completed">0</span><span class="metric-unit">/ <span id="total">0</span></span></div>
+      </article>
+      <article class="metric">
+        <div class="metric-label">比赛剩余</div>
+        <div class="metric-value accent-amber"><span id="remaining">05:00</span></div>
+      </article>
+    </section>
+
+    <section class="panel task-input-panel">
+      <div class="panel-head">
+        <h2 class="panel-title">出题程序题目输入</h2>
+        <span id="taskSubmitStatus" class="panel-meta">IDLE</span>
+      </div>
+      <div class="task-input-body">
+        <div class="task-input-col">
+          <label class="input-label" for="problemInput">题目（从出题程序复制，如“每个衣柜有5件衣物…”）</label>
+          <textarea id="problemInput" class="task-textarea" rows="3" spellcheck="false"
+            placeholder="每个衣柜有5件衣物;有T恤、裤子两种衣柜;小美需要2件T恤,1条裤子;小帅、小丽都需要7件T恤;小娜需要2件T恤,1条裤子;小杰需要1条裤子。设T恤衣柜数量为x,裤子衣柜数量为y,计算x、y分别为多少。"></textarea>
+        </div>
+        <div class="task-input-col">
+          <label class="input-label" for="rulesInput">映射规则（赛前公布，如“x代表红色…”）</label>
+          <textarea id="rulesInput" class="task-textarea" rows="3" spellcheck="false"
+            placeholder="x代表红色,y代表蓝色,数量大于等于3的去A区,其他颜色去C区">x代表红色,y代表蓝色,数量大于等于3的去A区,其他颜色去C区</textarea>
+        </div>
+        <div class="task-input-actions">
+          <button id="submitTask" class="task-submit" type="button">解析并下发任务</button>
+          <button id="fillWardrobe" class="task-sample" type="button">示例：衣柜题目</button>
+          <button id="fillPet" class="task-sample" type="button">示例：宠物店题目</button>
+          <span class="task-hint">下发后系统自动解析数量与颜色/区域映射并开始执行</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="stack">
+        <article class="panel">
+          <div class="panel-head">
+            <h2 class="panel-title">任务题目与执行顺序</h2>
+            <span id="taskSource" class="panel-meta">SOURCE / --</span>
+          </div>
+          <div class="question">
+            <p id="question" class="question-text empty">等待出题程序发布任务…</p>
+            <div id="order" class="order-row" aria-label="抓取顺序"></div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2 class="panel-title">实时导航路径</h2>
+            <span id="robotPose" class="panel-meta">X -- / Y --</span>
+          </div>
+          <div class="map-wrap">
+            <canvas id="map" aria-label="机器人实时导航路径图"></canvas>
+            <div class="map-legend">
+              <span class="legend-item"><span class="legend-swatch"></span>实时剩余路径</span>
+              <span class="legend-item"><span class="legend-swatch robot"></span>机器人</span>
+              <span class="legend-item"><span class="legend-swatch obstacle-one"></span>障碍 1</span>
+              <span class="legend-item"><span class="legend-swatch obstacle-two"></span>障碍 2</span>
+              <span class="legend-item"><span class="legend-swatch obstacle-three"></span>障碍 3</span>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <aside class="stack">
+        <article class="panel progress-panel">
+          <div class="panel-head">
+            <h2 class="panel-title">作业流程</h2>
+            <span id="missionState" class="panel-meta">IDLE</span>
+          </div>
+          <div id="stages" class="progress-track"></div>
+          <div class="bar"><div id="progressBar" class="bar-fill"></div></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2 class="panel-title">当前作业状态</h2>
+            <span id="missionIndex" class="panel-meta">ITEM 0 / 0</span>
+          </div>
+          <div class="detail-grid">
+            <div class="detail">
+              <div class="detail-label">当前货物</div>
+              <div id="cube" class="detail-value">--</div>
+            </div>
+            <div class="detail">
+              <div class="detail-label">目标区域</div>
+              <div id="zone" class="detail-value">--</div>
+            </div>
+            <div class="detail">
+              <div class="detail-label">导航状态</div>
+              <div id="navigation" class="detail-value">--</div>
+            </div>
+            <div class="detail">
+              <div class="detail-label">当前路线</div>
+              <div id="route" class="detail-value">--</div>
+            </div>
+            <div class="detail">
+              <div class="detail-label">恢复状态</div>
+              <div id="recovery" class="detail-value">--</div>
+            </div>
+            <div class="detail">
+              <div class="detail-label">末端执行器</div>
+              <div id="gripper" class="detail-value">UNKNOWN</div>
+            </div>
+            <div class="detail">
+              <div class="detail-label">大模型解析</div>
+              <div id="llm" class="detail-value">WAITING</div>
+            </div>
+            <div class="detail">
+              <div class="detail-label">识别结果</div>
+              <div id="perception" class="detail-value">0 TARGETS</div>
+            </div>
+            <div class="detail">
+              <div class="detail-label">动态避障</div>
+              <div id="avoidance" class="detail-value">WAITING</div>
+            </div>
+          </div>
+          <div class="detail-label" style="margin-top: 14px">
+            每一轮任务完成情况
+          </div>
+          <div id="rounds" class="rounds-list" aria-live="polite">
+            <span class="round-empty">等待任务开始…</span>
+          </div>
+          <div style="height: 20px"></div>
+        </article>
+      </aside>
+    </section>
+  </main>
+
+  <style>
+    .rounds-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .round-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .round-index {
+      font-weight: 600;
+      min-width: 42px;
+      opacity: 0.75;
+    }
+    .round-cube { flex: 1; opacity: 0.9; }
+    .round-result {
+      font-weight: 600;
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: 11px;
+    }
+    .round-completed { background: rgba(52, 211, 153, 0.18); color: #34d399; }
+    .round-skipped { background: rgba(251, 191, 36, 0.18); color: #fbbf24; }
+    .round-active { background: rgba(56, 189, 248, 0.18); color: #38bdf8; }
+    .round-failed,
+    .round-canceled,
+    .round-unfinished {
+      background: rgba(248, 113, 113, 0.18);
+      color: #f87171;
+    }
+    .round-empty { font-size: 12px; opacity: 0.55; }
+
+    .task-input-panel { margin-bottom: 20px; }
+    .task-input-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding: 16px 20px 18px;
+    }
+    .task-input-col { display: flex; flex-direction: column; gap: 7px; }
+    .input-label {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+    }
+    .task-textarea {
+      width: 100%;
+      resize: vertical;
+      min-height: 66px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--text);
+      background: rgba(4, 12, 18, 0.55);
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .task-textarea:focus {
+      outline: none;
+      border-color: rgba(65, 214, 211, 0.5);
+    }
+    .task-input-actions {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .task-submit {
+      padding: 10px 18px;
+      border: 1px solid rgba(65, 214, 211, 0.5);
+      border-radius: 10px;
+      color: #03141a;
+      background: var(--cyan);
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .task-submit:hover { filter: brightness(1.08); }
+    .task-sample {
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--muted);
+      background: rgba(4, 12, 18, 0.4);
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .task-sample:hover { color: var(--text); border-color: var(--cyan); }
+    .task-hint { color: var(--muted); font-size: 12px; margin-left: auto; }
+    @media (max-width: 900px) {
+      .task-input-body { grid-template-columns: 1fr; }
+    }
+  </style>
+
+  <script>
+    const stageDefinitions = [
+      ["navigating_pickup", "前往资源点"],
+      ["waiting_perception", "识别目标货物"],
+      ["picking", "机械臂抓取"],
+      ["navigating_departure", "安全离开货架"],
+      ["navigating_destination", "移动到放置区"],
+      ["placing", "机械臂放置"],
+      ["verifying", "核验任务结果"],
+      ["completed", "本轮任务完成"]
+    ];
+
+    const stateLabels = {
+      idle: "等待任务",
+      navigating_pickup: "前往资源点",
+      waiting_perception: "视觉识别",
+      picking: "抓取中",
+      navigating_departure: "离开货架",
+      navigating_destination: "前往放置区",
+      placing: "放置中",
+      verifying: "结果核验",
+      releasing: "安全释放",
+      completed: "任务完成",
+      failed: "任务失败",
+      canceled: "任务取消"
+    };
+
+    const el = (id) => document.getElementById(id);
+    const mapCanvas = el("map");
+    const mapContext = mapCanvas.getContext("2d");
+    let latestState = {};
+    let requestHealthy = false;
+    let missionClock = {
+      taskId: null,
+      elapsed: 0,
+      anchoredAt: performance.now(),
+      running: false
+    };
+
+    function text(id, value) {
+      el(id).textContent = value ?? "--";
+    }
+
+    function formatTime(seconds) {
+      const safe = Math.max(0, Math.round(Number(seconds) || 0));
+      return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(safe % 60).padStart(2, "0")}`;
+    }
+
+    function syncMissionClock(mission) {
+      const taskId = mission.task_id || null;
+      const elapsed = Math.max(0, Number(mission.elapsed_sec || 0));
+      const terminal = ["completed", "failed", "canceled"].includes(mission.state);
+      const running = Boolean(taskId) && !terminal && mission.state !== "idle";
+      const now = performance.now();
+      const estimate = missionClock.elapsed
+        + (missionClock.running ? (now - missionClock.anchoredAt) / 1000 : 0);
+      // Mission snapshots are event-driven and can stay unchanged for many
+      // seconds. Never rewind the client clock to that stale elapsed value.
+      if (taskId !== missionClock.taskId || elapsed > estimate + 0.5) {
+        missionClock = { taskId, elapsed, anchoredAt: now, running };
+      } else if (terminal || running !== missionClock.running) {
+        missionClock = { taskId, elapsed, anchoredAt: now, running };
+      }
+    }
+
+    function updateRemainingTime() {
+      const elapsed = missionClock.elapsed + (
+        missionClock.running
+          ? (performance.now() - missionClock.anchoredAt) / 1000
+          : 0
+      );
+      text("remaining", formatTime(300 - elapsed));
+    }
+
+    function updateStages(mission) {
+      const container = el("stages");
+      const activeState = mission.state || "idle";
+      const activeIndex = stageDefinitions.findIndex(([state]) => state === activeState);
+      container.replaceChildren();
+      stageDefinitions.forEach(([state, label], index) => {
+        const row = document.createElement("div");
+        row.className = "stage";
+        if (activeState === "completed" || (activeIndex >= 0 && index < activeIndex)) row.classList.add("done");
+        if (index === activeIndex) row.classList.add("active");
+        const node = document.createElement("span");
+        node.className = "stage-node";
+        const caption = document.createElement("span");
+        caption.textContent = label;
+        row.append(node, caption);
+        container.append(row);
+      });
+    }
+
+    function updateOrder(plan, mission) {
+      const order = Array.isArray(plan.execution_order) ? plan.execution_order : [];
+      const container = el("order");
+      container.replaceChildren();
+      if (!order.length) {
+        const empty = document.createElement("span");
+        empty.className = "empty";
+        empty.textContent = "等待大模型解析抓取顺序";
+        container.append(empty);
+        return;
+      }
+      const current = Math.max(0, Number(mission.current_index || 1) - 1);
+      order.forEach((color, index) => {
+        const chip = document.createElement("span");
+        chip.className = `order-chip ${color}`;
+        if (index === current && !["completed", "failed", "canceled"].includes(mission.state)) chip.classList.add("active");
+        chip.textContent = `${index + 1} · ${color === "red" ? "红色" : "蓝色"}`;
+        container.append(chip);
+      });
+    }
+
+    function fitCanvas() {
+      const ratio = Math.max(1, window.devicePixelRatio || 1);
+      const rect = mapCanvas.getBoundingClientRect();
+      const width = Math.round(rect.width * ratio);
+      const height = Math.round(rect.height * ratio);
+      if (mapCanvas.width !== width || mapCanvas.height !== height) {
+        mapCanvas.width = width;
+        mapCanvas.height = height;
+      }
+      mapContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+      return rect;
+    }
+
+    function drawMap(state) {
+      const rect = fitCanvas();
+      const width = rect.width;
+      const height = rect.height;
+      // The server parses these coordinates from the exact world Gazebo
+      // launches, so the canvas never maintains a second layout definition.
+      const layout = state.layout || {};
+      const bounds = layout.bounds || { minX: -4.7, maxX: 0.0, minY: -7.7, maxY: 3.2 };
+      const padding = 30;
+      const sx = (width - padding * 2) / (bounds.maxX - bounds.minX);
+      const sy = (height - padding * 2) / (bounds.maxY - bounds.minY);
+      const mapToScreen = (x, y) => [
+        padding + (x - bounds.minX) * sx,
+        height - padding - (y - bounds.minY) * sy
+      ];
+
+      mapContext.clearRect(0, 0, width, height);
+      const gradient = mapContext.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, "#0b1a25");
+      gradient.addColorStop(1, "#07121a");
+      mapContext.fillStyle = gradient;
+      mapContext.fillRect(0, 0, width, height);
+
+      mapContext.strokeStyle = "rgba(126, 174, 195, 0.09)";
+      mapContext.lineWidth = 1;
+      for (let x = Math.ceil(bounds.minX * 2) / 2; x <= bounds.maxX; x += 0.5) {
+        const [px] = mapToScreen(x, 0);
+        mapContext.beginPath();
+        mapContext.moveTo(px, padding);
+        mapContext.lineTo(px, height - padding);
+        mapContext.stroke();
+      }
+      for (let y = Math.ceil(bounds.minY * 2) / 2; y <= bounds.maxY; y += 0.5) {
+        const [, py] = mapToScreen(0, y);
+        mapContext.beginPath();
+        mapContext.moveTo(padding, py);
+        mapContext.lineTo(width - padding, py);
+        mapContext.stroke();
+      }
+
+      const zoneColors = { A: "#67e8a5", B: "#ffe08a", C: "#67d8e8" };
+      (layout.zones || []).forEach((zone) => {
+        const name = String(zone.label || "?");
+        const x = Number(zone.x);
+        const y = Number(zone.y);
+        const color = zoneColors[name] || "#ffffff";
+        const zoneWidth = Number(zone.width || 1.0) * sx;
+        const zoneHeight = Number(zone.height || 0.5) * sy;
+        const [px, py] = mapToScreen(x, y);
+        mapContext.fillStyle = "rgba(255, 191, 105, 0.10)";
+        mapContext.strokeStyle = "rgba(255, 191, 105, 0.45)";
+        mapContext.lineWidth = 1.5;
+        mapContext.beginPath();
+        mapContext.roundRect(px - zoneWidth / 2, py - zoneHeight / 2, zoneWidth, zoneHeight, 8);
+        mapContext.fill();
+        mapContext.stroke();
+        mapContext.fillStyle = color;
+        mapContext.font = "600 12px Inter, sans-serif";
+        mapContext.fillText(`ZONE ${name}`, px - 26, py + 4);
+      });
+
+      (layout.pickups || []).forEach((pickup) => {
+        const red = String(pickup.name).includes("red");
+        const name = red ? "RED PICKUP" : "BLUE PICKUP";
+        const color = red ? "#ff6b68" : "#5aa9ff";
+        const x = Number(pickup.x);
+        const y = Number(pickup.y);
+        const pickupWidth = Number(pickup.width || 0.55) * sx;
+        const pickupHeight = Number(pickup.height || 0.24) * sy;
+        const [px, py] = mapToScreen(x, y);
+        mapContext.fillStyle = color;
+        mapContext.globalAlpha = 0.72;
+        mapContext.fillRect(px - pickupWidth / 2, py - pickupHeight / 2, pickupWidth, pickupHeight);
+        mapContext.globalAlpha = 1;
+        mapContext.fillStyle = "rgba(208, 228, 236, 0.65)";
+        mapContext.font = "10px Inter, sans-serif";
+        mapContext.fillText(name, px - 34, py - pickupHeight / 2 - 5);
+      });
+
+      (layout.cubes || []).forEach((cube) => {
+        const [px, py] = mapToScreen(Number(cube.x), Number(cube.y));
+        mapContext.fillStyle = String(cube.name).startsWith("red") ? "#ff3d46" : "#2f8cff";
+        mapContext.fillRect(px - 2.5, py - 2.5, 5, 5);
+      });
+
+      const navigation = state.navigation || {};
+      const globalPath = Array.isArray(state.path) ? state.path : [];
+      const localPath = Array.isArray(state.local_path) ? state.local_path : [];
+      const localPathFresh = Date.now() / 1000
+        - Number(state.local_path_updated_at || 0) < 0.5;
+      const path = navigation.state === "active"
+        ? (localPathFresh && localPath.length > 1 ? localPath : globalPath)
+        : [];
+      if (path.length > 1) {
+        mapContext.strokeStyle = "#41d6d3";
+        mapContext.shadowColor = "rgba(65, 214, 211, 0.48)";
+        mapContext.shadowBlur = 9;
+        mapContext.lineWidth = 3;
+        mapContext.beginPath();
+        path.forEach(([x, y], index) => {
+          const [px, py] = mapToScreen(x, y);
+          if (index === 0) mapContext.moveTo(px, py);
+          else mapContext.lineTo(px, py);
+        });
+        mapContext.stroke();
+        mapContext.shadowBlur = 0;
+      }
+
+      if (navigation.state === "active" && Array.isArray(navigation.goal)) {
+        const goalX = Number(navigation.goal[0]);
+        const goalY = Number(navigation.goal[1]);
+        if (Number.isFinite(goalX) && Number.isFinite(goalY)) {
+          const [px, py] = mapToScreen(goalX, goalY);
+          mapContext.strokeStyle = "#ffffff";
+          mapContext.lineWidth = 2;
+          mapContext.beginPath();
+          mapContext.arc(px, py, 7, 0, Math.PI * 2);
+          mapContext.stroke();
+          mapContext.beginPath();
+          mapContext.moveTo(px - 10, py);
+          mapContext.lineTo(px + 10, py);
+          mapContext.moveTo(px, py - 10);
+          mapContext.lineTo(px, py + 10);
+          mapContext.stroke();
+        }
+      }
+
+      const avoidance = state.avoidance || {};
+      const obstacles = state.obstacles || avoidance.obstacles || {};
+      Object.entries(obstacles).forEach(([name, position], index) => {
+        if (!Array.isArray(position) || position.length < 2) return;
+        const x = Number(position[0]);
+        const y = Number(position[1]);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        const [px, py] = mapToScreen(x, y);
+        const idx = name.endsWith("_2") ? 2 : name.endsWith("_3") ? 3 : 1;
+        const color = idx === 2 ? "#d96cff" : idx === 3 ? "#ffd166" : "#ff7a32";
+        mapContext.save();
+        mapContext.fillStyle = color;
+        mapContext.shadowColor = color;
+        mapContext.shadowBlur = 12;
+        mapContext.beginPath();
+        mapContext.arc(px, py, 8, 0, Math.PI * 2);
+        mapContext.fill();
+        mapContext.shadowBlur = 0;
+        mapContext.strokeStyle = color;
+        mapContext.globalAlpha = 0.38;
+        mapContext.lineWidth = 1.5;
+        mapContext.beginPath();
+        mapContext.arc(px, py, 15, 0, Math.PI * 2);
+        mapContext.stroke();
+        mapContext.globalAlpha = 1;
+        mapContext.fillStyle = "#edf7fb";
+        mapContext.font = "600 10px Inter, sans-serif";
+        mapContext.fillText(`障碍 ${idx}`, px + 12, py - 10);
+        mapContext.restore();
+      });
+
+      const robot = state.robot || {};
+      if (Number.isFinite(robot.x) && Number.isFinite(robot.y)) {
+        const [px, py] = mapToScreen(robot.x, robot.y);
+        const yaw = Number(robot.yaw || 0);
+        mapContext.save();
+        mapContext.translate(px, py);
+        mapContext.rotate(-yaw);
+        mapContext.fillStyle = "#ffc66d";
+        mapContext.shadowColor = "rgba(255, 198, 109, 0.6)";
+        mapContext.shadowBlur = 12;
+        mapContext.beginPath();
+        mapContext.moveTo(13, 0);
+        mapContext.lineTo(-8, 8);
+        mapContext.lineTo(-5, 0);
+        mapContext.lineTo(-8, -8);
+        mapContext.closePath();
+        mapContext.fill();
+        mapContext.restore();
+      }
+    }
+
+    const roundResultLabels = {
+      completed: "已完成",
+      skipped: "已跳过",
+      active: "进行中",
+      failed: "失败",
+      canceled: "超时取消",
+      unfinished: "未完成",
+    };
+
+    function renderRounds(rounds) {
+      const host = document.getElementById("rounds");
+      if (!host) {
+        return;
+      }
+      if (!rounds.length) {
+        host.innerHTML = '<span class="round-empty">等待任务开始…</span>';
+        return;
+      }
+      host.innerHTML = rounds
+        .map((round) => {
+          const result = String(round.result || "active");
+          const label = roundResultLabels[result] || result.toUpperCase();
+          const cube = round.cube_name || "--";
+          const zone = round.target_zone ? `→ ${round.target_zone}` : "";
+          const elapsed =
+            round.elapsed_sec === undefined || round.elapsed_sec === null
+              ? ""
+              : ` ${Number(round.elapsed_sec).toFixed(0)}s`;
+          return (
+            '<div class="round-row">' +
+            `<span class="round-index">#${Number(round.index || 0)}</span>` +
+            `<span class="round-cube">${cube} ${zone}${elapsed}</span>` +
+            `<span class="round-result round-${result}">${label}</span>` +
+            "</div>"
+          );
+        })
+        .join("");
+    }
+
+    function render(state) {
+      latestState = state || {};
+      const plan = latestState.plan || {};
+      const llm = latestState.llm || {};
+      const mission = latestState.mission || {};
+      const navigation = latestState.navigation || {};
+      const perception = latestState.perception || {};
+      const avoidance = latestState.avoidance || {};
+      const targets = Array.isArray(perception.targets) ? perception.targets : [];
+      const counts = plan.counts || {};
+      const elapsed = Number(mission.elapsed_sec || 0);
+      const total = Number(mission.total || plan.execution_order?.length || 0);
+      const completed = Number(mission.completed || 0);
+
+      text("redCount", Number(counts.red || 0));
+      text("blueCount", Number(counts.blue || 0));
+      text("completed", completed);
+      text("total", total);
+      syncMissionClock(mission);
+      updateRemainingTime();
+      text("taskSource", `SOURCE / ${(plan.source || "--").toUpperCase()}`);
+      text("missionState", (mission.state || "idle").toUpperCase());
+      text("missionIndex", `ITEM ${Number(mission.current_index || 0)} / ${total}`);
+      text("cube", mission.cube_name || "--");
+      text("zone", mission.target_zone ? `ZONE ${mission.target_zone}` : "--");
+      const navPhase = navigation.phase
+        ? ` · ${navigation.phase.replace(/_/g, " ")}`
+        : "";
+      text(
+        "navigation",
+        navigation.state
+          ? `${navigation.zone || ""} · ${navigation.state}${navPhase}`
+          : "--"
+      );
+      const routeName = navigation.route
+        ? String(navigation.route).toUpperCase()
+        : "--";
+      text(
+        "route",
+        navigation.route_zone
+          ? "ZONE " + navigation.route_zone + " · " + routeName
+          : routeName
+      );
+      const recoveryAttempts = Number(navigation.recovery_attempts || 0);
+      text(
+        "recovery",
+        recoveryAttempts > 0
+          ? "RECOVERY " + recoveryAttempts
+          : "NORMAL"
+      );
+      renderRounds(Array.isArray(latestState.rounds) ? latestState.rounds : []);
+      text("gripper", String(latestState.gripper || "unknown").toUpperCase());
+      text(
+        "llm",
+        llm.source
+          ? `${String(llm.source).toUpperCase()} · ${llm.model || "--"}`
+          : "WAITING"
+      );
+      const redTargets = targets.filter((target) => target.color === "red").length;
+      const blueTargets = targets.filter((target) => target.color === "blue").length;
+      text(
+        "perception",
+        `${targets.length} TARGETS · R${redTargets} / B${blueTargets}`
+      );
+      text(
+        "avoidance",
+        avoidance.obstacles_seen
+          ? `${avoidance.obstacles_seen} OBSTACLES · ${
+              avoidance.safe ? "SAFE" : "MONITORING"
+            }`
+          : "WAITING"
+      );
+
+      const question = el("question");
+      question.textContent = latestState.question || "等待出题程序发布任务…";
+      question.classList.toggle("empty", !latestState.question);
+      const robot = latestState.robot || {};
+      const globalPoints = Array.isArray(latestState.path) ? latestState.path.length : 0;
+      const localPoints = Array.isArray(latestState.local_path) ? latestState.local_path.length : 0;
+      const localFresh = Date.now() / 1000
+        - Number(latestState.local_path_updated_at || 0) < 0.5;
+      const activePoints = localFresh && localPoints > 1 ? localPoints : globalPoints;
+      text(
+        "robotPose",
+        Number.isFinite(robot.x)
+          ? `X ${robot.x.toFixed(2)} / Y ${robot.y.toFixed(2)} · PATH ${activePoints}`
+          : "X -- / Y -- · PATH WAITING"
+      );
+
+      const progress = total ? Math.min(100, (completed / total) * 100) : 0;
+      el("progressBar").style.width = `${progress}%`;
+      updateOrder(plan, mission);
+      updateStages(mission);
+      drawMap(latestState);
+    }
+
+    async function refresh() {
+      try {
+        const response = await fetch("/api/state", { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const state = await response.json();
+        requestHealthy = true;
+        render(state);
+      } catch {
+        requestHealthy = false;
+      }
+      window.setTimeout(refresh, 100);
+      const updated = Number(latestState.updated_at || 0) * 1000;
+      const live = requestHealthy && updated > 0 && Date.now() - updated < 5000;
+      el("connection").classList.toggle("live", live);
+      text("connectionText", live ? "ROS 数据在线" : requestHealthy ? "等待 ROS 数据" : "面板连接中断");
+    }
+
+    const WARDROBE_QUESTION =
+      "每个衣柜有5件衣物;有T恤、裤子两种衣柜;小美需要2件T恤,1条裤子;" +
+      "小帅、小丽都需要7件T恤;小娜需要2件T恤,1条裤子;小杰需要1条裤子。" +
+      "设T恤衣柜数量为x,裤子衣柜数量为y,计算x、y分别为多少。";
+    const PET_QUESTION =
+      "每个宠物店有5只宠物;有猫、狗两种宠物店;小爱领养2只猫,5只狗;" +
+      "小宠、小动都领养2只猫;小乐领养3只猫,5只狗;小欢领养4只狗。" +
+      "设猫宠物店数量为x,狗宠物店数量为y,计算x、y分别为多少";
+    const DEFAULT_RULES = "x代表红色,y代表蓝色,数量大于等于3的去A区,其他颜色去C区";
+
+    async function submitTask() {
+      const question = el("problemInput").value.trim();
+      const rules = el("rulesInput").value.trim();
+      if (!question) {
+        text("taskSubmitStatus", "请输入题目");
+        return;
+      }
+      text("taskSubmitStatus", "SUBMITTING");
+      try {
+        const response = await fetch("/api/task", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question, mapping_rules: rules })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        text("taskSubmitStatus", "已下发");
+        const questionEl = el("question");
+        questionEl.textContent = question;
+        questionEl.classList.remove("empty");
+      } catch {
+        text("taskSubmitStatus", "下发失败");
+      }
+    }
+
+    function fillSample(question) {
+      el("problemInput").value = question;
+      el("rulesInput").value = DEFAULT_RULES;
+      text("taskSubmitStatus", "已填入示例");
+    }
+
+    el("submitTask").addEventListener("click", submitTask);
+    el("fillWardrobe").addEventListener("click", () => fillSample(WARDROBE_QUESTION));
+    el("fillPet").addEventListener("click", () => fillSample(PET_QUESTION));
+
+    setInterval(() => {
+      text("clock", new Date().toLocaleTimeString("zh-CN", { hour12: false }));
+    }, 500);
+    setInterval(updateRemainingTime, 100);
+    window.addEventListener("resize", () => drawMap(latestState));
+    updateStages({});
+    render({});
+    refresh();
+  </script>
+</body>
+</html>

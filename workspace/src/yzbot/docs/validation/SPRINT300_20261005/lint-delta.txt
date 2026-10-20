@@ -1,0 +1,22 @@
+No new flake8 diagnostics in changed Python/new tests compared to baseline.
+Current:
+tools_demo/tools_demo/mission_coordinator.py:141:1: E303 too many blank lines (3)
+tools_demo/tools_demo/mission_coordinator.py:157:1: E302 expected 2 blank lines, found 1
+tools_demo/tools_demo/mission_coordinator.py:253:1: E303 too many blank lines (3)
+tools_demo/tools_demo/mission_coordinator.py:279:1: E302 expected 2 blank lines, found 1
+tools_demo/tools_demo/mission_coordinator.py:322:1: E305 expected 2 blank lines after class or function definition, found 1
+tools_demo/tools_demo/mission_coordinator.py:1219:9: E303 too many blank lines (3)
+tools_demo/tools_demo/navigation_math.py:348:1: E302 expected 2 blank lines, found 1
+tools_demo/tools_demo/task_navigator.py:3417:9: F841 local variable 'segment_start_x' is assigned to but never used
+tools_demo/tools_demo/task_navigator.py:3418:9: F841 local variable 'segment_start_y' is assigned to but never used
+
+Baseline:
+<BASELINE_TEMP>/mission_coordinator.py:141:1: E303 too many blank lines (3)
+<BASELINE_TEMP>/mission_coordinator.py:157:1: E302 expected 2 blank lines, found 1
+<BASELINE_TEMP>/mission_coordinator.py:253:1: E303 too many blank lines (3)
+<BASELINE_TEMP>/mission_coordinator.py:279:1: E302 expected 2 blank lines, found 1
+<BASELINE_TEMP>/mission_coordinator.py:322:1: E305 expected 2 blank lines after class or function definition, found 1
+<BASELINE_TEMP>/mission_coordinator.py:1219:9: E303 too many blank lines (3)
+<BASELINE_TEMP>/navigation_math.py:348:1: E302 expected 2 blank lines, found 1
+<BASELINE_TEMP>/task_navigator.py:3414:9: F841 local variable 'segment_start_x' is assigned to but never used
+<BASELINE_TEMP>/task_navigator.py:3415:9: F841 local variable 'segment_start_y' is assigned to but never used

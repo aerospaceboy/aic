@@ -1,0 +1,29 @@
+[task_parser-34] [ERROR] [1791636237.258995626] [competition_task_parser]: Problem rejected: Required LLM problem parsing failed: Task count must be between 1 and 10
+[task_navigator-22] [WARN] [1791636377.027658639] [competition_task_navigator]: mover_crossing_hold begin topic=/competition/obstacles/obstacle_1 reason=staged_admission x=9.881 y=0.503
+[task_navigator-22] [WARN] [1791636384.248780456] [competition_task_navigator]: mover_crossing_hold end topic=/competition/obstacles/obstacle_1
+[task_navigator-22] [WARN] [1791636388.684516831] [competition_task_navigator]: mover_crossing_hold begin topic=/competition/obstacles/obstacle_2 reason=predicted_collision x=6.622 y=0.383
+[task_navigator-22] [WARN] [1791636393.114295937] [competition_task_navigator]: mover_crossing_hold end topic=/competition/obstacles/obstacle_2
+[mission_coordinator-38] [INFO] [1791636418.515891246] [competition_mission_coordinator]: nav_result state=succeeded elapsed=50.92s
+[mission_coordinator-38] [INFO] [1791636428.194079997] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.16s
+[mission_coordinator-38] [INFO] [1791636452.925566097] [competition_mission_coordinator]: nav_result state=succeeded elapsed=24.73s
+[mission_coordinator-38] [INFO] [1791636457.303171566] [competition_mission_coordinator]: delivery_truth cube=blue_cube_5 zone=A x=-5.4000 y=3.6400 z=0.0349 valid=True slot_error=0.0000 precise=True
+[mission_coordinator-38] [INFO] [1791636459.075831203] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.77s
+[mission_coordinator-38] [INFO] [1791636470.598133619] [competition_mission_coordinator]: nav_result state=succeeded elapsed=11.52s
+[mission_coordinator-38] [INFO] [1791636477.885268707] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.18s
+[mission_coordinator-38] [INFO] [1791636487.949977851] [competition_mission_coordinator]: nav_result state=succeeded elapsed=10.06s
+[mission_coordinator-38] [INFO] [1791636492.320710103] [competition_mission_coordinator]: delivery_truth cube=blue_cube_1 zone=A x=-5.4000 y=3.7200 z=0.0350 valid=True slot_error=0.0000 precise=True
+[mission_coordinator-38] [INFO] [1791636494.105816501] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.78s
+[mission_coordinator-38] [INFO] [1791636510.726520383] [competition_mission_coordinator]: nav_result state=succeeded elapsed=16.62s
+[mission_coordinator-38] [INFO] [1791636520.417379006] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.12s
+[mission_coordinator-38] [INFO] [1791636552.733931646] [competition_mission_coordinator]: nav_result state=succeeded elapsed=32.32s
+[mission_coordinator-38] [INFO] [1791636557.118538667] [competition_mission_coordinator]: delivery_truth cube=blue_cube_2 zone=A x=-5.4000 y=3.8000 z=0.0350 valid=True slot_error=0.0000 precise=True
+[mission_coordinator-38] [INFO] [1791636558.885008864] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.77s
+[mission_coordinator-38] [INFO] [1791636570.790041749] [competition_mission_coordinator]: nav_result state=succeeded elapsed=11.90s
+[mission_coordinator-38] [INFO] [1791636579.961544748] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.13s
+[mission_coordinator-38] [INFO] [1791636596.435368012] [competition_mission_coordinator]: nav_result state=succeeded elapsed=16.47s
+[mission_coordinator-38] [INFO] [1791636600.813158947] [competition_mission_coordinator]: delivery_truth cube=blue_cube_3 zone=A x=-5.4000 y=3.8800 z=0.0348 valid=True slot_error=0.0000 precise=True
+[mission_coordinator-38] [INFO] [1791636602.485815034] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.67s
+[mission_coordinator-38] [INFO] [1791636615.787634101] [competition_mission_coordinator]: nav_result state=succeeded elapsed=13.30s
+[mission_coordinator-38] [INFO] [1791636622.942602982] [competition_mission_coordinator]: nav_result state=succeeded elapsed=1.11s
+[mission_coordinator-38] [INFO] [1791636633.441387056] [competition_mission_coordinator]: nav_result state=succeeded elapsed=10.50s
+[mission_coordinator-38] [INFO] [1791636637.828199272] [competition_mission_coordinator]: delivery_truth cube=blue_cube_4 zone=A x=-5.4000 y=3.9600 z=0.0349 valid=True slot_error=0.0000 precise=True

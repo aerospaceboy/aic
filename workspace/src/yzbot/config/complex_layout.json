@@ -1,0 +1,310 @@
+{
+  "status": "DISTRIBUTED_LAYOUT_20261006_CANDIDATE_PENDING_PHYSICAL_VALIDATION",
+  "source_commit": "0e4acf8994b1d51c438928c011722076cacc139f",
+  "positions": {
+    "red_cube_1": [
+      -7.5,
+      -2.8
+    ],
+    "red_cube_2": [
+      1.0,
+      -5.4
+    ],
+    "red_cube_3": [
+      0.0,
+      3.8
+    ],
+    "red_cube_4": [
+      11.4,
+      -9.8
+    ],
+    "red_cube_5": [
+      -4.7,
+      -12.4
+    ],
+    "blue_cube_1": [
+      7.4,
+      3.6
+    ],
+    "blue_cube_2": [
+      -11.0,
+      -5.6
+    ],
+    "blue_cube_3": [
+      -2.0,
+      -6.0
+    ],
+    "blue_cube_4": [
+      -0.5,
+      -8.8
+    ],
+    "blue_cube_5": [
+      11.8,
+      -13.0
+    ],
+    "zone_a": [
+      -5.4,
+      3.8
+    ],
+    "zone_b": [
+      11.7,
+      -5.0
+    ],
+    "zone_c": [
+      3.3,
+      -12.1
+    ]
+  },
+  "added_static_walls": 0,
+  "new_dynamic_partitions": [
+    {
+      "id": "preview_moving_partition_1",
+      "pose": [
+        -5.4,
+        1.9,
+        0.6,
+        0,
+        0,
+        0
+      ],
+      "size": [
+        1.6,
+        0.12,
+        1.2
+      ],
+      "amplitude_x": 0.8,
+      "period_sec": 12.0,
+      "phase_offset_sec": 0.0
+    },
+    {
+      "id": "preview_moving_partition_2",
+      "pose": [
+        7.2,
+        -5.5,
+        0.6,
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.12,
+        1.6,
+        1.2
+      ],
+      "amplitude_x": 0.7,
+      "period_sec": 14.0,
+      "phase_offset_sec": 7.0
+    }
+  ],
+  "runtime_notes": {
+    "disabled_west_sides": [
+      "red_cube_1",
+      "red_cube_2",
+      "red_cube_3",
+      "red_cube_4",
+      "red_cube_5",
+      "blue_cube_3",
+      "blue_cube_4"
+    ],
+    "zone_a_docking_side": "east",
+    "zone_c_exit": "backoff west then north; original wall retained",
+    "original_movers": "unchanged continuous patrol",
+    "sprint300_changes": {
+      "red_cube_1": {
+        "before": [
+          -6.5,
+          3.4
+        ],
+        "after": [
+          -3.0,
+          3.8
+        ]
+      },
+      "red_cube_3": {
+        "before": [
+          -11.5,
+          -2.3
+        ],
+        "after": [
+          0.0,
+          3.8
+        ]
+      },
+      "blue_cube_1": {
+        "before": [
+          -10.5,
+          2.3
+        ],
+        "after": [
+          11.8,
+          -2.5
+        ]
+      },
+      "zone_a": {
+        "before": [
+          -13.0,
+          3.2
+        ],
+        "after": [
+          -5.4,
+          3.8
+        ]
+      },
+      "blue_cube_4": {
+        "before": [
+          4.3,
+          -5.4
+        ],
+        "after": [
+          12.0,
+          -6.6
+        ]
+      }
+    },
+    "distributed_20261006": {
+      "intent": "spread five resources away from the delivery zones; zones, walls, rocks, spawn and the four continuous movers unchanged",
+      "moved": {
+        "red_cube_1": {
+          "before": [
+            -3.0,
+            3.8
+          ],
+          "after": [
+            -7.5,
+            -2.8
+          ]
+        },
+        "red_cube_2": {
+          "before": [
+            6.0,
+            3.8
+          ],
+          "after": [
+            1.0,
+            -5.4
+          ]
+        },
+        "red_cube_4": {
+          "before": [
+            10.0,
+            -6.0
+          ],
+          "after": [
+            11.4,
+            -9.8
+          ]
+        },
+        "blue_cube_1": {
+          "before": [
+            11.8,
+            -2.5
+          ],
+          "after": [
+            7.4,
+            3.6
+          ]
+        },
+        "blue_cube_4": {
+          "before": [
+            12.0,
+            -6.6
+          ],
+          "after": [
+            -0.5,
+            -8.8
+          ]
+        }
+      },
+      "unchanged_cubes": {
+        "red_cube_3": [
+          0.0,
+          3.8
+        ],
+        "red_cube_5": [
+          -4.7,
+          -12.4
+        ],
+        "blue_cube_2": [
+          -11.0,
+          -5.6
+        ],
+        "blue_cube_3": [
+          -2.0,
+          -6.0
+        ],
+        "blue_cube_5": [
+          11.8,
+          -13.0
+        ]
+      },
+      "stale_certificates": [
+        "sprint300 target motion times",
+        "old entry/dock clearance table",
+        "old leg cost tables"
+      ],
+      "candidate_metrics": {
+        "min_cube_cube_center_m": 3.0594,
+        "min_cube_zone_center_m": 4.8094
+      },
+      "note": "candidate coordinates only; not physically verified yet"
+    }
+  },
+  "preview_swept_bounds": [
+    {
+      "id": "preview_moving_partition_1",
+      "pose": [
+        -5.4,
+        1.9,
+        0.6,
+        0,
+        0,
+        0
+      ],
+      "size": [
+        3.2,
+        0.12,
+        1.2
+      ],
+      "amplitude_x": 0.8,
+      "period_sec": 12.0,
+      "phase_offset_sec": 0.0,
+      "swept_clearance_to_fixed_m": 0.869
+    },
+    {
+      "id": "preview_moving_partition_2",
+      "pose": [
+        7.2,
+        -5.5,
+        0.6,
+        0,
+        0,
+        0
+      ],
+      "size": [
+        1.52,
+        1.6,
+        1.2
+      ],
+      "amplitude_x": 0.7,
+      "period_sec": 14.0,
+      "phase_offset_sec": 7.0,
+      "swept_clearance_to_fixed_m": 0.531
+    }
+  ],
+  "preview_analysis_note": "Historical previews remain invalidated; the 2026-10-06 distributed layout changes the spawn positions of five resources and all clearance/route certificates must be regenerated from the new world.",
+  "validation_summary": {
+    "report": "docs/validation/DISTRIBUTED_LAYOUT_20261006/README.md",
+    "superseded": {
+      "sprint300_target_motion_sec": [
+        205.4,
+        190.3
+      ],
+      "note": "old layout, not valid for the distributed layout"
+    },
+    "target_motion_sec": null,
+    "target_five_of_five": null,
+    "full48": "not_run",
+    "full_competition_wallclock": "not_tested",
+    "reverse_regression": "not_run"
+  }
+}

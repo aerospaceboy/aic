@@ -1,0 +1,227 @@
+[INFO] [1788863409.537739422] [competition_pick_place]: persistent pick-place serving requests
+[INFO] [1788863492.862910449] [competition_pick_place]: persistent_request id=1 op=scan cube=red_cube_1
+[WARN] [1788863492.887622314] [competition_pick_place]: One or more stand collision objects were already absent
+[INFO] [1788863492.888083326] [competition_pick_place]: scan_started
+[INFO] [1788863492.902623674] [competition_pick_place]: planning:scan_pose
+[INFO] [1788863497.057857685] [competition_pick_place]: executed:scan_pose
+[INFO] [1788863497.060885754] [competition_pick_place]: scan_ready
+[INFO] [1788863497.061514778] [competition_pick_place]: persistent_result id=1 success=True detail=ok
+[INFO] [1788863498.177493179] [competition_pick_place]: persistent_request id=2 op=scan cube=red_cube_1
+[WARN] [1788863498.184900945] [competition_pick_place]: One or more stand collision objects were already absent
+[INFO] [1788863498.185191012] [competition_pick_place]: scan_started
+[INFO] [1788863498.186869230] [competition_pick_place]: planning:scan_pose
+[INFO] [1788863498.361209476] [competition_pick_place]: executed:scan_pose
+[INFO] [1788863498.364189678] [competition_pick_place]: scan_ready
+[INFO] [1788863498.364632781] [competition_pick_place]: persistent_result id=2 success=True detail=ok
+[INFO] [1788863498.468246138] [competition_pick_place]: persistent_request id=3 op=pick cube=red_cube_1
+[INFO] [1788863498.960625792] [competition_pick_place]: base_stabilized
+[WARN] [1788863498.961929641] [competition_pick_place]: One or more stand collision objects were already absent
+[INFO] [1788863498.964017235] [competition_pick_place]: pick_cube_stabilized:red_cube_1
+[INFO] [1788863498.964329714] [competition_pick_place]: pick_started:red_cube_1
+[INFO] [1788863499.416955353] [competition_pick_place]: gripper=open
+[INFO] [1788863499.434185993] [competition_pick_place]: planning:pick_approach
+[INFO] [1788863503.714018508] [competition_pick_place]: executed:pick_approach
+[WARN] [1788863503.718140445] [competition_pick_place]: One or more stand collision objects were already absent
+[INFO] [1788863503.719222743] [competition_pick_place]: cartesian_planning:pick_descend
+[INFO] [1788863504.978502068] [competition_pick_place]: cartesian_executed:pick_descend:fraction=1.000
+[INFO] [1788863504.984388048] [competition_pick_place]: grasp_window x=0.01446 y=-0.00178 z=0.03621 valid=True
+[INFO] [1788863505.435866473] [competition_pick_place]: gripper=closed
+[INFO] [1788863505.436897109] [competition_pick_place]: carry_window x=0.01492 y=0.00070 z=0.06747 valid=True
+[INFO] [1788863505.543265395] [competition_pick_place]: pick_cube_stabilization_released:red_cube_1
+[INFO] [1788863505.544811161] [competition_pick_place]: carry_window x=0.01437 y=-0.00047 z=0.03624 valid=True
+[INFO] [1788863505.549492377] [competition_pick_place]: gripper=attached:red_cube_1
+[INFO] [1788863505.611206901] [competition_pick_place]: carry_window x=0.01614 y=0.00233 z=0.06859 valid=True
+[INFO] [1788863505.672451628] [competition_pick_place]: carry_window x=0.01534 y=0.00215 z=0.10016 valid=False
+[INFO] [1788863505.733828084] [competition_pick_place]: carry_window x=0.01610 y=0.00233 z=0.06858 valid=True
+[INFO] [1788863505.795805563] [competition_pick_place]: carry_window x=0.01615 y=0.00232 z=0.06859 valid=True
+[INFO] [1788863505.796296075] [competition_pick_place]: attachment_constraint_ready
+[INFO] [1788863505.796884195] [competition_pick_place]: cartesian_planning:pick_low_retract
+[INFO] [1788863507.052875097] [competition_pick_place]: cartesian_executed:pick_low_retract:fraction=1.000
+[INFO] [1788863507.055095680] [competition_pick_place]: carry_window x=0.04136 y=0.00404 z=0.06874 valid=True
+[INFO] [1788863507.055461888] [competition_pick_place]: attached_relative_drift=0.025268960
+[WARN] [1788863507.055778957] [competition_pick_place]: Attached cube settled more than 20 mm but remains inside the safe carry window
+[INFO] [1788863507.058363848] [competition_pick_place]: transport_envelope x=0.23961 y=-0.00093 z=0.01530 roll=-0.00004 pitch=0.00344 valid=True
+[INFO] [1788863507.120390247] [competition_pick_place]: base_released
+[INFO] [1788863507.373203219] [competition_pick_place]: transport_envelope x=0.22838 y=0.00536 z=0.00455 roll=-0.08583 pitch=-0.02944 valid=True
+[INFO] [1788863507.373710667] [competition_pick_place]: pick_complete:red_cube_1
+[INFO] [1788863507.374087856] [competition_pick_place]: persistent_result id=3 success=True detail=ok
+[INFO] [1788863519.355547905] [competition_pick_place]: persistent_request id=4 op=place cube=red_cube_1
+[INFO] [1788863519.363396426] [competition_pick_place]: carry_window x=0.01497 y=0.00185 z=0.06748 valid=True
+[INFO] [1788863519.364708975] [competition_pick_place]: transport_envelope x=0.26531 y=0.00309 z=-0.01682 roll=0.00000 pitch=0.00349 valid=True
+[INFO] [1788863519.834142520] [competition_pick_place]: base_stabilized
+[WARN] [1788863519.835595519] [competition_pick_place]: One or more stand collision objects were already absent
+[INFO] [1788863519.835874711] [competition_pick_place]: place_started:red_cube_1
+[INFO] [1788863519.837664790] [competition_pick_place]: transport_envelope x=0.26529 y=0.00308 z=-0.01683 roll=0.00000 pitch=0.00348 valid=True
+[INFO] [1788863519.837942899] [competition_pick_place]: world_slot_release:direct_from_low_carry
+[INFO] [1788863520.247571338] [competition_pick_place]: carry_window x=0.01497 y=0.00185 z=0.06748 valid=True
+[INFO] [1788863520.248039607] [competition_pick_place]: cartesian_planning:place_extend_loaded
+[INFO] [1788863522.104569897] [competition_pick_place]: cartesian_executed:place_extend_loaded:fraction=1.000
+[INFO] [1788863522.113658244] [competition_pick_place]: world_slot_release:extended_arm_to_place_pose
+[INFO] [1788863522.114502083] [competition_pick_place]: carry_window x=0.01498 y=0.00189 z=0.06749 valid=True
+[INFO] [1788863522.566894189] [competition_pick_place]: gripper=open
+[INFO] [1788863522.813481222] [competition_pick_place]: gripper=released:red_cube_1
+[INFO] [1788863523.026312674] [competition_pick_place]: base_released
+[INFO] [1788863524.494635782] [competition_pick_place]: placed_cube_stabilized:red_cube_1
+[INFO] [1788863524.646118345] [competition_pick_place]: world_slot_stabilized error=0.0000
+[INFO] [1788863524.646384821] [competition_pick_place]: world_slot_release:defer_return_home
+[INFO] [1788863524.647081732] [competition_pick_place]: planning_async:return_home_after_world_slot
+[INFO] [1788863524.648948741] [competition_pick_place]: place_complete:red_cube_1
+[INFO] [1788863524.649324960] [competition_pick_place]: persistent_result id=4 success=True detail=ok
+[INFO] [1788863527.122735439] [competition_pick_place]: executed_async:return_home_after_world_slot
+[INFO] [1788863547.466056007] [competition_pick_place]: persistent_request id=5 op=pick cube=red_cube_3
+[INFO] [1788863547.950978873] [competition_pick_place]: base_stabilized
+[WARN] [1788863547.952238593] [competition_pick_place]: One or more stand collision objects were already absent
+[INFO] [1788863547.953940242] [competition_pick_place]: pick_cube_stabilized:red_cube_3
+[INFO] [1788863547.954220600] [competition_pick_place]: pick_started:red_cube_3
+[INFO] [1788863547.954480039] [competition_pick_place]: gripper_command_skipped:open:already_at_target
+[INFO] [1788863547.954762010] [competition_pick_place]: gripper=open
+[INFO] [1788863547.965695815] [competition_pick_place]: planning:pick_approach
+[INFO] [1788863550.241908158] [competition_pick_place]: executed:pick_approach
+[WARN] [1788863550.249654253] [competition_pick_place]: One or more stand collision objects were already absent
+[INFO] [1788863550.250143855] [competition_pick_place]: cartesian_planning:pick_descend
+[INFO] [1788863551.504325323] [competition_pick_place]: cartesian_executed:pick_descend:fraction=1.000
+[INFO] [1788863551.505875051] [competition_pick_place]: grasp_window x=0.01540 y=-0.00023 z=0.06741 valid=True
+[INFO] [1788863551.958057124] [competition_pick_place]: gripper=closed
+[INFO] [1788863551.959488287] [competition_pick_place]: carry_window x=0.01527 y=0.00112 z=0.06759 valid=True
+[INFO] [1788863552.064689307] [competition_pick_place]: pick_cube_stabilization_released:red_cube_3
+[INFO] [1788863552.065958747] [competition_pick_place]: carry_window x=0.01487 y=-0.00007 z=0.03563 valid=True
+[INFO] [1788863552.069135533] [competition_pick_place]: gripper=attached:red_cube_3
+[INFO] [1788863552.131211448] [competition_pick_place]: carry_window x=0.01483 y=0.00276 z=0.03655 valid=True
+[INFO] [1788863552.192751917] [competition_pick_place]: carry_window x=0.01483 y=0.00276 z=0.03655 valid=True
+[INFO] [1788863552.193021364] [competition_pick_place]: attachment_constraint_ready
+[INFO] [1788863552.193483723] [competition_pick_place]: cartesian_planning:pick_low_retract
+[INFO] [1788863553.449562847] [competition_pick_place]: cartesian_executed:pick_low_retract:fraction=1.000
+[INFO] [1788863553.455015585] [competition_pick_place]: carry_window x=0.01478 y=0.00286 z=0.03658 valid=True
+[INFO] [1788863553.455280567] [competition_pick_place]: attached_relative_drift=0.000123149
+[INFO] [1788863553.456541456] [competition_pick_place]: transport_envelope x=0.27416 y=-0.00411 z=0.04421 roll=-0.00003 pitch=0.00346 valid=True
+[INFO] [1788863553.518507840] [competition_pick_place]: base_released
+[INFO] [1788863553.771293137] [competition_pick_place]: transport_envelope x=0.26196 y=0.01067 z=0.03541 roll=-0.07784 pitch=-0.03294 valid=True
+[INFO] [1788863553.771660562] [competition_pick_place]: pick_complete:red_cube_3
+[INFO] [1788863553.771976835] [competition_pick_place]: persistent_result id=5 success=True detail=ok
+[INFO] [1788863594.750307710] [competition_pick_place]: persistent_request id=6 op=place cube=red_cube_3
+[INFO] [1788863594.756906125] [competition_pick_place]: carry_window x=0.01483 y=0.00151 z=0.03593 valid=True
+[INFO] [1788863594.758655257] [competition_pick_place]: transport_envelope x=0.26556 y=0.00157 z=0.01474 roll=0.00001 pitch=0.00349 valid=True
+[INFO] [1788863595.226486611] [competition_pick_place]: base_stabilized
+[WARN] [1788863595.227689562] [competition_pick_place]: One or more stand collision objects were already absent
+[INFO] [1788863595.227962761] [competition_pick_place]: place_started:red_cube_3
+[INFO] [1788863595.229535749] [competition_pick_place]: transport_envelope x=0.26555 y=0.00160 z=0.01472 roll=0.00001 pitch=0.00347 valid=True
+[INFO] [1788863595.229774759] [competition_pick_place]: world_slot_release:direct_from_low_carry
+[INFO] [1788863595.639593073] [competition_pick_place]: carry_window x=0.01483 y=0.00151 z=0.03593 valid=True
+[INFO] [1788863595.640082884] [competition_pick_place]: cartesian_planning:place_extend_loaded
+[INFO] [1788863597.496555431] [competition_pick_place]: cartesian_executed:place_extend_loaded:fraction=1.000
+[INFO] [1788863597.505002509] [competition_pick_place]: world_slot_release:extended_arm_to_place_pose
+[INFO] [1788863597.506000669] [competition_pick_place]: carry_window x=0.01483 y=0.00151 z=0.03593 valid=True
+[INFO] [1788863597.958102207] [competition_pick_place]: gripper=open
+[INFO] [1788863598.204160743] [competition_pick_place]: gripper=released:red_cube_3
+[INFO] [1788863598.416486270] [competition_pick_place]: base_released
+[INFO] [1788863599.883913603] [competition_pick_place]: placed_cube_stabilized:red_cube_3
+[INFO] [1788863600.035591027] [competition_pick_place]: world_slot_stabilized error=0.0000
+[INFO] [1788863600.035876212] [competition_pick_place]: world_slot_release:defer_return_home
+[INFO] [1788863600.036390475] [competition_pick_place]: planning_async:return_home_after_world_slot
+[INFO] [1788863600.038064411] [competition_pick_place]: place_complete:red_cube_3
+[INFO] [1788863600.038434620] [competition_pick_place]: persistent_result id=6 success=True detail=ok
+[INFO] [1788863602.522084905] [competition_pick_place]: executed_async:return_home_after_world_slot
+[INFO] [1788863630.098291849] [competition_pick_place]: persistent_request id=7 op=scan cube=blue_cube_2
+[WARN] [1788863630.101698399] [competition_pick_place]: One or more stand collision objects were already absent
+[INFO] [1788863630.101976030] [competition_pick_place]: scan_started
+[INFO] [1788863630.111041694] [competition_pick_place]: planning:scan_pose
+[INFO] [1788863634.189559622] [competition_pick_place]: executed:scan_pose
+[INFO] [1788863634.194136975] [competition_pick_place]: scan_ready
+[INFO] [1788863634.194447098] [competition_pick_place]: persistent_result id=7 success=True detail=ok
+[INFO] [1788863635.310583447] [competition_pick_place]: persistent_request id=8 op=scan cube=blue_cube_2
+[WARN] [1788863635.319196814] [competition_pick_place]: One or more stand collision objects were already absent
+[INFO] [1788863635.319496937] [competition_pick_place]: scan_started
+[INFO] [1788863635.320918185] [competition_pick_place]: planning:scan_pose
+[INFO] [1788863635.485382078] [competition_pick_place]: executed:scan_pose
+[INFO] [1788863635.487861164] [competition_pick_place]: scan_ready
+[INFO] [1788863635.488189757] [competition_pick_place]: persistent_result id=8 success=True detail=ok
+[INFO] [1788863635.596694479] [competition_pick_place]: persistent_request id=9 op=pick cube=blue_cube_2
+[INFO] [1788863636.069977427] [competition_pick_place]: base_stabilized
+[WARN] [1788863636.071311524] [competition_pick_place]: One or more stand collision objects were already absent
+[INFO] [1788863636.073120656] [competition_pick_place]: pick_cube_stabilized:blue_cube_2
+[INFO] [1788863636.073482876] [competition_pick_place]: pick_started:blue_cube_2
+[INFO] [1788863636.073741486] [competition_pick_place]: gripper_command_skipped:open:already_at_target
+[INFO] [1788863636.074025351] [competition_pick_place]: gripper=open
+[INFO] [1788863636.083682723] [competition_pick_place]: planning:pick_approach
+[INFO] [1788863640.903693619] [competition_pick_place]: executed:pick_approach
+[WARN] [1788863640.905165989] [competition_pick_place]: One or more stand collision objects were already absent
+[INFO] [1788863640.905685315] [competition_pick_place]: cartesian_planning:pick_descend
+[INFO] [1788863642.161846075] [competition_pick_place]: cartesian_executed:pick_descend:fraction=1.000
+[INFO] [1788863642.171059076] [competition_pick_place]: grasp_window x=0.02019 y=-0.00621 z=0.06561 valid=True
+[INFO] [1788863642.622721447] [competition_pick_place]: gripper=closed
+[INFO] [1788863642.624431372] [competition_pick_place]: carry_window x=0.02231 y=-0.00081 z=0.06521 valid=True
+[INFO] [1788863642.728764234] [competition_pick_place]: pick_cube_stabilization_released:blue_cube_2
+[INFO] [1788863642.730743565] [competition_pick_place]: carry_window x=0.02171 y=-0.00090 z=0.06531 valid=True
+[INFO] [1788863642.733931432] [competition_pick_place]: gripper=attached:blue_cube_2
+[INFO] [1788863642.795417849] [competition_pick_place]: carry_window x=0.02282 y=-0.00220 z=0.03051 valid=True
+[INFO] [1788863642.856704573] [competition_pick_place]: carry_window x=0.02282 y=-0.00220 z=0.03051 valid=True
+[INFO] [1788863642.856966954] [competition_pick_place]: attachment_constraint_ready
+[INFO] [1788863642.857464939] [competition_pick_place]: cartesian_planning:pick_low_retract
+[INFO] [1788863644.123952144] [competition_pick_place]: cartesian_executed:pick_low_retract:fraction=1.000
+[INFO] [1788863644.133368232] [competition_pick_place]: carry_window x=0.02469 y=0.00724 z=0.02684 valid=True
+[INFO] [1788863644.133640701] [competition_pick_place]: attached_relative_drift=0.010299362
+[INFO] [1788863644.135573523] [competition_pick_place]: transport_envelope x=0.24837 y=-0.01259 z=0.02812 roll=0.00003 pitch=0.00347 valid=True
+[INFO] [1788863644.198585918] [competition_pick_place]: base_released
+[INFO] [1788863644.451211782] [competition_pick_place]: transport_envelope x=0.26151 y=-0.02007 z=0.04134 roll=-0.06166 pitch=-0.01477 valid=True
+[INFO] [1788863644.451481292] [competition_pick_place]: pick_complete:blue_cube_2
+[INFO] [1788863644.451846788] [competition_pick_place]: persistent_result id=9 success=True detail=ok
+[INFO] [1788863693.751965494] [competition_pick_place]: persistent_request id=10 op=release cube=blue_cube_2
+[INFO] [1788863693.841724032] [competition_pick_place]: gripper=released:blue_cube_2
+[INFO] [1788863694.293230625] [competition_pick_place]: gripper=open
+[ERROR] [1788863694.354723502] [competition_pick_place]: Base release failed: DETACHED -- ERROR (Joint does not exist!): {MODEL , LINK} -> {six_arm , base_footprint} -- {ground_plane , link}.
+[WARN] [1788863694.355049093] [competition_pick_place]: Base was already released or could not be released
+[INFO] [1788863694.355275470] [competition_pick_place]: safety_release:blue_cube_2
+[INFO] [1788863694.355627525] [competition_pick_place]: persistent_result id=10 success=True detail=ok
+[INFO] [1788863759.748862055] [competition_pick_place]: persistent_request id=11 op=pick cube=blue_cube_3
+[INFO] [1788863760.230281956] [competition_pick_place]: base_stabilized
+[WARN] [1788863760.231502126] [competition_pick_place]: One or more stand collision objects were already absent
+[INFO] [1788863760.233154716] [competition_pick_place]: pick_cube_stabilized:blue_cube_3
+[INFO] [1788863760.233443685] [competition_pick_place]: pick_started:blue_cube_3
+[INFO] [1788863760.233649415] [competition_pick_place]: gripper_command_skipped:open:already_at_target
+[INFO] [1788863760.233925626] [competition_pick_place]: gripper=open
+[INFO] [1788863760.235330267] [competition_pick_place]: planning:pick_approach
+[INFO] [1788863761.960217835] [competition_pick_place]: executed:pick_approach
+[WARN] [1788863761.965052710] [competition_pick_place]: One or more stand collision objects were already absent
+[INFO] [1788863761.965535969] [competition_pick_place]: cartesian_planning:pick_descend
+[INFO] [1788863763.219976706] [competition_pick_place]: cartesian_executed:pick_descend:fraction=1.000
+[INFO] [1788863763.223735849] [competition_pick_place]: grasp_window x=0.00487 y=-0.00654 z=0.07113 valid=True
+[INFO] [1788863763.675284966] [competition_pick_place]: gripper=closed
+[INFO] [1788863763.676100494] [competition_pick_place]: carry_window x=0.00482 y=-0.00652 z=0.07137 valid=True
+[INFO] [1788863763.780472493] [competition_pick_place]: pick_cube_stabilization_released:blue_cube_3
+[INFO] [1788863763.781390105] [competition_pick_place]: carry_window x=0.00481 y=-0.00002 z=0.07049 valid=True
+[INFO] [1788863763.785016424] [competition_pick_place]: gripper=attached:blue_cube_3
+[INFO] [1788863763.846865643] [competition_pick_place]: carry_window x=0.00476 y=0.00350 z=0.06711 valid=True
+[INFO] [1788863763.908333865] [competition_pick_place]: carry_window x=0.00476 y=0.00350 z=0.06711 valid=True
+[INFO] [1788863763.908621170] [competition_pick_place]: attachment_constraint_ready
+[INFO] [1788863763.909072823] [competition_pick_place]: cartesian_planning:pick_low_retract
+[INFO] [1788863765.164948311] [competition_pick_place]: cartesian_executed:pick_low_retract:fraction=1.000
+[INFO] [1788863765.173845939] [competition_pick_place]: carry_window x=0.00512 y=0.00681 z=0.06775 valid=True
+[INFO] [1788863765.174100489] [competition_pick_place]: attached_relative_drift=0.003390563
+[INFO] [1788863765.175535200] [competition_pick_place]: transport_envelope x=0.27012 y=0.03032 z=0.00653 roll=-0.08161 pitch=-0.05741 valid=True
+[INFO] [1788863765.237645717] [competition_pick_place]: base_released
+[INFO] [1788863765.490245238] [competition_pick_place]: transport_envelope x=0.26898 y=0.03150 z=0.00562 roll=-0.09663 pitch=-0.06859 valid=True
+[INFO] [1788863765.490523886] [competition_pick_place]: pick_complete:blue_cube_3
+[INFO] [1788863765.490802778] [competition_pick_place]: persistent_result id=11 success=True detail=ok
+[INFO] [1788863788.355157046] [competition_pick_place]: persistent_request id=12 op=place cube=blue_cube_3
+[INFO] [1788863788.362812352] [competition_pick_place]: carry_window x=0.00468 y=0.00282 z=0.06702 valid=True
+[INFO] [1788863788.364298203] [competition_pick_place]: transport_envelope x=0.27561 y=0.02362 z=-0.01640 roll=0.00000 pitch=0.00349 valid=True
+[INFO] [1788863788.843399227] [competition_pick_place]: base_stabilized
+[WARN] [1788863788.844574630] [competition_pick_place]: One or more stand collision objects were already absent
+[INFO] [1788863788.844841338] [competition_pick_place]: place_started:blue_cube_3
+[INFO] [1788863788.846148534] [competition_pick_place]: transport_envelope x=0.27560 y=0.02364 z=-0.01641 roll=-0.00000 pitch=0.00348 valid=True
+[INFO] [1788863788.846391629] [competition_pick_place]: world_slot_release:direct_from_low_carry
+[INFO] [1788863789.256904529] [competition_pick_place]: carry_window x=0.00468 y=0.00283 z=0.06702 valid=True
+[INFO] [1788863789.257385958] [competition_pick_place]: cartesian_planning:place_extend_loaded
+[INFO] [1788863791.114065511] [competition_pick_place]: cartesian_executed:place_extend_loaded:fraction=1.000
+[INFO] [1788863791.119962850] [competition_pick_place]: world_slot_release:extended_arm_to_place_pose
+[INFO] [1788863791.121345703] [competition_pick_place]: carry_window x=0.00468 y=0.00283 z=0.06702 valid=True
+[INFO] [1788863791.573026591] [competition_pick_place]: gripper=open
+[INFO] [1788863791.818526913] [competition_pick_place]: gripper=released:blue_cube_3
+[INFO] [1788863792.030733542] [competition_pick_place]: base_released
+[INFO] [1788863793.499264237] [competition_pick_place]: placed_cube_stabilized:blue_cube_3
+[INFO] [1788863793.651036499] [competition_pick_place]: world_slot_stabilized error=0.0000
+[INFO] [1788863793.651298403] [competition_pick_place]: world_slot_release:defer_return_home
+[INFO] [1788863793.651764915] [competition_pick_place]: planning_async:return_home_after_world_slot
+[INFO] [1788863793.653549222] [competition_pick_place]: place_complete:blue_cube_3
+[INFO] [1788863793.653837839] [competition_pick_place]: persistent_result id=12 success=True detail=ok
+[INFO] [1788863796.137744148] [competition_pick_place]: executed_async:return_home_after_world_slot

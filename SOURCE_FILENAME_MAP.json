@@ -1,0 +1,12 @@
+[
+  {
+    "archive_original_path_bytes_hex": "595a426f742d3232342d5553422f776f726b73706163652f7372632f797a626f742fc8fdc8cbbfaab7a2b7d6b9a4d3ebcab5caa9bcc6bbae2e6d64",
+    "normalized_path": "workspace/src/yzbot/三人开发分工与实施计划.md",
+    "reason": "historical GBK filename converted to UTF-8, file contents unchanged"
+  },
+  {
+    "archive_original_path_bytes_hex": "595a426f742d3232342d5553422f776f726b73706163652f7372632f797a626f742fcfeec4bfd7dcbde12e6d64",
+    "normalized_path": "workspace/src/yzbot/项目总结.md",
+    "reason": "historical GBK filename converted to UTF-8, file contents unchanged"
+  }
+]

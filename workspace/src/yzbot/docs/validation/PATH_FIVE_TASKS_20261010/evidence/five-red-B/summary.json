@@ -1,0 +1,22 @@
+{
+  "task": "five-red-B",
+  "requested_color": "red",
+  "target_zone": "B",
+  "state": "completed",
+  "completed": 5,
+  "skipped": 0,
+  "motion_seconds": 270.4,
+  "submit_to_terminal_seconds": 273.089,
+  "requirements_match": true,
+  "truth_valid_precise": true,
+  "truth_count": 5,
+  "obstacles_seen": 4,
+  "original_pair_demonstrated": true,
+  "minimum_dynamic_clearance": 0.5223,
+  "dynamic_collision_detected": false,
+  "llm_source": "llm",
+  "llm_model": "qwen3.8-max",
+  "control_base_commit": "c6d5cbe31f6687ffe96da239032a1d43bcc16b23",
+  "worktree_patch_sha256": "170ed575d217bd366ea89385022e6a2cf7625838e2ad2d6766195fc65f5d437d",
+  "display_navigation_state_wired": false
+}

@@ -1,0 +1,206 @@
+# Authoritative layout for the 2026 distributed scene.
+#
+# GENERATED from mybot_description/worlds/offic_room.world by
+# tools_demo/scripts/generate_final_layout.py. Do not hand-edit: rerun the
+# generator after changing the world, then run the consistency test
+# (tools_demo/test/test_layout_config.py) to prove every consumer agrees.
+#
+# Synchronized consumer values are checked against this generated file:
+#   - tools_demo/config/mission.yaml          (cube docks, zone nav)
+#   - bot_navigation/config/competition_zones.yaml (docks, entries, zones)
+#   - tools_demo/tools_demo/mission_coordinator.py (CUBE_WORLD_SLOTS)
+#   - tools_demo/tools_demo/task_navigator.py      (dock/entry defaults)
+#   - tools_demo/tools_demo/competition_dashboard.py (panel layout)
+
+frame_config:
+  mission_frame: map
+  robot_frame: base_link
+  world_frame: world
+
+robot_start:
+  x: 15.0000
+  y: -2.0000
+  yaw: 3.1416
+
+geometry:
+  # Distance from base_link to the cube centre at a per-cube dock.
+  cube_dock_standoff: 0.36
+  cube_entry_offset: 0.54
+  chassis_half_length: 0.16
+  costmap_inflation_radius: 0.45
+  zone_standoff: 0.40
+
+pickup_objects:
+  - id: red_cube_1
+    color: red
+    allowed_sides: ['east']
+    x: -7.5000
+    y: -2.8000
+    z: 0.1300
+    tray: competition_red_pickup_tray
+    # West approach, yaw 0: the cube sits cube_dock_standoff ahead.
+    pickup_approach: [-7.86, -2.80, 0.00]
+    # Nav2 goal outside every tray inflation footprint.
+    retreat_pose: [-8.40, -2.80, 0.00]
+    entry_clearance: 0.780
+    dock_to_entry: 0.54
+    alternate_retreat_pose: [-7.86, -2.15, 0.00]
+    alternate_entry_clearance: 0.582
+    alternate_dock_to_entry: 0.65
+  - id: red_cube_2
+    color: red
+    allowed_sides: ['east']
+    x: 1.0000
+    y: -5.4000
+    z: 0.1300
+    tray: competition_red_pickup_tray_2
+    # West approach, yaw 0: the cube sits cube_dock_standoff ahead.
+    pickup_approach: [0.64, -5.40, 0.00]
+    # Nav2 goal outside every tray inflation footprint.
+    retreat_pose: [0.10, -5.40, 0.00]
+    entry_clearance: 0.780
+    dock_to_entry: 0.54
+    alternate_retreat_pose: [0.64, -4.75, 0.00]
+    alternate_entry_clearance: 0.582
+    alternate_dock_to_entry: 0.65
+  - id: red_cube_3
+    color: red
+    allowed_sides: ['east']
+    x: 0.0000
+    y: 3.8000
+    z: 0.1300
+    tray: competition_red_pickup_tray_3
+    # West approach, yaw 0: the cube sits cube_dock_standoff ahead.
+    pickup_approach: [-0.36, 3.80, 0.00]
+    # Nav2 goal outside every tray inflation footprint.
+    retreat_pose: [-0.90, 3.80, 0.00]
+    entry_clearance: 0.780
+    dock_to_entry: 0.54
+    alternate_retreat_pose: [-0.36, 3.15, 0.00]
+    alternate_entry_clearance: 0.582
+    alternate_dock_to_entry: 0.65
+  - id: red_cube_4
+    color: red
+    allowed_sides: ['east']
+    x: 11.4000
+    y: -9.8000
+    z: 0.1300
+    tray: competition_red_pickup_tray_4
+    # West approach, yaw 0: the cube sits cube_dock_standoff ahead.
+    pickup_approach: [11.04, -9.80, 0.00]
+    # Nav2 goal outside every tray inflation footprint.
+    retreat_pose: [10.50, -9.80, 0.00]
+    entry_clearance: 0.780
+    dock_to_entry: 0.54
+    alternate_retreat_pose: [11.04, -9.15, 0.00]
+    alternate_entry_clearance: 0.582
+    alternate_dock_to_entry: 0.65
+  - id: red_cube_5
+    color: red
+    allowed_sides: ['east']
+    x: -4.7000
+    y: -12.4000
+    z: 0.1300
+    tray: competition_red_pickup_tray_5
+    # West approach, yaw 0: the cube sits cube_dock_standoff ahead.
+    pickup_approach: [-5.06, -12.40, 0.00]
+    # Nav2 goal outside every tray inflation footprint.
+    retreat_pose: [-5.60, -12.40, 0.00]
+    entry_clearance: 0.780
+    dock_to_entry: 0.54
+    alternate_retreat_pose: [-5.06, -11.75, 0.00]
+    alternate_entry_clearance: 0.582
+    alternate_dock_to_entry: 0.65
+  - id: blue_cube_1
+    color: blue
+    allowed_sides: ['west', 'east']
+    x: 7.4000
+    y: 3.6000
+    z: 0.1300
+    tray: competition_blue_pickup_tray
+    # West approach, yaw 0: the cube sits cube_dock_standoff ahead.
+    pickup_approach: [7.04, 3.60, 0.00]
+    # Nav2 goal outside every tray inflation footprint.
+    retreat_pose: [6.50, 3.60, 0.00]
+    entry_clearance: 0.780
+    dock_to_entry: 0.54
+  - id: blue_cube_2
+    color: blue
+    allowed_sides: ['west', 'east']
+    x: -11.0000
+    y: -5.6000
+    z: 0.1300
+    tray: competition_blue_pickup_tray_2
+    # West approach, yaw 0: the cube sits cube_dock_standoff ahead.
+    pickup_approach: [-11.36, -5.60, 0.00]
+    # Nav2 goal outside every tray inflation footprint.
+    retreat_pose: [-11.90, -5.60, 0.00]
+    entry_clearance: 0.780
+    dock_to_entry: 0.54
+  - id: blue_cube_3
+    color: blue
+    allowed_sides: ['east']
+    x: -2.0000
+    y: -6.0000
+    z: 0.1300
+    tray: competition_blue_pickup_tray_3
+    # West approach, yaw 0: the cube sits cube_dock_standoff ahead.
+    pickup_approach: [-2.36, -6.00, 0.00]
+    # Nav2 goal outside every tray inflation footprint.
+    retreat_pose: [-2.90, -6.00, 0.00]
+    entry_clearance: 0.780
+    dock_to_entry: 0.54
+  - id: blue_cube_4
+    color: blue
+    allowed_sides: ['east']
+    x: -0.5000
+    y: -8.8000
+    z: 0.1300
+    tray: competition_blue_pickup_tray_4
+    # West approach, yaw 0: the cube sits cube_dock_standoff ahead.
+    pickup_approach: [-0.86, -8.80, 0.00]
+    # Nav2 goal outside every tray inflation footprint.
+    retreat_pose: [-1.40, -8.80, 0.00]
+    entry_clearance: 0.780
+    dock_to_entry: 0.54
+  - id: blue_cube_5
+    color: blue
+    allowed_sides: ['west', 'east']
+    x: 11.8000
+    y: -13.0000
+    z: 0.1300
+    tray: competition_blue_pickup_tray_5
+    # West approach, yaw 0: the cube sits cube_dock_standoff ahead.
+    pickup_approach: [11.44, -13.00, 0.00]
+    # Nav2 goal outside every tray inflation footprint.
+    retreat_pose: [10.90, -13.00, 0.00]
+    entry_clearance: 0.780
+    dock_to_entry: 0.54
+
+zones:
+  A:
+    zone_id: A
+    zone_color: green
+    center: [-5.40, 3.80]
+    half_extent: [0.485, 0.235]
+  B:
+    zone_id: B
+    zone_color: yellow
+    center: [11.70, -5.00]
+    half_extent: [0.485, 0.235]
+  C:
+    zone_id: C
+    zone_color: blue
+    center: [3.30, -12.10]
+    half_extent: [0.485, 0.235]
+
+dynamic_obstacles:
+  obstacle_1:
+    model: competition_moving_obstacle_1
+    initial: [8.50, -0.35]
+    radius: 0.18
+  obstacle_2:
+    model: competition_moving_obstacle_2
+    initial: [5.00, -0.35]
+    radius: 0.18
+

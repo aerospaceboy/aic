@@ -1,0 +1,1077 @@
+Starting >>> mybot
+--- output: mybot
+UpdateCTestConfiguration  from :/home/ros/dev_ws/build/mybot/CTestConfiguration.ini
+Parse Config file:/home/ros/dev_ws/build/mybot/CTestConfiguration.ini
+   Site: u22
+   Build name: (empty)
+ Add coverage exclude regular expressions.
+Create new tag: 20261005-1035 - Experimental
+UpdateCTestConfiguration  from :/home/ros/dev_ws/build/mybot/CTestConfiguration.ini
+Parse Config file:/home/ros/dev_ws/build/mybot/CTestConfiguration.ini
+Test project /home/ros/dev_ws/build/mybot
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1
+    Start 1: test_pick_place_math
+
+1: Test command: /usr/bin/python3 "-u" "/opt/ros/humble/share/ament_cmake_test/cmake/run_test.py" "/home/ros/dev_ws/build/mybot/test_results/mybot/test_pick_place_math.xunit.xml" "--package-name" "mybot" "--output-file" "/home/ros/dev_ws/build/mybot/ament_cmake_pytest/test_pick_place_math.txt" "--command" "/usr/bin/python3" "-u" "-m" "pytest" "/home/ros/dev_ws/src/yzbot/mybot/test/test_pick_place_math.py" "-o" "cache_dir=/home/ros/dev_ws/build/mybot/ament_cmake_pytest/test_pick_place_math/.cache" "--junit-xml=/home/ros/dev_ws/build/mybot/test_results/mybot/test_pick_place_math.xunit.xml" "--junit-prefix=mybot"
+1: Test timeout computed to be: 60
+1: -- run_test.py: invoking following command in '/home/ros/dev_ws/build/mybot':
+1:  - /usr/bin/python3 -u -m pytest /home/ros/dev_ws/src/yzbot/mybot/test/test_pick_place_math.py -o cache_dir=/home/ros/dev_ws/build/mybot/ament_cmake_pytest/test_pick_place_math/.cache --junit-xml=/home/ros/dev_ws/build/mybot/test_results/mybot/test_pick_place_math.xunit.xml --junit-prefix=mybot
+1: ============================= test session starts ==============================
+1: platform linux -- Python 3.10.12, pytest-6.2.5, py-1.10.0, pluggy-0.13.0
+1: cachedir: build/mybot/ament_cmake_pytest/test_pick_place_math/.cache
+1: rootdir: /home/ros/dev_ws
+1: plugins: launch-testing-ros-0.19.13, ament-flake8-0.12.15, ament-xmllint-0.12.15, launch-testing-1.0.14, ament-pep257-0.12.15, ament-lint-0.12.15, ament-copyright-0.12.15, anyio-4.12.1, colcon-core-0.21.0, cov-3.0.0
+1: collected 42 items
+1: 
+1: ../../src/yzbot/mybot/test/test_pick_place_math.py ..................... [ 50%]
+1: .....................                                                    [100%]
+1: 
+1: - generated xml file: /home/ros/dev_ws/build/mybot/test_results/mybot/test_pick_place_math.xunit.xml -
+1: ============================== 42 passed in 0.61s ==============================
+1: -- run_test.py: return code 0
+1: -- run_test.py: verify result file '/home/ros/dev_ws/build/mybot/test_results/mybot/test_pick_place_math.xunit.xml'
+1/1 Test #1: test_pick_place_math .............   Passed    2.44 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+pytest    =   2.44 sec*proc (1 test)
+
+Total Test time (real) =   2.45 sec
+---
+Finished <<< mybot [2.62s]
+Starting >>> tools_demo
+--- output: tools_demo
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-6.2.5, py-1.10.0, pluggy-0.13.0
+cachedir: /home/ros/dev_ws/build/tools_demo/.pytest_cache
+rootdir: /home/ros/dev_ws/src/yzbot/tools_demo
+plugins: launch-testing-ros-0.19.13, ament-flake8-0.12.15, ament-xmllint-0.12.15, launch-testing-1.0.14, ament-pep257-0.12.15, ament-lint-0.12.15, ament-copyright-0.12.15, anyio-4.12.1, colcon-core-0.21.0, cov-3.0.0
+collected 632 items
+
+test/test_acceptance_contract.py .........                               [  1%]
+test/test_b_east_dock_egress.py ....                                     [  2%]
+test/test_c_clearance_route.py ..                                        [  2%]
+test/test_campaign_sim_health.py ......                                  [  3%]
+test/test_campaign_summary.py ...                                        [  3%]
+test/test_campaign_transport.py ...                                      [  4%]
+test/test_copyright.py s                                                 [  4%]
+test/test_costmap_updates.py ........                                    [  5%]
+test/test_costudio_300s.py ................                              [  8%]
+test/test_costudio_camera_contract.py ...                                [  8%]
+test/test_coverage_summary.py ...                                        [  9%]
+test/test_crossing_admission.py .........                                [ 10%]
+test/test_cube_order_override.py ....................................... [ 16%]
+........................                                                 [ 20%]
+test/test_dashboard_state.py ..................                          [ 23%]
+test/test_delivery_release.py ....                                       [ 24%]
+test/test_dynamic_obstacle_filter.py .....                               [ 24%]
+test/test_east_gate_steering.py ....                                     [ 25%]
+test/test_east_gate_wait_sweep.py .......                                [ 26%]
+test/test_evidence_audit.py .............                                [ 28%]
+test/test_flake8.py F                                                    [ 28%]
+test/test_gazebo_gui_modes.py ...                                        [ 29%]
+test/test_layout_config.py .............                                 [ 31%]
+test/test_layout_rescue.py .............                                 [ 33%]
+test/test_llm_client.py ...............                                  [ 35%]
+test/test_llm_http_integration.py ...                                    [ 36%]
+test/test_mission_contract.py ................................           [ 41%]
+test/test_mission_state_machine.py .........................             [ 45%]
+test/test_mover_crossing_control.py .....                                [ 46%]
+test/test_mover_reverse_sweep.py ......                                  [ 46%]
+test/test_navigation_batch_recovery.py .........                         [ 48%]
+test/test_navigation_contract.py ....................................... [ 54%]
+.......................................................................  [ 65%]
+test/test_navigation_math.py ........................................... [ 72%]
+............................                                             [ 77%]
+test/test_navigation_matrix.py ...                                       [ 77%]
+test/test_navigation_risk.py .............                               [ 79%]
+test/test_parse_result_evidence.py .........                             [ 81%]
+test/test_parser_mode_callbacks.py ..........                            [ 82%]
+test/test_payload_scan_mask.py ........                                  [ 83%]
+test/test_pep257.py F                                                    [ 84%]
+test/test_perception_math.py ........                                    [ 85%]
+test/test_pickup_nav_failure_recovery.py ..                              [ 85%]
+test/test_problem_solver.py .........                                    [ 87%]
+test/test_recovery_escape.py .......                                     [ 88%]
+test/test_safety_limiter.py ..........                                   [ 89%]
+test/test_scene_markers.py ...                                           [ 90%]
+test/test_speed_profile.py ...                                           [ 90%]
+test/test_startup_race_contract.py ...                                   [ 91%]
+test/test_sweep_band_keepout.py .....                                    [ 91%]
+test/test_swept_band_transit.py ........                                 [ 93%]
+test/test_target_provenance_contract.py ........                         [ 94%]
+test/test_task_parser_llm_defaults.py ...                                [ 94%]
+test/test_task_protocol.py ...............                               [ 97%]
+test/test_velocity_selector.py .......                                   [ 98%]
+test/test_video_submit.py ..........                                     [100%]
+
+=================================== FAILURES ===================================
+_________________________________ test_flake8 __________________________________
+test/test_flake8.py:23: in test_flake8
+    assert rc == 0, \
+E   AssertionError: Found 81 code style errors / warnings:
+E     ./launch/costudio_bridge.launch.py:27:100: E501 line too long (161 > 99 characters)
+E     ./scripts/nav_legs.py:56:100: E501 line too long (102 > 99 characters)
+E     ./scripts/summarize48_v2.py:11:1: E402 module level import not at top of file
+E     ./scripts/summarize48_v2.py:43:100: E501 line too long (100 > 99 characters)
+E     ./scripts/summarize48_v2.py:56:13: E128 continuation line under-indented for visual indent
+E     ./scripts/summarize48_v2.py:57:13: E128 continuation line under-indented for visual indent
+E     ./scripts/summarize48_v2.py:58:13: E128 continuation line under-indented for visual indent
+E     ./scripts/summarize48_v2.py:59:13: E128 continuation line under-indented for visual indent
+E     ./scripts/summarize48_v2.py:60:13: E128 continuation line under-indented for visual indent
+E     ./scripts/summarize48_v2.py:61:13: E128 continuation line under-indented for visual indent
+E     ./scripts/summarize48_v2.py:62:22: E128 continuation line under-indented for visual indent
+E     ./scripts/summarize48_v2.py:63:13: E128 continuation line under-indented for visual indent
+E     ./scripts/summarize48_v2.py:64:100: E501 line too long (120 > 99 characters)
+E     ./scripts/summarize48_v2.py:66:14: E128 continuation line under-indented for visual indent
+E     ./scripts/summarize48_v2.py:67:14: E128 continuation line under-indented for visual indent
+E     ./scripts/summarize48_v2.py:68:14: E128 continuation line under-indented for visual indent
+E     ./scripts/summarize48_v2.py:73:30: E231 missing whitespace after ':'
+E     ./scripts/summarize48_v2.py:74:9: E128 continuation line under-indented for visual indent
+E     ./scripts/summarize48_v2.py:74:23: E231 missing whitespace after ':'
+E     ./scripts/summarize48_v2.py:75:9: E128 continuation line under-indented for visual indent
+E     ./scripts/summarize48_v2.py:75:24: E231 missing whitespace after ':'
+E     ./scripts/summarize48_v2.py:76:9: E128 continuation line under-indented for visual indent
+E     ./scripts/summarize48_v2.py:76:29: E231 missing whitespace after ':'
+E     ./scripts/summarize48_v2.py:77:9: E128 continuation line under-indented for visual indent
+E     ./scripts/summarize48_v2.py:77:19: E231 missing whitespace after ':'
+E     ./scripts/summarize48_v2.py:78:9: E128 continuation line under-indented for visual indent
+E     ./scripts/summarize48_v2.py:78:16: E231 missing whitespace after ':'
+E     ./scripts/summarize48_v2.py:79:21: E225 missing whitespace around operator
+E     ./scripts/summarize48_v2.py:81:19: E225 missing whitespace around operator
+E     ./scripts/summarize48_v2.py:82:33: E702 multiple statements on one line (semicolon)
+E     ./test/test_acceptance_contract.py:114:13: E131 continuation line unaligned for hanging indent
+E     ./test/test_campaign_sim_health.py:8:1: F401 'importlib.util' imported but unused
+E     ./test/test_coverage_summary.py:7:5: E128 continuation line under-indented for visual indent
+E     ./test/test_coverage_summary.py:13:14: E225 missing whitespace around operator
+E     ./test/test_coverage_summary.py:17:16: E231 missing whitespace after ':'
+E     ./test/test_coverage_summary.py:17:22: E231 missing whitespace after ','
+E     ./test/test_coverage_summary.py:17:34: E231 missing whitespace after ':'
+E     ./test/test_coverage_summary.py:17:36: E231 missing whitespace after ','
+E     ./test/test_coverage_summary.py:17:46: E231 missing whitespace after ':'
+E     ./test/test_coverage_summary.py:17:48: E231 missing whitespace after ','
+E     ./test/test_coverage_summary.py:17:62: E231 missing whitespace after ':'
+E     ./test/test_coverage_summary.py:18:10: E225 missing whitespace around operator
+E     ./test/test_coverage_summary.py:23:23: E231 missing whitespace after ','
+E     ./test/test_coverage_summary.py:23:36: E231 missing whitespace after ','
+E     ./test/test_coverage_summary.py:24:8: E225 missing whitespace around operator
+E     ./test/test_coverage_summary.py:29:24: E225 missing whitespace around operator
+E     ./test/test_coverage_summary.py:33:23: E231 missing whitespace after ','
+E     ./test/test_coverage_summary.py:33:36: E231 missing whitespace after ','
+E     ./test/test_coverage_summary.py:34:23: E231 missing whitespace after ','
+E     ./test/test_coverage_summary.py:34:36: E231 missing whitespace after ','
+E     ./test/test_coverage_summary.py:34:42: E231 missing whitespace after ','
+E     ./test/test_coverage_summary.py:39:23: E231 missing whitespace after ','
+E     ./test/test_coverage_summary.py:39:36: E231 missing whitespace after ','
+E     ./test/test_coverage_summary.py:40:14: E225 missing whitespace around operator
+E     ./test/test_coverage_summary.py:40:36: E702 multiple statements on one line (semicolon)
+E     ./test/test_coverage_summary.py:40:36: E231 missing whitespace after ';'
+E     ./test/test_coverage_summary.py:42:9: E225 missing whitespace around operator
+E     ./test/test_coverage_summary.py:43:21: E225 missing whitespace around operator
+E     ./test/test_coverage_summary.py:44:28: E225 missing whitespace around operator
+E     ./test/test_mission_contract.py:22:100: E501 line too long (177 > 99 characters)
+E     ./test/test_navigation_contract.py:1456:100: E501 line too long (130 > 99 characters)
+E     ./test/test_navigation_contract.py:1460:100: E501 line too long (112 > 99 characters)
+E     ./test/test_navigation_contract.py:1991:100: E501 line too long (298 > 99 characters)
+E     ./test/test_navigation_contract.py:3401:1: E302 expected 2 blank lines, found 1
+E     ./test/test_parse_result_evidence.py:153:1: E303 too many blank lines (3)
+E     ./test/test_swept_band_transit.py:153:52: W292 no newline at end of file
+E     ./tools_demo/llm_client.py:152:13: F841 local variable 'exception' is assigned to but never used
+E     ./tools_demo/llm_client.py:156:13: F841 local variable 'exception' is assigned to but never used
+E     ./tools_demo/mission_coordinator.py:141:1: E303 too many blank lines (3)
+E     ./tools_demo/mission_coordinator.py:157:1: E302 expected 2 blank lines, found 1
+E     ./tools_demo/mission_coordinator.py:253:1: E303 too many blank lines (3)
+E     ./tools_demo/mission_coordinator.py:279:1: E302 expected 2 blank lines, found 1
+E     ./tools_demo/mission_coordinator.py:322:1: E305 expected 2 blank lines after class or function definition, found 1
+E     ./tools_demo/mission_coordinator.py:1219:9: E303 too many blank lines (3)
+E     ./tools_demo/moving_obstacle.py:429:100: E501 line too long (106 > 99 characters)
+E     ./tools_demo/navigation_math.py:348:1: E302 expected 2 blank lines, found 1
+E     ./tools_demo/safety_limiter.py:234:31: E127 continuation line over-indented for visual indent
+E     ./tools_demo/safety_limiter.py:266:5: E301 expected 1 blank line, found 0
+E     ./tools_demo/speed_profile_recorder.py:43:1: E302 expected 2 blank lines, found 1
+E     ./tools_demo/task_navigator.py:3401:9: F841 local variable 'segment_start_x' is assigned to but never used
+E     ./tools_demo/task_navigator.py:3402:9: F841 local variable 'segment_start_y' is assigned to but never used
+E   assert 1 == 0
+----------------------------- Captured stdout call -----------------------------
+
+./launch/costudio_bridge.launch.py:27:100: E501 line too long (161 > 99 characters)
+    r"^/clock$", r"^/map$", r"^/amcl_pose$", r"^/plan$", r"^/local_plan$", r"^/received_global_plan$", r"^/global_costmap/costmap$", r"^/local_costmap/costmap$",
+                                                                                                   ^
+
+./scripts/nav_legs.py:56:100: E501 line too long (102 > 99 characters)
+    print("%-5s %-16s %7s %5s %5s %5s %s" % ("tag", "leg", "dur", "retry", "slow", "recov", "result"))
+                                                                                                   ^
+
+./scripts/summarize48_v2.py:11:1: E402 module level import not at top of file
+import gen48_questions
+^
+
+./scripts/summarize48_v2.py:43:100: E501 line too long (100 > 99 characters)
+                accepted = line.split('CASE_ACCEPTED=', 1)[1].startswith('true collision_faults=[]')
+                                                                                                   ^
+
+./scripts/summarize48_v2.py:56:13: E128 continuation line under-indented for visual indent
+            state='INTERRUPTED' if interrupted else terminal.get('state', 'NO_TERMINAL'),
+            ^
+
+./scripts/summarize48_v2.py:57:13: E128 continuation line under-indented for visual indent
+            elapsed_sec=elapsed,
+            ^
+
+./scripts/summarize48_v2.py:58:13: E128 continuation line under-indented for visual indent
+            completed=terminal.get('completed'), skipped=terminal.get('skipped'),
+            ^
+
+./scripts/summarize48_v2.py:59:13: E128 continuation line under-indented for visual indent
+            five_of_five=completed, case_accepted=completed and accepted,
+            ^
+
+./scripts/summarize48_v2.py:60:13: E128 continuation line under-indented for visual indent
+            strict_motion_pass=functional and completed and accepted and not interrupted,
+            ^
+
+./scripts/summarize48_v2.py:61:13: E128 continuation line under-indented for visual indent
+            under300=functional and completed and accepted and not interrupted
+            ^
+
+./scripts/summarize48_v2.py:62:22: E128 continuation line under-indented for visual indent
+                     and isinstance(elapsed, (int, float)) and 0 < elapsed < 300,
+                     ^
+
+./scripts/summarize48_v2.py:63:13: E128 continuation line under-indented for visual indent
+            evidence=str(directory),
+            ^
+
+./scripts/summarize48_v2.py:64:100: E501 line too long (120 > 99 characters)
+            commit=(directory / 'commit.txt').read_text().strip() if (directory / 'commit.txt').exists() else 'unknown')
+                                                                                                   ^
+
+./scripts/summarize48_v2.py:66:14: E128 continuation line under-indented for visual indent
+             elapsed_sec=None, completed=None, skipped=None, five_of_five=False,
+             ^
+
+./scripts/summarize48_v2.py:67:14: E128 continuation line under-indented for visual indent
+             case_accepted=False, strict_motion_pass=False, under300=False,
+             ^
+
+./scripts/summarize48_v2.py:68:14: E128 continuation line under-indented for visual indent
+             evidence='', commit='unknown')) for tag, q in expected.items()]
+             ^
+
+./scripts/summarize48_v2.py:73:30: E231 missing whitespace after ':'
+    print(json.dumps({'tasks':len(rows),
+                             ^
+
+./scripts/summarize48_v2.py:74:9: E128 continuation line under-indented for visual indent
+        'five_of_five':sum(r['five_of_five'] for r in rows),
+        ^
+
+./scripts/summarize48_v2.py:74:23: E231 missing whitespace after ':'
+        'five_of_five':sum(r['five_of_five'] for r in rows),
+                      ^
+
+./scripts/summarize48_v2.py:75:9: E128 continuation line under-indented for visual indent
+        'case_accepted':sum(r['case_accepted'] for r in rows),
+        ^
+
+./scripts/summarize48_v2.py:75:24: E231 missing whitespace after ':'
+        'case_accepted':sum(r['case_accepted'] for r in rows),
+                       ^
+
+./scripts/summarize48_v2.py:76:9: E128 continuation line under-indented for visual indent
+        'strict_motion_pass':sum(r['strict_motion_pass'] for r in rows),
+        ^
+
+./scripts/summarize48_v2.py:76:29: E231 missing whitespace after ':'
+        'strict_motion_pass':sum(r['strict_motion_pass'] for r in rows),
+                            ^
+
+./scripts/summarize48_v2.py:77:9: E128 continuation line under-indented for visual indent
+        'under300':sum(r['under300'] for r in rows),
+        ^
+
+./scripts/summarize48_v2.py:77:19: E231 missing whitespace after ':'
+        'under300':sum(r['under300'] for r in rows),
+                  ^
+
+./scripts/summarize48_v2.py:78:9: E128 continuation line under-indented for visual indent
+        'retry':[r['tag'] for r in rows if not r['strict_motion_pass']]}, indent=2))
+        ^
+
+./scripts/summarize48_v2.py:78:16: E231 missing whitespace after ':'
+        'retry':[r['tag'] for r in rows if not r['strict_motion_pass']]}, indent=2))
+               ^
+
+./scripts/summarize48_v2.py:79:21: E225 missing whitespace around operator
+    if len(sys.argv)>2:
+                    ^
+
+./scripts/summarize48_v2.py:81:19: E225 missing whitespace around operator
+            writer=csv.DictWriter(handle, fieldnames=list(rows[0]))
+                  ^
+
+./scripts/summarize48_v2.py:82:33: E702 multiple statements on one line (semicolon)
+            writer.writeheader(); writer.writerows(rows)
+                                ^
+
+./test/test_acceptance_contract.py:114:13: E131 continuation line unaligned for hanging indent
+            "avoidance_demonstrated": True,
+            ^
+
+./test/test_campaign_sim_health.py:8:1: F401 'importlib.util' imported but unused
+import importlib.util
+^
+
+./test/test_coverage_summary.py:7:5: E128 continuation line under-indented for visual indent
+    Path(__file__).resolve().parents[1] / 'scripts' / 'summarize48_v2.py')
+    ^
+
+./test/test_coverage_summary.py:13:14: E225 missing whitespace around operator
+    directory=root / name
+             ^
+
+./test/test_coverage_summary.py:17:16: E231 missing whitespace after ':'
+        'state':state,'completed':5,'skipped':0,'elapsed_sec':250.0})+'\n'
+               ^
+
+./test/test_coverage_summary.py:17:22: E231 missing whitespace after ','
+        'state':state,'completed':5,'skipped':0,'elapsed_sec':250.0})+'\n'
+                     ^
+
+./test/test_coverage_summary.py:17:34: E231 missing whitespace after ':'
+        'state':state,'completed':5,'skipped':0,'elapsed_sec':250.0})+'\n'
+                                 ^
+
+./test/test_coverage_summary.py:17:36: E231 missing whitespace after ','
+        'state':state,'completed':5,'skipped':0,'elapsed_sec':250.0})+'\n'
+                                   ^
+
+./test/test_coverage_summary.py:17:46: E231 missing whitespace after ':'
+        'state':state,'completed':5,'skipped':0,'elapsed_sec':250.0})+'\n'
+                                             ^
+
+./test/test_coverage_summary.py:17:48: E231 missing whitespace after ','
+        'state':state,'completed':5,'skipped':0,'elapsed_sec':250.0})+'\n'
+                                               ^
+
+./test/test_coverage_summary.py:17:62: E231 missing whitespace after ':'
+        'state':state,'completed':5,'skipped':0,'elapsed_sec':250.0})+'\n'
+                                                             ^
+
+./test/test_coverage_summary.py:18:10: E225 missing whitespace around operator
+        +'CASE_ACCEPTED='+str(accepted).lower()+' collision_faults=[]\n')
+         ^
+
+./test/test_coverage_summary.py:23:23: E231 missing whitespace after ','
+    write_run(tmp_path,'20260101-a',False)
+                      ^
+
+./test/test_coverage_summary.py:23:36: E231 missing whitespace after ','
+    write_run(tmp_path,'20260101-a',False)
+                                   ^
+
+./test/test_coverage_summary.py:24:8: E225 missing whitespace around operator
+    row=summary.rows_for(tmp_path)[0]
+       ^
+
+./test/test_coverage_summary.py:29:24: E225 missing whitespace around operator
+    assert row['state']=='completed'
+                       ^
+
+./test/test_coverage_summary.py:33:23: E231 missing whitespace after ','
+    write_run(tmp_path,'20260101-a',True)
+                      ^
+
+./test/test_coverage_summary.py:33:36: E231 missing whitespace after ','
+    write_run(tmp_path,'20260101-a',True)
+                                   ^
+
+./test/test_coverage_summary.py:34:23: E231 missing whitespace after ','
+    write_run(tmp_path,'20260102-b',False,'failed')
+                      ^
+
+./test/test_coverage_summary.py:34:36: E231 missing whitespace after ','
+    write_run(tmp_path,'20260102-b',False,'failed')
+                                   ^
+
+./test/test_coverage_summary.py:34:42: E231 missing whitespace after ','
+    write_run(tmp_path,'20260102-b',False,'failed')
+                                         ^
+
+./test/test_coverage_summary.py:39:23: E231 missing whitespace after ','
+    write_run(tmp_path,'20260101-a',True)
+                      ^
+
+./test/test_coverage_summary.py:39:36: E231 missing whitespace after ','
+    write_run(tmp_path,'20260101-a',True)
+                                   ^
+
+./test/test_coverage_summary.py:40:14: E225 missing whitespace around operator
+    directory=tmp_path/'20260102-b';directory.mkdir()
+             ^
+
+./test/test_coverage_summary.py:40:36: E702 multiple statements on one line (semicolon)
+    directory=tmp_path/'20260102-b';directory.mkdir()
+                                   ^
+
+./test/test_coverage_summary.py:40:36: E231 missing whitespace after ';'
+    directory=tmp_path/'20260102-b';directory.mkdir()
+                                   ^
+
+./test/test_coverage_summary.py:42:9: E225 missing whitespace around operator
+    rows=summary.rows_for(tmp_path)
+        ^
+
+./test/test_coverage_summary.py:43:21: E225 missing whitespace around operator
+    assert len(rows)==48
+                    ^
+
+./test/test_coverage_summary.py:44:28: E225 missing whitespace around operator
+    assert rows[0]['state']=='NO_TERMINAL'
+                           ^
+
+./test/test_mission_contract.py:22:100: E501 line too long (177 > 99 characters)
+    expected_xy = {'red': [(-6.5, 3.4), (6.0, 3.8), (-11.5, -2.3), (10.0, -6.0), (-4.7, -12.4)], 'blue': [(-10.5, 2.3), (-11.0, -5.6), (-2.0, -6.0), (4.3, -5.4), (11.8, -13.0)]}
+                                                                                                   ^
+
+./test/test_navigation_contract.py:1456:100: E501 line too long (130 > 99 characters)
+    assert 'plugins: ["static_layer", "obstacle_layer", "dynamic_layer", "sweep_band_layer", "inflation_layer"]' in global_costmap
+                                                                                                   ^
+
+./test/test_navigation_contract.py:1460:100: E501 line too long (112 > 99 characters)
+    dynamic = yaml.safe_load(parameters)["global_costmap"]["global_costmap"]["ros__parameters"]["dynamic_layer"]
+                                                                                                   ^
+
+./test/test_navigation_contract.py:1991:100: E501 line too long (298 > 99 characters)
+CUBE_SLOTS = {'red_cube_1': (-6.5, 3.4), 'red_cube_2': (6.0, 3.8), 'red_cube_3': (-11.5, -2.3), 'red_cube_4': (10.0, -6.0), 'red_cube_5': (-4.7, -12.4), 'blue_cube_1': (-10.5, 2.3), 'blue_cube_2': (-11.0, -5.6), 'blue_cube_3': (-2.0, -6.0), 'blue_cube_4': (4.3, -5.4), 'blue_cube_5': (11.8, -13.0)}
+                                                                                                   ^
+
+./test/test_navigation_contract.py:3401:1: E302 expected 2 blank lines, found 1
+def test_reverse_probe_uses_an_existing_clearance_method():
+^
+
+./test/test_parse_result_evidence.py:153:1: E303 too many blank lines (3)
+def _evidence(state, plan):
+^
+
+./test/test_swept_band_transit.py:153:52: W292 no newline at end of file
+    assert published.linear.x == pytest.approx(0.0)                                                   ^
+
+./tools_demo/llm_client.py:152:13: F841 local variable 'exception' is assigned to but never used
+            except requests.Timeout as exception:
+            ^
+
+./tools_demo/llm_client.py:156:13: F841 local variable 'exception' is assigned to but never used
+            except requests.ConnectionError as exception:
+            ^
+
+./tools_demo/mission_coordinator.py:141:1: E303 too many blank lines (3)
+def selection_pose_after_universal_staging(
+^
+
+./tools_demo/mission_coordinator.py:157:1: E302 expected 2 blank lines, found 1
+def world_target_in_base(
+^
+
+./tools_demo/mission_coordinator.py:253:1: E303 too many blank lines (3)
+BLUE_B_SPAWN_ORIGIN = (15.0, -2.0)
+^
+
+./tools_demo/mission_coordinator.py:279:1: E302 expected 2 blank lines, found 1
+def blue_b_first_round_lookahead(
+^
+
+./tools_demo/mission_coordinator.py:322:1: E305 expected 2 blank lines after class or function definition, found 1
+RED_C_STATIC_PATH_COSTS = {
+^
+
+./tools_demo/mission_coordinator.py:1219:9: E303 too many blank lines (3)
+        # Hard stall escape: even if the timer body is re-entered oddly, do not
+        ^
+
+./tools_demo/moving_obstacle.py:429:100: E501 line too long (106 > 99 characters)
+                "motion_state": "continuous" if self.motion_mode == "continuous" else self.crossing_state,
+                                                                                                   ^
+
+./tools_demo/navigation_math.py:348:1: E302 expected 2 blank lines, found 1
+def mover_reverse_segment_clear(
+^
+
+./tools_demo/safety_limiter.py:234:31: E127 continuation line over-indented for visual indent
+                              "competition_moving_obstacle_2"}:
+                              ^
+
+./tools_demo/safety_limiter.py:266:5: E301 expected 1 blank line, found 0
+    def cmd_vel_callback(self, message: Twist) -> None:
+    ^
+
+./tools_demo/speed_profile_recorder.py:43:1: E302 expected 2 blank lines, found 1
+def live_qos() -> QoSProfile:
+^
+
+./tools_demo/task_navigator.py:3401:9: F841 local variable 'segment_start_x' is assigned to but never used
+        segment_start_x = self.latest_x
+        ^
+
+./tools_demo/task_navigator.py:3402:9: F841 local variable 'segment_start_y' is assigned to but never used
+        segment_start_y = self.latest_y
+        ^
+
+1     E127 continuation line over-indented for visual indent
+17    E128 continuation line under-indented for visual indent
+1     E131 continuation line unaligned for hanging indent
+10    E225 missing whitespace around operator
+23    E231 missing whitespace after ':'
+1     E301 expected 1 blank line, found 0
+5     E302 expected 2 blank lines, found 1
+4     E303 too many blank lines (3)
+1     E305 expected 2 blank lines after class or function definition, found 1
+1     E402 module level import not at top of file
+9     E501 line too long (161 > 99 characters)
+2     E702 multiple statements on one line (semicolon)
+1     F401 'importlib.util' imported but unused
+4     F841 local variable 'exception' is assigned to but never used
+1     W292 no newline at end of file
+
+121 files checked
+81 errors
+
+'E'-type errors: 75
+'F'-type errors: 5
+'W'-type errors: 1
+
+Checked files:
+
+* ./setup.py
+* ./test/test_mover_reverse_sweep.py
+* ./test/test_acceptance_contract.py
+* ./test/test_coverage_summary.py
+* ./test/test_mover_crossing_control.py
+* ./test/test_pickup_nav_failure_recovery.py
+* ./test/test_task_protocol.py
+* ./test/test_b_east_dock_egress.py
+* ./test/test_scene_markers.py
+* ./test/test_mission_contract.py
+* ./test/test_llm_client.py
+* ./test/test_cube_order_override.py
+* ./test/test_costudio_300s.py
+* ./test/test_mission_state_machine.py
+* ./test/test_navigation_risk.py
+* ./test/test_pep257.py
+* ./test/test_dashboard_state.py
+* ./test/test_campaign_sim_health.py
+* ./test/test_navigation_matrix.py
+* ./test/test_dynamic_obstacle_filter.py
+* ./test/test_payload_scan_mask.py
+* ./test/test_crossing_admission.py
+* ./test/test_east_gate_wait_sweep.py
+* ./test/test_parser_mode_callbacks.py
+* ./test/run_competition_acceptance.py
+* ./test/test_startup_race_contract.py
+* ./test/test_target_provenance_contract.py
+* ./test/test_swept_band_transit.py
+* ./test/test_velocity_selector.py
+* ./test/test_costudio_camera_contract.py
+* ./test/test_campaign_transport.py
+* ./test/test_perception_math.py
+* ./test/test_copyright.py
+* ./test/test_evidence_audit.py
+* ./test/test_parse_result_evidence.py
+* ./test/test_navigation_contract.py
+* ./test/test_safety_limiter.py
+* ./test/test_navigation_batch_recovery.py
+* ./test/test_layout_rescue.py
+* ./test/test_delivery_release.py
+* ./test/test_gazebo_gui_modes.py
+* ./test/test_layout_config.py
+* ./test/test_navigation_math.py
+* ./test/test_c_clearance_route.py
+* ./test/test_task_parser_llm_defaults.py
+* ./test/test_east_gate_steering.py
+* ./test/test_sweep_band_keepout.py
+* ./test/test_recovery_escape.py
+* ./test/test_campaign_summary.py
+* ./test/test_problem_solver.py
+* ./test/test_llm_http_integration.py
+* ./test/test_costmap_updates.py
+* ./test/test_video_submit.py
+* ./test/test_speed_profile.py
+* ./test/test_flake8.py
+* ./launch/costudio_bridge.launch.py
+* ./launch/perception.launch.py
+* ./launch/navigation_matrix_case.launch.py
+* ./launch/mission.launch.py
+* ./launch/competition_system.launch.py
+* ./tools_demo/problem_solver.py
+* ./tools_demo/__init__.py
+* ./tools_demo/sweep_band_keepout.py
+* ./tools_demo/chat_interactive_ros.py
+* ./tools_demo/navigation_matrix_probe.py
+* ./tools_demo/perception_math.py
+* ./tools_demo/scene_markers.py
+* ./tools_demo/task_protocol.py
+* ./tools_demo/safety_limiter.py
+* ./tools_demo/velocity_selector.py
+* ./tools_demo/avoidance_monitor.py
+* ./tools_demo/dynamic_obstacle_node.py
+* ./tools_demo/mission_state_machine.py
+* ./tools_demo/runtime_environment.py
+* ./tools_demo/llm_client.py
+* ./tools_demo/c_clearance_route.py
+* ./tools_demo/mission_coordinator.py
+* ./tools_demo/continuous_response.py
+* ./tools_demo/pick_order_policy.py
+* ./tools_demo/task_parser_node.py
+* ./tools_demo/b_delivery_route.py
+* ./tools_demo/task_question_node.py
+* ./tools_demo/competition_acceptance.py
+* ./tools_demo/moving_obstacle.py
+* ./tools_demo/chat_interactive.py
+* ./tools_demo/speed_profile_recorder.py
+* ./tools_demo/lifecycle_tuner.py
+* ./tools_demo/payload_scan_mask.py
+* ./tools_demo/task_navigator.py
+* ./tools_demo/competition_case_runner.py
+* ./tools_demo/evidence_audit.py
+* ./tools_demo/acceptance_contract.py
+* ./tools_demo/legacy_costudio_status.py
+* ./tools_demo/dynamic_obstacle_filter.py
+* ./tools_demo/navigation_math.py
+* ./tools_demo/dashboard_state.py
+* ./tools_demo/competition_dashboard.py
+* ./tools_demo/color_target_detector.py
+* ./tools_demo/safety_math.py
+* ./scripts/run_regression.py
+* ./scripts/generate_static_map.py
+* ./scripts/generate_navigation_risk_zones.py
+* ./scripts/run_navigation_matrix.py
+* ./scripts/round_leg_table.py
+* ./scripts/activate_complex_layout.py
+* ./scripts/leg_side_table.py
+* ./scripts/mission_timing_analysis.py
+* ./scripts/generate_navigation_map.py
+* ./scripts/generate_final_layout.py
+* ./scripts/coverage48_summary.py
+* ./scripts/full48_report.py
+* ./scripts/run_zone_once.py
+* ./scripts/summarize48_v2.py
+* ./scripts/video_submit.py
+* ./scripts/leg_cost_table.py
+* ./scripts/nav_legs.py
+* ./scripts/verify48_policy_match.py
+* ./scripts/run_zone9_campaign.py
+* ./scripts/audit_policy.py
+* ./scripts/gen48_questions.py
+* ./scripts/leg_slack_report.py
+_________________________________ test_pep257 __________________________________
+test/test_pep257.py:23: in test_pep257
+    assert rc == 0, 'Found code style errors / warnings'
+E   AssertionError: Found code style errors / warnings
+E   assert 1 == 0
+----------------------------- Captured stdout call -----------------------------
+checking ./launch/competition_system.launch.py
+checking ./launch/costudio_bridge.launch.py
+checking ./launch/mission.launch.py
+checking ./launch/navigation_matrix_case.launch.py
+checking ./launch/perception.launch.py
+checking ./scripts/activate_complex_layout.py
+checking ./scripts/audit_policy.py
+./scripts/audit_policy.py:2 at module level: D213: Multi-line docstring summary should start at the second line
+checking ./scripts/coverage48_summary.py
+./scripts/coverage48_summary.py:2 at module level: D213: Multi-line docstring summary should start at the second line
+checking ./scripts/full48_report.py
+./scripts/full48_report.py:2 at module level: D213: Multi-line docstring summary should start at the second line
+checking ./scripts/gen48_questions.py
+./scripts/gen48_questions.py:2 at module level: D213: Multi-line docstring summary should start at the second line
+checking ./scripts/generate_final_layout.py
+checking ./scripts/generate_navigation_map.py
+checking ./scripts/generate_navigation_risk_zones.py
+checking ./scripts/generate_static_map.py
+checking ./scripts/leg_cost_table.py
+./scripts/leg_cost_table.py:2 at module level: D213: Multi-line docstring summary should start at the second line
+checking ./scripts/leg_side_table.py
+./scripts/leg_side_table.py:2 at module level: D213: Multi-line docstring summary should start at the second line
+./scripts/leg_side_table.py:58 in public function `mission_window`: D213: Multi-line docstring summary should start at the second line
+checking ./scripts/leg_slack_report.py
+./scripts/leg_slack_report.py:2 at module level: D213: Multi-line docstring summary should start at the second line
+checking ./scripts/mission_timing_analysis.py
+checking ./scripts/nav_legs.py
+checking ./scripts/round_leg_table.py
+checking ./scripts/run_navigation_matrix.py
+checking ./scripts/run_regression.py
+checking ./scripts/run_zone9_campaign.py
+./scripts/run_zone9_campaign.py:2 at module level: D213: Multi-line docstring summary should start at the second line
+./scripts/run_zone9_campaign.py:305 in public function `sim_dead`: D213: Multi-line docstring summary should start at the second line
+./scripts/run_zone9_campaign.py:305 in public function `sim_dead`: D401: First line should be in imperative mood; try rephrasing (found 'True')
+checking ./scripts/run_zone_once.py
+./scripts/run_zone_once.py:2 at module level: D213: Multi-line docstring summary should start at the second line
+checking ./scripts/summarize48_v2.py
+checking ./scripts/verify48_policy_match.py
+./scripts/verify48_policy_match.py:2 at module level: D213: Multi-line docstring summary should start at the second line
+checking ./scripts/video_submit.py
+checking ./setup.py
+checking ./test/run_competition_acceptance.py
+checking ./test/test_acceptance_contract.py
+checking ./test/test_b_east_dock_egress.py
+checking ./test/test_c_clearance_route.py
+checking ./test/test_campaign_sim_health.py
+./test/test_campaign_sim_health.py:1 at module level: D213: Multi-line docstring summary should start at the second line
+./test/test_campaign_sim_health.py:38 in public function `test_sim_dead_detects_the_gazebo_wrapper`: D213: Multi-line docstring summary should start at the second line
+./test/test_campaign_sim_health.py:38 in public function `test_sim_dead_detects_the_gazebo_wrapper`: D301: Use r""" if any backslashes in a docstring
+./test/test_campaign_sim_health.py:78 in public function `test_sim_dead_ignores_a_dead_nav_node`: D213: Multi-line docstring summary should start at the second line
+./test/test_campaign_sim_health.py:78 in public function `test_sim_dead_ignores_a_dead_nav_node`: D403: First word of the first line should be properly capitalized ('Amcl', not 'amcl')
+./test/test_campaign_sim_health.py:92 in public function `test_relaunch_rebuilds_the_node_and_clears_the_baseline`: D213: Multi-line docstring summary should start at the second line
+checking ./test/test_campaign_summary.py
+checking ./test/test_campaign_transport.py
+checking ./test/test_copyright.py
+checking ./test/test_costmap_updates.py
+checking ./test/test_costudio_300s.py
+checking ./test/test_costudio_camera_contract.py
+checking ./test/test_coverage_summary.py
+checking ./test/test_crossing_admission.py
+checking ./test/test_cube_order_override.py
+checking ./test/test_dashboard_state.py
+checking ./test/test_delivery_release.py
+checking ./test/test_dynamic_obstacle_filter.py
+checking ./test/test_east_gate_steering.py
+checking ./test/test_east_gate_wait_sweep.py
+checking ./test/test_evidence_audit.py
+checking ./test/test_flake8.py
+checking ./test/test_gazebo_gui_modes.py
+checking ./test/test_layout_config.py
+checking ./test/test_layout_rescue.py
+checking ./test/test_llm_client.py
+checking ./test/test_llm_http_integration.py
+./test/test_llm_http_integration.py:1 at module level: D213: Multi-line docstring summary should start at the second line
+checking ./test/test_mission_contract.py
+./test/test_mission_contract.py:729 in public function `test_first_pick_failure_retries_the_same_cube`: D213: Multi-line docstring summary should start at the second line
+checking ./test/test_mission_state_machine.py
+checking ./test/test_mover_crossing_control.py
+checking ./test/test_mover_reverse_sweep.py
+checking ./test/test_navigation_batch_recovery.py
+checking ./test/test_navigation_contract.py
+./test/test_navigation_contract.py:137 in public function `test_official_world_uses_a_control_rate_physics_step`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:1061 in public function `test_deferred_command_fails_on_prerequisite_deadline`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:1467 in public function `test_global_costmap_bands_the_endless_partition_sweeps`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:1903 in public function `test_task_navigation_does_not_multiply_nav2_recovery_cycles`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:2294 in public function `test_in_place_rotation_can_stop_inside_its_release_window`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:2401 in public function `test_zone_c_deliveries_use_the_direct_south_west_corridor`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:2522 in public function `test_zone_a_deliveries_from_the_west_cross_the_wall_tip_gap`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:2802 in public function `test_b_northeast_corridor_clears_the_central_pickup_trays`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:2896 in public function `test_northeast_corridor_replaces_the_tray_crossing_route`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:2934 in public function `test_zone_c_east_wall_descent_replaces_the_tray_crossing_route`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:2962 in public function `test_direct_dock_always_has_a_deadline`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:2987 in public function `test_cube_pickups_cross_the_wall_tip_on_its_validated_chain`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:3042 in public function `test_departure_dock_does_not_gate_on_heading`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:3060 in public function `test_departure_backoff_keeps_one_direction_of_travel`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:3098 in public function `test_zone_egress_drives_out_instead_of_rotating_first`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:3118 in public function `test_departure_clears_the_pickup_dock_mode`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:3137 in public function `test_departure_timeout_hands_the_leg_to_nav2`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:3284 in public function `test_laser_filters_exclude_the_carried_payload`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:3306 in public function `test_lethal_start_cost_reads_the_nav2_bands`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:3339 in public function `test_lethal_start_is_gated_before_the_goal_reaches_nav2`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:3361 in public function `test_nav_retry_does_not_resend_from_a_lethal_cell`: D213: Multi-line docstring summary should start at the second line
+./test/test_navigation_contract.py:3378 in public function `test_every_costmap_layer_clears_the_robot_footprint`: D213: Multi-line docstring summary should start at the second line
+checking ./test/test_navigation_math.py
+checking ./test/test_navigation_matrix.py
+checking ./test/test_navigation_risk.py
+checking ./test/test_parse_result_evidence.py
+checking ./test/test_parser_mode_callbacks.py
+checking ./test/test_payload_scan_mask.py
+./test/test_payload_scan_mask.py:65 in public function `test_mask_keeps_level_state_without_repeated_publishes`: D205: 1 blank line required between summary line and description (found 0)
+./test/test_payload_scan_mask.py:65 in public function `test_mask_keeps_level_state_without_repeated_publishes`: D209: Multi-line docstring closing quotes should be on a separate line
+./test/test_payload_scan_mask.py:65 in public function `test_mask_keeps_level_state_without_repeated_publishes`: D213: Multi-line docstring summary should start at the second line
+./test/test_payload_scan_mask.py:65 in public function `test_mask_keeps_level_state_without_repeated_publishes`: D400: First line should end with a period (not 'e')
+./test/test_payload_scan_mask.py:65 in public function `test_mask_keeps_level_state_without_repeated_publishes`: D415: First line should end with a period, question mark, or exclamation point (not 'e')
+checking ./test/test_pep257.py
+checking ./test/test_perception_math.py
+checking ./test/test_pickup_nav_failure_recovery.py
+./test/test_pickup_nav_failure_recovery.py:1 at module level: D213: Multi-line docstring summary should start at the second line
+checking ./test/test_problem_solver.py
+checking ./test/test_recovery_escape.py
+./test/test_recovery_escape.py:1 at module level: D213: Multi-line docstring summary should start at the second line
+./test/test_recovery_escape.py:206 in public function `test_recovery_stays_inside_the_historical_distance_cap`: D213: Multi-line docstring summary should start at the second line
+checking ./test/test_safety_limiter.py
+checking ./test/test_scene_markers.py
+checking ./test/test_speed_profile.py
+checking ./test/test_startup_race_contract.py
+checking ./test/test_sweep_band_keepout.py
+checking ./test/test_swept_band_transit.py
+./test/test_swept_band_transit.py:1 at module level: D213: Multi-line docstring summary should start at the second line
+checking ./test/test_target_provenance_contract.py
+./test/test_target_provenance_contract.py:1 at module level: D213: Multi-line docstring summary should start at the second line
+checking ./test/test_task_parser_llm_defaults.py
+checking ./test/test_task_protocol.py
+checking ./test/test_velocity_selector.py
+checking ./test/test_video_submit.py
+checking ./tools_demo/__init__.py
+checking ./tools_demo/acceptance_contract.py
+checking ./tools_demo/avoidance_monitor.py
+checking ./tools_demo/b_delivery_route.py
+./tools_demo/b_delivery_route.py:18 in public function `b_northeast_waypoints`: D213: Multi-line docstring summary should start at the second line
+./tools_demo/b_delivery_route.py:49 in public function `b_central_south_waypoints`: D213: Multi-line docstring summary should start at the second line
+./tools_demo/b_delivery_route.py:78 in public function `b_central_north_waypoints`: D213: Multi-line docstring summary should start at the second line
+checking ./tools_demo/c_clearance_route.py
+checking ./tools_demo/chat_interactive.py
+checking ./tools_demo/chat_interactive_ros.py
+checking ./tools_demo/color_target_detector.py
+checking ./tools_demo/competition_acceptance.py
+checking ./tools_demo/competition_case_runner.py
+checking ./tools_demo/competition_dashboard.py
+checking ./tools_demo/continuous_response.py
+checking ./tools_demo/dashboard_state.py
+checking ./tools_demo/dynamic_obstacle_filter.py
+checking ./tools_demo/dynamic_obstacle_node.py
+checking ./tools_demo/evidence_audit.py
+checking ./tools_demo/legacy_costudio_status.py
+checking ./tools_demo/lifecycle_tuner.py
+checking ./tools_demo/llm_client.py
+./tools_demo/llm_client.py:1 at module level: D213: Multi-line docstring summary should start at the second line
+./tools_demo/llm_client.py:81 in private method `_post_until`: D213: Multi-line docstring summary should start at the second line
+checking ./tools_demo/mission_coordinator.py
+./tools_demo/mission_coordinator.py:1811 in private method `_consume_cube_order_override`: D213: Multi-line docstring summary should start at the second line
+./tools_demo/mission_coordinator.py:1903 in private method `_cube_order_override_entries`: D213: Multi-line docstring summary should start at the second line
+./tools_demo/mission_coordinator.py:1903 in private method `_cube_order_override_entries`: D401: First line should be in imperative mood; try rephrasing (found 'Current')
+./tools_demo/mission_coordinator.py:1917 in private method `_seed_cube_order_override`: D213: Multi-line docstring summary should start at the second line
+./tools_demo/mission_coordinator.py:2352 in public method `manipulation_result_callback`: D213: Multi-line docstring summary should start at the second line
+checking ./tools_demo/mission_state_machine.py
+checking ./tools_demo/moving_obstacle.py
+checking ./tools_demo/navigation_math.py
+./tools_demo/navigation_math.py:356 in public function `mover_reverse_segment_clear`: D213: Multi-line docstring summary should start at the second line
+./tools_demo/navigation_math.py:1010 in public function `mover_crossing_blocked`: D213: Multi-line docstring summary should start at the second line
+./tools_demo/navigation_math.py:1047 in public function `mover_lane_threat`: D213: Multi-line docstring summary should start at the second line
+checking ./tools_demo/navigation_matrix_probe.py
+checking ./tools_demo/payload_scan_mask.py
+./tools_demo/payload_scan_mask.py:1 at module level: D213: Multi-line docstring summary should start at the second line
+./tools_demo/payload_scan_mask.py:53 in public function `should_mask`: D213: Multi-line docstring summary should start at the second line
+checking ./tools_demo/perception_math.py
+checking ./tools_demo/pick_order_policy.py
+checking ./tools_demo/problem_solver.py
+checking ./tools_demo/runtime_environment.py
+./tools_demo/runtime_environment.py:12 in public function `configure_campaign_transport`: D213: Multi-line docstring summary should start at the second line
+checking ./tools_demo/safety_limiter.py
+./tools_demo/safety_limiter.py:214 in private method `_swept_band_transit`: D205: 1 blank line required between summary line and description (found 0)
+./tools_demo/safety_limiter.py:214 in private method `_swept_band_transit`: D213: Multi-line docstring summary should start at the second line
+checking ./tools_demo/safety_math.py
+checking ./tools_demo/scene_markers.py
+./tools_demo/scene_markers.py:1 at module level: D213: Multi-line docstring summary should start at the second line
+checking ./tools_demo/speed_profile_recorder.py
+checking ./tools_demo/sweep_band_keepout.py
+./tools_demo/sweep_band_keepout.py:1 at module level: D213: Multi-line docstring summary should start at the second line
+checking ./tools_demo/task_navigator.py
+./tools_demo/task_navigator.py:1113 in private method `_dedicated_corridor_active`: D401: First line should be in imperative mood; try rephrasing (found 'True')
+./tools_demo/task_navigator.py:1603 in private method `_pending_start_expired`: D401: First line should be in imperative mood; try rephrasing (found 'True')
+./tools_demo/task_navigator.py:1687 in private method `_costmap_segment_clear`: D213: Multi-line docstring summary should start at the second line
+./tools_demo/task_navigator.py:2428 in private method `_lethal_start_cost`: D213: Multi-line docstring summary should start at the second line
+./tools_demo/task_navigator.py:3857 in private method `_corridor_mover_topics`: D213: Multi-line docstring summary should start at the second line
+./tools_demo/task_navigator.py:3949 in private method `_begin_mover_crossing_hold`: D213: Multi-line docstring summary should start at the second line
+checking ./tools_demo/task_parser_node.py
+checking ./tools_demo/task_protocol.py
+checking ./tools_demo/task_question_node.py
+checking ./tools_demo/velocity_selector.py
+checking test/run_competition_acceptance.py
+checking test/test_acceptance_contract.py
+checking test/test_b_east_dock_egress.py
+checking test/test_c_clearance_route.py
+checking test/test_campaign_sim_health.py
+test/test_campaign_sim_health.py:1 at module level: D213: Multi-line docstring summary should start at the second line
+test/test_campaign_sim_health.py:38 in public function `test_sim_dead_detects_the_gazebo_wrapper`: D213: Multi-line docstring summary should start at the second line
+test/test_campaign_sim_health.py:38 in public function `test_sim_dead_detects_the_gazebo_wrapper`: D301: Use r""" if any backslashes in a docstring
+test/test_campaign_sim_health.py:78 in public function `test_sim_dead_ignores_a_dead_nav_node`: D213: Multi-line docstring summary should start at the second line
+test/test_campaign_sim_health.py:78 in public function `test_sim_dead_ignores_a_dead_nav_node`: D403: First word of the first line should be properly capitalized ('Amcl', not 'amcl')
+test/test_campaign_sim_health.py:92 in public function `test_relaunch_rebuilds_the_node_and_clears_the_baseline`: D213: Multi-line docstring summary should start at the second line
+checking test/test_campaign_summary.py
+checking test/test_campaign_transport.py
+checking test/test_copyright.py
+checking test/test_costmap_updates.py
+checking test/test_costudio_300s.py
+checking test/test_costudio_camera_contract.py
+checking test/test_coverage_summary.py
+checking test/test_crossing_admission.py
+checking test/test_cube_order_override.py
+checking test/test_dashboard_state.py
+checking test/test_delivery_release.py
+checking test/test_dynamic_obstacle_filter.py
+checking test/test_east_gate_steering.py
+checking test/test_east_gate_wait_sweep.py
+checking test/test_evidence_audit.py
+checking test/test_flake8.py
+checking test/test_gazebo_gui_modes.py
+checking test/test_layout_config.py
+checking test/test_layout_rescue.py
+checking test/test_llm_client.py
+checking test/test_llm_http_integration.py
+test/test_llm_http_integration.py:1 at module level: D213: Multi-line docstring summary should start at the second line
+checking test/test_mission_contract.py
+test/test_mission_contract.py:729 in public function `test_first_pick_failure_retries_the_same_cube`: D213: Multi-line docstring summary should start at the second line
+checking test/test_mission_state_machine.py
+checking test/test_mover_crossing_control.py
+checking test/test_mover_reverse_sweep.py
+checking test/test_navigation_batch_recovery.py
+checking test/test_navigation_contract.py
+test/test_navigation_contract.py:137 in public function `test_official_world_uses_a_control_rate_physics_step`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:1061 in public function `test_deferred_command_fails_on_prerequisite_deadline`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:1467 in public function `test_global_costmap_bands_the_endless_partition_sweeps`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:1903 in public function `test_task_navigation_does_not_multiply_nav2_recovery_cycles`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:2294 in public function `test_in_place_rotation_can_stop_inside_its_release_window`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:2401 in public function `test_zone_c_deliveries_use_the_direct_south_west_corridor`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:2522 in public function `test_zone_a_deliveries_from_the_west_cross_the_wall_tip_gap`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:2802 in public function `test_b_northeast_corridor_clears_the_central_pickup_trays`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:2896 in public function `test_northeast_corridor_replaces_the_tray_crossing_route`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:2934 in public function `test_zone_c_east_wall_descent_replaces_the_tray_crossing_route`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:2962 in public function `test_direct_dock_always_has_a_deadline`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:2987 in public function `test_cube_pickups_cross_the_wall_tip_on_its_validated_chain`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:3042 in public function `test_departure_dock_does_not_gate_on_heading`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:3060 in public function `test_departure_backoff_keeps_one_direction_of_travel`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:3098 in public function `test_zone_egress_drives_out_instead_of_rotating_first`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:3118 in public function `test_departure_clears_the_pickup_dock_mode`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:3137 in public function `test_departure_timeout_hands_the_leg_to_nav2`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:3284 in public function `test_laser_filters_exclude_the_carried_payload`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:3306 in public function `test_lethal_start_cost_reads_the_nav2_bands`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:3339 in public function `test_lethal_start_is_gated_before_the_goal_reaches_nav2`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:3361 in public function `test_nav_retry_does_not_resend_from_a_lethal_cell`: D213: Multi-line docstring summary should start at the second line
+test/test_navigation_contract.py:3378 in public function `test_every_costmap_layer_clears_the_robot_footprint`: D213: Multi-line docstring summary should start at the second line
+checking test/test_navigation_math.py
+checking test/test_navigation_matrix.py
+checking test/test_navigation_risk.py
+checking test/test_parse_result_evidence.py
+checking test/test_parser_mode_callbacks.py
+checking test/test_payload_scan_mask.py
+test/test_payload_scan_mask.py:65 in public function `test_mask_keeps_level_state_without_repeated_publishes`: D205: 1 blank line required between summary line and description (found 0)
+test/test_payload_scan_mask.py:65 in public function `test_mask_keeps_level_state_without_repeated_publishes`: D209: Multi-line docstring closing quotes should be on a separate line
+test/test_payload_scan_mask.py:65 in public function `test_mask_keeps_level_state_without_repeated_publishes`: D213: Multi-line docstring summary should start at the second line
+test/test_payload_scan_mask.py:65 in public function `test_mask_keeps_level_state_without_repeated_publishes`: D400: First line should end with a period (not 'e')
+test/test_payload_scan_mask.py:65 in public function `test_mask_keeps_level_state_without_repeated_publishes`: D415: First line should end with a period, question mark, or exclamation point (not 'e')
+checking test/test_pep257.py
+checking test/test_perception_math.py
+checking test/test_pickup_nav_failure_recovery.py
+test/test_pickup_nav_failure_recovery.py:1 at module level: D213: Multi-line docstring summary should start at the second line
+checking test/test_problem_solver.py
+checking test/test_recovery_escape.py
+test/test_recovery_escape.py:1 at module level: D213: Multi-line docstring summary should start at the second line
+test/test_recovery_escape.py:206 in public function `test_recovery_stays_inside_the_historical_distance_cap`: D213: Multi-line docstring summary should start at the second line
+checking test/test_safety_limiter.py
+checking test/test_scene_markers.py
+checking test/test_speed_profile.py
+checking test/test_startup_race_contract.py
+checking test/test_sweep_band_keepout.py
+checking test/test_swept_band_transit.py
+test/test_swept_band_transit.py:1 at module level: D213: Multi-line docstring summary should start at the second line
+checking test/test_target_provenance_contract.py
+test/test_target_provenance_contract.py:1 at module level: D213: Multi-line docstring summary should start at the second line
+checking test/test_task_parser_llm_defaults.py
+checking test/test_task_protocol.py
+checking test/test_velocity_selector.py
+checking test/test_video_submit.py
+119 errors
+------- generated xml file: /home/ros/dev_ws/build/tools_demo/pytest.xml -------
+=========================== short test summary info ============================
+FAILED test/test_flake8.py::test_flake8 - AssertionError: Found 81 code style...
+FAILED test/test_pep257.py::test_pep257 - AssertionError: Found code style er...
+================== 2 failed, 629 passed, 1 skipped in 17.27s ===================
+---
+Finished <<< tools_demo [19.5s]	[ with test failures ]
+
+Summary: 2 packages finished [22.6s]
+  1 package had test failures: tools_demo
+build/tools_demo/pytest.xml: 632 tests, 0 errors, 2 failures, 1 skipped
+- tools_demo.test.test_flake8 test_flake8
+  <<< failure message
+    AssertionError: Found 81 code style errors / warnings:
+      ./launch/costudio_bridge.launch.py:27:100: E501 line too long (161 > 99 characters)
+      ./scripts/nav_legs.py:56:100: E501 line too long (102 > 99 characters)
+      ./scripts/summarize48_v2.py:11:1: E402 module level import not at top of file
+      ./scripts/summarize48_v2.py:43:100: E501 line too long (100 > 99 characters)
+      ./scripts/summarize48_v2.py:56:13: E128 continuation line under-indented for visual indent
+      ./scripts/summarize48_v2.py:57:13: E128 continuation line under-indented for visual indent
+      ./scripts/summarize48_v2.py:58:13: E128 continuation line under-indented for visual indent
+      ./scripts/summarize48_v2.py:59:13: E128 continuation line under-indented for visual indent
+      ./scripts/summarize48_v2.py:60:13: E128 continuation line under-indented for visual indent
+      ./scripts/summarize48_v2.py:61:13: E128 continuation line under-indented for visual indent
+      ./scripts/summarize48_v2.py:62:22: E128 continuation line under-indented for visual indent
+      ./scripts/summarize48_v2.py:63:13: E128 continuation line under-indented for visual indent
+      ./scripts/summarize48_v2.py:64:100: E501 line too long (120 > 99 characters)
+      ./scripts/summarize48_v2.py:66:14: E128 continuation line under-indented for visual indent
+      ./scripts/summarize48_v2.py:67:14: E128 continuation line under-indented for visual indent
+      ./scripts/summarize48_v2.py:68:14: E128 continuation line under-indented for visual indent
+      ./scripts/summarize48_v2.py:73:30: E231 missing whitespace after ':'
+      ./scripts/summarize48_v2.py:74:9: E128 continuation line under-indented for visual indent
+      ./scripts/summarize48_v2.py:74:23: E231 missing whitespace after ':'
+      ./scripts/summarize48_v2.py:75:9: E128 continuation line under-indented for visual indent
+      ./scripts/summarize48_v2.py:75:24: E231 missing whitespace after ':'
+      ./scripts/summarize48_v2.py:76:9: E128 continuation line under-indented for visual indent
+      ./scripts/summarize48_v2.py:76:29: E231 missing whitespace after ':'
+      ./scripts/summarize48_v2.py:77:9: E128 continuation line under-indented for visual indent
+      ./scripts/summarize48_v2.py:77:19: E231 missing whitespace after ':'
+      ./scripts/summarize48_v2.py:78:9: E128 continuation line under-indented for visual indent
+      ./scripts/summarize48_v2.py:78:16: E231 missing whitespace after ':'
+      ./scripts/summarize48_v2.py:79:21: E225 missing whitespace around operator
+      ./scripts/summarize48_v2.py:81:19: E225 missing whitespace around operator
+      ./scripts/summarize48_v2.py:82:33: E702 multiple statements on one line (semicolon)
+      ./test/test_acceptance_contract.py:114:13: E131 continuation line unaligned for hanging indent
+      ./test/test_campaign_sim_health.py:8:1: F401 'importlib.util' imported but unused
+      ./test/test_coverage_summary.py:7:5: E128 continuation line under-indented for visual indent
+      ./test/test_coverage_summary.py:13:14: E225 missing whitespace around operator
+      ./test/test_coverage_summary.py:17:16: E231 missing whitespace after ':'
+      ./test/test_coverage_summary.py:17:22: E231 missing whitespace after ','
+      ./test/test_coverage_summary.py:17:34: E231 missing whitespace after ':'
+      ./test/test_coverage_summary.py:17:36: E231 missing whitespace after ','
+      ./test/test_coverage_summary.py:17:46: E231 missing whitespace after ':'
+      ./test/test_coverage_summary.py:17:48: E231 missing whitespace after ','
+      ./test/test_coverage_summary.py:17:62: E231 missing whitespace after ':'
+      ./test/test_coverage_summary.py:18:10: E225 missing whitespace around operator
+      ./test/test_coverage_summary.py:23:23: E231 missing whitespace after ','
+      ./test/test_coverage_summary.py:23:36: E231 missing whitespace after ','
+      ./test/test_coverage_summary.py:24:8: E225 missing whitespace around operator
+      ./test/test_coverage_summary.py:29:24: E225 missing whitespace around operator
+      ./test/test_coverage_summary.py:33:23: E231 missing whitespace after ','
+      ./test/test_coverage_summary.py:33:36: E231 missing whitespace after ','
+      ./test/test_coverage_summary.py:34:23: E231 missing whitespace after ','
+      ./test/test_coverage_summary.py:34:36: E231 missing whitespace after ','
+      ./test/test_coverage_summary.py:34:42: E231 missing whitespace after ','
+      ./test/test_coverage_summary.py:39:23: E231 missing whitespace after ','
+      ./test/test_coverage_summary.py:39:36: E231 missing whitespace after ','
+      ./test/test_coverage_summary.py:40:14: E225 missing whitespace around operator
+      ./test/test_coverage_summary.py:40:36: E702 multiple statements on one line (semicolon)
+      ./test/test_coverage_summary.py:40:36: E231 missing whitespace after ';'
+      ./test/test_coverage_summary.py:42:9: E225 missing whitespace around operator
+      ./test/test_coverage_summary.py:43:21: E225 missing whitespace around operator
+      ./test/test_coverage_summary.py:44:28: E225 missing whitespace around operator
+      ./test/test_mission_contract.py:22:100: E501 line too long (177 > 99 characters)
+      ./test/test_navigation_contract.py:1456:100: E501 line too long (130 > 99 characters)
+      ./test/test_navigation_contract.py:1460:100: E501 line too long (112 > 99 characters)
+      ./test/test_navigation_contract.py:1991:100: E501 line too long (298 > 99 characters)
+      ./test/test_navigation_contract.py:3401:1: E302 expected 2 blank lines, found 1
+      ./test/test_parse_result_evidence.py:153:1: E303 too many blank lines (3)
+      ./test/test_swept_band_transit.py:153:52: W292 no newline at end of file
+      ./tools_demo/llm_client.py:152:13: F841 local variable 'exception' is assigned to but never used
+      ./tools_demo/llm_client.py:156:13: F841 local variable 'exception' is assigned to but never used
+      ./tools_demo/mission_coordinator.py:141:1: E303 too many blank lines (3)
+      ./tools_demo/mission_coordinator.py:157:1: E302 expected 2 blank lines, found 1
+      ./tools_demo/mission_coordinator.py:253:1: E303 too many blank lines (3)
+      ./tools_demo/mission_coordinator.py:279:1: E302 expected 2 blank lines, found 1
+      ./tools_demo/mission_coordinator.py:322:1: E305 expected 2 blank lines after class or function definition, found 1
+      ./tools_demo/mission_coordinator.py:1219:9: E303 too many blank lines (3)
+      ./tools_demo/moving_obstacle.py:429:100: E501 line too long (106 > 99 characters)
+      ./tools_demo/navigation_math.py:348:1: E302 expected 2 blank lines, found 1
+      ./tools_demo/safety_limiter.py:234:31: E127 continuation line over-indented for visual indent
+      ./tools_demo/safety_limiter.py:266:5: E301 expected 1 blank line, found 0
+      ./tools_demo/speed_profile_recorder.py:43:1: E302 expected 2 blank lines, found 1
+      ./tools_demo/task_navigator.py:3401:9: F841 local variable 'segment_start_x' is assigned to but never used
+      ./tools_demo/task_navigator.py:3402:9: F841 local variable 'segment_start_y' is assigned to but never used
+    assert 1 == 0
+  >>>
+- tools_demo.test.test_pep257 test_pep257
+  <<< failure message
+    AssertionError: Found code style errors / warnings
+    assert 1 == 0
+  >>>
+
+Summary: 675 tests, 0 errors, 2 failures, 1 skipped

@@ -1,0 +1,737 @@
+[
+  {
+    "variant": "before",
+    "tag": "1rC_4bB",
+    "evidence": "/home/ros/dev_ws/experiments/targeted290-before-20261006/1rC_4bB/20261006T121036Z-beB48a",
+    "commit": "3f1e698d7aeca8238ee06feb16f071991c3178c6",
+    "elapsed_sec": 250.6,
+    "completed": 5,
+    "skipped": 0,
+    "goods_score": 20,
+    "obstacles_seen": 4,
+    "original_pair_demonstrated": true,
+    "collision_detected": false,
+    "safe": true,
+    "requirements_verified": true,
+    "truth_precise": true,
+    "dual_yield": true,
+    "minimum_clearance": 0.432,
+    "motion_functional_pass": true,
+    "under290": true,
+    "case_accepted": true,
+    "pick_entities": [
+      "blue_cube_1",
+      "blue_cube_3",
+      "blue_cube_5",
+      "red_cube_4",
+      "blue_cube_4"
+    ],
+    "legs": [
+      {
+        "location": "BLUE_CUBE_1",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 33.79
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.06
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 26.33
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 2.59
+      },
+      {
+        "location": "BLUE_CUBE_3",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 19.76
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.1
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 22.78
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 2.46
+      },
+      {
+        "location": "BLUE_CUBE_5",
+        "side": "west",
+        "state": "succeeded",
+        "seconds": 11.33
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.08
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 11.12
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 2.45
+      },
+      {
+        "location": "RED_CUBE_4",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 8.73
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.06
+      },
+      {
+        "location": "C",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 13.13
+      },
+      {
+        "location": "C_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.76
+      },
+      {
+        "location": "BLUE_CUBE_4",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 7.43
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.15
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 20.42
+      }
+    ],
+    "error_count": 0,
+    "patch_sha256": "aedee84946e154a5b2f32af92a80441f9828a992ac2e8eb9fa3d33f18ef3106c",
+    "manifest_sha256": "91ad0199ad1f6e3208b914cb29ea4d7ebc35b384ed4ecfe8b46428bf08c58f9e"
+  },
+  {
+    "variant": "before",
+    "tag": "4bB_1rA",
+    "evidence": "/home/ros/dev_ws/experiments/targeted290-before-20261006/4bB_1rA/20261006T121634Z-yFkAOI",
+    "commit": "3f1e698d7aeca8238ee06feb16f071991c3178c6",
+    "elapsed_sec": 276.7,
+    "completed": 5,
+    "skipped": 0,
+    "goods_score": 20,
+    "obstacles_seen": 4,
+    "original_pair_demonstrated": true,
+    "collision_detected": false,
+    "safe": true,
+    "requirements_verified": true,
+    "truth_precise": true,
+    "dual_yield": true,
+    "minimum_clearance": 0.5483,
+    "motion_functional_pass": true,
+    "under290": true,
+    "case_accepted": true,
+    "pick_entities": [
+      "blue_cube_1",
+      "blue_cube_4",
+      "blue_cube_5",
+      "red_cube_3",
+      "blue_cube_3"
+    ],
+    "legs": [
+      {
+        "location": "BLUE_CUBE_1",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 41.11
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.05
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 27.84
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 2.73
+      },
+      {
+        "location": "BLUE_CUBE_4",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 22.61
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.11
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 24.86
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 2.51
+      },
+      {
+        "location": "BLUE_CUBE_5",
+        "side": "west",
+        "state": "succeeded",
+        "seconds": 11.66
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.14
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 11.86
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 2.53
+      },
+      {
+        "location": "RED_CUBE_3",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 16.48
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.06
+      },
+      {
+        "location": "A",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 5.71
+      },
+      {
+        "location": "A_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.79
+      },
+      {
+        "location": "BLUE_CUBE_3",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 11.83
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.07
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 19.01
+      }
+    ],
+    "error_count": 0,
+    "patch_sha256": "aedee84946e154a5b2f32af92a80441f9828a992ac2e8eb9fa3d33f18ef3106c",
+    "manifest_sha256": "91ad0199ad1f6e3208b914cb29ea4d7ebc35b384ed4ecfe8b46428bf08c58f9e"
+  },
+  {
+    "variant": "after",
+    "tag": "1rC_4bB",
+    "evidence": "/home/ros/dev_ws/experiments/targeted290-after-20261006/1rC_4bB/20261006T122523Z-V6IAbj",
+    "commit": "c124b24300f7e441bca8c9bab628bbcc07c3ea74",
+    "elapsed_sec": 270.6,
+    "completed": 5,
+    "skipped": 0,
+    "goods_score": 20,
+    "obstacles_seen": 4,
+    "original_pair_demonstrated": true,
+    "collision_detected": false,
+    "safe": true,
+    "requirements_verified": true,
+    "truth_precise": true,
+    "dual_yield": true,
+    "minimum_clearance": 0.206,
+    "motion_functional_pass": true,
+    "under290": true,
+    "case_accepted": true,
+    "pick_entities": [
+      "blue_cube_3",
+      "red_cube_4",
+      "blue_cube_4",
+      "blue_cube_1",
+      "blue_cube_5"
+    ],
+    "legs": [
+      {
+        "location": "BLUE_CUBE_3",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 40.25
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 0.99
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 25.2
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 2.59
+      },
+      {
+        "location": "RED_CUBE_4",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 9.08
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.14
+      },
+      {
+        "location": "C",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 13.7
+      },
+      {
+        "location": "C_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.74
+      },
+      {
+        "location": "BLUE_CUBE_4",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 7.92
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.09
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 20.67
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 2.57
+      },
+      {
+        "location": "BLUE_CUBE_1",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 22.36
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.11
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 29.2
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 2.72
+      },
+      {
+        "location": "BLUE_CUBE_5",
+        "side": "west",
+        "state": "succeeded",
+        "seconds": 11.21
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.11
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 11.86
+      }
+    ],
+    "error_count": 0,
+    "patch_sha256": "aedee84946e154a5b2f32af92a80441f9828a992ac2e8eb9fa3d33f18ef3106c",
+    "manifest_sha256": "ee73dbfb354213758f3403632bfb58ceaf7d852b220d29510196c4d16cbacac9"
+  },
+  {
+    "variant": "after",
+    "tag": "4bB_1rA",
+    "evidence": "/home/ros/dev_ws/experiments/targeted290-after-20261006/4bB_1rA/20261006T123145Z-XQLWE9",
+    "commit": "c124b24300f7e441bca8c9bab628bbcc07c3ea74",
+    "elapsed_sec": 288.5,
+    "completed": 5,
+    "skipped": 0,
+    "goods_score": 20,
+    "obstacles_seen": 4,
+    "original_pair_demonstrated": true,
+    "collision_detected": false,
+    "safe": true,
+    "requirements_verified": true,
+    "truth_precise": true,
+    "dual_yield": true,
+    "minimum_clearance": 0.1943,
+    "motion_functional_pass": true,
+    "under290": true,
+    "case_accepted": true,
+    "pick_entities": [
+      "red_cube_3",
+      "blue_cube_3",
+      "blue_cube_1",
+      "blue_cube_4",
+      "blue_cube_5"
+    ],
+    "legs": [
+      {
+        "location": "RED_CUBE_3",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 42.73
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.11
+      },
+      {
+        "location": "A",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 5.88
+      },
+      {
+        "location": "A_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.73
+      },
+      {
+        "location": "BLUE_CUBE_3",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 11.03
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.09
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 23.83
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 2.61
+      },
+      {
+        "location": "BLUE_CUBE_1",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 21.77
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.09
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 25.83
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 2.57
+      },
+      {
+        "location": "BLUE_CUBE_4",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 22.54
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.15
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 25.27
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 2.75
+      },
+      {
+        "location": "BLUE_CUBE_5",
+        "side": "west",
+        "state": "succeeded",
+        "seconds": 11.42
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.05
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 12.02
+      }
+    ],
+    "error_count": 0,
+    "patch_sha256": "aedee84946e154a5b2f32af92a80441f9828a992ac2e8eb9fa3d33f18ef3106c",
+    "manifest_sha256": "ee73dbfb354213758f3403632bfb58ceaf7d852b220d29510196c4d16cbacac9"
+  },
+  {
+    "variant": "after",
+    "tag": "3rA_2bB",
+    "evidence": "/home/ros/dev_ws/experiments/targeted290-after-20261006/3rA_2bB/20261006T123822Z-D70eO4",
+    "commit": "c124b24300f7e441bca8c9bab628bbcc07c3ea74",
+    "elapsed_sec": 237.2,
+    "completed": 5,
+    "skipped": 0,
+    "goods_score": 20,
+    "obstacles_seen": 4,
+    "original_pair_demonstrated": true,
+    "collision_detected": false,
+    "safe": true,
+    "requirements_verified": true,
+    "truth_precise": true,
+    "dual_yield": true,
+    "minimum_clearance": 0.3778,
+    "motion_functional_pass": true,
+    "under290": true,
+    "case_accepted": true,
+    "pick_entities": [
+      "blue_cube_1",
+      "blue_cube_5",
+      "red_cube_2",
+      "red_cube_1",
+      "red_cube_3"
+    ],
+    "legs": [
+      {
+        "location": "BLUE_CUBE_1",
+        "side": "west",
+        "state": "succeeded",
+        "seconds": 47.81
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.11
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 24.7
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 2.66
+      },
+      {
+        "location": "BLUE_CUBE_5",
+        "side": "west",
+        "state": "succeeded",
+        "seconds": 12.5
+      },
+      {
+        "location": "BLUE_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.15
+      },
+      {
+        "location": "B",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 11.28
+      },
+      {
+        "location": "B_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 2.6
+      },
+      {
+        "location": "RED_CUBE_2",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 21.48
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.06
+      },
+      {
+        "location": "A",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 9.39
+      },
+      {
+        "location": "A_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.78
+      },
+      {
+        "location": "RED_CUBE_1",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 9.79
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.2
+      },
+      {
+        "location": "A",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 10.63
+      },
+      {
+        "location": "A_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.9
+      },
+      {
+        "location": "RED_CUBE_3",
+        "side": "east",
+        "state": "succeeded",
+        "seconds": 8.87
+      },
+      {
+        "location": "RED_EXIT",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 1.09
+      },
+      {
+        "location": "A",
+        "side": "auto",
+        "state": "succeeded",
+        "seconds": 7.58
+      }
+    ],
+    "error_count": 0,
+    "patch_sha256": "aedee84946e154a5b2f32af92a80441f9828a992ac2e8eb9fa3d33f18ef3106c",
+    "manifest_sha256": "ee73dbfb354213758f3403632bfb58ceaf7d852b220d29510196c4d16cbacac9"
+  }
+]

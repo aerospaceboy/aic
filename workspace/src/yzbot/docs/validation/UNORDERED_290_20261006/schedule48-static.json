@@ -1,0 +1,530 @@
+[
+  {
+    "tag": "1rA_4bB",
+    "ms": 7.645260004210286,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_4:east",
+      "blue_cube_5:west",
+      "red_cube_3:east",
+      "blue_cube_3:east"
+    ]
+  },
+  {
+    "tag": "4bB_1rA",
+    "ms": 6.09853099740576,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_4:east",
+      "blue_cube_5:west",
+      "red_cube_3:east",
+      "blue_cube_3:east"
+    ]
+  },
+  {
+    "tag": "2rA_3bB",
+    "ms": 23.109893998480402,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_5:west",
+      "red_cube_2:east",
+      "red_cube_3:east",
+      "blue_cube_3:east"
+    ]
+  },
+  {
+    "tag": "3bB_2rA",
+    "ms": 15.25183099147398,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_5:west",
+      "red_cube_2:east",
+      "red_cube_3:east",
+      "blue_cube_3:east"
+    ]
+  },
+  {
+    "tag": "3rA_2bB",
+    "ms": 14.5699999993667,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_5:west",
+      "red_cube_2:east",
+      "red_cube_1:east",
+      "red_cube_3:east"
+    ]
+  },
+  {
+    "tag": "2bB_3rA",
+    "ms": 14.28092599962838,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_5:west",
+      "red_cube_2:east",
+      "red_cube_1:east",
+      "red_cube_3:east"
+    ]
+  },
+  {
+    "tag": "4rA_1bB",
+    "ms": 4.541874004644342,
+    "entries": [
+      "blue_cube_1:east",
+      "red_cube_4:east",
+      "red_cube_1:east",
+      "red_cube_2:east",
+      "red_cube_3:east"
+    ]
+  },
+  {
+    "tag": "1bB_4rA",
+    "ms": 4.724732993054204,
+    "entries": [
+      "blue_cube_1:east",
+      "red_cube_4:east",
+      "red_cube_1:east",
+      "red_cube_2:east",
+      "red_cube_3:east"
+    ]
+  },
+  {
+    "tag": "1rA_4bC",
+    "ms": 6.021605993737467,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_3:east",
+      "blue_cube_4:east",
+      "blue_cube_5:west",
+      "red_cube_2:east"
+    ]
+  },
+  {
+    "tag": "4bC_1rA",
+    "ms": 5.776578997028992,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_3:east",
+      "blue_cube_4:east",
+      "blue_cube_5:west",
+      "red_cube_2:east"
+    ]
+  },
+  {
+    "tag": "2rA_3bC",
+    "ms": 15.227174997562543,
+    "entries": [
+      "blue_cube_5:east",
+      "blue_cube_3:east",
+      "blue_cube_4:east",
+      "red_cube_2:east",
+      "red_cube_3:east"
+    ]
+  },
+  {
+    "tag": "3bC_2rA",
+    "ms": 15.854972996748984,
+    "entries": [
+      "blue_cube_5:east",
+      "blue_cube_3:east",
+      "blue_cube_4:east",
+      "red_cube_2:east",
+      "red_cube_3:east"
+    ]
+  },
+  {
+    "tag": "3rA_2bC",
+    "ms": 13.900509002269246,
+    "entries": [
+      "blue_cube_5:east",
+      "blue_cube_4:east",
+      "red_cube_2:east",
+      "red_cube_1:east",
+      "red_cube_3:east"
+    ]
+  },
+  {
+    "tag": "2bC_3rA",
+    "ms": 14.807530998950824,
+    "entries": [
+      "blue_cube_5:east",
+      "blue_cube_4:east",
+      "red_cube_2:east",
+      "red_cube_1:east",
+      "red_cube_3:east"
+    ]
+  },
+  {
+    "tag": "4rA_1bC",
+    "ms": 4.771114996401593,
+    "entries": [
+      "red_cube_2:east",
+      "red_cube_1:east",
+      "blue_cube_3:east",
+      "red_cube_5:east",
+      "red_cube_3:east"
+    ]
+  },
+  {
+    "tag": "1bC_4rA",
+    "ms": 5.277917007333599,
+    "entries": [
+      "red_cube_2:east",
+      "red_cube_1:east",
+      "blue_cube_3:east",
+      "red_cube_5:east",
+      "red_cube_3:east"
+    ]
+  },
+  {
+    "tag": "1rB_4bA",
+    "ms": 5.960157999652438,
+    "entries": [
+      "red_cube_4:east",
+      "blue_cube_1:east",
+      "blue_cube_2:east",
+      "blue_cube_3:east",
+      "blue_cube_4:east"
+    ]
+  },
+  {
+    "tag": "4bA_1rB",
+    "ms": 5.7357350015081465,
+    "entries": [
+      "red_cube_4:east",
+      "blue_cube_1:east",
+      "blue_cube_2:east",
+      "blue_cube_3:east",
+      "blue_cube_4:east"
+    ]
+  },
+  {
+    "tag": "2rB_3bA",
+    "ms": 15.402602992253378,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_2:east",
+      "blue_cube_3:east",
+      "red_cube_3:east",
+      "red_cube_4:east"
+    ]
+  },
+  {
+    "tag": "3bA_2rB",
+    "ms": 15.73602699500043,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_2:east",
+      "blue_cube_3:east",
+      "red_cube_3:east",
+      "red_cube_4:east"
+    ]
+  },
+  {
+    "tag": "3rB_2bA",
+    "ms": 19.53213900560513,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_3:east",
+      "red_cube_3:east",
+      "red_cube_2:east",
+      "red_cube_4:east"
+    ]
+  },
+  {
+    "tag": "2bA_3rB",
+    "ms": 14.094149009906687,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_3:east",
+      "red_cube_3:east",
+      "red_cube_2:east",
+      "red_cube_4:east"
+    ]
+  },
+  {
+    "tag": "4rB_1bA",
+    "ms": 4.382042010547593,
+    "entries": [
+      "blue_cube_1:east",
+      "red_cube_1:east",
+      "red_cube_2:east",
+      "red_cube_3:east",
+      "red_cube_4:east"
+    ]
+  },
+  {
+    "tag": "1bA_4rB",
+    "ms": 4.716088005807251,
+    "entries": [
+      "blue_cube_1:east",
+      "red_cube_1:east",
+      "red_cube_2:east",
+      "red_cube_3:east",
+      "red_cube_4:east"
+    ]
+  },
+  {
+    "tag": "1rB_4bC",
+    "ms": 5.763523004134186,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_3:east",
+      "blue_cube_4:east",
+      "blue_cube_5:west",
+      "red_cube_4:east"
+    ]
+  },
+  {
+    "tag": "4bC_1rB",
+    "ms": 5.788406007923186,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_3:east",
+      "blue_cube_4:east",
+      "blue_cube_5:west",
+      "red_cube_4:east"
+    ]
+  },
+  {
+    "tag": "2rB_3bC",
+    "ms": 15.164324999204837,
+    "entries": [
+      "red_cube_4:east",
+      "blue_cube_5:west",
+      "blue_cube_3:east",
+      "blue_cube_4:east",
+      "red_cube_2:east"
+    ]
+  },
+  {
+    "tag": "3bC_2rB",
+    "ms": 17.362095008138567,
+    "entries": [
+      "red_cube_4:east",
+      "blue_cube_5:west",
+      "blue_cube_3:east",
+      "blue_cube_4:east",
+      "red_cube_2:east"
+    ]
+  },
+  {
+    "tag": "3rB_2bC",
+    "ms": 14.099744003033265,
+    "entries": [
+      "red_cube_3:east",
+      "blue_cube_5:west",
+      "blue_cube_4:east",
+      "red_cube_2:east",
+      "red_cube_4:east"
+    ]
+  },
+  {
+    "tag": "2bC_3rB",
+    "ms": 14.654663013061509,
+    "entries": [
+      "red_cube_3:east",
+      "blue_cube_5:west",
+      "blue_cube_4:east",
+      "red_cube_2:east",
+      "red_cube_4:east"
+    ]
+  },
+  {
+    "tag": "4rB_1bC",
+    "ms": 4.429961001733318,
+    "entries": [
+      "red_cube_3:east",
+      "red_cube_4:east",
+      "blue_cube_5:west",
+      "red_cube_5:east",
+      "red_cube_2:east"
+    ]
+  },
+  {
+    "tag": "1bC_4rB",
+    "ms": 4.806370998267084,
+    "entries": [
+      "red_cube_3:east",
+      "red_cube_4:east",
+      "blue_cube_5:west",
+      "red_cube_5:east",
+      "red_cube_2:east"
+    ]
+  },
+  {
+    "tag": "1rC_4bA",
+    "ms": 5.976211992674507,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_2:east",
+      "blue_cube_3:east",
+      "red_cube_2:east",
+      "blue_cube_4:east"
+    ]
+  },
+  {
+    "tag": "4bA_1rC",
+    "ms": 5.7620040024630725,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_2:east",
+      "blue_cube_3:east",
+      "red_cube_2:east",
+      "blue_cube_4:east"
+    ]
+  },
+  {
+    "tag": "2rC_3bA",
+    "ms": 15.031086004455574,
+    "entries": [
+      "red_cube_4:east",
+      "red_cube_2:east",
+      "blue_cube_4:east",
+      "blue_cube_2:east",
+      "blue_cube_3:east"
+    ]
+  },
+  {
+    "tag": "3bA_2rC",
+    "ms": 15.500143999815919,
+    "entries": [
+      "red_cube_4:east",
+      "red_cube_2:east",
+      "blue_cube_4:east",
+      "blue_cube_2:east",
+      "blue_cube_3:east"
+    ]
+  },
+  {
+    "tag": "3rC_2bA",
+    "ms": 14.040643000043929,
+    "entries": [
+      "red_cube_4:east",
+      "red_cube_2:east",
+      "red_cube_5:east",
+      "blue_cube_4:east",
+      "blue_cube_3:east"
+    ]
+  },
+  {
+    "tag": "2bA_3rC",
+    "ms": 14.825420003035106,
+    "entries": [
+      "red_cube_4:east",
+      "red_cube_2:east",
+      "red_cube_5:east",
+      "blue_cube_4:east",
+      "blue_cube_3:east"
+    ]
+  },
+  {
+    "tag": "4rC_1bA",
+    "ms": 4.601029999321327,
+    "entries": [
+      "red_cube_4:east",
+      "blue_cube_3:east",
+      "red_cube_1:east",
+      "red_cube_2:east",
+      "red_cube_5:east"
+    ]
+  },
+  {
+    "tag": "1bA_4rC",
+    "ms": 4.808894998859614,
+    "entries": [
+      "red_cube_4:east",
+      "blue_cube_3:east",
+      "red_cube_1:east",
+      "red_cube_2:east",
+      "red_cube_5:east"
+    ]
+  },
+  {
+    "tag": "1rC_4bB",
+    "ms": 6.21648199739866,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_3:east",
+      "blue_cube_5:west",
+      "red_cube_4:east",
+      "blue_cube_4:east"
+    ]
+  },
+  {
+    "tag": "4bB_1rC",
+    "ms": 5.617431990685873,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_3:east",
+      "blue_cube_5:west",
+      "red_cube_4:east",
+      "blue_cube_4:east"
+    ]
+  },
+  {
+    "tag": "2rC_3bB",
+    "ms": 15.168737998465076,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_5:west",
+      "red_cube_4:east",
+      "red_cube_2:east",
+      "blue_cube_4:east"
+    ]
+  },
+  {
+    "tag": "3bB_2rC",
+    "ms": 16.432135002105497,
+    "entries": [
+      "blue_cube_1:east",
+      "blue_cube_5:west",
+      "red_cube_4:east",
+      "red_cube_2:east",
+      "blue_cube_4:east"
+    ]
+  },
+  {
+    "tag": "3rC_2bB",
+    "ms": 14.198691991623491,
+    "entries": [
+      "blue_cube_1:east",
+      "red_cube_4:east",
+      "red_cube_5:east",
+      "red_cube_2:east",
+      "blue_cube_5:west"
+    ]
+  },
+  {
+    "tag": "2bB_3rC",
+    "ms": 14.106121001532301,
+    "entries": [
+      "blue_cube_1:east",
+      "red_cube_4:east",
+      "red_cube_5:east",
+      "red_cube_2:east",
+      "blue_cube_5:west"
+    ]
+  },
+  {
+    "tag": "4rC_1bB",
+    "ms": 4.744391000713222,
+    "entries": [
+      "blue_cube_1:east",
+      "red_cube_4:east",
+      "red_cube_5:east",
+      "red_cube_1:east",
+      "red_cube_2:east"
+    ]
+  },
+  {
+    "tag": "1bB_4rC",
+    "ms": 4.812090002815239,
+    "entries": [
+      "blue_cube_1:east",
+      "red_cube_4:east",
+      "red_cube_5:east",
+      "red_cube_1:east",
+      "red_cube_2:east"
+    ]
+  }
+]

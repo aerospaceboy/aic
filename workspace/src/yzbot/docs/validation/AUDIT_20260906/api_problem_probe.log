@@ -1,0 +1,2 @@
+[INFO] [1788663649.929474361] [competition_task_parser]: parser config use_llm=True require_llm=True base_url=https://ws-e8m6o1qfgkvnkfm9.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+API_EVIDENCE=[{"ok": false, "type": "LlmClientError", "reason": "llm request timed out"}, {"ok": false, "type": "LlmClientError", "reason": "llm request timed out"}]

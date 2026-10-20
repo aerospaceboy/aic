@@ -1,0 +1,19 @@
+FAILED 1rA_4bB rc=1 evidence=missing harness=/home/ros/dev_ws/experiments/full48-290-20261006T213708Z/1rA_4bB/harness-x1E9O6.log
+FAILED 4bB_1rA rc=1 evidence=/home/ros/dev_ws/experiments/full48-290-20261006T213708Z/4bB_1rA/20261006T213916Z-vdfTJ2 harness=/home/ros/dev_ws/experiments/full48-290-20261006T213708Z/4bB_1rA/harness-ET403p.log
+FAILED 3bA_2rC rc=1 evidence=/home/ros/dev_ws/experiments/full48-290-20261006T213708Z/3bA_2rC/20261007T004345Z-KLxMRU harness=/home/ros/dev_ws/experiments/full48-290-20261006T213708Z/3bA_2rC/harness-K3qgEi.log
+FAILED 2rC_3bB rc=1 evidence=/home/ros/dev_ws/experiments/full48-290-20261006T213708Z/2rC_3bB/20261007T012322Z-j2mtTg harness=/home/ros/dev_ws/experiments/full48-290-20261006T213708Z/2rC_3bB/harness-YZI5Yg.log
+FAILED 4bB_1rA rc=1 evidence=/home/ros/dev_ws/experiments/full48-290-20261006T213708Z/4bB_1rA/20261007T020908Z-iCKyfd harness=/home/ros/dev_ws/experiments/full48-290-20261006T213708Z/4bB_1rA/harness-rLz3DU.log
+FAILED 4bB_1rA rc=0 evidence=/home/ros/dev_ws/experiments/full48-290-20261006T213708Z/4bB_1rA/20261007T022733Z-ALs6SX harness=/home/ros/dev_ws/experiments/full48-290-20261006T213708Z/4bB_1rA/harness-NQBa1t.log
+FAILED 4bB_1rA rc=1 evidence=/home/ros/dev_ws/experiments/full48-290-20261006T213708Z/4bB_1rA/20261007T023435Z-PdPHDq harness=/home/ros/dev_ws/experiments/full48-290-20261006T213708Z/4bB_1rA/harness-ZTrYPn.log
+}
+{
+  "expected": 48,
+  "rows": 48,
+  "accepted": 47,
+  "failing": [
+    "4bB_1rA"
+  ]
+}
+CONVERGE_PASS=4 2026-10-07T02:41:58Z
+SKIP 1rA_4bB (accepted on this campaign version)
+RUN 2/48 4bB_1rA

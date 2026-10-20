@@ -1,0 +1,139 @@
+[INFO] [1788863471.585724529] [competition_task_navigator]: cube_entry_choice zone=RED_CUBE_1 side=east entry=(-3.10,3.00,yaw=3.14) dock=(-3.64,3.00)
+[INFO] [1788863471.586806443] [competition_task_navigator]: dynamic_gate_route zone=RED_CUBE_1 crossing_y=-0.60
+[INFO] [1788863471.587895678] [competition_task_navigator]: nav_plan zone=RED_CUBE_1 poses=(12.60,-0.60,yaw=3.14),(0.00,0.00,yaw=3.14),(-3.10,3.00,yaw=3.14) robot=(13.22,-0.95,yaw=-3.14)
+[INFO] [1788863471.597904618] [competition_task_navigator]: nav_costmap_probe goal=(12.60,-0.60) goal_cost=0 start=(13.22,-0.95) start_cost=0 occupied_cells=91373
+[INFO] [1788863471.598226608] [competition_task_navigator]: nav_goal zone=RED_CUBE_1 stage=1/3 x=12.600 y=-0.600 yaw=3.142
+[INFO] [1788863473.217857958] [competition_task_navigator]: nav_handoff zone=RED_CUBE_1 distance=0.199 source=odom
+[INFO] [1788863473.220616463] [competition_task_navigator]: nav_handoff_cancel_ack
+[INFO] [1788863473.237450425] [competition_task_navigator]: nav_handoff_result_received
+[INFO] [1788863473.246346460] [competition_task_navigator]: nav_costmap_probe goal=(0.00,0.00) goal_cost=0 start=(12.78,-0.69) start_cost=0 occupied_cells=91373
+[INFO] [1788863473.246671514] [competition_task_navigator]: nav_goal zone=RED_CUBE_1 stage=2/3 x=0.000 y=0.000 yaw=3.142
+[INFO] [1788863484.390643737] [competition_task_navigator]: nav_handoff zone=RED_CUBE_1 distance=0.199 source=odom
+[INFO] [1788863484.392966722] [competition_task_navigator]: nav_handoff_cancel_ack
+[INFO] [1788863484.403480631] [competition_task_navigator]: nav_handoff_result_received
+[INFO] [1788863484.412418286] [competition_task_navigator]: nav_costmap_probe goal=(-3.10,3.00) goal_cost=0 start=(0.20,-0.03) start_cost=0 occupied_cells=91373
+[INFO] [1788863484.412805780] [competition_task_navigator]: nav_goal zone=RED_CUBE_1 stage=3/3 x=-3.100 y=3.000 yaw=3.142
+[INFO] [1788863489.096603360] [competition_task_navigator]: nav_handoff zone=RED_CUBE_1 distance=0.196 source=odom
+[INFO] [1788863489.098591383] [competition_task_navigator]: nav_handoff_cancel_ack
+[INFO] [1788863489.124878438] [competition_task_navigator]: nav_handoff_result_received
+[INFO] [1788863489.125248181] [competition_task_navigator]: alignment_start phase=direct_docking target_yaw=3.142 dock=True
+[INFO] [1788863489.546800565] [competition_task_navigator]: pickup_entry_alignment zone=RED_CUBE_1 yaw=3.14
+[INFO] [1788863491.551021158] [competition_task_navigator]: pickup_entry_aligned; starting forward-only dock target=(-3.64,3.00)
+[INFO] [1788863507.424227171] [competition_task_navigator]: nav_plan zone=RED_EXIT poses= robot=(-3.64,2.99,yaw=3.10)
+[INFO] [1788863507.425148794] [competition_task_navigator]: alignment_start phase=direct_docking target_yaw=3.142 dock=True
+[INFO] [1788863509.721043373] [competition_task_navigator]: departure_position_complete; handing yaw to Nav2
+[INFO] [1788863509.728816064] [competition_task_navigator]: tray_crossing_route zone=C side=east
+[INFO] [1788863509.729328719] [competition_task_navigator]: nav_plan zone=C poses=(-3.35,2.35,yaw=0.00),(-4.65,2.35,yaw=0.00),(-9.60,2.00,yaw=3.14) robot=(-3.14,2.98,yaw=-2.84)
+[INFO] [1788863509.737586464] [competition_task_navigator]: nav_costmap_probe goal=(-3.35,2.35) goal_cost=0 start=(-3.14,2.98) start_cost=0 occupied_cells=91373
+[INFO] [1788863509.745154472] [competition_task_navigator]: nav_costmap_probe goal=(-4.65,2.35) goal_cost=0 start=(-3.14,2.98) start_cost=0 occupied_cells=91373
+[INFO] [1788863509.753960562] [competition_task_navigator]: nav_costmap_probe goal=(-9.60,2.00) goal_cost=0 start=(-3.14,2.98) start_cost=0 occupied_cells=91373
+[INFO] [1788863509.754247146] [competition_task_navigator]: nav_goal_batch zone=C stages=3 first=(-3.350,2.350) final=(-9.600,2.000)
+[INFO] [1788863518.031818326] [competition_task_navigator]: nav_handoff zone=C distance=0.185 source=odom
+[INFO] [1788863518.033576701] [competition_task_navigator]: nav_handoff_cancel_ack
+[INFO] [1788863518.056245280] [competition_task_navigator]: nav_handoff_result_received
+[INFO] [1788863518.056707467] [competition_task_navigator]: alignment_start phase=direct_docking target_yaw=3.142 dock=True
+[INFO] [1788863524.698540758] [competition_task_navigator]: zone_exit_waypoint_skipped zone=C yaw=3.119
+[INFO] [1788863526.590990820] [competition_task_navigator]: cube_entry_choice zone=RED_CUBE_3 side=east entry=(-5.10,-2.50,yaw=3.14) dock=(-5.64,-2.50)
+[INFO] [1788863526.591446186] [competition_task_navigator]: nav_plan zone=RED_CUBE_3 poses=(-4.45,-1.60,yaw=-2.20),(-5.10,-2.50,yaw=3.14) robot=(-9.10,1.97,yaw=3.12)
+[INFO] [1788863526.602953503] [competition_task_navigator]: nav_costmap_probe goal=(-4.45,-1.60) goal_cost=0 start=(-9.10,1.97) start_cost=0 occupied_cells=91373
+[INFO] [1788863526.612972614] [competition_task_navigator]: nav_costmap_probe goal=(-5.10,-2.50) goal_cost=0 start=(-9.10,1.97) start_cost=0 occupied_cells=91373
+[INFO] [1788863526.613310109] [competition_task_navigator]: nav_goal_batch zone=RED_CUBE_3 stages=2 first=(-4.450,-1.600) final=(-5.100,-2.500)
+[INFO] [1788863543.014821970] [competition_task_navigator]: nav_handoff zone=RED_CUBE_3 distance=0.184 source=odom
+[INFO] [1788863543.016096736] [competition_task_navigator]: nav_handoff_cancel_ack
+[INFO] [1788863543.045618432] [competition_task_navigator]: nav_handoff_result_received
+[INFO] [1788863543.045894553] [competition_task_navigator]: alignment_start phase=direct_docking target_yaw=3.142 dock=True
+[INFO] [1788863543.344606669] [competition_task_navigator]: pickup_entry_alignment zone=RED_CUBE_3 yaw=3.14
+[INFO] [1788863546.056953755] [competition_task_navigator]: pickup_entry_aligned; starting forward-only dock target=(-5.64,-2.50)
+[INFO] [1788863553.794849921] [competition_task_navigator]: nav_plan zone=RED_EXIT poses= robot=(-5.65,-2.50,yaw=3.14)
+[INFO] [1788863553.795155619] [competition_task_navigator]: alignment_start phase=direct_docking target_yaw=3.142 dock=True
+[INFO] [1788863555.289594085] [competition_task_navigator]: departure_position_complete; handing yaw to Nav2
+[INFO] [1788863555.297492825] [competition_task_navigator]: zone_C_west_guide active start=(-5.14,-2.51) stages=2
+[INFO] [1788863555.297803238] [competition_task_navigator]: tray_crossing_route zone=C side=east
+[INFO] [1788863555.298285283] [competition_task_navigator]: nav_plan zone=C poses=(-5.35,-1.85,yaw=0.00),(-6.65,-1.85,yaw=0.00),(-8.50,0.50,yaw=0.00),(-9.60,2.00,yaw=3.14) robot=(-5.14,-2.51,yaw=-3.01)
+[INFO] [1788863555.306388237] [competition_task_navigator]: nav_costmap_probe goal=(-5.35,-1.85) goal_cost=0 start=(-5.14,-2.51) start_cost=0 occupied_cells=91373
+[INFO] [1788863555.317423675] [competition_task_navigator]: nav_costmap_probe goal=(-6.65,-1.85) goal_cost=0 start=(-5.14,-2.51) start_cost=0 occupied_cells=91373
+[INFO] [1788863555.326317736] [competition_task_navigator]: nav_costmap_probe goal=(-8.50,0.50) goal_cost=50 start=(-5.14,-2.51) start_cost=0 occupied_cells=91373
+[INFO] [1788863555.335168073] [competition_task_navigator]: nav_costmap_probe goal=(-9.60,2.00) goal_cost=0 start=(-5.14,-2.51) start_cost=0 occupied_cells=91373
+[INFO] [1788863555.335493011] [competition_task_navigator]: nav_goal_batch zone=C stages=4 first=(-5.350,-1.850) final=(-9.600,2.000)
+[INFO] [1788863589.798138525] [competition_task_navigator]: alignment_start phase=direct_docking target_yaw=3.142 dock=True
+[INFO] [1788863600.177343926] [competition_task_navigator]: zone_exit_waypoint_skipped zone=C yaw=3.112
+[INFO] [1788863602.077883969] [competition_task_navigator]: cube_entry_choice zone=BLUE_CUBE_2 side=east entry=(-9.24,-3.00,yaw=3.14) dock=(-9.64,-3.00)
+[INFO] [1788863602.078185954] [competition_task_navigator]: obstacle_2_west_bypass zone=BLUE_CUBE_2
+[INFO] [1788863602.078621693] [competition_task_navigator]: nav_plan zone=BLUE_CUBE_2 poses=(-2.10,1.80,yaw=-1.57),(-2.10,0.00,yaw=-1.48),(-4.20,0.00,yaw=-2.58),(-9.24,-3.00,yaw=3.14) robot=(-9.15,1.93,yaw=3.12)
+[INFO] [1788863602.086396359] [competition_task_navigator]: nav_costmap_probe goal=(-2.10,1.80) goal_cost=0 start=(-9.15,1.93) start_cost=0 occupied_cells=91373
+[INFO] [1788863602.094501668] [competition_task_navigator]: nav_costmap_probe goal=(-2.10,0.00) goal_cost=0 start=(-9.15,1.93) start_cost=0 occupied_cells=91373
+[INFO] [1788863602.103119723] [competition_task_navigator]: nav_costmap_probe goal=(-4.20,0.00) goal_cost=0 start=(-9.15,1.93) start_cost=0 occupied_cells=91373
+[INFO] [1788863602.111596706] [competition_task_navigator]: nav_costmap_probe goal=(-9.24,-3.00) goal_cost=0 start=(-9.15,1.93) start_cost=0 occupied_cells=91373
+[INFO] [1788863602.111929070] [competition_task_navigator]: nav_goal_batch zone=BLUE_CUBE_2 stages=4 first=(-2.100,1.800) final=(-9.240,-3.000)
+[INFO] [1788863625.929208077] [competition_task_navigator]: nav_handoff zone=BLUE_CUBE_2 distance=0.196 source=odom
+[INFO] [1788863625.930224227] [competition_task_navigator]: nav_handoff_cancel_ack
+[INFO] [1788863625.934287141] [competition_task_navigator]: nav_handoff_result_received
+[INFO] [1788863625.934566122] [competition_task_navigator]: alignment_start phase=direct_docking target_yaw=3.142 dock=True
+[INFO] [1788863627.074823199] [competition_task_navigator]: pickup_entry_alignment zone=BLUE_CUBE_2 yaw=3.14
+[INFO] [1788863628.686612071] [competition_task_navigator]: pickup_entry_aligned; starting forward-only dock target=(-9.64,-3.00)
+[INFO] [1788863644.561167298] [competition_task_navigator]: nav_plan zone=BLUE_EXIT poses= robot=(-9.63,-3.02,yaw=3.13)
+[INFO] [1788863644.561526482] [competition_task_navigator]: alignment_start phase=direct_docking target_yaw=3.142 dock=True
+[INFO] [1788863646.761842426] [competition_task_navigator]: departure_position_complete; handing yaw to Nav2
+[INFO] [1788863646.769878283] [competition_task_navigator]: nav_plan zone=A poses=(-2.41,2.99,yaw=0.00) robot=(-9.27,-3.01,yaw=-2.88)
+[INFO] [1788863646.777843648] [competition_task_navigator]: nav_costmap_probe goal=(-2.41,2.99) goal_cost=0 start=(-9.27,-3.01) start_cost=0 occupied_cells=91373
+[INFO] [1788863646.778180608] [competition_task_navigator]: nav_goal zone=A stage=1/1 x=-2.410 y=2.990 yaw=0.000
+[WARN] [1788863668.020432317] [competition_task_navigator]: nav_retry zone=A attempt=1/1 delay=1.5s
+[INFO] [1788863669.529854289] [competition_task_navigator]: nav_costmap_probe goal=(-2.41,2.99) goal_cost=0 start=(-2.83,0.52) start_cost=80 occupied_cells=91373
+[INFO] [1788863669.530146321] [competition_task_navigator]: nav_goal zone=A stage=1/1 x=-2.410 y=2.990 yaw=0.000
+[WARN] [1788863677.072156068] [competition_task_navigator]: Bounded recovery rejected: blocked segment in recent_trail
+[ERROR] [1788863677.072519870] [competition_task_navigator]: Navigation to zone A ended as aborted
+[INFO] [1788863677.080527134] [competition_task_navigator]: nav_plan zone=A poses=(-2.41,2.99,yaw=0.00) robot=(-2.83,0.53,yaw=0.45)
+[INFO] [1788863677.092066768] [competition_task_navigator]: nav_costmap_probe goal=(-2.41,2.99) goal_cost=0 start=(-2.83,0.53) start_cost=80 occupied_cells=91373
+[INFO] [1788863677.093009736] [competition_task_navigator]: nav_goal zone=A stage=1/1 x=-2.410 y=2.990 yaw=0.000
+[WARN] [1788863684.675473162] [competition_task_navigator]: nav_retry zone=A attempt=1/1 delay=1.5s
+[INFO] [1788863686.183767467] [competition_task_navigator]: nav_costmap_probe goal=(-2.41,2.99) goal_cost=0 start=(-2.82,0.53) start_cost=80 occupied_cells=91373
+[INFO] [1788863686.184048122] [competition_task_navigator]: nav_goal zone=A stage=1/1 x=-2.410 y=2.990 yaw=0.000
+[WARN] [1788863693.746198897] [competition_task_navigator]: Bounded recovery rejected: blocked segment in recent_trail
+[ERROR] [1788863693.746535555] [competition_task_navigator]: Navigation to zone A ended as aborted
+[INFO] [1788863694.389207415] [competition_task_navigator]: cube_entry_choice zone=BLUE_CUBE_5 side=west entry=(1.84,-5.80,yaw=0.00) dock=(2.24,-5.80)
+[INFO] [1788863694.389858210] [competition_task_navigator]: nav_plan zone=BLUE_CUBE_5 poses=(1.84,-5.80,yaw=0.00) robot=(-2.82,0.53,yaw=0.50)
+[INFO] [1788863694.397628349] [competition_task_navigator]: nav_costmap_probe goal=(1.84,-5.80) goal_cost=0 start=(-2.82,0.53) start_cost=80 occupied_cells=91373
+[INFO] [1788863694.397906713] [competition_task_navigator]: nav_goal zone=BLUE_CUBE_5 stage=1/1 x=1.840 y=-5.800 yaw=0.000
+[WARN] [1788863701.879910793] [competition_task_navigator]: nav_retry zone=BLUE_CUBE_5 attempt=1/1 delay=1.5s
+[INFO] [1788863703.389798443] [competition_task_navigator]: nav_costmap_probe goal=(1.84,-5.80) goal_cost=0 start=(-2.81,0.54) start_cost=80 occupied_cells=91373
+[INFO] [1788863703.390262788] [competition_task_navigator]: nav_goal zone=BLUE_CUBE_5 stage=1/1 x=1.840 y=-5.800 yaw=0.000
+[WARN] [1788863711.011646843] [competition_task_navigator]: Bounded recovery rejected: blocked segment in recent_trail
+[ERROR] [1788863711.011999698] [competition_task_navigator]: Navigation to zone BLUE_CUBE_5 ended as aborted
+[INFO] [1788863711.021423231] [competition_task_navigator]: cube_entry_choice zone=BLUE_CUBE_1 side=east entry=(5.12,1.91,yaw=3.14) dock=(4.72,1.91)
+[INFO] [1788863711.021870411] [competition_task_navigator]: nav_plan zone=BLUE_CUBE_1 poses=(5.12,1.91,yaw=3.14) robot=(-2.81,0.54,yaw=0.50)
+[INFO] [1788863711.030544513] [competition_task_navigator]: nav_costmap_probe goal=(5.12,1.91) goal_cost=31 start=(-2.81,0.54) start_cost=80 occupied_cells=91373
+[INFO] [1788863711.030842506] [competition_task_navigator]: nav_goal zone=BLUE_CUBE_1 stage=1/1 x=5.120 y=1.910 yaw=3.142
+[WARN] [1788863718.542800153] [competition_task_navigator]: nav_retry zone=BLUE_CUBE_1 attempt=1/1 delay=1.5s
+[INFO] [1788863720.051560656] [competition_task_navigator]: nav_costmap_probe goal=(5.12,1.91) goal_cost=31 start=(-2.81,0.54) start_cost=80 occupied_cells=91373
+[INFO] [1788863720.051855395] [competition_task_navigator]: nav_goal zone=BLUE_CUBE_1 stage=1/1 x=5.120 y=1.910 yaw=3.142
+[WARN] [1788863727.474004719] [competition_task_navigator]: Bounded recovery rejected: blocked segment in recent_trail
+[ERROR] [1788863727.474285026] [competition_task_navigator]: Navigation to zone BLUE_CUBE_1 ended as aborted
+[INFO] [1788863727.485069005] [competition_task_navigator]: cube_entry_choice zone=BLUE_CUBE_3 side=east entry=(-5.24,-7.00,yaw=3.14) dock=(-5.64,-7.00)
+[INFO] [1788863727.485638240] [competition_task_navigator]: nav_plan zone=BLUE_CUBE_3 poses=(-7.00,-6.00,yaw=0.00),(-5.24,-7.00,yaw=3.14) robot=(-2.80,0.54,yaw=0.51)
+[INFO] [1788863727.495198206] [competition_task_navigator]: nav_costmap_probe goal=(-7.00,-6.00) goal_cost=0 start=(-2.80,0.54) start_cost=80 occupied_cells=91373
+[INFO] [1788863727.503764814] [competition_task_navigator]: nav_costmap_probe goal=(-5.24,-7.00) goal_cost=0 start=(-2.80,0.54) start_cost=80 occupied_cells=91373
+[INFO] [1788863727.504060342] [competition_task_navigator]: nav_goal_batch zone=BLUE_CUBE_3 stages=2 first=(-7.000,-6.000) final=(-5.240,-7.000)
+[WARN] [1788863729.686183733] [competition_task_navigator]: nav_batch_fallback_serial reason=batch_navigation_failed remaining=2
+[INFO] [1788863729.695550381] [competition_task_navigator]: nav_costmap_probe goal=(-7.00,-6.00) goal_cost=0 start=(-2.80,0.54) start_cost=80 occupied_cells=91373
+[INFO] [1788863729.695892395] [competition_task_navigator]: nav_goal zone=BLUE_CUBE_3 stage=1/2 x=-7.000 y=-6.000 yaw=0.000
+[INFO] [1788863745.217127630] [competition_task_navigator]: nav_handoff zone=BLUE_CUBE_3 distance=0.190 source=odom
+[INFO] [1788863745.218785957] [competition_task_navigator]: nav_handoff_cancel_ack
+[INFO] [1788863745.248112332] [competition_task_navigator]: nav_handoff_result_received
+[INFO] [1788863745.256778260] [competition_task_navigator]: nav_costmap_probe goal=(-5.24,-7.00) goal_cost=0 start=(-6.83,-6.08) start_cost=0 occupied_cells=91373
+[INFO] [1788863745.257069357] [competition_task_navigator]: nav_goal zone=BLUE_CUBE_3 stage=2/2 x=-5.240 y=-7.000 yaw=3.142
+[INFO] [1788863753.454139034] [competition_task_navigator]: nav_handoff zone=BLUE_CUBE_3 distance=0.196 source=odom
+[INFO] [1788863753.455953564] [competition_task_navigator]: nav_handoff_cancel_ack
+[INFO] [1788863753.479742401] [competition_task_navigator]: nav_handoff_result_received
+[INFO] [1788863753.480037610] [competition_task_navigator]: alignment_start phase=direct_docking target_yaw=3.142 dock=True
+[INFO] [1788863755.217503504] [competition_task_navigator]: pickup_entry_alignment zone=BLUE_CUBE_3 yaw=3.14
+[INFO] [1788863758.333327437] [competition_task_navigator]: pickup_entry_aligned; starting forward-only dock target=(-5.64,-7.00)
+[INFO] [1788863765.666215643] [competition_task_navigator]: nav_plan zone=BLUE_EXIT poses= robot=(-5.64,-6.99,yaw=3.09)
+[INFO] [1788863765.666507495] [competition_task_navigator]: alignment_start phase=direct_docking target_yaw=3.142 dock=True
+[INFO] [1788863767.865912106] [competition_task_navigator]: departure_position_complete; handing yaw to Nav2
+[INFO] [1788863767.874575531] [competition_task_navigator]: nav_plan zone=A poses=(-2.41,2.99,yaw=0.00) robot=(-5.27,-7.01,yaw=-2.92)
+[INFO] [1788863767.882475304] [competition_task_navigator]: nav_costmap_probe goal=(-2.41,2.99) goal_cost=0 start=(-5.27,-7.01) start_cost=0 occupied_cells=91373
+[INFO] [1788863767.882833496] [competition_task_navigator]: nav_goal zone=A stage=1/1 x=-2.410 y=2.990 yaw=0.000
+[INFO] [1788863784.761069561] [competition_task_navigator]: nav_handoff zone=A distance=0.194 source=odom
+[INFO] [1788863784.763248995] [competition_task_navigator]: nav_handoff_cancel_ack
+[INFO] [1788863784.772224367] [competition_task_navigator]: nav_handoff_result_received
+[INFO] [1788863784.772598768] [competition_task_navigator]: alignment_start phase=direct_docking target_yaw=0.000 dock=True

@@ -1,0 +1,1398 @@
+diff --git a/mybot/pick_place_moveit.py b/mybot/pick_place_moveit.py
+index 3ac6e0a..0a51dc8 100644
+--- a/mybot/pick_place_moveit.py
++++ b/mybot/pick_place_moveit.py
+@@ -1585,7 +1585,8 @@ class MoveItPickPlace(Node):
+     ) -> Optional[Tuple[float, float, float]]:
+         """Recover when Gazebo creates a fixed joint at a bad anchor pose."""
+         original_pose = self.get_entity_pose(self.cube_name, "world")
+-        if original_pose is None:
++        original_reference = self.validate_carry_window()
++        if original_pose is None or original_reference is None:
+             return None
+         for attempt in range(attempts):
+             if self.attach_cube():
+@@ -1593,6 +1594,11 @@ class MoveItPickPlace(Node):
+                 if (
+                     reference is not None
+                     and attachment_anchor_within_window(reference)
++                    # A stable joint may still have jumped during attachment.
++                    # Rebuild it before retraction using the existing 20 mm
++                    # drift bound; the absolute carry window is unchanged.
++                    and point_distance(original_reference, reference)
++                    <= MAX_ATTACHED_DRIFT
+                 ):
+                     return reference
+                 if reference is not None:
+diff --git a/mybot/test/test_pick_place_math.py b/mybot/test/test_pick_place_math.py
+index b160a11..d2c08d8 100644
+--- a/mybot/test/test_pick_place_math.py
++++ b/mybot/test/test_pick_place_math.py
+@@ -439,3 +439,50 @@ def test_limit_guard_keeps_the_validated_safety_windows():
+     assert MODULE.CARRY_XY_LIMIT == 0.060
+     assert MODULE.CARRY_Z_LIMITS == (-0.030, 0.080)
+     assert MODULE.MAX_ATTACHED_DRIFT == 0.020
++
++
++def test_attachment_rebuilds_stable_but_shifted_joint(monkeypatch):
++    """Reject the measured red2 Z jump despite a valid absolute window."""
++    from types import SimpleNamespace
++
++    initial = (0.01488, -0.00003, 0.03575)
++    bad = (0.01237, 0.00362, 0.06851)
++    good = (0.01480, 0.00010, 0.03580)
++    assert MODULE.attachment_anchor_within_window(bad)
++    samples = iter([bad, good])
++    events = []
++    node = SimpleNamespace(
++        cube_name="red_cube_2", attached=True,
++        get_entity_pose=lambda *args: "original-pose",
++        validate_carry_window=lambda: initial,
++        attach_cube=lambda: events.append("attach") or True,
++        confirm_attachment_constraint=lambda: next(samples),
++        detach_cube=lambda: events.append("detach") or True,
++        set_entity_pose=lambda *args: events.append(args) or True,
++        get_logger=lambda: SimpleNamespace(warn=lambda *args: None),
++    )
++    monkeypatch.setattr(MODULE.time, "sleep", lambda seconds: None)
++    result = MODULE.MoveItPickPlace.attach_cube_with_stability_retry(node)
++    assert result == good
++    assert events == ["attach", "detach", ("red_cube_2", "original-pose"), "attach"]
++
++
++def test_attachment_shift_retries_are_bounded(monkeypatch):
++    """A persistent bad joint must fail without permitting arm retraction."""
++    from types import SimpleNamespace
++
++    attempts = []
++    node = SimpleNamespace(
++        cube_name="red_cube_2", attached=True,
++        get_entity_pose=lambda *args: "original-pose",
++        validate_carry_window=lambda: (0.01488, -0.00003, 0.03575),
++        attach_cube=lambda: attempts.append(1) or True,
++        confirm_attachment_constraint=lambda: (0.01237, 0.00362, 0.06851),
++        detach_cube=lambda: True,
++        set_entity_pose=lambda *args: True,
++        get_logger=lambda: SimpleNamespace(
++            warn=lambda *args: None, error=lambda *args: None),
++    )
++    monkeypatch.setattr(MODULE.time, "sleep", lambda seconds: None)
++    assert MODULE.MoveItPickPlace.attach_cube_with_stability_retry(node) is None
++    assert len(attempts) == 3
+diff --git a/tools_demo/config/cube_order_policy.json b/tools_demo/config/cube_order_policy.json
+index 98f68b9..e0a16bc 100644
+--- a/tools_demo/config/cube_order_policy.json
++++ b/tools_demo/config/cube_order_policy.json
+@@ -16,36 +16,36 @@
+  },
+  "tasks": {
+   "1rA_4bB": {
+-   "estimated_nav_sec": 793.3,
++   "estimated_nav_sec": 160.4,
+    "order": [
+     {
+      "cube": "RED_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+      "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+-    {
+-     "cube": "BLUE_CUBE_2",
+-     "side": "east"
+-    },
+     {
+      "cube": "BLUE_CUBE_5",
+      "side": "west"
++    },
++    {
++     "cube": "BLUE_CUBE_4",
++     "side": "east"
+     }
+    ]
+   },
+   "4bB_1rA": {
+-   "estimated_nav_sec": 731.9,
++   "estimated_nav_sec": 154.6,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_4",
++     "side": "east"
+     },
+     {
+      "cube": "BLUE_CUBE_1",
+@@ -56,8 +56,8 @@
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
+-     "side": "east"
++     "cube": "BLUE_CUBE_5",
++     "side": "west"
+     },
+     {
+      "cube": "RED_CUBE_1",
+@@ -66,15 +66,15 @@
+    ]
+   },
+   "2rA_3bB": {
+-   "estimated_nav_sec": 574.9,
++   "estimated_nav_sec": 115.9,
+    "order": [
+     {
+-     "cube": "RED_CUBE_1",
++     "cube": "RED_CUBE_3",
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_2",
+-     "side": "west"
++     "cube": "RED_CUBE_1",
++     "side": "east"
+     },
+     {
+      "cube": "BLUE_CUBE_4",
+@@ -91,19 +91,19 @@
+    ]
+   },
+   "3bB_2rA": {
+-   "estimated_nav_sec": 482.4,
++   "estimated_nav_sec": 105.1,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_4",
++     "side": "east"
+     },
+     {
+      "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
+-     "side": "east"
++     "cube": "BLUE_CUBE_5",
++     "side": "west"
+     },
+     {
+      "cube": "RED_CUBE_2",
+@@ -116,8 +116,12 @@
+    ]
+   },
+   "3rA_2bB": {
+-   "estimated_nav_sec": 563.4,
++   "estimated_nav_sec": 100.5,
+    "order": [
++    {
++     "cube": "RED_CUBE_2",
++     "side": "west"
++    },
+     {
+      "cube": "RED_CUBE_3",
+      "side": "east"
+@@ -127,12 +131,8 @@
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_2",
+-     "side": "west"
+-    },
+-    {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_4",
++     "side": "east"
+     },
+     {
+      "cube": "BLUE_CUBE_1",
+@@ -141,11 +141,11 @@
+    ]
+   },
+   "2bB_3rA": {
+-   "estimated_nav_sec": 476.3,
++   "estimated_nav_sec": 70.8,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_4",
++     "side": "east"
+     },
+     {
+      "cube": "BLUE_CUBE_1",
+@@ -166,7 +166,7 @@
+    ]
+   },
+   "4rA_1bB": {
+-   "estimated_nav_sec": 589.6,
++   "estimated_nav_sec": 107.4,
+    "order": [
+     {
+      "cube": "RED_CUBE_5",
+@@ -185,17 +185,17 @@
+      "side": "west"
+     },
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_1",
++     "side": "east"
+     }
+    ]
+   },
+   "1bB_4rA": {
+-   "estimated_nav_sec": 505.2,
++   "estimated_nav_sec": 93.2,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_1",
++     "side": "east"
+     },
+     {
+      "cube": "RED_CUBE_2",
+@@ -206,17 +206,17 @@
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_1",
++     "cube": "RED_CUBE_3",
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_3",
++     "cube": "RED_CUBE_1",
+      "side": "east"
+     }
+    ]
+   },
+   "1rA_4bC": {
+-   "estimated_nav_sec": 685.0,
++   "estimated_nav_sec": 167.3,
+    "order": [
+     {
+      "cube": "RED_CUBE_1",
+@@ -227,28 +227,24 @@
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_5",
++     "cube": "BLUE_CUBE_3",
+      "side": "west"
+     },
+     {
+-     "cube": "BLUE_CUBE_2",
+-     "side": "east"
++     "cube": "BLUE_CUBE_5",
++     "side": "west"
+     }
+    ]
+   },
+   "4bC_1rA": {
+-   "estimated_nav_sec": 693.5,
++   "estimated_nav_sec": 161.2,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
+-    },
+-    {
+-     "cube": "BLUE_CUBE_1",
++     "cube": "BLUE_CUBE_4",
+      "side": "east"
+     },
+     {
+@@ -256,58 +252,62 @@
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_5",
++     "side": "west"
++    },
++    {
++     "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_2",
+-     "side": "west"
++     "cube": "RED_CUBE_1",
++     "side": "east"
+     }
+    ]
+   },
+   "2rA_3bC": {
+-   "estimated_nav_sec": 468.4,
++   "estimated_nav_sec": 129.2,
+    "order": [
+     {
+-     "cube": "RED_CUBE_1",
++     "cube": "RED_CUBE_3",
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_2",
+-     "side": "west"
++     "cube": "RED_CUBE_1",
++     "side": "east"
+     },
+     {
+      "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_5",
++     "cube": "BLUE_CUBE_3",
+      "side": "west"
+     }
+    ]
+   },
+   "3bC_2rA": {
+-   "estimated_nav_sec": 454.1,
++   "estimated_nav_sec": 120.8,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_4",
++     "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_2",
++     "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_2",
+-     "side": "west"
++     "cube": "RED_CUBE_3",
++     "side": "east"
+     },
+     {
+      "cube": "RED_CUBE_1",
+@@ -316,8 +316,12 @@
+    ]
+   },
+   "3rA_2bC": {
+-   "estimated_nav_sec": 459.8,
++   "estimated_nav_sec": 119.0,
+    "order": [
++    {
++     "cube": "RED_CUBE_2",
++     "side": "west"
++    },
+     {
+      "cube": "RED_CUBE_3",
+      "side": "east"
+@@ -327,28 +331,24 @@
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_2",
+-     "side": "west"
+-    },
+-    {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_2",
++     "side": "east"
+     }
+    ]
+   },
+   "2bC_3rA": {
+-   "estimated_nav_sec": 388.6,
++   "estimated_nav_sec": 115.7,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_4",
++     "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+@@ -366,7 +366,7 @@
+    ]
+   },
+   "4rA_1bC": {
+-   "estimated_nav_sec": 586.8,
++   "estimated_nav_sec": 116.1,
+    "order": [
+     {
+      "cube": "RED_CUBE_5",
+@@ -385,16 +385,16 @@
+      "side": "west"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     }
+    ]
+   },
+   "1bC_4rA": {
+-   "estimated_nav_sec": 520.4,
++   "estimated_nav_sec": 118.3,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+@@ -416,22 +416,22 @@
+    ]
+   },
+   "1rB_4bA": {
+-   "estimated_nav_sec": 649.2,
++   "estimated_nav_sec": 133.3,
+    "order": [
+     {
+-     "cube": "RED_CUBE_1",
+-     "side": "east"
++     "cube": "RED_CUBE_2",
++     "side": "west"
+     },
+     {
+-     "cube": "BLUE_CUBE_2",
++     "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_1",
++     "cube": "BLUE_CUBE_4",
+      "side": "east"
+     },
+     {
+@@ -441,19 +441,19 @@
+    ]
+   },
+   "4bA_1rB": {
+-   "estimated_nav_sec": 557.9,
++   "estimated_nav_sec": 118.0,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_4",
++     "side": "east"
+     },
+     {
+      "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
+-     "side": "east"
++     "cube": "BLUE_CUBE_5",
++     "side": "west"
+     },
+     {
+      "cube": "BLUE_CUBE_2",
+@@ -466,7 +466,7 @@
+    ]
+   },
+   "2rB_3bA": {
+-   "estimated_nav_sec": 429.4,
++   "estimated_nav_sec": 107.5,
+    "order": [
+     {
+      "cube": "RED_CUBE_1",
+@@ -481,7 +481,7 @@
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+@@ -491,12 +491,8 @@
+    ]
+   },
+   "3bA_2rB": {
+-   "estimated_nav_sec": 336.6,
++   "estimated_nav_sec": 90.1,
+    "order": [
+-    {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
+-    },
+     {
+      "cube": "BLUE_CUBE_4",
+      "side": "east"
+@@ -505,6 +501,10 @@
+      "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
++    {
++     "cube": "BLUE_CUBE_2",
++     "side": "east"
++    },
+     {
+      "cube": "RED_CUBE_1",
+      "side": "east"
+@@ -516,7 +516,7 @@
+    ]
+   },
+   "3rB_2bA": {
+-   "estimated_nav_sec": 557.7,
++   "estimated_nav_sec": 95.9,
+    "order": [
+     {
+      "cube": "RED_CUBE_1",
+@@ -535,20 +535,20 @@
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     }
+    ]
+   },
+   "2bA_3rB": {
+-   "estimated_nav_sec": 359.0,
++   "estimated_nav_sec": 85.0,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_4",
++     "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+@@ -566,7 +566,7 @@
+    ]
+   },
+   "4rB_1bA": {
+-   "estimated_nav_sec": 706.6,
++   "estimated_nav_sec": 106.6,
+    "order": [
+     {
+      "cube": "RED_CUBE_3",
+@@ -591,10 +591,10 @@
+    ]
+   },
+   "1bA_4rB": {
+-   "estimated_nav_sec": 508.3,
++   "estimated_nav_sec": 106.5,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+@@ -616,39 +616,35 @@
+    ]
+   },
+   "1rB_4bC": {
+-   "estimated_nav_sec": 694.2,
++   "estimated_nav_sec": 174.7,
+    "order": [
+     {
+-     "cube": "RED_CUBE_1",
+-     "side": "east"
++     "cube": "RED_CUBE_2",
++     "side": "west"
+     },
+     {
+      "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_5",
++     "cube": "BLUE_CUBE_3",
+      "side": "west"
+     },
+     {
+-     "cube": "BLUE_CUBE_2",
+-     "side": "east"
++     "cube": "BLUE_CUBE_5",
++     "side": "west"
+     }
+    ]
+   },
+   "4bC_1rB": {
+-   "estimated_nav_sec": 678.4,
++   "estimated_nav_sec": 176.3,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
+-    },
+-    {
+-     "cube": "BLUE_CUBE_1",
++     "cube": "BLUE_CUBE_4",
+      "side": "east"
+     },
+     {
+@@ -656,17 +652,21 @@
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_5",
++     "side": "west"
++    },
++    {
++     "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_2",
+-     "side": "west"
++     "cube": "RED_CUBE_1",
++     "side": "east"
+     }
+    ]
+   },
+   "2rB_3bC": {
+-   "estimated_nav_sec": 468.8,
++   "estimated_nav_sec": 134.3,
+    "order": [
+     {
+      "cube": "RED_CUBE_1",
+@@ -681,42 +681,42 @@
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_5",
++     "cube": "BLUE_CUBE_3",
+      "side": "west"
+     }
+    ]
+   },
+   "3bC_2rB": {
+-   "estimated_nav_sec": 470.2,
++   "estimated_nav_sec": 132.9,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_4",
++     "side": "east"
++    },
++    {
++     "cube": "BLUE_CUBE_1",
++     "side": "east"
+     },
+     {
+      "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "RED_CUBE_1",
+      "side": "east"
+     },
+     {
+      "cube": "RED_CUBE_2",
+      "side": "west"
+-    },
+-    {
+-     "cube": "RED_CUBE_1",
+-     "side": "east"
+     }
+    ]
+   },
+   "3rB_2bC": {
+-   "estimated_nav_sec": 581.6,
++   "estimated_nav_sec": 110.9,
+    "order": [
+     {
+      "cube": "RED_CUBE_1",
+@@ -735,30 +735,30 @@
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     }
+    ]
+   },
+   "2bC_3rB": {
+-   "estimated_nav_sec": 400.5,
++   "estimated_nav_sec": 112.8,
+    "order": [
+-    {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
+-    },
+     {
+      "cube": "BLUE_CUBE_4",
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_3",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+      "cube": "RED_CUBE_1",
+      "side": "east"
+     },
++    {
++     "cube": "RED_CUBE_4",
++     "side": "west"
++    },
+     {
+      "cube": "RED_CUBE_2",
+      "side": "west"
+@@ -766,12 +766,16 @@
+    ]
+   },
+   "4rB_1bC": {
+-   "estimated_nav_sec": 711.2,
++   "estimated_nav_sec": 117.5,
+    "order": [
+     {
+      "cube": "RED_CUBE_3",
+      "side": "east"
+     },
++    {
++     "cube": "RED_CUBE_1",
++     "side": "east"
++    },
+     {
+      "cube": "RED_CUBE_4",
+      "side": "west"
+@@ -781,20 +785,16 @@
+      "side": "west"
+     },
+     {
+-     "cube": "RED_CUBE_1",
+-     "side": "east"
+-    },
+-    {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_1",
+      "side": "east"
+     }
+    ]
+   },
+   "1bC_4rB": {
+-   "estimated_nav_sec": 514.9,
++   "estimated_nav_sec": 112.8,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+@@ -816,22 +816,22 @@
+    ]
+   },
+   "1rC_4bA": {
+-   "estimated_nav_sec": 637.9,
++   "estimated_nav_sec": 142.5,
+    "order": [
+     {
+      "cube": "RED_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_1",
++     "cube": "BLUE_CUBE_4",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_2",
++     "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+@@ -841,19 +841,19 @@
+    ]
+   },
+   "4bA_1rC": {
+-   "estimated_nav_sec": 551.4,
++   "estimated_nav_sec": 111.5,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_4",
++     "side": "east"
+     },
+     {
+      "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
+-     "side": "east"
++     "cube": "BLUE_CUBE_5",
++     "side": "west"
+     },
+     {
+      "cube": "BLUE_CUBE_2",
+@@ -866,37 +866,33 @@
+    ]
+   },
+   "2rC_3bA": {
+-   "estimated_nav_sec": 507.0,
++   "estimated_nav_sec": 126.1,
+    "order": [
+     {
+      "cube": "RED_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_2",
+-     "side": "west"
+-    },
+-    {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "RED_CUBE_3",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_1",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+      "cube": "BLUE_CUBE_5",
+      "side": "west"
++    },
++    {
++     "cube": "BLUE_CUBE_1",
++     "side": "east"
+     }
+    ]
+   },
+   "3bA_2rC": {
+-   "estimated_nav_sec": 421.6,
++   "estimated_nav_sec": 96.1,
+    "order": [
+-    {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
+-    },
+     {
+      "cube": "BLUE_CUBE_4",
+      "side": "east"
+@@ -905,50 +901,54 @@
+      "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
++    {
++     "cube": "BLUE_CUBE_2",
++     "side": "east"
++    },
+     {
+      "cube": "RED_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_2",
+-     "side": "west"
++     "cube": "RED_CUBE_3",
++     "side": "east"
+     }
+    ]
+   },
+   "3rC_2bA": {
+-   "estimated_nav_sec": 525.7,
++   "estimated_nav_sec": 134.4,
+    "order": [
+     {
+-     "cube": "RED_CUBE_1",
++     "cube": "RED_CUBE_5",
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_2",
+-     "side": "west"
++     "cube": "RED_CUBE_1",
++     "side": "east"
+     },
+     {
+      "cube": "RED_CUBE_3",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_1",
++     "side": "east"
+     }
+    ]
+   },
+   "2bA_3rC": {
+-   "estimated_nav_sec": 440.3,
++   "estimated_nav_sec": 111.0,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_4",
++     "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+@@ -956,22 +956,18 @@
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_2",
+-     "side": "west"
++     "cube": "RED_CUBE_3",
++     "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_3",
++     "cube": "RED_CUBE_5",
+      "side": "east"
+     }
+    ]
+   },
+   "4rC_1bA": {
+-   "estimated_nav_sec": 674.0,
++   "estimated_nav_sec": 157.0,
+    "order": [
+-    {
+-     "cube": "RED_CUBE_1",
+-     "side": "east"
+-    },
+     {
+      "cube": "RED_CUBE_2",
+      "side": "west"
+@@ -980,25 +976,25 @@
+      "cube": "RED_CUBE_3",
+      "side": "east"
+     },
++    {
++     "cube": "RED_CUBE_1",
++     "side": "east"
++    },
+     {
+      "cube": "RED_CUBE_5",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_1",
+      "side": "east"
+     }
+    ]
+   },
+   "1bA_4rC": {
+-   "estimated_nav_sec": 590.1,
++   "estimated_nav_sec": 145.2,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_4",
+-     "side": "east"
+-    },
+-    {
+-     "cube": "RED_CUBE_1",
++     "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+@@ -1009,6 +1005,10 @@
+      "cube": "RED_CUBE_3",
+      "side": "east"
+     },
++    {
++     "cube": "RED_CUBE_1",
++     "side": "east"
++    },
+     {
+      "cube": "RED_CUBE_5",
+      "side": "east"
+@@ -1016,36 +1016,36 @@
+    ]
+   },
+   "1rC_4bB": {
+-   "estimated_nav_sec": 811.0,
++   "estimated_nav_sec": 178.1,
+    "order": [
+     {
+      "cube": "RED_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
++     "cube": "BLUE_CUBE_2",
+      "side": "east"
+     },
+     {
+      "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+-    {
+-     "cube": "BLUE_CUBE_2",
+-     "side": "east"
+-    },
+     {
+      "cube": "BLUE_CUBE_5",
+      "side": "west"
++    },
++    {
++     "cube": "BLUE_CUBE_4",
++     "side": "east"
+     }
+    ]
+   },
+   "4bB_1rC": {
+-   "estimated_nav_sec": 740.5,
++   "estimated_nav_sec": 163.1,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_4",
++     "side": "east"
+     },
+     {
+      "cube": "BLUE_CUBE_1",
+@@ -1056,8 +1056,8 @@
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
+-     "side": "east"
++     "cube": "BLUE_CUBE_5",
++     "side": "west"
+     },
+     {
+      "cube": "RED_CUBE_1",
+@@ -1066,15 +1066,15 @@
+    ]
+   },
+   "2rC_3bB": {
+-   "estimated_nav_sec": 652.8,
++   "estimated_nav_sec": 141.0,
+    "order": [
+     {
+      "cube": "RED_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_2",
+-     "side": "west"
++     "cube": "RED_CUBE_3",
++     "side": "east"
+     },
+     {
+      "cube": "BLUE_CUBE_4",
+@@ -1091,48 +1091,48 @@
+    ]
+   },
+   "3bB_2rC": {
+-   "estimated_nav_sec": 582.3,
++   "estimated_nav_sec": 126.0,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_4",
++     "side": "east"
+     },
+     {
+      "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_4",
+-     "side": "east"
++     "cube": "BLUE_CUBE_5",
++     "side": "west"
+     },
+     {
+      "cube": "RED_CUBE_1",
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_2",
+-     "side": "west"
++     "cube": "RED_CUBE_3",
++     "side": "east"
+     }
+    ]
+   },
+   "3rC_2bB": {
+-   "estimated_nav_sec": 648.6,
++   "estimated_nav_sec": 131.1,
+    "order": [
+     {
+-     "cube": "RED_CUBE_1",
++     "cube": "RED_CUBE_5",
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_2",
+-     "side": "west"
++     "cube": "RED_CUBE_1",
++     "side": "east"
+     },
+     {
+      "cube": "RED_CUBE_3",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_4",
++     "side": "east"
+     },
+     {
+      "cube": "BLUE_CUBE_1",
+@@ -1141,18 +1141,14 @@
+    ]
+   },
+   "2bB_3rC": {
+-   "estimated_nav_sec": 578.1,
++   "estimated_nav_sec": 99.8,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
+-    },
+-    {
+-     "cube": "BLUE_CUBE_1",
++     "cube": "BLUE_CUBE_4",
+      "side": "east"
+     },
+     {
+-     "cube": "RED_CUBE_1",
++     "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+@@ -1162,16 +1158,16 @@
+     {
+      "cube": "RED_CUBE_3",
+      "side": "east"
++    },
++    {
++     "cube": "RED_CUBE_1",
++     "side": "east"
+     }
+    ]
+   },
+   "4rC_1bB": {
+-   "estimated_nav_sec": 680.7,
++   "estimated_nav_sec": 152.0,
+    "order": [
+-    {
+-     "cube": "RED_CUBE_1",
+-     "side": "east"
+-    },
+     {
+      "cube": "RED_CUBE_2",
+      "side": "west"
+@@ -1180,25 +1176,25 @@
+      "cube": "RED_CUBE_3",
+      "side": "east"
+     },
++    {
++     "cube": "RED_CUBE_1",
++     "side": "east"
++    },
+     {
+      "cube": "RED_CUBE_5",
+      "side": "east"
+     },
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
++     "cube": "BLUE_CUBE_1",
++     "side": "east"
+     }
+    ]
+   },
+   "1bB_4rC": {
+-   "estimated_nav_sec": 610.2,
++   "estimated_nav_sec": 125.3,
+    "order": [
+     {
+-     "cube": "BLUE_CUBE_5",
+-     "side": "west"
+-    },
+-    {
+-     "cube": "RED_CUBE_1",
++     "cube": "BLUE_CUBE_1",
+      "side": "east"
+     },
+     {
+@@ -1209,6 +1205,10 @@
+      "cube": "RED_CUBE_3",
+      "side": "east"
+     },
++    {
++     "cube": "RED_CUBE_1",
++     "side": "east"
++    },
+     {
+      "cube": "RED_CUBE_5",
+      "side": "east"
+diff --git a/tools_demo/launch/mission.launch.py b/tools_demo/launch/mission.launch.py
+index 8f937f7..f08c5ce 100644
+--- a/tools_demo/launch/mission.launch.py
++++ b/tools_demo/launch/mission.launch.py
+@@ -98,8 +98,8 @@ def generate_launch_description():
+                 "cmd_vel_out": "/cmd_vel_safe",
+                 # This truth guard only covers short scan dropouts. Nav2 and
+                 # Collision Monitor retain ownership of route avoidance.
+-                "danger_radius": 0.55,
+-                "caution_radius": 1.20,
++                "danger_radius": 0.70,
++                "caution_radius": 1.60,
+                 "cone_half_angle_deg": 50.0,
+                 "obstacle_timeout_sec": 0.75,
+             },
+diff --git a/tools_demo/tools_demo/moving_obstacle.py b/tools_demo/tools_demo/moving_obstacle.py
+index 5c484e0..411b905 100644
+--- a/tools_demo/tools_demo/moving_obstacle.py
++++ b/tools_demo/tools_demo/moving_obstacle.py
+@@ -14,6 +14,7 @@ from rclpy.node import Node
+ from std_msgs.msg import String
+ 
+ from tools_demo.navigation_math import triangle_wave
++from tools_demo.continuous_response import ContinuousResponse
+ 
+ 
+ class MovingObstacle(Node):
+@@ -139,6 +140,9 @@ class MovingObstacle(Node):
+             10,
+         )
+         self.create_subscription(Odometry, "/odom", self.odom_callback, 20)
++        self.robot_stamp_ns = None
++        self.continuous_response = ContinuousResponse(
++            self.trigger_distance, self.response_distance, self.response_speed)
+         self.robot_x = None
+         self.robot_y = None
+         self.robot_speed = 0.0
+@@ -173,6 +177,7 @@ class MovingObstacle(Node):
+ 
+     def odom_callback(self, message: Odometry) -> None:
+         """Track whether the robot visibly reacts to the crossing actor."""
++        self.robot_stamp_ns = self.get_clock().now().nanoseconds
+         position = message.pose.pose.position
+         velocity = message.twist.twist
+         self.robot_x = float(position.x)
+@@ -395,6 +400,14 @@ class MovingObstacle(Node):
+                 f"Moving obstacle truth query failed: {exception}"
+             )
+         self.pending_get = None
++        now_ns = self.get_clock().now().nanoseconds
++        if (success and self.motion_mode == "continuous"
++                and self.robot_stamp_ns is not None
++                and 0 <= now_ns - self.robot_stamp_ns <= 750_000_000):
++            distance = math.hypot(self.robot_x - x_value, self.robot_y - y_value)
++            if self.continuous_response.observe(distance, self.robot_speed, now_ns / 1e9):
++                self.response_observed = True
++                self.response_kind = "yield"
+         self.publish_state(success, x_value, y_value, source="gazebo")
+ 
+     def publish_state(
+@@ -413,7 +426,8 @@ class MovingObstacle(Node):
+                 "source": source,
+                 "x": round(x_value, 3),
+                 "y": round(y_value, 3),
+-                "motion_state": self.crossing_state,
++                "motion_state": "continuous" if self.motion_mode == "continuous" else self.crossing_state,
++                "continuous_response": self.continuous_response.evidence,
+                 "response_observed": self.response_observed,
+                 "response_kind": self.response_kind,
+                 "robot_speed": round(self.robot_speed, 3),
+diff --git a/tools_demo/tools_demo/task_navigator.py b/tools_demo/tools_demo/task_navigator.py
+index 7c1f715..d0c35c9 100644
+--- a/tools_demo/tools_demo/task_navigator.py
++++ b/tools_demo/tools_demo/task_navigator.py
+@@ -9,6 +9,7 @@ from typing import Dict, List, Optional
+ 
+ import yaml
+ from tools_demo.c_clearance_route import c_clearance_waypoints
++from tools_demo.b_delivery_route import b_south_waypoints
+ 
+ from ament_index_python.packages import get_package_share_directory
+ from action_msgs.msg import GoalStatus
+@@ -918,6 +919,11 @@ class TaskNavigator(Node):
+         self.dock_arrival_tolerance = self.dock_arrival_zone
+         self.dock_max_speed = self.dock_speed_zone
+         self.c_clearance_route_active = False
++        if zone == "B" and not backup:
++            bypass = b_south_waypoints(self.latest_x, self.latest_y, place)
++            if bypass:
++                self.pending_poses = bypass + self.pending_poses
++                self.get_logger().info("B_south_sweep_corridor active")
+         if zone == "C" and not backup and getattr(
+                 self, "c_clearance_route_enabled", False):
+             waypoints = c_clearance_waypoints(

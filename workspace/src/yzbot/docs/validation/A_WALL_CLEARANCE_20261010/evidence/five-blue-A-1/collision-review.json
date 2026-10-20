@@ -1,0 +1,87 @@
+{
+  "label": "five-blue-A-1",
+  "completed": 5,
+  "skipped": 0,
+  "state": "completed",
+  "motion_seconds": 255.1,
+  "submit_to_terminal_seconds": 256.34746471100004,
+  "dynamic_collision": false,
+  "dynamic_minimum_clearance": 0.5546,
+  "original_pair_demonstrated": true,
+  "obstacles_seen": 4,
+  "commit": "cd89b3d0687027e850ecd81f86b5cbc83bb1313f",
+  "world_sha256": "c32bb9e6e19cb60e8807b2783a2ab0432a6c5ba436f0b2894e5b6e0f28fb92d3",
+  "gripper": "released:blue_cube_4",
+  "delivery_truth_count": 5,
+  "truth_valid_precise": true,
+  "requirements_match": true,
+  "llm_source": "llm",
+  "stage_speed_limits_applied": {
+    "A_WALL_WEST_CLEAR": false,
+    "A_WALL_SOUTH_TIP_CLEAR": false,
+    "A_WALL_SOUTH_CLEAR": true,
+    "A_WALL_NORTH_CLEAR": true
+  },
+  "max_abs_roll_deg": 46.15425061125093,
+  "max_abs_pitch_deg": 14.4361534628043,
+  "minimum_wall_circle_clearance": 0.005663272695139943,
+  "roll_peak": {
+    "xy": [
+      -2.864248137018314,
+      -5.334993246512766
+    ],
+    "timestamp": 1791638329282897436
+  },
+  "pitch_peak": {
+    "xy": [
+      -2.844798418748113,
+      -5.306266935466304
+    ],
+    "timestamp": 1791638329483658600
+  },
+  "wall_minimum_event": {
+    "wall": "Wall_75_Collision",
+    "xy": [
+      -2.9014981954304138,
+      -5.2552158180732835
+    ],
+    "timestamp": 1791638326961614881
+  },
+  "truth_pose_samples": 1272,
+  "contact_observer_final": {
+    "frames": "147906",
+    "robot_contacts": "473809",
+    "wall_contacts": "2016",
+    "first_sim": "279.244",
+    "last_sim": "575.082"
+  },
+  "non_ground_contact_pairs": [
+    "PAIR blue_cube_1::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=180",
+    "PAIR blue_cube_1::link::collision | six_arm::link6::link6_collision count=382",
+    "PAIR blue_cube_2::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=14163",
+    "PAIR blue_cube_2::link::collision | six_arm::link6::link6_collision count=368",
+    "PAIR blue_cube_3::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=159",
+    "PAIR blue_cube_3::link::collision | six_arm::link6::link6_collision count=377",
+    "PAIR blue_cube_4::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=178",
+    "PAIR blue_cube_4::link::collision | six_arm::link6::link6_collision count=376",
+    "PAIR blue_cube_5::link::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=5445",
+    "PAIR blue_cube_5::link::collision | six_arm::link6::link6_collision count=375",
+    "PAIR competition_blue_pickup_tray::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__camera_link_collision_2 count=59",
+    "PAIR competition_blue_pickup_tray::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=991",
+    "PAIR competition_blue_pickup_tray::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 count=997",
+    "PAIR competition_blue_pickup_tray_2::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=961",
+    "PAIR competition_blue_pickup_tray_2::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 count=959",
+    "PAIR competition_blue_pickup_tray_3::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=982",
+    "PAIR competition_blue_pickup_tray_3::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 count=982",
+    "PAIR competition_blue_pickup_tray_4::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__camera_link_collision_2 count=47",
+    "PAIR competition_blue_pickup_tray_4::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=1000",
+    "PAIR competition_blue_pickup_tray_4::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 count=1001",
+    "PAIR competition_blue_pickup_tray_5::tray::collision | six_arm::base_footprint::base_footprint_fixed_joint_lump__camera_link_collision_2 count=319",
+    "PAIR competition_blue_pickup_tray_5::tray::collision | six_arm::gripper_finger_link1::gripper_finger_link1_collision count=1030",
+    "PAIR competition_blue_pickup_tray_5::tray::collision | six_arm::link6::link6_fixed_joint_lump__gripper_finger_link2_collision_1 count=1031",
+    "PAIR six_arm::base_footprint::base_footprint_fixed_joint_lump__left_wheel_link_collision_4 | officeroom::Wall_75::Wall_75_Collision count=359",
+    "PAIR six_arm::link3::link3_collision | officeroom::Wall_75::Wall_75_Collision count=575",
+    "PAIR six_arm::link6::link6_fixed_joint_lump__camera_rgbd_link_collision_2 | officeroom::Wall_75::Wall_75_Collision count=1082"
+  ],
+  "scan_screen_method": "Gazebo truth versus actual saved-state wall boxes, radius .28; not physical contact proof"
+}

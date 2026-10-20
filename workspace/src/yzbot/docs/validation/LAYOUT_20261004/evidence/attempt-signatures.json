@@ -1,0 +1,34 @@
+[
+  {
+    "attempt": "smoke-attempt-1",
+    "launch_log": "/home/ros/layout-integration-20261004/smoke-attempt-1/smoke-launch.log",
+    "bag": "/home/ros/layout-integration-20261004/smoke-attempt-1/smoke-bag",
+    "excerpts": [
+      "[task_navigator-22] [INFO] [1791129108.233145815] [competition_task_navigator]: cube_entry_choice zone=RED_CUBE_4 side=west entry=(9.10,-6.00,yaw=0.00) dock=(9.64,-6.00)",
+      "[task_navigator-22] [ERROR] [1791129232.630450407] [competition_task_navigator]: Navigation to zone B ended as aborted",
+      "[mission_coordinator-35] [INFO] [1791129232.641774848] [competition_mission_coordinator]: nav_result state=aborted elapsed=96.11s",
+      "[task_navigator-22] [ERROR] [1791129290.218842314] [competition_task_navigator]: Navigation to zone B ended as aborted",
+      "[mission_coordinator-35] [INFO] [1791129290.231622573] [competition_mission_coordinator]: nav_result state=aborted elapsed=57.58s",
+      "[mission_coordinator-35] [INFO] [1791129290.234212887] [competition_mission_coordinator]: {\"color\":\"red\",\"completed\":0,\"cube_name\":\"red_cube_4\",\"current_index\":1,\"detail\":\"destination_navigation_failed:holding_cube\",\"elapsed_sec\":182.1,\"schema_version\":\"1.0\",\"skipped\":0,\"state\":\"failed\",\"target_zone\":\"B\",\"task_id\":\"88a56a6e7e874c6e\",\"total\":1}",
+      "[mission_coordinator-35] [INFO] [1791129290.235659082] [competition_mission_coordinator]: mission_terminal:destination_navigation_failed:holding_cube"
+    ]
+  },
+  {
+    "attempt": "smoke-attempt-2-interrupted",
+    "launch_log": "/home/ros/layout-integration-20261004/smoke-attempt-2-interrupted/smoke-launch.log",
+    "bag": "/home/ros/layout-integration-20261004/smoke-attempt-2-interrupted/smoke-bag",
+    "excerpts": [
+      "[task_navigator-22] [INFO] [1791129678.811188937] [competition_task_navigator]: cube_entry_choice zone=RED_CUBE_4 side=west entry=(9.10,-6.00,yaw=0.00) dock=(9.64,-6.00)",
+      "[controller_server-14] [ERROR] [1791129743.620661477] [controller_server]: Failed to make progress"
+    ]
+  },
+  {
+    "attempt": ".",
+    "launch_log": "/home/ros/layout-integration-20261004/smoke-launch.log",
+    "bag": "/home/ros/layout-integration-20261004/smoke-bag",
+    "excerpts": [
+      "[task_navigator-22] [INFO] [1791130297.637135949] [competition_task_navigator]: cube_entry_choice zone=RED_CUBE_4 side=west entry=(9.10,-6.00,yaw=0.00) dock=(9.64,-6.00)",
+      "[controller_server-14] [ERROR] [1791130450.974866488] [controller_server]: Failed to make progress"
+    ]
+  }
+]

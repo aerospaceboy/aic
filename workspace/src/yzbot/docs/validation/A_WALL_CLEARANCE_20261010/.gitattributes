@@ -1,0 +1,2 @@
+# Preserve historical unified-diff context whitespace in evidence.
+evidence/**/worktree.patch -whitespace

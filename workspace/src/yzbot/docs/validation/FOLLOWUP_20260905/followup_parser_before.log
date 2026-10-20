@@ -1,0 +1,195 @@
+FFFF..FFF                                                                [100%]
+=================================== FAILURES ===================================
+______ test_required_web_problem_never_publishes_rules_fallback[failure0] ______
+
+failure = Timeout('offline')
+
+    @pytest.mark.parametrize("failure", [
+        requests.Timeout("offline"), "invalid json", REVERSED])
+    def test_required_web_problem_never_publishes_rules_fallback(failure):
+        harness = Harness()
+        if isinstance(failure, Exception):
+            harness.request_llm_problem.side_effect = failure
+        else:
+            harness.request_llm_problem.return_value = failure
+        harness.submit()
+>       harness.publish_plan.assert_not_called()
+
+src/yzbot/tools_demo/test/test_parser_mode_callbacks.py:56: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Mock id='138865000424656'>
+
+    def assert_not_called(self):
+        """assert that the mock was never called.
+        """
+        if self.call_count != 0:
+            msg = ("Expected '%s' to not have been called. Called %s times.%s"
+                   % (self._mock_name or 'mock',
+                      self.call_count,
+                      self._calls_repr()))
+>           raise AssertionError(msg)
+E           AssertionError: Expected 'mock' to not have been called. Called 1 times.
+E           Calls: [call(TaskPlan(task_id='attempt-1', source='rules', items=(TaskItem(color='red', count=4, target_zone='A'), TaskItem(color='blue', count=1, target_zone='C')), schema_version='1.0'))].
+
+/usr/lib/python3.10/unittest/mock.py:890: AssertionError
+____ test_required_web_problem_never_publishes_rules_fallback[invalid json] ____
+
+failure = 'invalid json'
+
+    @pytest.mark.parametrize("failure", [
+        requests.Timeout("offline"), "invalid json", REVERSED])
+    def test_required_web_problem_never_publishes_rules_fallback(failure):
+        harness = Harness()
+        if isinstance(failure, Exception):
+            harness.request_llm_problem.side_effect = failure
+        else:
+            harness.request_llm_problem.return_value = failure
+        harness.submit()
+>       harness.publish_plan.assert_not_called()
+
+src/yzbot/tools_demo/test/test_parser_mode_callbacks.py:56: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Mock id='138865000899696'>
+
+    def assert_not_called(self):
+        """assert that the mock was never called.
+        """
+        if self.call_count != 0:
+            msg = ("Expected '%s' to not have been called. Called %s times.%s"
+                   % (self._mock_name or 'mock',
+                      self.call_count,
+                      self._calls_repr()))
+>           raise AssertionError(msg)
+E           AssertionError: Expected 'mock' to not have been called. Called 1 times.
+E           Calls: [call(TaskPlan(task_id='attempt-1', source='rules', items=(TaskItem(color='red', count=4, target_zone='A'), TaskItem(color='blue', count=1, target_zone='C')), schema_version='1.0'))].
+
+/usr/lib/python3.10/unittest/mock.py:890: AssertionError
+_ test_required_web_problem_never_publishes_rules_fallback[{"items": [{"color": "blue", "count": 1, "target_zone": "C"}, {"color": "red", "count": 4, "target_zone": "A"}]}] _
+
+failure = '{"items": [{"color": "blue", "count": 1, "target_zone": "C"}, {"color": "red", "count": 4, "target_zone": "A"}]}'
+
+    @pytest.mark.parametrize("failure", [
+        requests.Timeout("offline"), "invalid json", REVERSED])
+    def test_required_web_problem_never_publishes_rules_fallback(failure):
+        harness = Harness()
+        if isinstance(failure, Exception):
+            harness.request_llm_problem.side_effect = failure
+        else:
+            harness.request_llm_problem.return_value = failure
+        harness.submit()
+>       harness.publish_plan.assert_not_called()
+
+src/yzbot/tools_demo/test/test_parser_mode_callbacks.py:56: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Mock id='138865000428544'>
+
+    def assert_not_called(self):
+        """assert that the mock was never called.
+        """
+        if self.call_count != 0:
+            msg = ("Expected '%s' to not have been called. Called %s times.%s"
+                   % (self._mock_name or 'mock',
+                      self.call_count,
+                      self._calls_repr()))
+>           raise AssertionError(msg)
+E           AssertionError: Expected 'mock' to not have been called. Called 1 times.
+E           Calls: [call(TaskPlan(task_id='attempt-1', source='rules', items=(TaskItem(color='red', count=4, target_zone='A'), TaskItem(color='blue', count=1, target_zone='C')), schema_version='1.0'))].
+
+/usr/lib/python3.10/unittest/mock.py:890: AssertionError
+_______________ test_required_web_problem_rejects_disabled_model _______________
+
+    def test_required_web_problem_rejects_disabled_model():
+        harness = Harness(enabled=False)
+        harness.submit()
+>       harness.publish_plan.assert_not_called()
+
+src/yzbot/tools_demo/test/test_parser_mode_callbacks.py:63: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Mock id='138865000896288'>
+
+    def assert_not_called(self):
+        """assert that the mock was never called.
+        """
+        if self.call_count != 0:
+            msg = ("Expected '%s' to not have been called. Called %s times.%s"
+                   % (self._mock_name or 'mock',
+                      self.call_count,
+                      self._calls_repr()))
+>           raise AssertionError(msg)
+E           AssertionError: Expected 'mock' to not have been called. Called 1 times.
+E           Calls: [call(TaskPlan(task_id='attempt-1', source='rules', items=(TaskItem(color='red', count=4, target_zone='A'), TaskItem(color='blue', count=1, target_zone='C')), schema_version='1.0'))].
+
+/usr/lib/python3.10/unittest/mock.py:890: AssertionError
+________ test_failed_web_submission_can_be_retried_after_model_recovers ________
+
+    def test_failed_web_submission_can_be_retried_after_model_recovers():
+        harness = Harness()
+        harness.request_llm_problem.side_effect = requests.Timeout("offline")
+        harness.submit()
+>       harness.publish_plan.assert_not_called()
+
+src/yzbot/tools_demo/test/test_parser_mode_callbacks.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Mock id='138865000721440'>
+
+    def assert_not_called(self):
+        """assert that the mock was never called.
+        """
+        if self.call_count != 0:
+            msg = ("Expected '%s' to not have been called. Called %s times.%s"
+                   % (self._mock_name or 'mock',
+                      self.call_count,
+                      self._calls_repr()))
+>           raise AssertionError(msg)
+E           AssertionError: Expected 'mock' to not have been called. Called 1 times.
+E           Calls: [call(TaskPlan(task_id='attempt-1', source='rules', items=(TaskItem(color='red', count=4, target_zone='A'), TaskItem(color='blue', count=1, target_zone='C')), schema_version='1.0'))].
+
+/usr/lib/python3.10/unittest/mock.py:890: AssertionError
+______ test_successful_duplicate_is_suppressed_but_new_round_is_accepted _______
+
+    def test_successful_duplicate_is_suppressed_but_new_round_is_accepted():
+        harness = Harness()
+        harness.submit("round-1")
+        harness.submit("round-1")
+        assert harness.publish_plan.call_count == 1
+        harness.submit("round-2")
+>       assert harness.publish_plan.call_count == 2
+E       AssertionError: assert 1 == 2
+E        +  where 1 = <Mock id='138865000715392'>.call_count
+E        +    where <Mock id='138865000715392'> = <test_parser_mode_callbacks.Harness object at 0x7e4c070a2110>.publish_plan
+
+src/yzbot/tools_demo/test/test_parser_mode_callbacks.py:98: AssertionError
+_________ test_direct_question_can_retry_after_required_model_failure __________
+
+    def test_direct_question_can_retry_after_required_model_failure():
+        harness = Harness()
+        question = SimpleNamespace(
+            data="Move 1 blue cube to zone B and 4 red cubes to zone A.")
+        harness.request_llm.side_effect = requests.Timeout("offline")
+        harness.question_callback(question)
+        harness.publish_plan.assert_not_called()
+        harness.request_llm.side_effect = None
+        harness.request_llm.return_value = json.dumps({"items": [
+            {"color": "blue", "count": 1, "target_zone": "B"},
+            {"color": "red", "count": 4, "target_zone": "A"}]})
+        harness.question_callback(question)
+>       assert harness.publish_plan.call_count == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = <Mock id='138865000465456'>.call_count
+E        +    where <Mock id='138865000465456'> = <test_parser_mode_callbacks.Harness object at 0x7e4c07064460>.publish_plan
+
+src/yzbot/tools_demo/test/test_parser_mode_callbacks.py:114: AssertionError
+=========================== short test summary info ============================
+FAILED src/yzbot/tools_demo/test/test_parser_mode_callbacks.py::test_required_web_problem_never_publishes_rules_fallback[failure0]
+FAILED src/yzbot/tools_demo/test/test_parser_mode_callbacks.py::test_required_web_problem_never_publishes_rules_fallback[invalid json]
+FAILED src/yzbot/tools_demo/test/test_parser_mode_callbacks.py::test_required_web_problem_never_publishes_rules_fallback[{"items": [{"color": "blue", "count": 1, "target_zone": "C"}, {"color": "red", "count": 4, "target_zone": "A"}]}]
+FAILED src/yzbot/tools_demo/test/test_parser_mode_callbacks.py::test_required_web_problem_rejects_disabled_model
+FAILED src/yzbot/tools_demo/test/test_parser_mode_callbacks.py::test_failed_web_submission_can_be_retried_after_model_recovers
+FAILED src/yzbot/tools_demo/test/test_parser_mode_callbacks.py::test_successful_duplicate_is_suppressed_but_new_round_is_accepted
+FAILED src/yzbot/tools_demo/test/test_parser_mode_callbacks.py::test_direct_question_can_retry_after_required_model_failure
+7 failed, 2 passed in 0.48s

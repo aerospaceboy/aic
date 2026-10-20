@@ -1,0 +1,40 @@
+{
+  "request_id": "video-8c16cc0f9faa4527b8bd730f04048e54",
+  "question": "题目: 每个衣柜有5件衣物;有T恤、裤子两种衣柜;小美需要2件T恤,1条裤子;小帅、小丽都需要7件T恤;小娜需要2件T恤,1条裤子;小杰需要1条裤子。设T恤衣柜数量为x,裤子衣柜数量为y,计算x、y分别为多少。",
+  "mapping_rules": "x代表红色,y代表蓝色,数量大于等于3的去A区,其他颜色去C区",
+  "schema_version": "1.0",
+  "state": "published",
+  "model": "qwen3.7-plus",
+  "published": true,
+  "task_id": "video-8c16cc0f9faa4527b8bd730f04048e54",
+  "source": "llm",
+  "plan": {
+    "schema_version": "1.0",
+    "task_id": "video-8c16cc0f9faa4527b8bd730f04048e54",
+    "source": "llm",
+    "items": [
+      {
+        "color": "red",
+        "count": 4,
+        "target_zone": "A"
+      },
+      {
+        "color": "blue",
+        "count": 1,
+        "target_zone": "C"
+      }
+    ],
+    "counts": {
+      "red": 4,
+      "blue": 1
+    },
+    "execution_order": [
+      "red",
+      "red",
+      "red",
+      "red",
+      "blue"
+    ]
+  },
+  "error": ""
+}
