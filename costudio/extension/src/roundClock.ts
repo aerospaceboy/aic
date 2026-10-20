@@ -72,6 +72,30 @@ function object(value: unknown): Record<string, unknown> {
     ? value as Record<string, unknown> : {};
 }
 
+/**
+ * Operator stopwatch endpoint for a terminal status frame.
+ *
+ * The backend captures `mission_finished_at_unix_ms` once at the real
+ * transition, so it is preferred over the local receipt time: a reconnecting
+ * panel must not charge the disconnection latency to the operator. However a
+ * missing/invalid endpoint, a previous-round timestamp or a backend clock that
+ * is ahead of the browser clock must never leave the stopwatch running
+ * forever; those cases fall back to the first local terminal observation and
+ * a future endpoint is clamped instead of rejected.
+ */
+function terminalStopTime(
+  record: RoundClockRecord,
+  finishedAt: unknown,
+  now: number,
+): number {
+  const local = Math.max(record.startedAt, Number.isFinite(now) ? now : record.startedAt);
+  if (typeof finishedAt !== "number" || !Number.isFinite(finishedAt) ||
+      finishedAt < record.startedAt) {
+    return local;
+  }
+  return Math.min(finishedAt, local);
+}
+
 /** Pure transition: idle, stale/unrelated telemetry and duplicate finals are inert. */
 export function advanceRoundClock(
   record: RoundClockRecord | undefined,
@@ -100,12 +124,10 @@ export function advanceRoundClock(
   if (!missionId || missionId !== (next.missionTaskId || next.taskId)) { return next; }
   const state = String(status["task_manager_state"] ?? status["current_state"] ?? "").toLowerCase();
   if (["completed", "failed", "canceled", "aborted"].includes(state)) {
-    const finishedAt = status["mission_finished_at_unix_ms"];
-    // A persisted backend endpoint prevents disconnection/reload latency from
-    // being charged to the operator. Missing endpoints cannot fabricate one.
-    if (typeof finishedAt !== "number" || !Number.isFinite(finishedAt) ||
-        finishedAt < next.startedAt || finishedAt > now + 1000) { return next; }
-    return { ...next, stoppedAt: finishedAt,
+    // A terminal status always freezes the operator clock exactly once.
+    // Missing or clock-skewed endpoints fall back to the local observation.
+    return { ...next,
+      stoppedAt: terminalStopTime(next, status["mission_finished_at_unix_ms"], now),
       phase: state === "completed" ? "completed" : state === "canceled" ? "canceled" : "failed" };
   }
   return state && state !== "idle" ? { ...next, phase: "running" } : next;

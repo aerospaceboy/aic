@@ -24,3 +24,10 @@ test("completed mission shows completion instead of idle fallback", () => {
   assert.equal(state.robotStatus, "任务完成");
   assert.equal(state.taskRunning, false);
 });
+test("parseMode keeps explicit modes and defaults everything else to AUTO", () => {
+  const {parseMode} = exportsObject;
+  for (const mode of ["AUTO", "DEMO", "LIVE"]) assert.equal(parseMode(mode), mode);
+  for (const invalid of ["live", "", " MANUAL", null, undefined, 42, {}]) {
+    assert.equal(parseMode(invalid), "AUTO");
+  }
+});
