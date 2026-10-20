@@ -5,7 +5,7 @@
 # completed MISSION_TERMINAL; otherwise one fresh run_ordered_case.sh run
 # is made and its evidence directory printed.
 set -u
-repo=$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel 2>/dev/null || echo /home/ros/dev_ws/src/yzbot)
+repo=$(cd -- "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 workspace=$(cd "$repo/../.." && pwd)
 root=${COVERAGE_ROOT:-"$workspace/experiments/coverage-48"}
 mapfile -t QUESTIONS < <(python3 "$repo/tools_demo/scripts/gen48_questions.py")

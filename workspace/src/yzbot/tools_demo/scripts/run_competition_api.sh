@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Keep cloud credentials outside both the repository and command arguments.
 set -eo pipefail
-repo=$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)
+repo=$(cd -- "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 workspace=$(cd "$repo/../.." && pwd)
 if [ -z "${DASHSCOPE_API_KEY:-}" ]; then
   credentials=${YZBOT_LLM_ENV_FILE:-"$HOME/.config/yzbot/llm.env"}

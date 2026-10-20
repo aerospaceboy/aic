@@ -2,7 +2,7 @@
 set -eo pipefail
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-repo=$(git -C "$script_dir" rev-parse --show-toplevel)
+repo=$(cd -- "$script_dir/../.." && pwd)
 export HEADLESS=False
 export GAZEBO_DEBUG_GUI=True
 export YZBOT_GAZEBO_GUI_RENDER_RATE="${YZBOT_GAZEBO_GUI_RENDER_RATE:-15}"

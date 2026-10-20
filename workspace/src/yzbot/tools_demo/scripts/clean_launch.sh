@@ -2,7 +2,7 @@
 set -eo pipefail
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-repo=$(git -C "$script_dir" rev-parse --show-toplevel)
+repo=$(cd -- "$script_dir/../.." && pwd)
 workspace=$(cd "$repo/../.." && pwd)
 
 LAUNCH_PID_FILE=/tmp/yzbot_competition_system.pid

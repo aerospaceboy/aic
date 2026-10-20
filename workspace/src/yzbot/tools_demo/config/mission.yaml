@@ -94,6 +94,12 @@ competition_mission_coordinator:
     delivery_cube_half_height: 0.015
     delivery_height_tolerance: 0.10
     delivery_precision_tolerance: 0.06
+    # Move each delivery slot this far toward the robot's approach side. The
+    # zone dock keeps a 0.40 m standoff and Nav2 may stop up to 0.20 m short,
+    # while the arm's checked extension ends at 0.38 m; without the bias the
+    # cube was released short and the pose was written afterwards. 0.13 m
+    # leaves the slot 0.36 m inside the pad edge.
+    delivery_slot_approach_bias: 0.13
     ros2_executable: ros2
     manipulation_package: mybot
     manipulation_executable: pick_place_moveit

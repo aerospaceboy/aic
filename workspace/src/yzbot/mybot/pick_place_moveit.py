@@ -2467,6 +2467,7 @@ class MoveItPickPlace(Node):
         if not self.wait_until_ready():
             return False
         self.place_failure_reason = None
+        self.place_slot_correction = None
 
         staging_arm = {name: 0.0 for name in ARM_JOINT_NAMES}
         relative = self.validate_carry_window()
@@ -2555,6 +2556,10 @@ class MoveItPickPlace(Node):
                     # final fixed-slot stabilization, even with 30mm tracking.
                     correction_x = abs(expected_cube[0] - self.release_world_pose[0])
                     correction_y = abs(expected_cube[1] - self.release_world_pose[1])
+                    # Report the residual the arm actually left, so the
+                    # coordinator can tell a real placement from a pose that
+                    # had to be written after release.
+                    self.place_slot_correction = (correction_x, correction_y)
                     if correction_x > .18 or correction_y > .03:
                         raise ValueError("Dock is too far from the physical delivery area")
                 except ValueError as exception:
@@ -2901,6 +2906,7 @@ class MoveItPickPlace(Node):
         # refusal from a transient one instead of repeating an identical
         # unreachable request (v15 sent the same rejected slot twice).
         self.place_failure_reason = None
+        self.place_slot_correction = None
         self.cube_name = str(request.get("cube_name", ""))
         self.pick_pose = tuple(float(v) for v in request["pick_pose"])
         self.pick_safe_pose = tuple(
@@ -3043,6 +3049,11 @@ class MoveItPickPlace(Node):
                     "cube_attached": bool(self.attached),
                     "detail": str(detail),
                     "failure_reason": self.place_failure_reason,
+                    "place_slot_correction": (
+                        list(self.place_slot_correction)
+                        if self.place_slot_correction is not None
+                        else None
+                    ),
                 },
                 ensure_ascii=False,
                 separators=(",", ":"),

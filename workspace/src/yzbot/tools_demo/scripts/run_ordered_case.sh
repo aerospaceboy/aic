@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Motion-only benchmark. Every invocation retains a fresh evidence directory.
 set -eo pipefail
-repo=$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)
+repo=$(cd -- "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 workspace=$(cd "$repo/../.." && pwd)
 source "$repo/tools_demo/scripts/verify_runtime_sources.sh"
 verify_yzbot_runtime_sources "$repo" "$workspace"

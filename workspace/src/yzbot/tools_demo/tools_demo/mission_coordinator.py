@@ -115,6 +115,12 @@ CUBE_SLOT_BASE_Z = 0.0266
 # moved; otherwise the mission fails closed with the cube retained.
 PLACE_REPEAT_POSE_TOLERANCE = 0.010
 PLACE_REPEAT_YAW_TOLERANCE = 0.020
+# Keep a delivery slot at least this far inside the pad edge after the
+# approach bias, so the cube never straddles the painted boundary.
+DELIVERY_SLOT_EDGE_MARGIN = 0.10
+# Aim the delivery extension at the middle of the arm's 0.25-0.38 m
+# checked window, leaving margin on both bounds for docking error.
+DELIVERY_REACH_TARGET = 0.33
 # Arm-reported reasons that are deterministic in the delivered geometry.
 DETERMINISTIC_PLACE_FAILURES = ("slot_unreachable", "dock_too_far")
 CENTERED_PICK_FORWARD_COMPENSATION = 0.045
@@ -600,6 +606,12 @@ class MissionCoordinator(Node):
         self.declare_parameter("delivery_cube_half_height", 0.015)
         self.declare_parameter("delivery_height_tolerance", 0.10)
         self.declare_parameter("delivery_precision_tolerance", 0.06)
+        # Pull the slot toward the approach side so the arm's checked 0.38 m
+        # extension actually reaches it. The zone dock stops 0.40 m from the
+        # pad centre and the goal tolerance adds up to 0.13 m, so without this
+        # shift the cube is released short and set_entity_state finishes the
+        # delivery. The shift stays well inside the 1.0 x 0.5 m pad.
+        self.declare_parameter("delivery_slot_approach_bias", 0.13)
         self.declare_parameter("ros2_executable", "ros2")
         self.declare_parameter("manipulation_package", "mybot")
         self.declare_parameter(
@@ -735,6 +747,21 @@ class MissionCoordinator(Node):
         self.delivery_precision_tolerance = self._positive_parameter(
             "delivery_precision_tolerance"
         )
+        self.delivery_slot_approach_bias = float(
+            self.get_parameter("delivery_slot_approach_bias").value
+        )
+        if not 0.0 <= self.delivery_slot_approach_bias < min(
+            self.zone_half_extent[0], self.zone_half_extent[1]
+        ) - DELIVERY_SLOT_EDGE_MARGIN:
+            raise ValueError(
+                "delivery_slot_approach_bias must keep the slot inside the pad"
+            )
+        self.zone_nav_poses = {
+            zone: self._vector_parameter(
+                f"zone_{zone.lower()}_nav", 3
+            )
+            for zone in ("A", "B", "C")
+        }
 
         qos = reliable_transient_qos()
         self.state_publisher = self.create_publisher(
@@ -854,6 +881,10 @@ class MissionCoordinator(Node):
         self._task_order_entries = None
         self.inventory_scan_complete = False
         self._perception_recovery_used = {}
+        # Arm-reported residual between the checked extension endpoint and the
+        # commanded slot; recorded in delivery_truth so the score can separate
+        # a real placement from a pose written after release.
+        self.last_place_arm_residual = None
         # Geometry of the last deterministic placement refusal, so a retry
         # that has not moved cannot repeat the identical request.
         self._refused_place_geometry = None
@@ -2591,6 +2622,14 @@ class MissionCoordinator(Node):
         """
         if operation != "place":
             return
+        correction = result.get("place_slot_correction")
+        if isinstance(correction, (list, tuple)) and len(correction) == 2:
+            self.last_place_arm_residual = (
+                float(correction[0]),
+                float(correction[1]),
+            )
+        else:
+            self.last_place_arm_residual = None
         if success:
             self._refused_place_geometry = None
             return
@@ -2651,15 +2690,46 @@ class MissionCoordinator(Node):
         return None
 
     def _delivery_slot_world(self, job) -> tuple:
-        """Return the job's fixed world slot centre as (x, y).
+        """Return the job's commanded world slot centre as (x, y).
 
         Single source of the world slot: the arm's ``release_world_pose``,
         the delivery truth check and the navigator's final dock heading all
         read this, so the delivery point and the dock cannot drift apart.
+
+        The slot is pulled toward the approach side so the arm's checked
+        extension lands in the middle of its reach band instead of at the
+        0.38 m clamp. The zone dock keeps a 0.40 m standoff and Nav2 may stop
+        from 0.20 m short to slightly past the goal, so the shift is measured
+        against the current base pose rather than assumed: the cube is then
+        released where the arm reaches, still inside the pad.
         """
         y_offset, _, _ = self._delivery_slot_offset(job)
         center_x, center_y = self.zone_centers[job.target_zone]
-        return (float(center_x), float(center_y + y_offset))
+        slot_x = float(center_x)
+        slot_y = float(center_y + y_offset)
+        bias = self.delivery_slot_approach_bias
+        if bias <= 0.0:
+            return (slot_x, slot_y)
+        nav = self.zone_nav_poses[job.target_zone]
+        dx = float(nav[0]) - center_x
+        dy = float(nav[1]) - center_y
+        norm = math.hypot(dx, dy)
+        if norm <= 1e-9:
+            return (slot_x, slot_y)
+        shift = min(bias, self.zone_half_extent[0] - DELIVERY_SLOT_EDGE_MARGIN)
+        pose = self._odom_pose()
+        if pose is not None:
+            # Distance from the pad centre to the base along the approach
+            # axis; keep the commanded extension at the band centre.
+            forward = (
+                (float(pose[0]) - slot_x) * dx / norm
+                + (float(pose[1]) - slot_y) * dy / norm
+            )
+            shift = min(max(forward - DELIVERY_REACH_TARGET, 0.0), shift)
+        return (
+            slot_x + shift * dx / norm,
+            slot_y + shift * dy / norm,
+        )
 
     def _delivery_slot_offset(self, job) -> tuple:
         """Return the job's centered zone-slot offset and stable index."""
@@ -2981,10 +3051,14 @@ class MissionCoordinator(Node):
                     + self.delivery_cube_half_height
                 )
                 position = response.state.pose.position
-                slot_offset, _, _ = self._delivery_slot_offset(job)
+                slot_x, slot_y = self._delivery_slot_world(job)
                 slot_error = math.hypot(
+                    position.x - slot_x,
+                    position.y - slot_y,
+                )
+                center_offset = math.hypot(
                     position.x - center_x,
-                    position.y - (center_y + slot_offset),
+                    position.y - center_y,
                 )
                 precise = slot_error <= self.delivery_precision_tolerance
                 success = (
@@ -2993,13 +3067,21 @@ class MissionCoordinator(Node):
                     and abs(position.z - expected_z)
                     <= self.delivery_height_tolerance
                 )
+                residual = self.last_place_arm_residual
+                arm_residual = (
+                    math.hypot(float(residual[0]), float(residual[1]))
+                    if residual
+                    else -1.0
+                )
                 self.get_logger().info(
                     "delivery_truth "
                     f"cube={self.verification_cube_name} "
                     f"zone={job.target_zone} "
                     f"x={position.x:.4f} y={position.y:.4f} "
                     f"z={position.z:.4f} valid={success} "
-                    f"slot_error={slot_error:.4f} precise={precise}"
+                    f"slot_error={slot_error:.4f} precise={precise} "
+                    f"center_offset={center_offset:.4f} "
+                    f"arm_residual={arm_residual:.4f}"
                 )
                 if success:
                     self.placed_cubes[self.verification_cube_name] = (

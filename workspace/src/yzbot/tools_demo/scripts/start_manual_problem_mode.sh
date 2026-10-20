@@ -19,7 +19,9 @@ fi
 # behaviour, controller tuning, physics or acceptance gates.
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-repo=$(git -C "$script_dir" rev-parse --show-toplevel)
+# Resolve the workspace from this file, so a delivery tree that is itself
+# inside a Git repository (or carries no nested .git) still launches.
+repo=$(cd -- "$script_dir/../.." && pwd)
 workspace=$(cd -- "$repo/../.." && pwd)
 project_root=$(cd -- "$workspace/.." && pwd)
 source "$script_dir/verify_runtime_sources.sh"

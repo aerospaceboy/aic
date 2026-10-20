@@ -563,6 +563,13 @@ def _coordinator_state(**overrides):
         place_slot_spacing=0.080,
         place_maximum_abs_y=0.160,
         zone_centers=ZONE_CENTERS,
+        zone_nav_poses={
+            "A": (-5.0, 3.8, math.pi),
+            "B": (11.3, -5.0, 0.0),
+            "C": (2.9, -12.1, 0.0),
+        },
+        zone_half_extent=(0.485, 0.235),
+        delivery_slot_approach_bias=0.13,
         place_pose=(0.350, 0.000, 0.160),
         place_safe_pose=(0.350, 0.000, 0.200),
         place_minimum_x=0.290,
@@ -628,21 +635,84 @@ def test_arm_release_pose_is_built_from_the_shared_world_slot():
         harness.manipulation_request_publisher.messages[0]
     )
     expected = MissionCoordinator._delivery_slot_world(harness, job)
-    assert expected == (-5.4, 3.96)
     assert request["release_world_pose"] == [
         expected[0], expected[1], 0.035
     ]
-    # The arm refuses this slot from the legacy zone-centre dock...
-    accepted, error = _arm_guard((-4.947, 3.757), 3.109, expected)
+    # The commanded slot sits in the middle of the arm's checked window, so
+    # the extension is neither clamped nor short of the reach floor.
+    from tools_demo.mission_coordinator import DELIVERY_REACH_TARGET
+    forward = abs(expected[0] - harness.odom_pose[0])
+    assert forward == pytest.approx(DELIVERY_REACH_TARGET, abs=1e-3)
+    assert expected[1] == pytest.approx(3.96)
+    # The arm still refuses the un-biased pad centre from the legacy dock...
+    accepted, error = _arm_guard((-4.947, 3.757), 3.109, (-5.4, 3.96))
     assert accepted is None
     assert "outside checked placement workspace" in error
-    # ...and accepts it from the sideways dock the navigator now plans.
+    # ...and accepts the commanded slot from the sideways dock it plans.
     dock, reason = delivery_slot_dock(
         ZonePose("A", -5.0, 3.8, math.pi), expected
     )
     assert reason == "aligned"
     accepted, error = _arm_guard((dock.x, dock.y), dock.yaw, expected)
     assert accepted is not None, error
+
+
+def test_delivery_slot_bias_stays_inside_every_pad_and_reach_window():
+    """The bias must keep every slot in the pad and in the arm's workspace."""
+    from tools_demo.mission_coordinator import DELIVERY_SLOT_EDGE_MARGIN
+    from tools_demo.navigation_math import DELIVERY_DOCK_MIN_FORWARD
+
+    harness = _coordinator_state()
+    dock_standoff = {}
+    for zone, center in ZONE_CENTERS.items():
+        nav = harness.zone_nav_poses[zone]
+        dock_standoff[zone] = math.hypot(
+            nav[0] - center[0], nav[1] - center[1]
+        )
+        for count in (1, 2, 3, 4, 5):
+            harness.machine = SimpleNamespace(jobs=_slot_jobs(count, zone))
+            for job in harness.machine.jobs:
+                slot = MissionCoordinator._delivery_slot_world(harness, job)
+                shift = math.hypot(
+                    slot[0] - center[0], slot[1] - center[1]
+                )
+                # Inside the painted pad with a real margin from the edge.
+                assert shift <= harness.zone_half_extent[0] - DELIVERY_SLOT_EDGE_MARGIN
+                # The navigator still finds the slot inside its dock band, so
+                # the sideways dock stays "aligned" rather than falling back.
+                forward = abs(slot[0] - nav[0])
+                assert DELIVERY_DOCK_MIN_FORWARD <= forward <= 0.54
+                accepted, error = _arm_guard(
+                    (nav[0], slot[1]), nav[2], slot
+                )
+                assert accepted is not None, (zone, count, error)
+
+
+def test_zero_bias_keeps_the_pad_centre_for_compatibility():
+    harness = _coordinator_state(delivery_slot_approach_bias=0.0)
+    job = harness.machine.jobs[0]
+    slot = MissionCoordinator._delivery_slot_world(harness, job)
+    offset = MissionCoordinator._delivery_slot_offset(harness, job)[0]
+    center = ZONE_CENTERS["A"]
+    assert slot == pytest.approx((center[0], center[1] + offset))
+
+
+def test_delivery_truth_reports_the_commanded_slot_and_arm_residual():
+    """Precision is measured against the commanded point and the arm's own
+    residual, so a written pose cannot masquerade as a real placement."""
+    source = (
+        REPOSITORY / "tools_demo" / "tools_demo" / "mission_coordinator.py"
+    ).read_text(encoding="utf-8")
+    block = source.split('"delivery_truth "', 1)[1].split("if success:", 1)[0]
+    assert "center_offset=" in block
+    assert "arm_residual=" in block
+    verify = source.split("slot_error = math.hypot(", 1)[1].split(
+        "precise =", 1
+    )[0]
+    assert "slot_x" in verify and "slot_y" in verify
+    assert "self._delivery_slot_world(job)" in source.split(
+        "slot_error = math.hypot(", 1
+    )[0][-400:]
 
 
 # ---------------------------------------------------------------------------
@@ -670,10 +740,13 @@ def test_deterministic_refusal_records_the_slot_and_pose():
     harness = _coordinator_state()
     result = {"success": False, "failure_reason": "slot_unreachable"}
     MissionCoordinator._note_place_outcome(harness, result, "place", False)
-    assert harness._refused_place_geometry == {
-        "slot": (-5.4, 3.96), "pose": (-4.947, 3.757, 3.109),
-        "reason": "slot_unreachable",
-    }
+    recorded = harness._refused_place_geometry
+    job = harness.machine.jobs[-1]
+    assert recorded["slot"] == pytest.approx(
+        MissionCoordinator._delivery_slot_world(harness, job)
+    )
+    assert recorded["pose"] == (-4.947, 3.757, 3.109)
+    assert recorded["reason"] == "slot_unreachable"
     assert any("place_geometry_refused" in text for text in harness.logs)
     assert "slot_unreachable" in DETERMINISTIC_PLACE_FAILURES
 
@@ -689,7 +762,7 @@ def test_non_deterministic_and_successful_outcomes_clear_the_guard():
     ):
         harness = _coordinator_state()
         harness._refused_place_geometry = {
-            "slot": (-5.4, 3.96), "pose": (-4.947, 3.757, 3.109),
+            "slot": (-5.27, 3.96), "pose": (-4.947, 3.757, 3.109),
             "reason": "slot_unreachable",
         }
         MissionCoordinator._note_place_outcome(
@@ -709,11 +782,13 @@ def test_non_deterministic_and_successful_outcomes_clear_the_guard():
 
 def test_unchanged_geometry_is_refused_and_changed_geometry_is_allowed():
     harness = _placing_coordinator()
+    # 0.13 m approach bias moves the A slot from -5.40 to -5.27.
+    job = SimpleNamespace(target_zone="A", index=3, cube_name="red_cube_3")
     harness._refused_place_geometry = {
-        "slot": (-5.4, 3.96), "pose": (-4.947, 3.757, 3.109),
+        "slot": MissionCoordinator._delivery_slot_world(harness, job),
+        "pose": (-4.947, 3.757, 3.109),
         "reason": "slot_unreachable",
     }
-    job = SimpleNamespace(target_zone="A", index=3, cube_name="red_cube_3")
     assert MissionCoordinator._place_repeat_refusal(harness, job) is not None
     # Odometry jitter inside the tolerance is still the same geometry.
     harness.odom_pose = (-4.951, 3.760, 3.115)
@@ -730,7 +805,7 @@ def test_unchanged_geometry_is_refused_and_changed_geometry_is_allowed():
 def test_start_manipulation_fails_closed_instead_of_repeating():
     harness = _placing_coordinator()
     harness._refused_place_geometry = {
-        "slot": (-5.4, 3.96), "pose": (-4.947, 3.757, 3.109),
+        "slot": (-5.27, 3.96), "pose": (-4.947, 3.757, 3.109),
         "reason": "slot_unreachable",
     }
     harness._place_repeat_refusal = (
@@ -752,7 +827,7 @@ def test_start_manipulation_fails_closed_instead_of_repeating():
 def test_start_manipulation_still_sends_once_the_geometry_changed():
     harness = _placing_coordinator()
     harness._refused_place_geometry = {
-        "slot": (-5.4, 3.96), "pose": (-4.947, 3.757, 3.109),
+        "slot": (-5.27, 3.96), "pose": (-4.947, 3.757, 3.109),
         "reason": "slot_unreachable",
     }
     harness.odom_pose = (-4.90, 3.90, 2.95)

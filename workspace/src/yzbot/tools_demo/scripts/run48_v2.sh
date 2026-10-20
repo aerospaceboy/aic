@@ -3,7 +3,7 @@
 # Usage: run48_v2.sh [first=1] [last=48] [legacy-variant] [fresh-output-root]
 # A checkpoint requires CASE_ACCEPTED, motion_under_290 and a frozen version.
 set -uo pipefail
-repo=$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)
+repo=$(cd -- "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 workspace=$(cd "$repo/../.." && pwd)
 first=${1:-1}
 last=${2:-48}
