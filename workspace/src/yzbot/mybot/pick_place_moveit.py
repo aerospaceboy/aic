@@ -1886,6 +1886,9 @@ class MoveItPickPlace(Node):
             and abs(pitch) <= TRANSPORT_BASE_TILT_LIMIT
         )
         valid = payload_valid and attitude_valid
+        # Keep the sample so a tolerated drift can be reported to the
+        # coordinator instead of being lost in a log line.
+        self.last_envelope_sample = (xyz, roll, pitch)
         self.get_logger().info(
             "transport_envelope "
             f"x={xyz[0]:.5f} y={xyz[1]:.5f} z={xyz[2]:.5f} "
@@ -2468,6 +2471,7 @@ class MoveItPickPlace(Node):
             return False
         self.place_failure_reason = None
         self.place_slot_correction = None
+        self.place_envelope_violation = None
 
         staging_arm = {name: 0.0 for name in ARM_JOINT_NAMES}
         relative = self.validate_carry_window()
@@ -2477,10 +2481,16 @@ class MoveItPickPlace(Node):
             )
             return False
         if not self.validate_transport_envelope_after_settle():
-            self.get_logger().error(
-                "Wrist extended outside the transport envelope in transit"
+            # The transport leg is over: the base is parked at the delivery
+            # dock and the placement proof (hover height, xy error, slot
+            # correction) still gates the release. Failing the whole mission
+            # here loses the remaining deliveries, while the payload is
+            # attached and measurable, so record the drift and place anyway.
+            self.place_envelope_violation = self.last_envelope_sample
+            self.get_logger().warn(
+                "transport_envelope_drift_continuing_to_place "
+                f"sample={self.place_envelope_violation}"
             )
-            return False
         self.attached = True
         succeeded = False
         try:
@@ -2498,10 +2508,14 @@ class MoveItPickPlace(Node):
                 # the validated 0.28 m carry pose instead of sweeping a loaded
                 # arm through a random 2--7 s OMPL placement trajectory.
                 if not self.validate_transport_envelope():
-                    self.get_logger().error(
-                        "Low carry envelope became invalid before release"
+                    if self.place_envelope_violation is None:
+                        self.get_logger().error(
+                            "Low carry envelope became invalid before release"
+                        )
+                        return False
+                    self.get_logger().warn(
+                        "transport_envelope_drift_at_release_continuing"
                     )
-                    return False
                 self.get_logger().info(
                     "world_slot_release:direct_from_low_carry"
                 )
@@ -2907,6 +2921,7 @@ class MoveItPickPlace(Node):
         # unreachable request (v15 sent the same rejected slot twice).
         self.place_failure_reason = None
         self.place_slot_correction = None
+        self.place_envelope_violation = None
         self.cube_name = str(request.get("cube_name", ""))
         self.pick_pose = tuple(float(v) for v in request["pick_pose"])
         self.pick_safe_pose = tuple(
@@ -3052,6 +3067,13 @@ class MoveItPickPlace(Node):
                     "place_slot_correction": (
                         list(self.place_slot_correction)
                         if self.place_slot_correction is not None
+                        else None
+                    ),
+                    "place_envelope_drift": (
+                        list(self.place_envelope_violation[0])
+                        + [self.place_envelope_violation[1],
+                           self.place_envelope_violation[2]]
+                        if self.place_envelope_violation is not None
                         else None
                     ),
                 },

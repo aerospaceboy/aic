@@ -885,6 +885,7 @@ class MissionCoordinator(Node):
         # commanded slot; recorded in delivery_truth so the score can separate
         # a real placement from a pose written after release.
         self.last_place_arm_residual = None
+        self.last_place_envelope_drift = None
         # Geometry of the last deterministic placement refusal, so a retry
         # that has not moved cannot repeat the identical request.
         self._refused_place_geometry = None
@@ -2622,6 +2623,7 @@ class MissionCoordinator(Node):
         """
         if operation != "place":
             return
+        self.last_place_envelope_drift = result.get("place_envelope_drift")
         correction = result.get("place_slot_correction")
         if isinstance(correction, (list, tuple)) and len(correction) == 2:
             self.last_place_arm_residual = (
@@ -3073,6 +3075,10 @@ class MissionCoordinator(Node):
                     if residual
                     else -1.0
                 )
+                drift = self.last_place_envelope_drift
+                drift_text = "none" if drift is None else ",".join(
+                    f"{float(value):.4f}" for value in drift
+                )
                 self.get_logger().info(
                     "delivery_truth "
                     f"cube={self.verification_cube_name} "
@@ -3081,7 +3087,8 @@ class MissionCoordinator(Node):
                     f"z={position.z:.4f} valid={success} "
                     f"slot_error={slot_error:.4f} precise={precise} "
                     f"center_offset={center_offset:.4f} "
-                    f"arm_residual={arm_residual:.4f}"
+                    f"arm_residual={arm_residual:.4f} "
+                    f"envelope_drift={drift_text}"
                 )
                 if success:
                     self.placed_cubes[self.verification_cube_name] = (
