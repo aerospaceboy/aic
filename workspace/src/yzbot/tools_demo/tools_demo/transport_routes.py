@@ -78,9 +78,8 @@ def current_pickup_guides(zone, start_x, start_y, entry,
         return [ZonePose("north_pickup_tray_west_clear", -1.2, 3.0, 0.),
                 ZonePose("north_pickup_tray_east_clear", 6.5, 3.0,
                          math.pi / 2.0)]
-    # Keep the encounter route unless current-mission evidence proves
-    # BOTH responses already happened. Safety anchors are independent
-    # of that encounter policy and are never removed by the evidence.
+    # Wall/patrol clearance guides protect the route. Do not add an out/back
+    # solely to manufacture avoidance evidence; telemetry reports what occurs.
     central_gates = []
     # A retry that starts beside the dock must not re-cross the mover
     # corridor: the first attempt already earned the crossing, and
@@ -105,9 +104,6 @@ def current_pickup_guides(zone, start_x, start_y, entry,
         if (1.7 <= entry.x <= 2.1
                 and abs(entry.y + 5.4) <= .05):
             central_gates.append(CENTRAL_RED2_NORTH_ENTRY)
-    elif zone == "BLUE_CUBE_3" and not near_dock:
-        central_gates = [
-            CENTRAL_MOVER_GATE_EAST, CENTRAL_MOVER_GATE_WEST]
     guides = list(dynamic_gate_waypoints(
         (start_x, start_y), (entry.x, entry.y)))
     if not guides:
@@ -144,10 +140,28 @@ def current_pickup_guides(zone, start_x, start_y, entry,
     # Existing wall/spawn guides must run first. The short mover gate
     # is the final transit immediately before the precision entry.
     prefix = guides + bypass
+    if zone == "BLUE_CUBE_3" and not near_dock:
+        flank_start = prefix[-1] if prefix else ZonePose(
+            "start", start_x, start_y, 0.)
+        if flank_start.y >= CENTRAL_PATROL_NORTH_FLANK.y:
+            # Descend outside both complete patrols, even without response
+            # evidence. Never turn east from this safe western approach.
+            prefix += [CENTRAL_PATROL_NORTH_FLANK,
+                       CENTRAL_PATROL_SOUTH_FLANK]
+        elif (flank_start.y > CENTRAL_MOVER_GATE_WEST.y + .08
+              and flank_start.x <= -.8):
+            prefix.append(CENTRAL_PATROL_SOUTH_FLANK)
+        elif (flank_start.y > CENTRAL_MOVER_GATE_WEST.y + .08
+              and flank_start.x > 1.2):
+            # An eastern start needs a south-side clearance point before
+            # going west to the pickup, not an out-and-back demonstration.
+            prefix.append(CENTRAL_MOVER_GATE_EAST)
+        log("blue3_encounter_detour_disabled task_route_only")
+        return prefix
     if central_gates:
-        entry = prefix[-1] if prefix else ZonePose(
+        flank_start = prefix[-1] if prefix else ZonePose(
             "start", start_x, start_y, 0.0)
-        if entry.y >= -2.20 and entry.x <= 1.20:
+        if flank_start.y >= -2.20 and flank_start.x <= 1.20:
             # A safe crossing endpoint does not make its approach
             # safe: the old diagonal reached (0.662,-2.892) beside
             # cart 2's north reversal, leaving only 0.0776 m. The
@@ -157,42 +171,6 @@ def current_pickup_guides(zone, start_x, start_y, entry,
             # rounding the whole approach back into that diagonal.
             prefix += [CENTRAL_PATROL_NORTH_FLANK,
                        CENTRAL_PATROL_SOUTH_FLANK]
-            if zone == "BLUE_CUBE_3":
-                if responses_complete:
-                    log(
-                        "central_repeat_crossing_omitted "
-                        "both_current_mission_responses_verified")
-                    return prefix
-                # Reach the horizontal line on its clear west side
-                # before heading east. A diagonal from the lower
-                # flank shaves the red-2 tray's tracking reserve.
-                prefix.append(CENTRAL_MOVER_GATE_WEST)
-    # The extra westward traversal for BLUE_CUBE_3 used to live inside
-    # the entry-condition block above, so when that condition was false
-    # the course fell back to a SINGLE [EAST, WEST] crossing. The two
-    # central carts sweep a 2.33 s band, so one traversal samples the
-    # phase once: measured 2026-10-17, 1rA_4bC logged exactly one
-    # CENTRAL_MOVER_GATE_EAST and one CENTRAL_MOVER_GATE_WEST for the
-    # whole run, never encountered either cart, completed 5/5 at
-    # 227.3 s and failed only the central-response gate (D17-021,
-    # D17-034). The passing 2rA_3bC course was
-    # [north_flank, south_flank, WEST, EAST, WEST]: two traversals.
-    #
-    # Decide it from current-mission evidence, not from the entry
-    # condition. When both responses are already proven the existing
-    # early return above still omits the gates entirely; otherwise the
-    # course must contain both traversals whichever branch built the
-    # prefix. This adds no new geometry: it reuses only the two
-    # validated gate poses.
-    if (zone == "BLUE_CUBE_3" and central_gates
-            and not any(p.zone == "CENTRAL_MOVER_GATE_WEST"
-                        for p in prefix)
-            and not responses_complete):
-        central_gates = [CENTRAL_MOVER_GATE_WEST] + list(central_gates)
-        log(
-            "central_pair_extra_traversal zone=BLUE_CUBE_3 "
-            f"stages={len(prefix) + len(central_gates)}"
-        )
     return prefix + central_gates
 
 

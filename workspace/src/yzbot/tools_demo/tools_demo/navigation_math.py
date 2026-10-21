@@ -516,7 +516,8 @@ UNIVERSAL_WALL_TIP_CLEAR_Y = 0.45
 # for the next patrol cycle a second time (v15 1rC_4bA-r2). The full slow/fast
 # crossing model still admits from the measured, slightly more distant stop;
 # neither the final gate nor the separation threshold is weakened.
-UNIVERSAL_EAST_WAIT_X = 9.80
+UNIVERSAL_EAST_WAIT_X = 9.825
+UNIVERSAL_EAST_WAIT_ANCHOR_Y = .525
 # At the old y=0.45 anchor, the observed 4 cm arrival error made the
 # shared admission window shorter than one 5 Hz actor update. This lane
 # widens the window while retaining 0.149 m clearance to Wall_40 for the
@@ -731,7 +732,11 @@ def dynamic_gate_waypoints(
         ZonePose(
             "universal_east_wait",
             UNIVERSAL_EAST_WAIT_X,
-            UNIVERSAL_EAST_WAIT_Y,
+            # Use an actual 5cm grid-cell centre. A boundary goal was
+            # quantized diagonally away from the physical 3cm handoff disk;
+            # pursuing the last millimetres then turned toward that offset.
+            # The straight crossing still validates its measured Y lane.
+            UNIVERSAL_EAST_WAIT_ANCHOR_Y,
             math.pi,
         ),
         # Hold the same wall-clear Y lane across both original patrols.

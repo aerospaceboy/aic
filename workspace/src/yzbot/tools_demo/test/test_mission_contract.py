@@ -246,8 +246,11 @@ def test_mission_uses_separate_delivery_slots_for_accuracy():
     assert "def _place_slot_poses" in source
     assert "delivery_slot " in source
     assert "place_slot_spacing: 0.080" in config
-    assert "spacing = max(" in source
-    assert "y_offset = centered_index * spacing" in source
+    from tools_demo.transport_schedule import centered_slot_offset
+    assert "centered_slot_offset(slot_index, count" in source
+    assert [centered_slot_offset(i, 2, .08, .16) for i in range(2)] == [-.16, .16]
+    assert [centered_slot_offset(i, 5, .08, .16) for i in range(5)] == [
+        -.16, -.08, 0., .08, .16]
 
 
 def test_mission_aims_wrist_rgbd_camera_at_pickup_inventory():

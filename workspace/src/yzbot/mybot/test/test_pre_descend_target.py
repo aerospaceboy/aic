@@ -36,6 +36,11 @@ class FakeArm:
         self.approach_rejected_reason = None
         self.descend_calls = 0
         self.events = []
+        self.moves = []
+        self.tool_orientation = (0., 1., 0., 0.)
+        self.pick_lift_duration = 1.0
+        self.shift_succeeds = True
+        self.apply_shift = True
 
     def relative_cube_position(self):
         if self.relative is None:
@@ -50,8 +55,15 @@ class FakeArm:
         )
 
     def cartesian_move(self, pose, label, **kwargs):
-        if label.startswith("pick_descend"):
-            self.descend_calls += 1
+        self.moves.append((pose, label))
+        if not self.shift_succeeds:
+            return False
+        if self.apply_shift:
+            self.relative = (
+                self.relative[0] + pose[0] - self.pick_safe_pose[0],
+                self.relative[1] - pose[1] + self.pick_safe_pose[1],
+                self.relative[2],
+            )
         return True
 
     def messages(self, marker):
@@ -60,7 +72,7 @@ class FakeArm:
 
 def test_normal_target_is_accepted_at_the_current_pose():
     """A cube already inside the window must not be disturbed."""
-    arm = FakeArm((0.01513, -0.00028, 0.06790))
+    arm = FakeArm((0.01513, -0.00028, 0.13790))
     assert REFINE(arm, "pick_descend") is True
     assert arm.approach_rejected_reason is None
     assert arm.pick_pose == (0.400, 0.0, 0.080)
@@ -103,7 +115,7 @@ def test_target_identity_mismatch_is_refused():
 
 def test_bounded_offset_is_recomputed_at_the_current_pose():
     """A small residual must be corrected here, not left for the descend."""
-    arm = FakeArm((0.03000, 0.04000, 0.06800))
+    arm = FakeArm((0.03000, 0.04000, 0.13800))
     assert REFINE(arm, "pick_descend") is True
     assert arm.approach_rejected_reason is None
     assert arm.pick_pose[0] < 0.400
@@ -114,12 +126,12 @@ def test_bounded_offset_is_recomputed_at_the_current_pose():
 
 def test_correction_without_retract_room_is_refused():
     """A correction that leaves no transport margin must not raise."""
-    arm = FakeArm((0.03000, 0.00000, 0.06800))
+    arm = FakeArm((0.03000, 0.00000, 0.13800))
     arm.pick_pose = (0.320, 0.0, 0.080)
     arm.pick_safe_pose = (0.320, 0.0, 0.150)
     assert REFINE(arm, "pick_descend") is True  # correction keeps retract room
     assert arm.pick_pose[0] > arm.transport_x
-    arm2 = FakeArm((0.06000, 0.00000, 0.06800))
+    arm2 = FakeArm((0.06000, 0.00000, 0.13800))
     arm2.pick_pose = (0.300, 0.0, 0.080)
     arm2.pick_safe_pose = (0.300, 0.0, 0.150)
     assert REFINE(arm2, "pick_descend") is False
@@ -148,7 +160,7 @@ def test_both_pick_entry_points_gate_the_descend():
     for entry in ("    def run_pick_only", "    def run_once"):
         body = source.split(entry, 1)[1]
         guard = body.index('refine_pick_target_before_descend("pick_descend")')
-        descend = body.index('"pick_descend",')
+        descend = body.index("self.descend_pick_vertically()")
         assert guard < descend, entry
         assert "return False" in body[guard:descend]
 
@@ -158,3 +170,43 @@ def test_refusal_is_reported_with_a_distinct_result_detail():
     source = MODULE_PATH.read_text(encoding="utf-8")
     assert '"approach_rejected "' in source
     assert "elif self.approach_rejected_reason:" in source
+
+
+def test_safe_height_z_does_not_trigger_a_lateral_correction():
+    # Actual 20261021 safe poses had relative Z ~109 mm and valid XY.
+    arm = FakeArm((.009, -.001, .109))
+    assert REFINE(arm, "pick_descend")
+    assert arm.moves == []
+    assert arm.pick_pose == (.4, 0., .08)
+    assert not arm.messages("pick_target_refined")
+
+
+def test_real_xy_correction_is_executed_at_safe_height():
+    arm = FakeArm((.06, .04, .109))
+    assert REFINE(arm, "pick_descend")
+    assert len(arm.moves) == 1
+    pose, label = arm.moves[0]
+    assert label == "pick_align_at_safe_height"
+    assert pose[2] == .15
+    assert pose[:2] == arm.pick_pose[:2] == arm.pick_safe_pose[:2]
+    assert abs(arm.relative[0] - .014) < 1e-10
+    assert abs(arm.relative[1] + .009) < 1e-10
+
+
+def test_failed_or_unverified_shift_never_retargets_the_descent():
+    for failed, unverified in ((True, False), (False, True)):
+        arm = FakeArm((.06, .04, .109))
+        arm.shift_succeeds = not failed
+        arm.apply_shift = not unverified
+        assert not REFINE(arm, "pick_descend")
+        assert arm.pick_pose == (.4, 0., .08)
+        assert arm.pick_safe_pose == (.4, 0., .15)
+        assert arm.approach_rejected_reason in {
+            "safe_alignment_failed", "safe_alignment_unverified"}
+
+
+def test_bad_projected_height_is_refused_without_xy_motion():
+    for z in (.075, .20, float('nan')):
+        arm = FakeArm((.06, .04, z))
+        assert not REFINE(arm, "pick_descend")
+        assert arm.moves == []

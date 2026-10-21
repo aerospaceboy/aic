@@ -443,7 +443,7 @@ def test_dynamic_gate_waypoints_use_universal_origin_staging(target):
         (12.6, 0.45)
     )
     assert (route[2].x, route[2].y) == pytest.approx(
-        (9.80, 0.55)
+        (9.825, 0.525)
     )
     assert (route[-1].x, route[-1].y) == pytest.approx(
         (0.0, 0.0)
@@ -458,7 +458,7 @@ def test_dynamic_gate_waypoints_trigger_for_advanced_spawn(target):
     assert len(route) == 6
     assert (route[0].x, route[0].y) == pytest.approx((12.6, -0.6))
     assert (route[1].x, route[1].y) == pytest.approx((12.6, 0.45))
-    assert (route[2].x, route[2].y) == pytest.approx((9.80, 0.55))
+    assert (route[2].x, route[2].y) == pytest.approx((9.825, 0.525))
     assert (route[-1].x, route[-1].y) == pytest.approx((0.0, 0.0))
 
 

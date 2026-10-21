@@ -108,6 +108,8 @@ def test_recorded_early_arrival_cannot_advance_into_patrol_admission():
     follow = wait.find('.//FollowPath')
     assert follow.attrib['goal_checker_id'] == 'corridor_wait_goal_checker'
     follow.attrib['goal_checker_id'] = 'general_goal_checker'
+    assert follow.attrib['controller_id'] == 'CorridorApproach'
+    follow.attrib['controller_id'] = 'FollowPath'
     for compute in wait.findall('.//ComputePathToPose'):
         assert compute.attrib['planner_id'] == 'CorridorWaitExact'
         compute.attrib['planner_id'] = 'GridBased'
@@ -180,9 +182,7 @@ def test_current_blue3_does_not_visit_obsolete_south_bay_before_carts():
     poses = TaskNavigator._cube_approach_waypoints(node, 'BLUE_CUBE_3', -4.5, 3.75)
     assert [p.zone for p in poses] == [
         'obstacle_2_north_gate', 'obstacle_2_south_gate',
-        'central_patrol_north_flank', 'central_patrol_south_flank',
-        'CENTRAL_MOVER_GATE_WEST',
-        'CENTRAL_MOVER_GATE_EAST', 'CENTRAL_MOVER_GATE_WEST']
+        'central_patrol_north_flank', 'central_patrol_south_flank']
 
 
 def test_central_arrival_anchors_stay_outside_final_stop_even_with_error():
@@ -391,11 +391,11 @@ def test_unproven_or_unsafe_slowdown_never_suppresses_repeat(key, value):
     assert not node.central_mission_responses
 
 
-@pytest.mark.parametrize('active,names,skip', [
-    (True, {'crossing_cart_1', 'crossing_cart_2'}, True),
-    (True, {'crossing_cart_1'}, False),
-    (False, {'crossing_cart_1', 'crossing_cart_2'}, False)])
-def test_repeat_policy_never_removes_blue3_west_flank_safety_anchors(active, names, skip):
+@pytest.mark.parametrize('active,names', [
+    (True, {'crossing_cart_1', 'crossing_cart_2'}),
+    (True, {'crossing_cart_1'}),
+    (False, {'crossing_cart_1', 'crossing_cart_2'})])
+def test_task_route_keeps_blue3_flanks_without_response_detours(active, names):
     node = SimpleNamespace(
         use_legacy_layout_routes=False, get_logger=lambda: Mock(),
         dock_pose=ZonePose('BLUE_CUBE_3', -1.64, -6., math.pi),
@@ -404,7 +404,7 @@ def test_repeat_policy_never_removes_blue3_west_flank_safety_anchors(active, nam
     assert [p.zone for p in poses[:4]] == [
         'obstacle_2_north_gate', 'obstacle_2_south_gate',
         'central_patrol_north_flank', 'central_patrol_south_flank']
-    assert (not any(p.zone.startswith('CENTRAL_MOVER_GATE_') for p in poses)) == skip
+    assert not any(p.zone.startswith('CENTRAL_MOVER_GATE_') for p in poses)
 
 
 def test_flank_safety_anchor_is_serial_even_without_an_encounter_loop():

@@ -113,16 +113,24 @@ def test_grasp_correction_reduces_measured_link6_x_error():
         pick_pose = (0.36, 0.0, 0.08)
         pick_safe_pose = (0.36, 0.0, 0.13)
         pick_lift_duration = 1.0
+        pick_descend_duration = .6
+        transport_x = .28
+        tool_orientation = (0., 1., 0., 0.)
+        descend_pick_vertically = MODULE.MoveItPickPlace.descend_pick_vertically
 
         def __init__(self):
             self.relative = [-0.05111, -0.01842, 0.06467]
             self.tool_xy = [0.36, 0.0]
+            self.tool_z = .08
 
         def relative_cube_position(self):
             return tuple(self.relative)
 
         def get_logger(self):
-            return SimpleNamespace(warn=lambda message: None)
+            return Mock()
+
+        def pick_tool_pose(self):
+            return MODULE.pose_from_values((*self.tool_xy, self.tool_z), self.tool_orientation)
 
         def cartesian_move(self, pose, label, **kwargs):
             # At this downward link6 orientation, moving the arm in local X
@@ -131,7 +139,9 @@ def test_grasp_correction_reduces_measured_link6_x_error():
             delta_y = pose[1] - self.tool_xy[1]
             self.relative[0] += delta_x
             self.relative[1] -= delta_y
+            self.relative[2] += pose[2] - self.tool_z
             self.tool_xy[:] = pose[:2]
+            self.tool_z = pose[2]
             return True
 
         def validate_grasp_window(self):
@@ -402,7 +412,7 @@ def test_persistent_scan_avoids_disposable_base_constraints():
 
     assert "self.stabilize_base()" not in scan_body
     assert "self.release_base()" not in scan_body
-    assert 'self.pick_safe_pose,\n                "pick_approach"' in pick_body
+    assert "self.move_pick_approach()" in pick_body
     assert '"pick_transit"' not in pick_body
     assert '"pick_low_retract"' in pick_body
     assert 'self.transport_pose,\n                "pick_low_retract"' in pick_body
@@ -412,7 +422,7 @@ def test_persistent_scan_avoids_disposable_base_constraints():
     assert pick_body.count("self.validate_transport_envelope()") >= 2
     assert "Loaded chassis became unstable after base release" in pick_body
     assert '"pick_clearance"' not in pick_body
-    assert '"pick_descend_retry"' in pick_body
+    assert "self.descend_pick_vertically()" in pick_body
     place_body = source.split("def run_place_only", 1)[1].split(
         "def run_release_only", 1
     )[0]
@@ -607,24 +617,6 @@ def test_limit_guard_keeps_the_validated_safety_windows():
     assert MODULE.CARRY_Z_LIMITS == (-0.030, 0.080)
     assert MODULE.MAX_ATTACHED_DRIFT == 0.020
 
-
-def test_pick_descend_falls_back_to_an_ik_move():
-    """A twice-truncated descend must not throw the cube away.
-
-    BC3 (2026-09-11): `pick_descend` reached 0.400 and `pick_descend_retry`
-    0.333, the pick aborted after 3.9 s, the coordinator excluded the cube and
-    picked another blue one, which cost ~30 s. The cube is anchored until the
-    gripper closes, so the IK fallback is safe there.
-    """
-    source = MODULE_PATH.read_text(encoding="utf-8")
-    descend_block = source.split('"pick_descend_retry"', 1)[1].split(
-        "if self.validate_grasp_window() is None:", 1
-    )[0]
-    assert "pick_descend Cartesian truncated twice" in descend_block
-    assert '"pick_descend_fallback"' in descend_block
-    assert "self.move_to_pose(" in descend_block
-    # The anchor is still held at that point and the window is checked after.
-    assert "pick_cube_stabilized" in source
 
 
 def test_low_retract_climbs_over_the_tray_and_returns_to_carry():

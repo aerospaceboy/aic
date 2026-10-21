@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "scope": "Controlled same-layout simulation navigation timings; sparse samples blend with geometric priors.",
+  "geometry_sha256": {
+    "navigation_math.py": "a772531bd22f72f00822d24889d5b414377d4b436a8f00041c417a003e181a93",
+    "transport_routes.py": "8d49c3b5f699da24f7ac538d071fae98357656f887dcfbdc9d598f4f3fcfca4f",
+    "task_navigator.py": "35537bf41d37e69fd491f9382d3b3c94136e7b2a01f60757cb67690b934d8a69",
+    "competition_zones.yaml": "3e5eb0e6fdaca0fe7913a3cd0c5b4c1ef0d86e20ffe1e93dbcfdd339d3c1768f",
+    "originbot_nav2.yaml": "8c71c1431d9c1358219fccdc76ddf692546effc5e86c03038c77f67b238be4ae",
+    "navigation_risk_zones.yaml": "6db7783aa09660feee6c56d22f637475f342a60e3cca0effd2bee38fc1306df7",
+    "mission.yaml": "fff69c9ff2560b606e51f0a4a538b06e9ee8976114a2ff8d83a0b787afc4b54f"
+  },
+  "source_logs_sha256": {
+    "runs/transport-optimization-20261021/baseline/launch.log": "7db7dd683753e89617a76758493e38af2f5562875bda994fe54a9173c82b0d39"
+  },
+  "samples": [
+    {
+      "phase": "spawn",
+      "cube": "red_cube_2",
+      "side": "east",
+      "zone": "B",
+      "start_pose": [
+        13.2,
+        -0.95,
+        3.142
+      ],
+      "source": "baseline",
+      "waypoints_xy": [
+        [
+          12.6,
+          -0.6
+        ],
+        [
+          12.6,
+          0.45
+        ],
+        [
+          9.8,
+          0.55
+        ],
+        [
+          6.65,
+          0.55
+        ],
+        [
+          3.8,
+          0.55
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "elapsed_sec": 29.249393701553345
+    },
+    {
+      "phase": "delivery",
+      "cube": "red_cube_2",
+      "side": "east",
+      "zone": "B",
+      "start_pose": [
+        0.076,
+        0.805,
+        -3.121
+      ],
+      "source": "baseline",
+      "waypoints_xy": [
+        [
+          11.3,
+          -5.16
+        ]
+      ],
+      "elapsed_sec": 12.51
+    },
+    {
+      "phase": "pickup",
+      "cube": "blue_cube_1",
+      "side": "east",
+      "zone": "A",
+      "start_pose": [
+        10.339,
+        -5.007,
+        -0.184
+      ],
+      "source": "baseline",
+      "waypoints_xy": [
+        [
+          8.3,
+          3.6
+        ]
+      ],
+      "elapsed_sec": 20.62
+    },
+    {
+      "phase": "delivery",
+      "cube": "blue_cube_1",
+      "side": "east",
+      "zone": "A",
+      "start_pose": [
+        8.276,
+        3.6,
+        3.12
+      ],
+      "source": "baseline",
+      "waypoints_xy": [
+        [
+          8.05,
+          4.25
+        ],
+        [
+          6.75,
+          4.25
+        ],
+        [
+          -5.0,
+          3.64
+        ]
+      ],
+      "elapsed_sec": 10.91
+    },
+    {
+      "phase": "pickup",
+      "cube": "blue_cube_3",
+      "side": "east",
+      "zone": "A",
+      "start_pose": [
+        -4.516,
+        3.583,
+        -3.13
+      ],
+      "source": "baseline",
+      "waypoints_xy": [
+        [
+          -2.1,
+          1.8
+        ],
+        [
+          -2.1,
+          0.0
+        ],
+        [
+          -1.2,
+          -2.2
+        ],
+        [
+          -1.2,
+          -4.9
+        ],
+        [
+          -0.6,
+          -4.7
+        ],
+        [
+          1.0,
+          -4.7
+        ],
+        [
+          -0.6,
+          -4.7
+        ],
+        [
+          -1.1,
+          -6.0
+        ]
+      ],
+      "elapsed_sec": 26.92
+    },
+    {
+      "phase": "delivery",
+      "cube": "blue_cube_3",
+      "side": "east",
+      "zone": "A",
+      "start_pose": [
+        -1.127,
+        -6.001,
+        -3.115
+      ],
+      "source": "baseline",
+      "waypoints_xy": [
+        [
+          -1.2,
+          -4.55
+        ],
+        [
+          -2.1,
+          -0.3
+        ],
+        [
+          -2.1,
+          1.85
+        ],
+        [
+          -5.0,
+          3.96
+        ]
+      ],
+      "elapsed_sec": 15.11
+    },
+    {
+      "phase": "pickup",
+      "cube": "red_cube_3",
+      "side": "east",
+      "zone": "B",
+      "start_pose": [
+        -4.507,
+        3.963,
+        -3.131
+      ],
+      "source": "baseline",
+      "waypoints_xy": [
+        [
+          0.9,
+          3.8
+        ]
+      ],
+      "elapsed_sec": 9.81
+    },
+    {
+      "phase": "delivery",
+      "cube": "red_cube_3",
+      "side": "east",
+      "zone": "B",
+      "start_pose": [
+        0.905,
+        3.8,
+        -3.108
+      ],
+      "source": "baseline",
+      "waypoints_xy": [
+        [
+          4.4,
+          -2.5
+        ],
+        [
+          13.4,
+          -2.5
+        ],
+        [
+          11.3,
+          -5.0
+        ]
+      ],
+      "elapsed_sec": 16.91
+    },
+    {
+      "phase": "pickup",
+      "cube": "red_cube_4",
+      "side": "east",
+      "zone": "B",
+      "start_pose": [
+        10.339,
+        -4.997,
+        0.072
+      ],
+      "source": "baseline",
+      "waypoints_xy": [
+        [
+          12.3,
+          -9.8
+        ]
+      ],
+      "elapsed_sec": 9.31
+    },
+    {
+      "phase": "delivery",
+      "cube": "red_cube_4",
+      "side": "east",
+      "zone": "B",
+      "start_pose": [
+        12.309,
+        -9.8,
+        3.132
+      ],
+      "source": "baseline",
+      "waypoints_xy": [
+        [
+          11.3,
+          -4.84
+        ]
+      ],
+      "elapsed_sec": 7.8
+    }
+  ]
+}

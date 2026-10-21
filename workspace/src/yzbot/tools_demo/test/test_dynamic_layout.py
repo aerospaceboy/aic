@@ -134,10 +134,11 @@ def test_retreat_patrols_match_physical_motion_not_an_obsolete_lane():
 
 @pytest.mark.parametrize('cube,expected', [
     ('RED_CUBE_2', ['CENTRAL_MOVER_GATE_WEST', 'CENTRAL_MOVER_GATE_EAST']),
-    ('BLUE_CUBE_3', ['CENTRAL_MOVER_GATE_EAST', 'CENTRAL_MOVER_GATE_WEST']),
+    ('BLUE_CUBE_3', ['central_patrol_north_flank', 'central_patrol_south_flank']),
 ])
-def test_every_central_pickup_crosses_both_short_patrols_once(cube, expected):
+def test_central_pickups_retain_their_physical_clearance_guides(cube, expected):
     node = SimpleNamespace(use_legacy_layout_routes=False,
+                           get_logger=lambda: SimpleNamespace(info=lambda _: None),
                            dock_pose=ZonePose(cube, 2., -5., 0.))
     waypoints = TaskNavigator._cube_approach_waypoints(node, cube, 0., 0.)
     assert [point.zone for point in waypoints[-2:]] == expected

@@ -24,6 +24,8 @@ from std_msgs.msg import Bool, String
 from tools_demo.navigation_math import corridor_lane_release_clear
 from tools_demo.navigation_math import EAST_LANE_RELEASE_DISTANCE
 from tools_demo.navigation_math import CORRIDOR_TRANSIT_SPEED
+from tools_demo.navigation_math import UNIVERSAL_EAST_WAIT_Y
+from tools_demo.corridor_admission import spawn_corridor_admission
 
 from tools_demo.safety_math import compute_scale
 
@@ -82,6 +84,13 @@ class SafetyLimiter(Node):
         self.robot: Optional[Tuple[float, float, float]] = None
         self.obstacles: Dict[str, Tuple[float, float, int]] = {}
         self.obstacle_previous_y: Dict[str, float] = {}
+        self.obstacle_source_stamps = {}
+        self.obstacle_previous_source_stamps = {}
+        self.obstacle_motion_samples = {}
+        self.obstacle_motion_velocities = {}
+        self.robot_stamp_ns = None
+        self.odom_history = []
+        self.robot_speed = 0.
         self.east_gate_open = False
         self.west_lane_open = False
         self.swept_band_since_ns = None
@@ -127,6 +136,12 @@ class SafetyLimiter(Node):
             1.0 - 2.0 * (q.y * q.y + q.z * q.z),
         )
         self.robot = (pose.position.x, pose.position.y, yaw)
+        self.robot_stamp_ns = (
+            message.header.stamp.sec * 1_000_000_000 + message.header.stamp.nanosec)
+        self.robot_speed = math.hypot(message.twist.twist.linear.x,
+                                      message.twist.twist.linear.y)
+        self.odom_history.append((self.robot_stamp_ns, self.robot))
+        self.odom_history = self.odom_history[-16:]
 
     def obstacle_callback(self, message: String) -> None:
         """Store one successful Gazebo-truth obstacle position."""
@@ -139,9 +154,37 @@ class SafetyLimiter(Node):
             return
         if payload.get("success") is not True:
             return
+        if not math.isfinite(x_value) or not math.isfinite(y_value):
+            return
+        source = payload.get("stamp_sec")
+        source_valid = isinstance(source, (int, float)) and math.isfinite(source)
+        if source_valid:
+            last_source = self.obstacle_source_stamps.get(model)
+            if last_source is not None and source < last_source:
+                return
+            observed = self.obstacle_motion_samples.get(model)
+            if observed is None:
+                self.obstacle_motion_samples[model] = (y_value, float(source))
+            elif source > observed[1] and abs(y_value - observed[0]) >= .003:
+                elapsed = source - observed[1]
+                if elapsed <= .75:
+                    self.obstacle_motion_velocities[model] = (
+                        (y_value - observed[0]) / elapsed, float(source))
+                else:
+                    self.obstacle_motion_velocities.pop(model, None)
+                self.obstacle_motion_samples[model] = (y_value, float(source))
+            elif source - observed[1] > .75:
+                self.obstacle_motion_velocities.pop(model, None)
+                self.obstacle_motion_samples[model] = (y_value, float(source))
         previous = self.obstacles.get(model)
         if previous is not None:
             self.obstacle_previous_y[model] = previous[1]
+            self.obstacle_previous_source_stamps[model] = (
+                self.obstacle_source_stamps.get(model))
+        if source_valid:
+            self.obstacle_source_stamps[model] = float(source)
+        else:
+            self.obstacle_source_stamps.pop(model, None)
         self.obstacles[model] = (
             x_value,
             y_value,
@@ -165,6 +208,50 @@ class SafetyLimiter(Node):
             self.cone_half,
             motion_sign,
         )
+
+    def _spawn_admission_clear(self, model: str, rolling=False) -> bool:
+        """Use the navigator's crossing proof with fresh source time."""
+        now = self.get_clock().now().nanoseconds * 1e-9
+        actor = self.obstacles.get(model)
+        source = getattr(self, "obstacle_source_stamps", {}).get(model)
+        motion = getattr(self, "obstacle_motion_velocities", {}).get(model)
+        odom = getattr(self, "robot_stamp_ns", None)
+        pose = self.robot
+        # Gazebo can publish odometry a few milliseconds before its /clock
+        # update. Use an actually clock-confirmed sample, never widen the
+        # future-data check or turn a future stamp into a fresh receipt.
+        if odom is not None and odom * 1e-9 > now:
+            confirmed = [(stamp, position) for stamp, position in
+                         getattr(self, 'odom_history', [])
+                         if 0 <= now - stamp * 1e-9 <= .50]
+            if confirmed:
+                odom, pose = max(confirmed, key=lambda sample: sample[0])
+        if (actor is None or source is None or motion is None or odom is None
+                or not 0 <= now - source <= self.obstacle_timeout
+                or not 0 <= now - odom * 1e-9 <= .50
+                or not 0 <= now - motion[1] <= .75):
+            return False
+        return spawn_corridor_admission(
+            pose, actor[:2], motion[0], rolling=rolling)
+
+    def _prewarm_spawn_gates(self, rolling: bool = False) -> None:
+        """Latch independently proved windows before entering either gate."""
+        speed = getattr(self, "robot_speed", math.inf)
+        stopped = speed <= .05
+        moving = rolling and .56 <= speed <= 1.15
+        if getattr(self, "robot", None) is None or not (stopped or moving):
+            return
+        gates = (("competition_moving_obstacle_1", "east_gate_open"),
+                 ("competition_moving_obstacle_2", "west_lane_open"))
+        for model, latch in gates:
+            second_rolling = moving and model.endswith('_2')
+            if second_rolling and not 6.9 <= self.robot[0] <= 7.2:
+                continue
+            if (not getattr(self, latch, False)
+                    and SafetyLimiter._spawn_admission_clear(
+                        self, model, rolling=second_rolling)):
+                setattr(self, latch, True)
+                self.get_logger().info(f"corridor_gate_prearmed model={model}")
 
     def west_lane_blocked(self, motion_sign: float) -> bool:
         """Yield before the second corridor lane until its phase is seen."""
@@ -226,7 +313,13 @@ class SafetyLimiter(Node):
             if actor_fresh and separation >= 0.40:
                 return False
             self.west_lane_open = False
-        if actor_fresh and separation >= 0.60 and moving_away:
+        canonical = (abs(y_value - UNIVERSAL_EAST_WAIT_Y) <= .07
+                     and abs(math.remainder(yaw - math.pi,
+                                            2 * math.pi)) <= .04)
+        released = (SafetyLimiter._spawn_admission_clear(
+            self, actor_name, rolling=getattr(self, "robot_speed", 0.) > .05)
+            if canonical else separation >= .60 and moving_away)
+        if actor_fresh and released:
             self.west_lane_open = True
             self.get_logger().info(
                 "west mover gate released clear of the base lane "
@@ -310,8 +403,15 @@ class SafetyLimiter(Node):
             if actor_fresh and separation >= release - 0.10:
                 return False
             self.east_gate_open = False
-        if (actor_fresh and corridor_lane_release_clear(
-                y_value, actor[1], moving_away, release)):
+        canonical = (abs(y_value - UNIVERSAL_EAST_WAIT_Y) <= .07
+                     and abs(math.remainder(yaw - math.pi,
+                                            2 * math.pi)) <= .04)
+        released = (SafetyLimiter._spawn_admission_clear(
+            self, "competition_moving_obstacle_1",
+            rolling=getattr(self, "robot_speed", 0.) > .05)
+            if canonical else actor_fresh and corridor_lane_release_clear(
+                y_value, actor[1], moving_away, release))
+        if actor_fresh and released:
             self.east_gate_open = True
             self.get_logger().info(
                 "east mover gate released clear of the base lane "
@@ -389,6 +489,8 @@ class SafetyLimiter(Node):
         if self.base_hold:
             self.publisher.publish(Twist())
             return
+        if message.linear.x >= -.03:
+            SafetyLimiter._prewarm_spawn_gates(self, rolling=message.linear.x >= .03)
         motion_sign = 0.0
         if abs(message.linear.x) >= 0.03:
             motion_sign = math.copysign(1.0, message.linear.x)
@@ -403,7 +505,20 @@ class SafetyLimiter(Node):
             # checked upstream; do not delay heading until release.
             safe.angular.z = message.angular.z
             self.publisher.publish(safe)
-            self.get_logger().info(gate_message, throttle_duration_sec=1.0)
+            # Retain the exact observation used to reject admission, so a
+            # real phase wait can be distinguished from stale/unknown data.
+            now = self.get_clock().now().nanoseconds * 1e-9
+            snapshot = {
+                'pose': self.robot,
+                'speed': getattr(self, 'robot_speed', None),
+                'now': now,
+                'odom_stamp_ns': getattr(self, 'robot_stamp_ns', None),
+                'sources': getattr(self, 'obstacle_source_stamps', {}),
+                'motions': getattr(self, 'obstacle_motion_velocities', {}),
+            }
+            self.get_logger().info(
+                gate_message + ' admission=' + json.dumps(snapshot),
+                throttle_duration_sec=1.0)
             return
         scale = self.scale_for_obstacles(motion_sign)
         if scale <= 0.01:

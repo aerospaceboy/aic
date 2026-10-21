@@ -1,16 +1,6 @@
-"""The central pair must be crossed enough to actually meet both carts.
-
-The two central carts sweep a 2.33 s band. One traversal samples that phase
-once and can miss both of them: measured 2026-10-17, ``1rA_4bC`` logged exactly
-one CENTRAL_MOVER_GATE_EAST and one CENTRAL_MOVER_GATE_WEST for the whole run,
-never encountered either cart, completed 5/5 at 227.3 s and failed only the
-central-response gate. The passing ``2rA_3bC`` course was
-``[north_flank, south_flank, WEST, EAST, WEST]``.
-"""
+"""Pickup routes must not manufacture response evidence by extra traversals."""
 
 from types import SimpleNamespace
-
-import pytest
 
 from tools_demo.task_navigator import (
     CENTRAL_MOVER_GATE_EAST,
@@ -42,12 +32,10 @@ def traversals(names):
     return sum(1 for name in names if name in (WEST, EAST))
 
 
-def test_a_single_traversal_is_not_enough_when_nothing_is_proven_yet():
-    """The regression: the entry condition is false, so only [EAST, WEST]."""
+def test_missing_responses_do_not_generate_an_out_and_back():
+    """A south-side approach follows the task route without a demonstration."""
     names = course(0.0, -5.0)
-    assert traversals(names) >= 3, names
-    assert names.count(WEST) == 2, names
-    assert names[-1] == WEST, names
+    assert traversals(names) == 0, names
 
 
 def test_the_already_verified_case_is_unchanged_and_omits_the_gates():
@@ -56,10 +44,10 @@ def test_the_already_verified_case_is_unchanged_and_omits_the_gates():
     assert WEST not in names and EAST not in names, names
 
 
-def test_a_partial_response_set_still_earns_the_second_traversal():
-    """One cart proven is not enough; the course must still cross twice."""
+def test_partial_responses_do_not_generate_a_second_traversal():
+    """Response telemetry does not add motion to the pickup route."""
     names = course(0.0, -5.0, responses={"crossing_cart_2"})
-    assert traversals(names) >= 3, names
+    assert traversals(names) == 0, names
 
 
 def test_red_cube_2_keeps_its_single_consistent_pass():
@@ -70,8 +58,8 @@ def test_red_cube_2_keeps_its_single_consistent_pass():
     assert names.index(WEST) < names.index(EAST), names
 
 
-def test_the_extra_traversal_reuses_only_validated_gate_poses():
-    """No new geometry: every crossing stage is one of the two gate poses."""
+def test_no_extra_gate_geometry_is_generated():
+    """Neither crossing direction is added to a safe south-side route."""
     names = course(0.0, -5.0)
     crossings = [n for n in names if n in (WEST, EAST)]
-    assert crossings == [WEST, EAST, WEST], names
+    assert crossings == [], names

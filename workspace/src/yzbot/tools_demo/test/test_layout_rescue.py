@@ -32,7 +32,7 @@ def test_both_patrol_anchors_keep_the_wider_wall_clear_lane():
     """The second patrol must not drift back to the unsafe y=0.1 line."""
     route = dynamic_gate_waypoints((13.2, -.95), (-6.0, 3.4))
     assert [(p.x, p.y) for p in route[2:5]] == [
-        (9.80, .55), (6.65, .55), (3.8, .55)]
+        (9.825, .525), (6.65, .55), (3.8, .55)]
 
 
 def test_a_sweep_guides_avoid_the_alcove_and_wall_band():

@@ -4,8 +4,11 @@ import json
 import math
 import struct
 import time
+from dataclasses import replace
 from pathlib import Path
 from typing import Optional, Sequence
+
+import yaml
 
 from ament_index_python.packages import get_package_share_directory
 from gazebo_msgs.srv import GetEntityState
@@ -55,6 +58,9 @@ from tools_demo.mission_state_machine import select_reachable_target
 from tools_demo.pick_order_policy import ordered_task_key
 from tools_demo.pick_order_policy import validate_pick_entries
 from tools_demo.unordered_schedule import optimize_schedule
+from tools_demo.transport_schedule import (
+    TransportTimeEstimator, centered_slot_offset, load_timing_profile, route_estimate,
+)
 
 
 TERMINAL_NAVIGATION_STATES = {
@@ -485,6 +491,10 @@ class MissionCoordinator(Node):
             "cube_order_policy_file",
             _default_cube_order_policy_file(),
         )
+        self.declare_parameter("transport_schedule_enabled", False)
+        self.declare_parameter("transport_replan_minimum_gain_sec", 8.0)
+        self.declare_parameter("transport_uncertainty_weight", 0.15)
+        self.declare_parameter("transport_timing_profile_file", "")
         self.declare_parameter(
             "perception_topic",
             "/competition/perception/targets",
@@ -1015,6 +1025,11 @@ class MissionCoordinator(Node):
         self._override_index = 0
         self._override_pending_side = None
         self._seed_cube_order_override()
+        self._transport_automatic = bool(self.get_parameter("transport_schedule_enabled").value)
+        self._transport_automatic = self._transport_automatic and not bool(self._cube_order_override_entries())
+        self._transport_automatic = self._transport_automatic and not bool(self._task_order_entries)
+        self._transport_responses_complete = False
+        self._transport_epoch_sec = self.get_clock().now().nanoseconds * 1e-9
         if self._schedule_unordered_jobs():
             action = self.machine._navigate_pickup()
         self.handle_action(action)
@@ -1035,6 +1050,16 @@ class MissionCoordinator(Node):
         if payload.get("zone") != self.navigation_location:
             return
         state = payload.get("state")
+        if getattr(self, "_transport_automatic", False):
+            epoch = payload.get("encounter_epoch_sec")
+            responses = payload.get("verified_central_responses")
+            if (payload.get("encounter_task_id") == self.active_task_id
+                    and isinstance(epoch, (int, float)) and math.isfinite(epoch)
+                    and epoch >= self._transport_epoch_sec
+                    and isinstance(responses, list) and all(isinstance(r, str) for r in responses)
+                    and set(responses)
+                    >= {"crossing_cart_1", "crossing_cart_2"}):
+                self._transport_responses_complete = True
         if state in {"sending", "active", "canceling", "timing_out"}:
             self.navigation_seen_active = True
             return
@@ -1049,6 +1074,9 @@ class MissionCoordinator(Node):
             f"nav_result state={state} elapsed="
             f"{time.monotonic() - self.action_started_at:.2f}s"
         )
+        previous_state = self.machine.state
+        failed_pick_departure = (previous_state == "navigating_departure"
+                                 and self.machine.switch_after_departure)
         try:
             action = self.machine.navigation_finished(
                 state == "succeeded"
@@ -1056,6 +1084,15 @@ class MissionCoordinator(Node):
         except MissionValueError as exception:
             self.publish_error(str(exception))
             return
+        if (state == "succeeded" and action.kind == "navigate"
+                and action.location in {"RED", "BLUE"}
+                and (previous_state == "navigating_zone_exit" or failed_pick_departure)
+                and getattr(self, "_transport_automatic", False)):
+            if previous_state == "navigating_zone_exit" and self._round_cube_name:
+                self._cube_done.add(self._round_cube_name)
+                self._round_cube_name = None
+            if self._schedule_transport_jobs(replan=True):
+                action = self.machine._navigate_pickup()
         if (
             state == "succeeded"
             and action.kind == "perceive"
@@ -2078,10 +2115,156 @@ class MissionCoordinator(Node):
             f"cube_order_policy_seeded n={len(entries)}"
         )
 
+    def _schedule_transport_jobs(self, replan=False) -> bool:
+        """Replace only unexecuted jobs at an empty, safe planning boundary."""
+        if (not getattr(self, "_transport_automatic", False)
+                or self.get_parameter("enforce_color_order").value
+                or self.machine.state != "navigating_pickup"):
+            return False
+        offset = self.machine.job_offset
+        remaining = self.machine.jobs[offset:]
+        if not remaining:
+            return False
+        try:
+            share = Path(get_package_share_directory("bot_navigation"))
+            nav = yaml.safe_load((share / "config/competition_zones.yaml").read_text())[
+                "competition_task_navigator"]["ros__parameters"]
+            if nav.get("use_legacy_layout_routes", True):
+                return False
+            strategies = yaml.safe_load(
+                (share / "config/navigation_risk_zones.yaml").read_text())["zone_strategies"]
+            options = {}
+            unavailable = self._cube_done | self._cube_excluded
+            for name, xy in CUBE_WORLD_SLOTS.items():
+                if name not in unavailable:
+                    options.setdefault(
+                        name.split("_")[0],
+                        []).extend(
+                        (name,
+                         c.side,
+                         c) for c in self._cube_approach_candidates(
+                            name,
+                            xy))
+            totals = {zone: sum(j.target_zone == zone for j in self.machine.jobs)
+                      for zone in self.zone_centers}
+            counts = {zone: sum(j.target_zone == zone for j in self.machine.jobs[:offset])
+                      for zone in self.zone_centers}
+            timing_samples = []
+            profile_name = str(self.get_parameter(
+                "transport_timing_profile_file").value or "")
+            if profile_name:
+                tools_share = Path(get_package_share_directory("tools_demo"))
+                profile_path = Path(profile_name)
+                if not profile_path.is_absolute():
+                    profile_path = tools_share / "config" / profile_name
+                try:
+                    timing_samples = load_timing_profile(profile_path, {
+                        "navigation_math.py": Path(__file__).with_name("navigation_math.py"),
+                        "transport_routes.py": Path(__file__).with_name("transport_routes.py"),
+                        "task_navigator.py": Path(__file__).with_name("task_navigator.py"),
+                        "competition_zones.yaml": share / "config/competition_zones.yaml",
+                        "originbot_nav2.yaml": share / "param/originbot_nav2.yaml",
+                        "navigation_risk_zones.yaml": share / "config/navigation_risk_zones.yaml",
+                        "mission.yaml": tools_share / "config/mission.yaml"})
+                except (OSError, ValueError) as exception:
+                    self.get_logger().warn(
+                        f"transport_timing_profile_rejected: {exception}")
+            estimator = TransportTimeEstimator(
+                self.zone_nav_poses,
+                strategies,
+                CUBE_WORLD_SLOTS,
+                totals,
+                spacing=self.place_slot_spacing,
+                maximum_abs_y=self.place_maximum_abs_y,
+                uncertainty_weight=float(
+                    self.get_parameter("transport_uncertainty_weight").value),
+                failures=dict(
+                    self._cube_failures),
+                responses_complete=self._transport_responses_complete,
+                navigation_parameters=nav,
+                timing_samples=timing_samples)
+            # A geometry-only replacement must not silently remove the only
+            # planned central encounter. Real proof still comes from Nav2's
+            # timestamped, current-epoch response verification, not this DP.
+            required = ()
+            if (not self._transport_responses_complete
+                    and "blue_cube_3" not in self._cube_done
+                    and any(j.color == "blue" for j in remaining)):
+                required = ("blue_cube_3",)
+            start = self._odom_pose()
+            jobs, entries, estimate = optimize_schedule(
+                remaining, options, start, self.zone_nav_poses, None,
+                transition=estimator.transition, required_cubes=required,
+                zone_counts=counts)
+            if not validate_pick_entries(entries, jobs):
+                return False
+            incumbent_entries = self._task_order_entries[self._override_index:]
+            incumbent = route_estimate(
+                remaining,
+                incumbent_entries,
+                options,
+                start,
+                estimator.transition,
+                counts)
+            if not set(required) <= {
+                    e.split(":")[0] for e in incumbent_entries}:
+                incumbent = math.inf
+            threshold = float(self.get_parameter(
+                "transport_replan_minimum_gain_sec").value)
+            if not math.isfinite(threshold) or threshold < 0:
+                raise ValueError(
+                    "Replan minimum gain must be finite and nonnegative")
+            if (replan or incumbent_entries) and incumbent - \
+                    estimate < threshold:
+                self.get_logger().info(
+                    f"transport_replan_hold remaining={len(remaining)} "
+                    f"incumbent_sec={incumbent:.2f} best_sec={estimate:.2f} "
+                    f"threshold_sec={threshold:.2f}")
+                return False
+            prefix = tuple(self.machine.jobs[:offset])
+            jobs = tuple(
+                replace(
+                    j,
+                    index=offset+i+1,
+                    total=len(
+                        self.machine.jobs)) for i,
+                j in enumerate(jobs))
+            self.machine.jobs = prefix + jobs
+            self._task_order_entries = entries
+            self._override_index = 0
+            self._override_pending_side = None
+            self.get_logger().info(
+                f"transport_schedule replan={replan} offset={offset} "
+                f"risk_adjusted_estimate_sec={estimate:.2f} "
+                f"incumbent_sec={incumbent:.2f} required={required} "
+                f"responses_complete={self._transport_responses_complete} "
+                f"timing_samples={len(timing_samples)} "
+                f"entries={entries} requirements={[(j.color, j.target_zone) for j in jobs]}")
+            lookup = {f"{n}:{s}": c for items in options.values()
+                      for n, s, c in items}
+            trace_counts, trace_pose = dict(counts), start
+            for i, (job, entry) in enumerate(zip(jobs, entries)):
+                slot = trace_counts.get(job.target_zone, 0)
+                candidate = lookup[entry]
+                parts = estimator.components(
+                    trace_pose, candidate, job.target_zone, slot, i == len(jobs)-1)
+                self.get_logger().info(
+                    f"transport_prediction job={job.index} entry={entry} "
+                    f"zone={job.target_zone} components_sec="
+                    f"{json.dumps({k: round(v, 2) for k, v in parts.items()}, sort_keys=True)}")
+                _, trace_pose = estimator.transition(
+                    trace_pose, candidate, job.target_zone, slot, i == len(jobs)-1)
+                trace_counts[job.target_zone] = slot + 1
+            return True
+        except (OSError, KeyError, TypeError, ValueError, yaml.YAMLError) as exception:
+            self.get_logger().warn(f"transport_schedule_fallback: {exception}")
+            return False
+
     def _schedule_unordered_jobs(self) -> bool:
         """Schedule legal goods freely; explicit operator overrides win."""
         if (self.get_parameter("enforce_color_order").value
-                or self._cube_order_override_entries()):
+                or self._cube_order_override_entries()
+                or getattr(self, "_task_order_entries", ())):
             return False
         options = {}
         for name, xy in CUBE_WORLD_SLOTS.items():
@@ -2110,6 +2293,12 @@ class MissionCoordinator(Node):
         self.get_logger().info(
             f"unordered_schedule estimate={estimate:.2f} entries={entries} "
             f"requirements={[(j.color, j.target_zone) for j in jobs]}")
+        # Keep a complete legal incumbent before evaluating the richer model.
+        # The same gain floor protects both initial and rolling replacements;
+        # unmeasured alternatives must not win merely by a few predicted
+        # seconds.
+        if self.get_parameter("transport_schedule_enabled").value:
+            self._schedule_transport_jobs()
         return True
 
     def _select_best_cube(self, job) -> Optional[str]:
@@ -2749,21 +2938,14 @@ class MissionCoordinator(Node):
             if candidate.index == job.index
         )
         count = len(jobs_in_zone)
-        centered_index = slot_index - (count - 1) / 2.0
         # Spread the slots across the arm's lateral reach window instead of
         # a fixed 0.08 m pitch. The chassis clears the 3 cm cube (base plate
         # bottom sits ~5.3 cm above ground), so the observed collision is the
         # gripper brushing an already-placed cube while descending to place an
         # adjacent one. Few-cube deliveries now keep much larger separation
         # (2 cubes -> 0.32 m apart) while 5-cube fills stay at the arm limit.
-        if count > 1:
-            spacing = max(
-                self.place_slot_spacing,
-                2.0 * self.place_maximum_abs_y / (count - 1),
-            )
-        else:
-            spacing = 0.0
-        y_offset = centered_index * spacing
+        y_offset = centered_slot_offset(slot_index, count, self.place_slot_spacing,
+                                        self.place_maximum_abs_y)
         return y_offset, slot_index, count
 
     def _expected_cube_base_position(

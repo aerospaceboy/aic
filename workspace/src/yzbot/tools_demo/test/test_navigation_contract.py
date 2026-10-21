@@ -1581,9 +1581,9 @@ def test_path_controller_tolerates_loaded_vm_transform_latency():
     controller = parameters.split("\ncontroller_server:\n", 1)[1].split(
         "\nlocal_costmap:\n", 1
     )[0]
-    # Both the ordinary and the isolated central controller retain the same
-    # VM-safe TF tolerance; adding a profile must not weaken either one.
-    assert _nav_scalars(controller, "transform_tolerance") == [1.0, 1.0]
+    # Ordinary, central and precision waiting controllers retain the same
+    # VM-safe TF tolerance; adding a profile must not weaken any of them.
+    assert _nav_scalars(controller, "transform_tolerance") == [1.0, 1.0, 1.0]
 
 
 def test_valid_path_keeps_rotation_shim_alignment_stable():
@@ -3559,11 +3559,12 @@ def test_new_layout_keeps_the_original_mover_bypass_gates():
     Evidence 20261013T225015: without it, a north-side start on blue_cube_2 ran
     a straight diagonal through the racks and clipped the bottom shelf.
     """
-    block = _pickup_guide_block()
-    assert "OBSTACLE_2_NORTH_SOUTH_GATES" in block
-    assert "OBSTACLE_2_WEST_UPPER_GATE" in block
-    assert "prefix = guides + bypass" in block
-    assert "return prefix + central_gates" in block
+    from tools_demo.transport_routes import current_pickup_guides
+    from tools_demo.navigation_math import ZonePose
+    poses = current_pickup_guides(
+        "BLUE_CUBE_2", -4.5, 3.8, ZonePose("entry", -10.1, -5.6, 3.14))
+    assert [p.zone for p in poses][-3:] == [
+        "obstacle_2_north_gate", "obstacle_2_south_gate", "obstacle_2_west_upper"]
 
 
 def test_dock_fail_threshold_is_beyond_the_arrival_band():

@@ -131,7 +131,9 @@ def test_delivery_route_stages_bound_the_pre_turn_before_nav2():
     assert "needs_pre_navigation_alignment" in body
     assert "self.pre_navigation_alignment_timeout_ns" in body
     assert "self._send_next_goal()" in body
-    assert source.count("self._continue_staged_navigation()") == 2
+    # Nav2 result, its serialized handoff, and the separately proved physical
+    # wait-anchor arrival all use the same staged pre-alignment owner.
+    assert source.count("self._continue_staged_navigation()") == 3
 
 
 def test_zone_return_route_uses_its_own_retreat_and_return_waypoint():

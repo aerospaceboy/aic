@@ -199,6 +199,21 @@ def normalize_quaternion(
     return tuple(component / norm for component in quaternion)
 
 
+def quaternion_angular_error(
+    actual: Sequence[float], target: Sequence[float],
+) -> float:
+    """Return sign-independent rotation error, rejecting invalid readings."""
+    if not all(math.isfinite(v) for v in (*actual, *target)):
+        return math.inf
+    try:
+        actual = normalize_quaternion(actual)
+        target = normalize_quaternion(target)
+    except ValueError:
+        return math.inf
+    dot = abs(sum(a * b for a, b in zip(actual, target)))
+    return 2.0 * math.acos(min(1.0, dot))
+
+
 def rotate_vector(
     quaternion: Sequence[float],
     vector: Sequence[float],
@@ -462,6 +477,76 @@ def transit_pose_for_operation(
     return tuple(float(value) for value in pick_safe_pose)
 
 
+def pick_plane_axes(yaw: float) -> Dict[str, float]:
+    """Keep the shoulder and wrist in the vertical plane through the target."""
+    return {"joint1": yaw, "joint4": 0.0, "joint6": yaw}
+
+
+def pick_plane_error(positions: Dict[str, float], yaw: float) -> float:
+    """Return the largest side-axis error; unknown feedback is not proof."""
+    errors = []
+    for name, reference in pick_plane_axes(yaw).items():
+        value = positions.get(name, math.nan)
+        if not math.isfinite(value):
+            return math.inf
+        errors.append(abs(math.remainder(value - reference, 2.0 * math.pi)))
+    return max(errors)
+
+
+def pick_plane_constraints(yaw: float) -> Constraints:
+    """Bound side-axis motion throughout the approach, including the start."""
+    constraints = Constraints()
+    constraints.name = "pick_vertical_plane"
+    for name, reference in pick_plane_axes(yaw).items():
+        joint = JointConstraint()
+        joint.joint_name = name
+        joint.position = reference
+        joint.tolerance_above = PICK_PLANE_JOINT_TOLERANCE
+        joint.tolerance_below = PICK_PLANE_JOINT_TOLERANCE
+        joint.weight = 1.0
+        constraints.joint_constraints.append(joint)
+    return constraints
+
+
+def pick_trajectory_in_plane(trajectory, yaw: float) -> bool:
+    """Reject side-axis flips at any point, even with a valid endpoint."""
+    joints = trajectory.joint_trajectory
+    if (not math.isfinite(yaw) or not joints.points
+            or not set(ARM_JOINT_NAMES).issubset(joints.joint_names)):
+        return False
+    for point in joints.points:
+        if (len(point.positions) != len(joints.joint_names)
+                or not all(math.isfinite(v) for v in point.positions)):
+            return False
+        positions = dict(zip(joints.joint_names, point.positions))
+        # Absolute angles also reject an extra full turn hidden by wrapping.
+        if any(abs(positions[name] - reference)
+               > PICK_PLANE_JOINT_TOLERANCE
+               for name, reference in pick_plane_axes(yaw).items()):
+            return False
+    return True
+
+
+def pick_alignment_constraints(
+    positions: Dict[str, float], yaw: float,
+) -> Constraints:
+    """Align side axes at height without allowing the arm to fold down."""
+    target = dict(positions)
+    target.update(pick_plane_axes(yaw))
+    constraints = Constraints()
+    constraints.name = "pick_high_alignment"
+    for name in ARM_JOINT_NAMES:
+        low, high = sorted((positions[name], target[name]))
+        joint = JointConstraint()
+        joint.joint_name = name
+        joint.position = (low + high) / 2.0
+        joint.tolerance_above = (high - low) / 2.0 + 0.020
+        joint.tolerance_below = joint.tolerance_above
+        joint.weight = 1.0
+        constraints.joint_constraints.append(joint)
+    return constraints
+
+
 def nearest_equivalent_angle(target: float, current: float) -> float:
     """Shift one joint target by whole turns to the value nearest `current`.
 
@@ -554,7 +639,7 @@ class MoveItPickPlace(Node):
         self.declare_parameter("place_safe_pose", [0.350, 0.000, 0.200])
         self.declare_parameter(
             "tool_orientation",
-            [0.0, 0.9939, 0.0, -0.1100],
+            [0.0, 1.0, 0.0, 0.0],
         )
         self.declare_parameter("tool_to_cube", 0.045)
         self.declare_parameter("pick_transit_height", 0.220)
@@ -1100,7 +1185,10 @@ class MoveItPickPlace(Node):
             return False
         return True
 
-    def compute_ik(self, target_pose: Pose) -> Optional[Dict[str, float]]:
+    def compute_ik(
+        self, target_pose: Pose,
+        seed_positions: Optional[Dict[str, float]] = None,
+    ) -> Optional[Dict[str, float]]:
         """Solve collision-aware arm IK using the live joint state as seed."""
         if self.latest_joint_state is None:
             return None
@@ -1117,6 +1205,12 @@ class MoveItPickPlace(Node):
         ik_request.robot_state.joint_state = copy.deepcopy(
             self.latest_joint_state
         )
+        if seed_positions is not None:
+            state = ik_request.robot_state.joint_state
+            state.position = [
+                float(seed_positions.get(name, value))
+                for name, value in zip(state.name, state.position)
+            ]
         ik_request.avoid_collisions = True
         ik_request.pose_stamped = stamped_pose
         ik_request.timeout = duration_from_seconds(5.0)
@@ -1184,6 +1278,8 @@ class MoveItPickPlace(Node):
             joint_constraint.weight = 1.0
             constraints.joint_constraints.append(joint_constraint)
         goal.request.goal_constraints = [constraints]
+        if path_constraints is not None:
+            goal.request.path_constraints = path_constraints
 
         goal.planning_options.plan_only = False
         goal.planning_options.look_around = False
@@ -1241,6 +1337,92 @@ class MoveItPickPlace(Node):
             self.get_logger().error(f"No IK solution for {label}")
             return False
         return self.move_to_joint_target(solution, label)
+
+    def move_pick_approach(self) -> bool:
+        """Choose a forward IK branch and approach in its vertical plane."""
+        xyz = self.pick_safe_pose
+        if not all(math.isfinite(v) for v in xyz) or xyz[0] <= 0.0:
+            return False
+        yaw = math.atan2(xyz[1], xyz[0])
+        tool = self.pick_tool_pose()
+        current = self.arm_positions()
+        if (
+            not all(math.isfinite(current.get(name, math.nan))
+                    for name in ARM_JOINT_NAMES)
+            or tool is None or not math.isfinite(tool.position.z)
+            or tool.position.z < PICK_PLANE_ALIGN_HEIGHT
+            or abs(math.remainder(current["joint1"] - yaw, 2 * math.pi)) > 0.35
+        ):
+            self.get_logger().error(
+                "pick_approach_rejected: unsafe starting pose "
+                "for plane alignment"
+            )
+            return False
+        # Cached inventory skips scanning: the preceding place often leaves
+        # all six joints at zero, a singular upright seed. KDL can then pick
+        # shoulder/wrist ~= yaw+pi with a 34 cm lateral sweep. Seed bent,
+        # forward configurations and explicitly reject that other branch.
+        candidates = []
+        for pitches in ((0.78, 1.15, -1.21), (0.61, 1.26, -1.49)):
+            seed = dict(zip(ARM_JOINT_NAMES, (
+                yaw, pitches[0], pitches[1], 0.0, pitches[2], yaw,
+            )))
+            solution = self.compute_ik(
+                pose_from_values(xyz, self.tool_orientation),
+                seed_positions=seed,
+            )
+            if solution is None:
+                continue
+            bounded = all(
+                math.isfinite(solution.get(name, math.nan))
+                and abs(solution[name]) < limit - ARM_JOINT_LIMIT_MARGIN
+                for name, limit in ARM_JOINT_LIMITS.items()
+            )
+            if not bounded or pick_plane_error(solution, yaw) > 0.010:
+                self.get_logger().warn(
+                    "pick_ik_branch_rejected: outside plane"
+                )
+                continue
+            cost = sum((solution[name] - current[name]) ** 2
+                       for name in ARM_JOINT_NAMES)
+            candidates.append((cost, solution))
+        if not candidates:
+            self.get_logger().error(
+                "pick_approach_rejected: no forward IK branch"
+            )
+            return False
+        solution = min(candidates, key=lambda item: item[0])[1]
+        aligned = dict(current)
+        aligned.update(pick_plane_axes(yaw))
+        if pick_plane_error(current, yaw) > 0.005:
+            if not self.move_to_joint_target(
+                aligned, "pick_plane_align_high",
+                path_constraints=pick_alignment_constraints(current, yaw),
+            ):
+                return False
+        if (pick_plane_error(self.arm_positions(), yaw)
+                > PICK_PLANE_JOINT_TOLERANCE):
+            self.get_logger().error(
+                "pick_approach_rejected: alignment unverified"
+            )
+            return False
+        self.get_logger().info(
+            f"pick_approach_plane_start yaw={yaw:.5f} "
+            f"joint1_target={solution['joint1']:.5f} "
+            f"joint6_target={solution['joint6']:.5f} "
+            f"cube={self.cube_name}"
+        )
+        if not self.move_to_joint_target(
+            solution, "pick_approach",
+            path_constraints=pick_plane_constraints(yaw),
+        ):
+            return False
+        error = pick_plane_error(self.arm_positions(), yaw)
+        valid = error <= PICK_PLANE_JOINT_TOLERANCE
+        self.get_logger().info(
+            f"pick_approach_plane_end axis_error={error:.5f} valid={valid}"
+        )
+        return valid
 
     def start_joint_target_async(
         self,
@@ -1311,6 +1493,7 @@ class MoveItPickPlace(Node):
         avoid_collisions: bool = True,
         duration_sec: Optional[float] = None,
         via: Optional[Sequence[Sequence[float]]] = None,
+        plane_yaw: Optional[float] = None,
     ) -> bool:
         """Compute, retime, and execute a short guarded Cartesian path."""
         if self.latest_joint_state is None:
@@ -1348,6 +1531,8 @@ class MoveItPickPlace(Node):
         )
         request.revolute_jump_threshold = CARTESIAN_REVOLUTE_JUMP_THRESHOLD
         request.avoid_collisions = avoid_collisions
+        if plane_yaw is not None:
+            request.path_constraints = pick_plane_constraints(plane_yaw)
 
         self.publish_state(f"cartesian_planning:{label}")
         response = self._wait_for_future(
@@ -1370,6 +1555,15 @@ class MoveItPickPlace(Node):
             self.get_logger().error(
                 f"Cartesian path for {label} only reached "
                 f"{response.fraction:.3f}"
+            )
+            return False
+
+        if (
+            plane_yaw is not None
+            and not pick_trajectory_in_plane(response.solution, plane_yaw)
+        ):
+            self.get_logger().error(
+                f"Cartesian side-axis branch rejected for {label}"
             )
             return False
 
@@ -2082,7 +2276,8 @@ class MoveItPickPlace(Node):
         correction_x = 0.014 - rx
         correction_y = ry + 0.009
         if (
-            abs(correction_x) > APPROACH_CORRECTION_X_LIMIT
+            not all(math.isfinite(v) for v in relative)
+            or abs(correction_x) > APPROACH_CORRECTION_X_LIMIT
             or abs(correction_y) > APPROACH_CORRECTION_Y_LIMIT
         ):
             return False
@@ -2096,6 +2291,18 @@ class MoveItPickPlace(Node):
             self.pick_safe_pose[1] + correction_y,
             self.pick_safe_pose[2],
         )
+        pick_corrected = (
+            self.pick_pose[0] + correction_x,
+            self.pick_pose[1] + correction_y,
+            self.pick_pose[2],
+        )
+        try:
+            low_transport_pose(
+                pick_corrected, self.transport_x,
+                getattr(self, "carry_clearance_lift", CARRY_CLEARANCE_LIFT),
+            )
+        except ValueError:
+            return False
         # First lift vertically out of the open fingers. The previous single
         # diagonal retract swept through a slightly offset free cube and
         # could launch it several metres before the correction completed.
@@ -2113,17 +2320,11 @@ class MoveItPickPlace(Node):
             duration_sec=self.pick_lift_duration,
         ):
             return False
-        pick_corrected = (
-            self.pick_pose[0] + correction_x,
-            self.pick_pose[1] + correction_y,
-            self.pick_pose[2],
-        )
-        if not self.cartesian_move(
-            pick_corrected,
-            "pick_correct_descend",
-            avoid_collisions=False,
-            duration_sec=self.pick_lift_duration,
-        ):
+        # Retain the executed correction for the descent AND the later lift.
+        # Otherwise the lift returns diagonally to the obsolete safe column.
+        self.pick_pose = pick_corrected
+        self.pick_safe_pose = safe_corrected
+        if not self.descend_pick_vertically("pick_correct_descend"):
             return False
         if self.validate_grasp_window() is None:
             self.get_logger().warn(
@@ -2133,17 +2334,7 @@ class MoveItPickPlace(Node):
         return True
 
     def refine_pick_target_before_descend(self, label: str) -> bool:
-        """Verify and, when required, re-derive the grasp target before the move.
-
-        The descend is a vertical move, so the cube pose measured relative to
-        link6 at the approach pose is the value validate_grasp_window reports
-        after the descend. Reading it first turns a descend that cannot
-        succeed into either a bounded correction computed at the current base
-        pose or an explicit refusal. Campaign policy_20260918T190835 needed
-        this: after slot-fallback targets it descended onto poses 0.78 m and
-        2.01 m away from the cube, and every wasted descend ended in exactly
-        the grasp-window rejection this live check can make before moving.
-        """
+        """Check the projected grasp and complete lateral alignment at height."""
         self.approach_rejected_reason = None
         relative = self.relative_cube_position()
         provenance = (
@@ -2160,7 +2351,7 @@ class MoveItPickPlace(Node):
         # Slot-fallback / cached targets can be tens of metres off when the
         # entity pose is queried in the wrong frame (observed relative x
         # ~ -10.2 m). Treat that as bad target data, not a grasp miss.
-        if (
+        if not all(math.isfinite(value) for value in relative) or (
             abs(relative[0]) > 0.40
             or abs(relative[1]) > 0.30
             or relative[2] > 0.30
@@ -2173,15 +2364,36 @@ class MoveItPickPlace(Node):
                 f"{relative[2]:.5f}) reason=target_out_of_reach"
             )
             return False
-        if position_within_window(relative, GRASP_XY_LIMIT, GRASP_Z_LIMITS):
+        # link6 +Z points down: a 70 mm descent reduces the relative cube Z
+        # by 70 mm. Applying the final Z window at safe height used to trigger
+        # an unnecessary XY correction on every otherwise aligned pickup.
+        quaternion = self.tool_orientation
+        inverse = (
+            -quaternion[0], -quaternion[1], -quaternion[2], quaternion[3],
+        )
+        translation = rotate_vector(inverse, tuple(
+            self.pick_pose[i] - self.pick_safe_pose[i] for i in range(3)
+        ))
+        projected = tuple(relative[i] - translation[i] for i in range(3))
+        if not GRASP_Z_LIMITS[0] <= projected[2] <= GRASP_Z_LIMITS[1]:
+            self.approach_rejected_reason = "projected_grasp_height_invalid"
+            self.get_logger().error(
+                f"approach_rejected stage={label} {provenance} "
+                f"relative_z={relative[2]:.5f} projected_z={projected[2]:.5f} "
+                "reason=projected_grasp_height_invalid"
+            )
+            return False
+        if position_within_window(projected, GRASP_XY_LIMIT, GRASP_Z_LIMITS):
             self.get_logger().info(
                 f"approach_verified stage={label} {provenance} "
                 f"relative=({relative[0]:.5f},{relative[1]:.5f},"
-                f"{relative[2]:.5f})"
+                f"{relative[2]:.5f}) projected_z={projected[2]:.5f}"
             )
             return True
-        correction_x = 0.014 - relative[0]
-        correction_y = relative[1] + 0.009
+        correction = rotate_vector(
+            quaternion, (projected[0] - 0.014, projected[1] + 0.009, 0.0)
+        )
+        correction_x, correction_y = correction[:2]
         if (
             abs(correction_x) > APPROACH_CORRECTION_X_LIMIT
             or abs(correction_y) > APPROACH_CORRECTION_Y_LIMIT
@@ -2230,6 +2442,24 @@ class MoveItPickPlace(Node):
                 "reason=transport_pose_invalid"
             )
             return False
+        # Updating the endpoint alone would produce a diagonal descent from
+        # the OLD safe pose. Physically complete the XY move before descending.
+        if not self.cartesian_move(
+            corrected_safe,
+            "pick_align_at_safe_height",
+            avoid_collisions=False,
+            duration_sec=self.pick_lift_duration,
+        ):
+            self.approach_rejected_reason = "safe_alignment_failed"
+            return False
+        aligned = self.relative_cube_position()
+        if aligned is None or not position_within_window(
+            tuple(aligned[i] - translation[i] for i in range(3)),
+            GRASP_XY_LIMIT,
+            GRASP_Z_LIMITS,
+        ):
+            self.approach_rejected_reason = "safe_alignment_unverified"
+            return False
         self.pick_pose = corrected_pick
         self.pick_safe_pose = corrected_safe
         self.transport_pose = corrected_transport
@@ -2240,6 +2470,139 @@ class MoveItPickPlace(Node):
             f"correction=({correction_x:.5f},{correction_y:.5f})"
         )
         return True
+
+    def pick_tool_pose(self) -> Optional[Pose]:
+        """Read the physical TCP in base_link, including actual base attitude."""
+        # Gazebo merges the fixed base_link into base_footprint. Their URDF
+        # axes coincide and the only offset is BASE_LINK_HEIGHT along Z.
+        pose = self.get_entity_pose("six_arm::link6", "six_arm::base_footprint")
+        if pose is not None:
+            pose.position.z -= BASE_LINK_HEIGHT
+        return pose
+
+    def calibrate_pick_height_at_safe_pose(self) -> bool:
+        """Keep the physical finger tips above the cube's support surface."""
+        tool = self.pick_tool_pose()
+        relative = self.relative_cube_position()
+        if tool is None or relative is None:
+            self.approach_rejected_reason = "pickup_height_unavailable"
+            return False
+        q = tool.orientation
+        quaternion = (q.x, q.y, q.z, q.w)
+        if (
+            not all(math.isfinite(v) for v in relative)
+            or quaternion_angular_error(quaternion, (0., 1., 0., 0.))
+            > PICK_ORIENTATION_TOLERANCE
+        ):
+            self.approach_rejected_reason = "pickup_height_pose_invalid"
+            return False
+        cube_z = tool.position.z + rotate_vector(quaternion, relative)[2]
+        # A settled cube is 30 mm tall. The finger bottoms overlap its side
+        # while retaining 8 mm of air above its supporting tray. A cached
+        # slot Z plus 25 mm put the 82 mm fingers THROUGH the tray; Gazebo
+        # contacts then tilted the arm despite MoveIt reporting success.
+        height = (
+            cube_z + PICK_FINGER_DOWN_REACH - CUBE_HALF_SIZE
+            + PICK_SURFACE_CLEARANCE
+        )
+        if (
+            not math.isfinite(height)
+            or abs(height - self.pick_pose[2]) > PICK_HEIGHT_CORRECTION_LIMIT
+            or height >= min(tool.position.z, self.pick_safe_pose[2]) - 0.010
+        ):
+            self.approach_rejected_reason = "pickup_height_out_of_bounds"
+            return False
+        pick = (self.pick_pose[0], self.pick_pose[1], height)
+        try:
+            transport = low_transport_pose(
+                pick, self.transport_x,
+                getattr(self, "carry_clearance_lift", CARRY_CLEARANCE_LIFT),
+            )
+        except ValueError:
+            self.approach_rejected_reason = "transport_pose_invalid"
+            return False
+        self.get_logger().info(
+            f"pick_height_calibrated cube={self.cube_name} "
+            f"previous_z={self.pick_pose[2]:.5f} cube_z={cube_z:.5f} "
+            f"pick_z={height:.5f} surface_clearance={PICK_SURFACE_CLEARANCE:.5f}"
+        )
+        self.pick_pose = pick
+        self.transport_pose = transport
+        return True
+
+    def descend_pick_vertically(self, label: str = "pick_descend") -> bool:
+        """Require aligned TCP and descend at measured XY without IK recovery."""
+        start = self.pick_tool_pose()
+        if start is None:
+            return False
+        q = start.orientation
+        orientation_error = quaternion_angular_error(
+            (q.x, q.y, q.z, q.w), self.tool_orientation
+        )
+        position = start.position
+        xy_error = math.hypot(
+            position.x - self.pick_pose[0], position.y - self.pick_pose[1]
+        )
+        if (
+            not all(math.isfinite(v) for v in (position.x, position.y, position.z))
+            or xy_error > PICK_VERTICAL_POSITION_TOLERANCE
+            or orientation_error > PICK_ORIENTATION_TOLERANCE
+            or position.z <= self.pick_pose[2]
+        ):
+            self.get_logger().error(
+                f"vertical_pick_rejected stage={label} xy_error={xy_error:.5f} "
+                f"orientation_error={orientation_error:.5f}"
+            )
+            return False
+        target = (position.x, position.y, self.pick_pose[2])
+        plane_yaw = math.atan2(position.y, position.x)
+        # Keep any subsequent correction/retract above the executed column.
+        self.pick_pose = target
+        self.pick_safe_pose = (target[0], target[1], self.pick_safe_pose[2])
+        self.transport_pose = low_transport_pose(
+            target, self.transport_x,
+            getattr(self, "carry_clearance_lift", CARRY_CLEARANCE_LIFT),
+        )
+        self.get_logger().info(
+            f"vertical_pick_start stage={label} "
+            f"start=({position.x:.5f},{position.y:.5f},{position.z:.5f}) "
+            f"target=({target[0]:.5f},{target[1]:.5f},{target[2]:.5f}) "
+            f"orientation_error={orientation_error:.5f}"
+        )
+        for attempt in range(2):
+            if self.cartesian_move(
+                target, label if attempt == 0 else f"{label}_retry",
+                avoid_collisions=False,
+                duration_sec=self.pick_descend_duration,
+                plane_yaw=plane_yaw,
+            ):
+                break
+            if attempt == 1:
+                self.get_logger().error(
+                    f"vertical_pick_failed stage={label}; no joint-space fallback"
+                )
+                return False
+            self.wait_for_joint_state(timeout_sec=0.5)
+        end = self.pick_tool_pose()
+        if end is None:
+            return False
+        p, q = end.position, end.orientation
+        orientation_error = quaternion_angular_error(
+            (q.x, q.y, q.z, q.w), self.tool_orientation
+        )
+        xy_drift = math.hypot(p.x - target[0], p.y - target[1])
+        z_error = abs(p.z - target[2])
+        valid = (
+            xy_drift <= PICK_VERTICAL_POSITION_TOLERANCE
+            and z_error <= PICK_VERTICAL_POSITION_TOLERANCE
+            and orientation_error <= PICK_ORIENTATION_TOLERANCE
+        )
+        self.get_logger().info(
+            f"vertical_pick_end stage={label} xy_drift={xy_drift:.5f} "
+            f"z_error={z_error:.5f} orientation_error={orientation_error:.5f} "
+            f"valid={valid}"
+        )
+        return valid
 
     def run_pick_only(self) -> bool:
         """Pick one cube, stow the arm, and leave the cube attached."""
@@ -2264,13 +2627,7 @@ class MoveItPickPlace(Node):
             self.publish_state(f"pick_started:{self.cube_name}")
             if not self.command_gripper(0.0, "open"):
                 return False
-            # The preceding scan already leaves the wrist above inventory.
-            # Plan directly to the collision-checked safe pose instead of
-            # adding a redundant transit + Cartesian approach segment.
-            if not self.move_to_pose(
-                self.pick_safe_pose,
-                "pick_approach",
-            ):
+            if not self.move_pick_approach():
                 return False
             if not self.update_stand_collision_objects(
                 CollisionObject.REMOVE,
@@ -2280,40 +2637,12 @@ class MoveItPickPlace(Node):
             # Never descend onto a target the live cube pose does not
             # support; only a bounded recomputation at the current base
             # pose may change the requested grasp pose at this point.
+            if not self.calibrate_pick_height_at_safe_pose():
+                return False
             if not self.refine_pick_target_before_descend("pick_descend"):
                 return False
-            if not self.cartesian_move(
-                self.pick_pose,
-                "pick_descend",
-                avoid_collisions=False,
-                duration_sec=self.pick_descend_duration,
-            ):
-                self.get_logger().warn(
-                    "Retrying transient pick_descend Cartesian planning"
-                )
-                self.wait_for_joint_state(timeout_sec=0.5)
-                if not self.cartesian_move(
-                    self.pick_pose,
-                    "pick_descend_retry",
-                    avoid_collisions=False,
-                    duration_sec=self.pick_descend_duration,
-                ):
-                    # A truncated descend is not always transient: BC3
-                    # (2026-09-11) reached 0.400 and then 0.333, the pick
-                    # aborted after 3.9 s and the mission had to exclude the
-                    # cube and pick another one of the same colour (~30 s).
-                    # The cube is anchored until the gripper has closed, so a
-                    # joint-space move to the same grasp target cannot knock
-                    # it, and the grasp window still validates the result.
-                    self.get_logger().warn(
-                        "pick_descend Cartesian truncated twice; "
-                        "retrying via IK pose move"
-                    )
-                    if not self.move_to_pose(
-                        self.pick_pose,
-                        "pick_descend_fallback",
-                    ):
-                        return False
+            if not self.descend_pick_vertically():
+                return False
 
             grasp_reference = self.validate_grasp_window()
             if grasp_reference is None:
@@ -2822,22 +3151,7 @@ class MoveItPickPlace(Node):
             self.publish_state(f"pick_place_started:{self.cube_name}")
             if not self.command_gripper(0.0, "open"):
                 return False
-            self.get_logger().info(
-                "pick_transit_pose="
-                f"({self.pick_transit_pose[0]:.4f}, "
-                f"{self.pick_transit_pose[1]:.4f}, "
-                f"{self.pick_transit_pose[2]:.4f})"
-            )
-            if not self.move_to_pose(
-                self.pick_transit_pose,
-                "pick_transit",
-            ):
-                return False
-            if not self.cartesian_move(
-                self.pick_safe_pose,
-                "pick_approach",
-                avoid_collisions=False,
-            ):
+            if not self.move_pick_approach():
                 return False
             if not self.update_stand_collision_objects(
                 CollisionObject.REMOVE,
@@ -2847,14 +3161,11 @@ class MoveItPickPlace(Node):
             # Never descend onto a target the live cube pose does not
             # support; only a bounded recomputation at the current base
             # pose may change the requested grasp pose at this point.
+            if not self.calibrate_pick_height_at_safe_pose():
+                return False
             if not self.refine_pick_target_before_descend("pick_descend"):
                 return False
-            if not self.cartesian_move(
-                self.pick_pose,
-                "pick_descend",
-                avoid_collisions=False,
-                duration_sec=self.pick_descend_duration,
-            ):
+            if not self.descend_pick_vertically():
                 return False
 
             if self.validate_grasp_window() is None:

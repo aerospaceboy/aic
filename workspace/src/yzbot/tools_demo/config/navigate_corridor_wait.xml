@@ -1,4 +1,4 @@
-<!-- Ordinary tracking/checks; exact wait-cell planning and precision checker. -->
+<!-- Precision wait tracking; exact planning and unchanged physical checks. -->
 <root main_tree_to_execute="MainTree">
   <BehaviorTree ID="MainTree">
     <RecoveryNode number_of_retries="2" name="NavigateRecovery">
@@ -14,7 +14,7 @@
             <ComputePathToPose goal="{goal}" path="{path}" planner_id="CorridorWaitExact"/>
           </Fallback>
         </RateController>
-        <FollowPath path="{path}" controller_id="FollowPath" goal_checker_id="corridor_wait_goal_checker"/>
+        <FollowPath path="{path}" controller_id="CorridorApproach" goal_checker_id="corridor_wait_goal_checker"/>
         </PipelineSequence>
       </Sequence>
       <ReactiveFallback name="RecoveryFallback">
