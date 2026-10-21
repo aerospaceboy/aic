@@ -51,24 +51,25 @@ def test_restored_guard_admits_safe_window_but_rejects_the_turnaround():
 
 
 def actor_y(phase):
-    phase = phase % 7.2
-    return -.8 + .25 * phase if phase <= 3.6 else 1. - .25 * phase
+    phase = phase % 11.2
+    return -.8 + .25 * phase if phase <= 5.6 else 2. - .25 * phase
 
 
-@pytest.mark.parametrize('initial_phase', [i * .2 for i in range(36)])
+@pytest.mark.parametrize('initial_phase', [i * 11.2 / 36 for i in range(36)])
 @pytest.mark.parametrize('control_delay', [0., .10])
 def test_restored_transit_stays_safe_and_records_only_real_responses(initial_phase, control_delay):
     x, y, yaw = 9.852, .525, math.pi
     admitted = False
+    second_admitted = False
     monitors = [ContinuousResponse(2.6, 1.3, .8), ContinuousResponse(2.6, 1.4, .85)]
     dt, actual_speed = .02, 0.
     queued = []
-    for index in range(1000):
+    for index in range(2500):
         elapsed = index * dt
-        phases = [initial_phase + elapsed, initial_phase + elapsed + 3.6]
+        phases = [initial_phase + elapsed, initial_phase + elapsed + 5.6]
         actors = {name: (ox, actor_y(phase)) for name, ox, phase in
                   zip((FIRST, SECOND), (8.5, 5.), phases)}
-        velocity = .25 if phases[0] % 7.2 < 3.6 else -.25
+        velocity = .25 if phases[0] % 11.2 < 5.6 else -.25
         if not admitted and spawn_corridor_admission(
                 (x, y, yaw), actors[FIRST], velocity):
             admitted = True
@@ -80,7 +81,15 @@ def test_restored_transit_stays_safe_and_records_only_real_responses(initial_pha
         if x <= 3.8:
             break
         scale = compute_scale((x, y, yaw), actors, .75, 1.6, math.radians(65))
-        queued.append(1.1 * scale if admitted else 0.)
+        # Mirror the real handoff: prove mover 2 while rolling, or stop
+        # outside its sweep at the existing x=6.65 safe staging point.
+        if admitted and not second_admitted and 5.8 <= x <= 7.2:
+            second_velocity = .25 if phases[1] % 11.2 < 5.6 else -.25
+            second_admitted = spawn_corridor_admission(
+                (x, y, yaw), actors[SECOND], second_velocity,
+                rolling=actual_speed > .05)
+        blocked_second = admitted and not second_admitted and x <= 6.65 + .02
+        queued.append(1.1 * scale if admitted and not blocked_second else 0.)
         target = queued[max(0, len(queued) - 1 - round(control_delay / dt))]
         actual_speed += max(-5. * dt, min(5. * dt, target - actual_speed))
         x -= actual_speed * dt

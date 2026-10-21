@@ -3,7 +3,8 @@
 import math
 
 from tools_demo.navigation_math import (
-    CORRIDOR_PATROL_SPEED, CORRIDOR_TRANSIT_SPEED, UNIVERSAL_EAST_WAIT_Y,
+    CORRIDOR_PATROL_MIN_Y, CORRIDOR_PATROL_MAX_Y, CORRIDOR_PATROL_SPEED,
+    CORRIDOR_TRANSIT_SPEED, UNIVERSAL_EAST_WAIT_Y,
     corridor_crossing_clear, corridor_lane_release_clear,
 )
 from tools_demo.safety_math import compute_scale
@@ -19,11 +20,13 @@ def guarded_corridor_crossing_clear(
     name = ('competition_moving_obstacle_1' if abs(ox - 8.5) <= .05
             else 'competition_moving_obstacle_2')
     direction = math.copysign(CORRIDOR_PATROL_SPEED, velocity)
-    phase_start = oy + .8 if direction > 0. else 1.8 - (oy + .8)
+    span = CORRIDOR_PATROL_MAX_Y - CORRIDOR_PATROL_MIN_Y
+    phase_start = (oy - CORRIDOR_PATROL_MIN_Y if direction > 0.
+                   else 2 * span - (oy - CORRIDOR_PATROL_MIN_Y))
     for step in range(241):
         t = step * .025
-        phase = (phase_start + CORRIDOR_PATROL_SPEED * t) % 1.8
-        ay = -.8 + (phase if phase <= .9 else 1.8 - phase)
+        phase = (phase_start + CORRIDOR_PATROL_SPEED * t) % (2 * span)
+        ay = CORRIDOR_PATROL_MIN_Y + (phase if phase <= span else 2 * span - phase)
         if math.hypot(x - ox, y - ay) < .60:
             return False
         if x <= ox - .60:

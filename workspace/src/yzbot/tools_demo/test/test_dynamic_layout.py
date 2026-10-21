@@ -231,9 +231,9 @@ def test_corridor_geometry_and_forecast_exclusion_are_preserved():
         p = CONFIG[name]['ros__parameters']
         assert (p['center_x'],p['center_y'],p['amplitude_x'],p['amplitude_y'],
                 p['period_sec'],p['phase_offset_sec']) == (
-                    expected_x,-.35,0,.45,CORRIDOR_PATROL_PERIOD,phase)
+                    expected_x,-.10,0,.70,CORRIDOR_PATROL_PERIOD,phase)
         assert exclusion[0] <= expected_x <= exclusion[2]
-        assert exclusion[1] <= -.8 <= .1 <= exclusion[3]
+        assert exclusion[1] <= -.8 <= .6 <= exclusion[3]
 
 
 def test_only_new_central_carts_enable_physical_proximity_guard():

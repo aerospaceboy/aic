@@ -26,7 +26,7 @@ def test_corridor_actor_predictor_and_command_share_one_speed_contract():
     config = yaml.safe_load((REPO/'bot_navigation/config/competition_zones.yaml').read_text())
     for i in (1, 2):
         p = config[f'competition_moving_obstacle_{i}']['ros__parameters']
-        assert p['period_sec'] == CORRIDOR_PATROL_PERIOD == 7.2
+        assert p['period_sec'] == CORRIDOR_PATROL_PERIOD == 11.2
         assert 4*p['amplitude_y']/p['period_sec'] == CORRIDOR_PATROL_SPEED
         assert CORRIDOR_PATROL_SPEED/p['update_rate_hz'] < .06
         assert p['update_rate_hz'] == p['truth_read_rate_hz'] == 10.
@@ -68,7 +68,8 @@ def test_predictor_does_not_silently_reuse_old_patrol_velocity():
     # Faster candidate's actual .243 m/s must have been modeled during the
     # rejected 7.4 s trial, rather than its sign being applied to .225 m/s.
     candidate_speed = 1.8/7.4
-    assert not corridor_crossing_clear(9.3, .194, math.pi, 8.5, -.11, -.225)
+    assert not corridor_crossing_clear(9.3, .194, math.pi, 8.5, -.11, -.225,
+                                        patrol_speed=.225)
     assert corridor_crossing_clear(
         9.3, .194, math.pi, 8.5, -.11, -candidate_speed,
         patrol_speed=candidate_speed)

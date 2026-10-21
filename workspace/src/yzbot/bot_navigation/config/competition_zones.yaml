@@ -186,13 +186,11 @@ competition_moving_obstacle_1:
     use_sim_time: true
     model_name: competition_moving_obstacle_1
     reference_frame: world
-    # All task distributions first navigate to the open origin staging area.
-    # This small actor parks south of that shared corridor, then crosses it
-    # only when odometry proves the robot is approaching. Nav2 receives no
-    # hard-coded dodge waypoint: lidar obstacle costs determine yield/detour.
+    # Continuous patrol across the shared spawn corridor; timing is independent
+    # of the robot. Live lidar and the full-patrol admission protect the base.
     motion_mode: continuous
     center_x: 8.50
-    center_y: -0.35
+    center_y: -0.10
     center_z: 0.25
     crossing_x: 8.50
     crossing_y: -0.10
@@ -206,10 +204,10 @@ competition_moving_obstacle_1:
     response_lateral_distance: 0.20
     exit_duration_sec: 0.80
     amplitude_x: 0.00
-    amplitude_y: 0.45
-    # Paired with 10 Hz truth: every sample alignment still offers two
-    # safe admissions, including the original 0.56 m/s slow profile.
-    period_sec: 7.2
+    amplitude_y: 0.70
+    # Y[-0.80, 0.60]: only the north endpoint is extended by 0.50 m.
+    # Preserve 0.25 m/s patrol speed and the 10 Hz truth feed.
+    period_sec: 11.2
     phase_offset_sec: 0.0
     update_rate_hz: 10.0
     truth_read_rate_hz: 10.0
@@ -224,7 +222,7 @@ competition_moving_obstacle_2:
     # A phase offset does not guarantee a separate robot response.
     motion_mode: continuous
     center_x: 5.00
-    center_y: -0.35
+    center_y: -0.10
     center_z: 0.25
     crossing_x: 5.00
     crossing_y: -0.10
@@ -240,9 +238,9 @@ competition_moving_obstacle_2:
     response_lateral_distance: 0.20
     exit_duration_sec: 0.80
     amplitude_x: 0.00
-    amplitude_y: 0.45
-    period_sec: 7.2
-    phase_offset_sec: 3.6
+    amplitude_y: 0.70
+    period_sec: 11.2
+    phase_offset_sec: 5.6
     update_rate_hz: 10.0
     truth_read_rate_hz: 10.0
     state_topic: /competition/obstacles/obstacle_2

@@ -108,7 +108,7 @@ def test_arrival_error_still_leaves_multiple_actor_updates_to_admit():
             admitted.append(corridor_lane_release_clear(y, oy, True) and all(
                 corridor_crossing_clear(
                     x, y, math.pi, 8.5, oy, -.225,
-                    crossing_speed=speed, dispatch_delay=delay)
+                    crossing_speed=speed, dispatch_delay=delay, patrol_speed=.225)
                 for speed in (.56, .8) for delay in (.4, .8)))
         assert any(all(admitted[i:i + 3])
                    for i in range(len(admitted) - 2)), offset

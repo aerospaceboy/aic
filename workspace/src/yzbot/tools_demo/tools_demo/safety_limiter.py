@@ -274,8 +274,8 @@ class SafetyLimiter(Node):
         lane_x = 5.0
         if x_value < 3.0:
             self.west_lane_open = False
-        if not -2.00 <= y_value <= 1.30:
-            # Outside the lateral reach of the patrol (centre y=-0.35).
+        if not -2.00 <= y_value <= 1.80:
+            # Outside the lateral reach of the patrol (centre y=-0.10).
             return False
         approach_east = (
             lane_x + 0.80 <= x_value <= lane_x + 1.55
@@ -346,7 +346,7 @@ class SafetyLimiter(Node):
         # A wider y band catches more approach paths before commitment.
         if not (
             9.3 <= x_value <= 9.75
-            and -1.2 <= y_value <= 1.2
+            and -1.2 <= y_value <= 1.7
             and math.cos(yaw) < -0.4
         ):
             return False
@@ -378,7 +378,7 @@ class SafetyLimiter(Node):
             )
         # Never demand more separation than this patrol can offer, or a route
         # that crosses straight over the lane would wait forever: mover 1
-        # sweeps y in [-0.80, 0.10].
+        # sweeps y in [-0.80, 0.60].
         # Floor 0.75: at 0.60 a base that had drifted INTO the patrol band
         # (2026-10-06 case 4bA_1rC left the corridor at y=0.45, waited at
         # y=-0.09) was released with only 0.71 m of separation and the actor

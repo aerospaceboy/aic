@@ -44,5 +44,6 @@ def test_reverse_endpoint_cannot_enter_sweep_from_safe_start():
 def test_reverse_clear_of_full_sweep_remains_available():
     """The guard does not disable all obstacle recovery."""
     assert mover_reverse_segment_clear((9.3, 0.0), (9.5, 0.0), 8.5)
-    assert mover_reverse_segment_clear((8.5, 0.8), (8.7, 0.8), 8.5)
+    assert not mover_reverse_segment_clear((8.5, 0.8), (8.7, 0.8), 8.5)
+    assert mover_reverse_segment_clear((8.5, 1.3), (8.7, 1.3), 8.5)
     assert not mover_reverse_segment_clear((5.1, 0.2), (5.3, 0.2), 5.0)

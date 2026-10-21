@@ -462,8 +462,8 @@ def test_admitted_phases_preserve_physical_margin_at_intermediate_speeds(
                 duration = (x - ox + .6) / speed + delay
                 for i in range(math.ceil(duration / .01) + 1):
                     t = i * .01
-                    phase = (oy + .8 + velocity * t) % 1.8
-                    actor_y = -.8 + (phase if phase <= .9 else 1.8 - phase)
+                    phase = (oy + .8 + velocity * t) % 2.8
+                    actor_y = -.8 + (phase if phase <= 1.4 else 2.8 - phase)
                     robot_x = x - speed * max(0., t - delay)
                     assert math.hypot(robot_x - ox, .55 - actor_y) >= .56
     assert admitted > 0
@@ -477,7 +477,7 @@ def test_admitted_windows_remain_safe_with_the_live_guard_slowdown(
 ):
     admitted = 0
     for phase_index in range(37):
-        oy = -.8 + .9 * phase_index / 36
+        oy = -.8 + 1.4 * phase_index / 36
         for velocity in (-.25, .25):
             if not spawn_corridor_admission((x, .55, math.pi), (ox, oy),
                                             velocity, rolling):
@@ -488,8 +488,8 @@ def test_admitted_windows_remain_safe_with_the_live_guard_slowdown(
                 cleared = False
                 for index in range(241):
                     t = index * .025
-                    phase = (oy + .8 + velocity * t) % 1.8
-                    ay = -.8 + (phase if phase <= .9 else 1.8 - phase)
+                    phase = (oy + .8 + velocity * t) % 2.8
+                    ay = -.8 + (phase if phase <= 1.4 else 2.8 - phase)
                     assert math.hypot(robot_x - ox, .55 - ay) >= .56
                     if robot_x <= ox - .6:
                         cleared = True

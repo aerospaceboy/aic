@@ -5,6 +5,15 @@ import math
 from typing import Optional, Sequence
 
 
+# Spawn movers: extend only the positive Y endpoint by 0.50 m.
+# Preserve 0.25 m/s physical speed; the longer path needs an 11.2 s cycle.
+CORRIDOR_PATROL_MIN_Y = -0.80
+CORRIDOR_PATROL_MAX_Y = 0.60
+CORRIDOR_PATROL_SPEED = 0.25
+CORRIDOR_PATROL_PERIOD = 11.2
+CORRIDOR_TRANSIT_SPEED = 1.10
+
+
 VALID_ZONES = ("A", "B", "C")
 VALID_ZONE_EXITS = tuple(f"{zone}_EXIT" for zone in VALID_ZONES)
 VALID_PICKUPS = ("RED", "BLUE")
@@ -474,13 +483,13 @@ def mover_reverse_segment_clear(
     start_xy: Sequence[float],
     end_xy: Sequence[float],
     actor_x: float,
-    minimum_y: float = -0.80,
-    maximum_y: float = 0.10,
+    minimum_y: float = CORRIDOR_PATROL_MIN_Y,
+    maximum_y: float = CORRIDOR_PATROL_MAX_Y,
     minimum_distance: float = 0.60,
 ) -> bool:
     """Admit a reverse only outside the mover's complete swept segment.
 
-    Both competition movers have fixed X and patrol Y[-0.8,0.1]. Checking
+    Both competition movers have fixed X and patrol Y[-0.8,0.6]. Checking
     the currently observed Y alone can back the robot into their next pose.
     A 2 cm spatial sample plus a 1 cm distance buffer bounds interpolation
     error; endpoints and the occupied starting pose are included.
@@ -1237,17 +1246,6 @@ def triangle_wave(elapsed_sec: float, period_sec: float) -> float:
 
 MOVER_HOLD_MIN_TRIGGER = 1.05
 
-# One shared crossing model for admission, direct control and the final guard.
-# The 0.90 m Y sweep traverses twice per cycle. Keep the physical geometry and
-# safety separation unchanged. Faster patrols require a physically confirmed
-# waiting pose: the ordinary 0.20m arrival error erased the safe window.
-# The private 0.03m wait checker plus 0.04m odometry proof keep that window
-# observable at 10Hz, including the original slow/delayed transit profiles.
-CORRIDOR_PATROL_PERIOD = 7.2
-CORRIDOR_PATROL_SPEED = 1.8 / CORRIDOR_PATROL_PERIOD
-CORRIDOR_TRANSIT_SPEED = 1.10
-
-
 # Lane the two corridor actors block when their crossing is triggered.
 MOVER_CROSSING_LANE_Y = -0.10
 
@@ -1265,7 +1263,7 @@ def mover_crossing_blocked(
 ) -> bool:
     """Whether one corridor mover gates the base's current approach.
 
-    The movers patrol Y[-0.8, 0.1] across the spawn corridor (robot lane
+    The movers patrol Y[-0.8, 0.6] across the spawn corridor (robot lane
     y ~ 0.2), so passing beside a mover at its north swing leaves as little
     as 0.03-0.05 m of surface clearance even while the robot is already
     yielding (measured 2026-10-05: 0.038 and 0.053 m). The base must hold
@@ -1324,13 +1322,13 @@ def corridor_crossing_clear(
     robot_x: float, robot_y: float, yaw: float, mover_x: float,
     mover_y: float, mover_vy: float, clearance: float = 0.60,
     crossing_speed: float = 0.8, dispatch_delay: float = 0.4,
-    patrol_speed: float = 0.225,
+    patrol_speed: float = CORRIDOR_PATROL_SPEED,
 ) -> bool:
     """
-    Estimate admission for the frozen original Y patrols.
+    Estimate admission for the current spawn-mover Y patrols.
 
     Predict a straight crossing at the supplied speed and latency, with
-    reflection at Y=-0.8/0.1. This is a conservative admission test, not a
+    reflection at the shared Y patrol bounds. This is a conservative admission test, not a
     replacement for live collision protection or physical validation.
     """
     values = (robot_x, robot_y, yaw, mover_x, mover_y, mover_vy, clearance,
@@ -1341,7 +1339,8 @@ def corridor_crossing_clear(
         return False
     # Unknown direction, out-of-layout positions or non-crossing headings
     # cannot justify admitting the base into a live lane.
-    if abs(mover_vy) < 0.02 or not -0.82 <= mover_y <= 0.12:
+    if (abs(mover_vy) < 0.02
+            or not CORRIDOR_PATROL_MIN_Y - .02 <= mover_y <= CORRIDOR_PATROL_MAX_Y + .02):
         return False
     cos_yaw, sin_yaw = math.cos(yaw), math.sin(yaw)
     if abs(cos_yaw) < 0.4:
@@ -1353,7 +1352,7 @@ def corridor_crossing_clear(
         crossing_speed * abs(cos_yaw)) + dispatch_delay
     if duration > 6.0:
         return False
-    y_value = min(0.1, max(-0.8, mover_y))
+    y_value = min(CORRIDOR_PATROL_MAX_Y, max(CORRIDOR_PATROL_MIN_Y, mover_y))
     velocity = math.copysign(patrol_speed, mover_vy)
     steps = int(math.ceil(duration / 0.05))
     for step in range(steps + 1):
@@ -1364,11 +1363,11 @@ def corridor_crossing_clear(
         if math.hypot(mover_x - bx, y_value - by) < clearance:
             return False
         y_value += velocity * 0.05
-        if y_value < -0.8:
-            y_value = -1.6 - y_value
+        if y_value < CORRIDOR_PATROL_MIN_Y:
+            y_value = 2 * CORRIDOR_PATROL_MIN_Y - y_value
             velocity = abs(velocity)
-        elif y_value > 0.1:
-            y_value = 0.2 - y_value
+        elif y_value > CORRIDOR_PATROL_MAX_Y:
+            y_value = 2 * CORRIDOR_PATROL_MAX_Y - y_value
             velocity = -abs(velocity)
     return True
 

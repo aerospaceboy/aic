@@ -207,8 +207,8 @@ def test_official_world_contains_four_kinematic_moving_obstacles():
         if "name" in model.attrib
     }
     expected_initial_xy = {
-        "competition_moving_obstacle_1": (8.5, -0.35),
-        "competition_moving_obstacle_2": (5.0, -0.35),
+        "competition_moving_obstacle_1": (8.5, -0.10),
+        "competition_moving_obstacle_2": (5.0, -0.10),
         "crossing_cart_1": (0.0, -3.60),
         "crossing_cart_2": (0.4, -3.02),
     }
@@ -248,7 +248,7 @@ def test_official_world_contains_four_kinematic_moving_obstacles():
     assert "competition_moving_obstacle_2:" in config
     assert "competition_moving_obstacle_3:" not in config
     assert config.count("motion_mode: continuous") == 4
-    assert config.count("center_y: -0.35") == 2
+    assert config.count("center_y: -0.10") == 2
     assert config.count("crossing_y: -0.10") == 2
     assert "minimum_robot_distance" not in config
     assert "yield_x" not in config

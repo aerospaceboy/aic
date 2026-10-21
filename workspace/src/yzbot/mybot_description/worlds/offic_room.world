@@ -4153,7 +4153,7 @@
     </model>
     <model name="competition_moving_obstacle_1">
       <static>false</static>
-      <pose>8.5 -0.35 0.25 0 0 0</pose>
+      <pose>8.5 -0.10 0.25 0 0 0</pose>
       <link name="body">
         <kinematic>true</kinematic>
         <gravity>false</gravity>
@@ -4200,7 +4200,7 @@
     </model>
     <model name="competition_moving_obstacle_2">
       <static>false</static>
-      <pose>5.0 -0.35 0.25 0 0 0</pose>
+      <pose>5.0 -0.10 0.25 0 0 0</pose>
       <link name="body">
         <kinematic>true</kinematic>
         <gravity>false</gravity>
