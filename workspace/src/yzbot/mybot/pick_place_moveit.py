@@ -547,6 +547,44 @@ def pick_alignment_constraints(
     return constraints
 
 
+def pick_recovery_height_floor(positions: Dict[str, float]) -> float:
+    """Bound TCP height for every configuration inside the neutral joint box."""
+    def cosine_floor(low, high):
+        if math.ceil((low - math.pi) / (2 * math.pi)) <= math.floor(
+                (high - math.pi) / (2 * math.pi)):
+            return -1.0
+        return min(math.cos(low), math.cos(high))
+
+    if not all(math.isfinite(positions.get(n, math.nan)) for n in ARM_JOINT_NAMES):
+        return -math.inf
+    q2, q3 = positions['joint2'], positions['joint3']
+    low2, high2 = min(0., q2) - .020, max(0., q2) + .020
+    low3, high3 = min(0., q3) - .020, max(0., q3) + .020
+    # Shipped URDF: pedestal .06 + joint origins .07+.05 = .18;
+    # link2 .14, link3+link4 .28. Bound the last .06 wrist link by
+    # -length for ANY wrist orientation, including the scan branch.
+    return (.18 + .14 * cosine_floor(low2, high2)
+            + .28 * cosine_floor(low2 + low3, high2 + high3) - .06)
+
+
+def pick_recovery_constraints(positions: Dict[str, float]) -> Optional[Constraints]:
+    """Use a joint corridor only when its entire box is above the floor."""
+    if pick_recovery_height_floor(positions) < PICK_PLANE_ALIGN_HEIGHT:
+        return None
+    constraints = Constraints()
+    constraints.name = "pick_recovery_high_joint_corridor"
+    for name in ARM_JOINT_NAMES:
+        low, high = sorted((positions[name], 0.))
+        joint = JointConstraint()
+        joint.joint_name = name
+        joint.position = (low + high) / 2.
+        joint.tolerance_above = (high - low) / 2. + .020
+        joint.tolerance_below = joint.tolerance_above
+        joint.weight = 1.
+        constraints.joint_constraints.append(joint)
+    return constraints
+
+
 def nearest_equivalent_angle(target: float, current: float) -> float:
     """Shift one joint target by whole turns to the value nearest `current`.
 
@@ -1296,8 +1334,9 @@ class MoveItPickPlace(Node):
             self.get_logger().error(f"MoveGroup rejected {label}")
             return False
 
+        result_future = goal_handle.get_result_async()
         wrapped_result = self._wait_for_future(
-            goal_handle.get_result_async(),
+            result_future,
             timeout_sec=result_timeout_sec,
         )
         if wrapped_result is None:
@@ -1318,6 +1357,7 @@ class MoveItPickPlace(Node):
                             joint_state.name, joint_state.position)
                     )
                 )
+            self._cancel_and_drain_execution(goal_handle, result_future, label)
             return False
         error_code = wrapped_result.result.error_code.val
         if error_code != MoveItErrorCodes.SUCCESS:
@@ -1338,7 +1378,98 @@ class MoveItPickPlace(Node):
             return False
         return self.move_to_joint_target(solution, label)
 
-    def move_pick_approach(self) -> bool:
+    def recover_pick_plane_start(self, tool: Pose, yaw: float) -> bool:
+        """Lift without turning, then return to a checked upright pose."""
+        self.get_logger().info(
+            f"pick_plane_recovery_start cube={self.cube_name} "
+            f"height={tool.position.z:.5f} target_yaw={yaw:.5f}"
+        )
+        if tool.position.z < PICK_PLANE_ALIGN_HEIGHT:
+            q = tool.orientation
+            orientation = (q.x, q.y, q.z, q.w)
+            if (not all(math.isfinite(v) for v in orientation)
+                    or quaternion_norm(orientation) < 1e-6):
+                return False
+            if not self.cartesian_move(
+                (tool.position.x, tool.position.y, PICK_PLANE_ALIGN_HEIGHT + .14),
+                "pick_plane_recovery_lift", orientation=orientation,
+                avoid_collisions=True,
+            ):
+                return False
+            lifted = self.pick_tool_pose()
+            if (lifted is None or not math.isfinite(lifted.position.z)
+                    or lifted.position.z < PICK_PLANE_ALIGN_HEIGHT):
+                return False
+        # The scan IK may use the reversed shoulder branch. Reset to the
+        # known upright joint goal rather than solving that scan pose again.
+        # A conservative URDF height bound proves every state in this joint
+        # corridor stays high; keep the fast joint-space planner instead of
+        # the Cartesian-region sampler, which took >6s and long detours.
+        constraints = pick_recovery_constraints(self.arm_positions())
+        if constraints is None:
+            self.get_logger().error("pick_plane_recovery_rejected: uncertified joint corridor")
+            return False
+        upright = dict.fromkeys(ARM_JOINT_NAMES, 0.0)
+        if not self.move_to_joint_target(
+            upright, "pick_plane_recovery_upright",
+            path_constraints=constraints, result_timeout_sec=10.0,
+        ):
+            return False
+        if abs(yaw) > .30:
+            upright.update(pick_plane_axes(yaw))
+            if not self.move_to_joint_target(
+                upright, "pick_plane_recovery_heading",
+                path_constraints=pick_alignment_constraints(self.arm_positions(), yaw),
+                result_timeout_sec=10.0,
+            ):
+                return False
+        return True
+
+    def move_visual_pick_approach(self, tool: Pose, current: Dict[str, float],
+                                  yaw: float) -> bool:
+        """Align at scan height, then descend without returning upright."""
+        if (tool.position.z < PICK_PLANE_ALIGN_HEIGHT
+                or abs(math.remainder(current['joint1'] - yaw, 2 * math.pi)) > .35):
+            self.get_logger().error("pick_approach_rejected: visual scan start invalid")
+            return False
+        aligned = dict(current)
+        aligned.update(pick_plane_axes(yaw))
+        if pick_plane_error(current, yaw) > .005:
+            if not self.move_to_joint_target(
+                aligned, "pick_visual_align_plane_high",
+                path_constraints=pick_alignment_constraints(current, yaw),
+            ):
+                return False
+        if pick_plane_error(self.arm_positions(), yaw) > PICK_PLANE_JOINT_TOLERANCE:
+            return False
+        # A long-reach cube may require a slightly lower hover than the
+        # scan view. Every candidate stays above the original alignment floor;
+        # incomplete Cartesian paths are never sent for execution.
+        heights = sorted({min(tool.position.z, h) for h in
+                          (tool.position.z, .30, .28, .26)}, reverse=True)
+        for height in heights:
+            if height < PICK_PLANE_ALIGN_HEIGHT:
+                continue
+            if self.cartesian_move(
+                (self.pick_safe_pose[0], self.pick_safe_pose[1], height),
+                "pick_visual_align_xy_high", avoid_collisions=True,
+                plane_yaw=yaw,
+            ):
+                break
+        else:
+            return False
+        self.get_logger().info(
+            f"visual_pick_direct_start cube={self.cube_name} hover_height={height:.5f}"
+        )
+        if not self.descend_pick_vertically(
+            "pick_visual_descend_to_safe", to_safe_pose=True,
+        ):
+            return False
+        valid = pick_plane_error(self.arm_positions(), yaw) <= PICK_PLANE_JOINT_TOLERANCE
+        self.get_logger().info(f"visual_pick_direct_end cube={self.cube_name} valid={valid}")
+        return valid
+
+    def move_pick_approach(self, label: str = "pick_approach") -> bool:
         """Choose a forward IK branch and approach in its vertical plane."""
         xyz = self.pick_safe_pose
         if not all(math.isfinite(v) for v in xyz) or xyz[0] <= 0.0:
@@ -1349,15 +1480,36 @@ class MoveItPickPlace(Node):
         if (
             not all(math.isfinite(current.get(name, math.nan))
                     for name in ARM_JOINT_NAMES)
-            or tool is None or not math.isfinite(tool.position.z)
-            or tool.position.z < PICK_PLANE_ALIGN_HEIGHT
-            or abs(math.remainder(current["joint1"] - yaw, 2 * math.pi)) > 0.35
+            or tool is None
+            or not all(math.isfinite(v) for v in (
+                tool.position.x, tool.position.y, tool.position.z))
         ):
             self.get_logger().error(
                 "pick_approach_rejected: unsafe starting pose "
                 "for plane alignment"
             )
             return False
+        if (getattr(self, "operation", None) == "pick"
+                and getattr(self, "target_source", None) == "perception"):
+            return self.move_visual_pick_approach(tool, current, yaw)
+        if (tool.position.z < PICK_PLANE_ALIGN_HEIGHT
+                or abs(math.remainder(current["joint1"] - yaw, 2 * math.pi)) > .35):
+            if not self.recover_pick_plane_start(tool, yaw):
+                self.get_logger().error("pick_approach_rejected: high recovery failed")
+                return False
+            tool = self.pick_tool_pose()
+            current = self.arm_positions()
+            if (tool is None or not math.isfinite(tool.position.z)
+                    or tool.position.z < PICK_PLANE_ALIGN_HEIGHT
+                    or not all(math.isfinite(current.get(name, math.nan))
+                               for name in ARM_JOINT_NAMES)
+                    or abs(math.remainder(current["joint1"] - yaw, 2 * math.pi)) > .35):
+                self.get_logger().error("pick_approach_rejected: high recovery unverified")
+                return False
+            self.get_logger().info(
+                f"pick_plane_recovery_verified cube={self.cube_name} "
+                f"height={tool.position.z:.5f} joint1={current['joint1']:.5f}"
+            )
         # Cached inventory skips scanning: the preceding place often leaves
         # all six joints at zero, a singular upright seed. KDL can then pick
         # shoulder/wrist ~= yaw+pi with a 34 cm lateral sweep. Seed bent,
@@ -1413,7 +1565,7 @@ class MoveItPickPlace(Node):
             f"cube={self.cube_name}"
         )
         if not self.move_to_joint_target(
-            solution, "pick_approach",
+            solution, label,
             path_constraints=pick_plane_constraints(yaw),
         ):
             return False
@@ -1494,6 +1646,7 @@ class MoveItPickPlace(Node):
         duration_sec: Optional[float] = None,
         via: Optional[Sequence[Sequence[float]]] = None,
         plane_yaw: Optional[float] = None,
+        orientation: Optional[Sequence[float]] = None,
     ) -> bool:
         """Compute, retime, and execute a short guarded Cartesian path."""
         if self.latest_joint_state is None:
@@ -1516,10 +1669,11 @@ class MoveItPickPlace(Node):
         )
         request.group_name = "arm"
         request.link_name = "grasping_frame"
+        quaternion = self.tool_orientation if orientation is None else orientation
         waypoints = [
-            pose_from_values(point, self.tool_orientation) for point in via
+            pose_from_values(point, quaternion) for point in via
         ] if via else []
-        waypoints.append(pose_from_values(xyz, self.tool_orientation))
+        waypoints.append(pose_from_values(xyz, quaternion))
         request.waypoints = waypoints
         request.max_step = 0.005
         # The relative jump heuristic falsely rejects smooth long vertical
@@ -2530,7 +2684,8 @@ class MoveItPickPlace(Node):
         self.transport_pose = transport
         return True
 
-    def descend_pick_vertically(self, label: str = "pick_descend") -> bool:
+    def descend_pick_vertically(self, label: str = "pick_descend",
+                                to_safe_pose: bool = False) -> bool:
         """Require aligned TCP and descend at measured XY without IK recovery."""
         start = self.pick_tool_pose()
         if start is None:
@@ -2540,27 +2695,29 @@ class MoveItPickPlace(Node):
             (q.x, q.y, q.z, q.w), self.tool_orientation
         )
         position = start.position
+        requested = self.pick_safe_pose if to_safe_pose else self.pick_pose
         xy_error = math.hypot(
-            position.x - self.pick_pose[0], position.y - self.pick_pose[1]
+            position.x - requested[0], position.y - requested[1]
         )
         if (
             not all(math.isfinite(v) for v in (position.x, position.y, position.z))
             or xy_error > PICK_VERTICAL_POSITION_TOLERANCE
             or orientation_error > PICK_ORIENTATION_TOLERANCE
-            or position.z <= self.pick_pose[2]
+            or position.z <= requested[2]
         ):
             self.get_logger().error(
                 f"vertical_pick_rejected stage={label} xy_error={xy_error:.5f} "
                 f"orientation_error={orientation_error:.5f}"
             )
             return False
-        target = (position.x, position.y, self.pick_pose[2])
+        target = (position.x, position.y, requested[2])
         plane_yaw = math.atan2(position.y, position.x)
         # Keep any subsequent correction/retract above the executed column.
-        self.pick_pose = target
-        self.pick_safe_pose = (target[0], target[1], self.pick_safe_pose[2])
+        self.pick_pose = (target[0], target[1], self.pick_pose[2] if to_safe_pose else target[2])
+        self.pick_safe_pose = (target[0], target[1], target[2] if to_safe_pose
+                               else self.pick_safe_pose[2])
         self.transport_pose = low_transport_pose(
-            target, self.transport_x,
+            self.pick_pose, self.transport_x,
             getattr(self, "carry_clearance_lift", CARRY_CLEARANCE_LIFT),
         )
         self.get_logger().info(
@@ -2572,8 +2729,9 @@ class MoveItPickPlace(Node):
         for attempt in range(2):
             if self.cartesian_move(
                 target, label if attempt == 0 else f"{label}_retry",
-                avoid_collisions=False,
-                duration_sec=self.pick_descend_duration,
+                avoid_collisions=to_safe_pose,
+                duration_sec=(self.pick_lift_duration if to_safe_pose
+                              else self.pick_descend_duration),
                 plane_yaw=plane_yaw,
             ):
                 break
@@ -2820,7 +2978,7 @@ class MoveItPickPlace(Node):
         # MoveIt would otherwise reject every scan retry in turn.
         if not self.enforce_arm_joint_limits():
             return False
-        if not self.move_to_pose(self.pick_safe_pose, "scan_pose"):
+        if not self.move_pick_approach(label="scan_pose"):
             return False
         self.publish_state("scan_ready")
         return True
@@ -3384,7 +3542,9 @@ class MoveItPickPlace(Node):
             request_id = request.get("request_id")
             self.get_logger().info(
                 f"persistent_request id={request_id} "
-                f"op={request.get('operation')} cube={request.get('cube_name')}"
+                f"op={request.get('operation')} cube={request.get('cube_name')} "
+                f"target_source={request.get('target_source', 'unknown')} "
+                f"pick_pose={request.get('pick_pose')}"
             )
             try:
                 self._apply_request_state(request)

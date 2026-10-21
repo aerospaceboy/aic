@@ -254,7 +254,7 @@ def test_mission_uses_separate_delivery_slots_for_accuracy():
 
 
 def test_mission_aims_wrist_rgbd_camera_at_pickup_inventory():
-    """Use the validated shelf-facing tool quaternion only while scanning."""
+    """Scan facing down so the detected target needs no wrist reversal."""
     source = (
         REPOSITORY
         / "tools_demo"
@@ -265,7 +265,7 @@ def test_mission_aims_wrist_rgbd_camera_at_pickup_inventory():
         REPOSITORY / "tools_demo" / "config" / "mission.yaml"
     ).read_text(encoding="utf-8")
     assert (
-        "scan_tool_orientation: [-0.2369, 0.9667, 0.0225, 0.0946]"
+        "scan_tool_orientation: [0.0, 1.0, 0.0, 0.0]"
         in config
     )
     assert "pick_tool_orientation: [0.0, 1.0, 0.0, 0.0]" in config
@@ -276,7 +276,7 @@ def test_mission_aims_wrist_rgbd_camera_at_pickup_inventory():
     assert "reachable_minimum_z: 0.005" in config
     assert "pickup_preferred_y: 0.0" in config
     assert "pick_tool_offset: [0.010, 0.001, 0.025]" in config
-    assert "scan_pose: [0.300, -0.030, 0.390]" in config
+    assert "scan_pose: [0.300, -0.030, 0.320]" in config
     assert '"tool_orientation":' in source
     assert "self.scan_tool_orientation" in source
     assert "self.pick_tool_orientation" in source

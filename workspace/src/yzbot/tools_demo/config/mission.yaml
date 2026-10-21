@@ -27,10 +27,9 @@ competition_mission_coordinator:
     # this changes only the recovery path and never repeats a stale pose.
     # Enable only while the wrist camera is proven live; a dead detector
     # with this on multiplies every pick by the rescan budget.
-    # Camera-driven selection is implemented and the detector now publishes
-    # reliably (see docs/VISION_GRASP_20261021.md). Keep it off until the
-    # pick plane-alignment guard accepts a perception-driven repeat pick.
-    require_perception: false
+    # Every pickup uses a fresh camera target; no cached or fallback slot pick.
+    # Scanning uses the grasp wrist branch; visual picks descend without homing.
+    require_perception: true
     maximum_perception_retries: 1
     maximum_cubes_per_color: 5
     # Soft delivery-zone group preference (C->upper, A/B->lower), metres.
@@ -83,9 +82,9 @@ competition_mission_coordinator:
     # remove that lateral miss without changing the validated X/Z approach.
     pick_tool_offset: [0.010, 0.001, 0.025]
     pick_safe_lift: 0.070
-    scan_pose: [0.300, -0.030, 0.390]
-    # Wrist RGB-D optical axis aimed at the shelf center from scan_pose.
-    scan_tool_orientation: [-0.2369, 0.9667, 0.0225, 0.0946]
+    scan_pose: [0.300, -0.030, 0.320]
+    # Look down in the same forward wrist branch used for the vertical grasp.
+    scan_tool_orientation: [0.0, 1.0, 0.0, 0.0]
     pick_tool_orientation: [0.0, 1.0, 0.0, 0.0]
     # X/Y are a safe fallback only. At runtime the current odometry pose is
     # transformed against each world-fixed slot to cancel Nav2 dock error.

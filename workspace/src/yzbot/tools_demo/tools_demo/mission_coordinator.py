@@ -573,10 +573,10 @@ class MissionCoordinator(Node):
             [0.010, 0.001, 0.025],
         )
         self.declare_parameter("pick_safe_lift", 0.070)
-        self.declare_parameter("scan_pose", [0.300, -0.030, 0.390])
+        self.declare_parameter("scan_pose", [0.300, -0.030, 0.320])
         self.declare_parameter(
             "scan_tool_orientation",
-            [-0.2369, 0.9667, 0.0225, 0.0946],
+            [0.0, 1.0, 0.0, 0.0],
         )
         self.declare_parameter(
             "pick_tool_orientation",
@@ -1749,6 +1749,11 @@ class MissionCoordinator(Node):
         still validates the actual grasp window, so a genuinely moved cube
         falls through to the normal skip path.
         """
+        if self.require_perception:
+            self.get_logger().error(
+                "perception_required_slot_fallback_blocked"
+            )
+            return False
         job = self._active_job()
         if job is None:
             return False
@@ -1782,13 +1787,6 @@ class MissionCoordinator(Node):
                 "z": CUBE_SLOT_BASE_Z,
             },
         }
-        if self.require_perception:
-            # Grasping is supposed to be camera-driven; make the degraded
-            # path impossible to miss in the log instead of a quiet warn.
-            self.get_logger().error(
-                "perception_required_but_falling_back_to_slot:"
-                f"{job.cube_name}:x={cube_x:.3f},y={cube_y:.3f}"
-            )
         self.get_logger().warn(
             f"perception_slot_fallback:{job.cube_name}:"
             f"x={cube_x:.3f},y={cube_y:.3f}"
@@ -2580,7 +2578,8 @@ class MissionCoordinator(Node):
             # authoritative; otherwise the static slot is the better
             # estimate for the outer slots where the camera adds parallax.
             slot_consistent = (
-                expected_before is not None
+                not self.require_perception
+                and expected_before is not None
                 and abs(raw_y - expected_before[1]) <= 0.06
             )
             if abs(raw_y) > CENTERING_LATERAL_THRESHOLD:

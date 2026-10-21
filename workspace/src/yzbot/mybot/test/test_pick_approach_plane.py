@@ -4,7 +4,7 @@ import importlib.util
 import ast
 import math
 from pathlib import Path
-from types import SimpleNamespace
+from types import MethodType, SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
@@ -30,13 +30,23 @@ def arm_for_red3():
         cube_name='red_cube_3',
         pick_safe_pose=(.36012, -.01558, .1216),
         tool_orientation=(0., 1., 0., 0.), positions=positions,
-        pick_tool_pose=lambda: MODULE.pose_from_values(
-            (0., 0., .66), (0., 0., 0., 1.)),
+        tool_pose=MODULE.pose_from_values((0., 0., .66), (0., 0., 0., 1.)),
         get_logger=lambda: Mock(), compute_ik=Mock(return_value=solution))
     arm.arm_positions = lambda: dict(arm.positions)
+    arm.pick_tool_pose = lambda: arm.tool_pose
+    arm.recover_pick_plane_start = MethodType(
+        MODULE.MoveItPickPlace.recover_pick_plane_start, arm)
+
+    def lift(xyz, label, **kwargs):
+        arm.tool_pose.position.z = xyz[2]
+        return True
+
+    arm.cartesian_move = Mock(side_effect=lift)
 
     def move(target, label, **kwargs):
         arm.positions.update(target)
+        if label == 'pick_plane_recovery_upright':
+            arm.tool_pose.position.z = .66
         return True
 
     arm.move_to_joint_target = Mock(side_effect=move)
@@ -91,14 +101,194 @@ def test_already_aligned_start_avoids_redundant_alignment():
 
 
 @pytest.mark.parametrize('height,shoulder', [(.18, 0.), (.66, 2.8)])
-def test_low_or_reversed_start_is_refused_before_planning(height, shoulder):
+def test_low_or_reversed_scan_start_recovers_before_plane_approach(height, shoulder):
     arm, _, _ = arm_for_red3()
     arm.positions['joint1'] = shoulder
-    arm.pick_tool_pose = lambda: MODULE.pose_from_values(
-        (0., 0., height), (0., 0., 0., 1.))
+    arm.tool_pose.position.z = height
+    assert APPROACH(arm)
+    labels = [call.args[1] for call in arm.move_to_joint_target.call_args_list]
+    assert labels[0] == 'pick_plane_recovery_upright'
+    assert labels[-1] == 'pick_approach'
+    if height < MODULE.PICK_PLANE_ALIGN_HEIGHT:
+        lift = arm.cartesian_move.call_args
+        assert lift.args[0][:2] == (0., 0.)
+        assert lift.args[0][2] > MODULE.PICK_PLANE_ALIGN_HEIGHT
+        assert lift.kwargs['orientation'] == (0., 0., 0., 1.)
+        assert lift.kwargs['avoid_collisions'] is True
+    else:
+        arm.cartesian_move.assert_not_called()
+    constraints = arm.move_to_joint_target.call_args_list[0].kwargs['path_constraints']
+    assert len(constraints.joint_constraints) == 6
+    assert not constraints.position_constraints
+    for joint in constraints.joint_constraints:
+        assert joint.position - joint.tolerance_below <= 0.
+        assert joint.position + joint.tolerance_above >= 0.
+
+
+@pytest.mark.parametrize('stage', ['lift', 'reset', 'unverified'])
+def test_failed_or_unverified_recovery_cannot_start_the_pick(stage):
+    arm, _, _ = arm_for_red3()
+    arm.positions['joint1'] = 2.8
+    if stage == 'lift':
+        arm.tool_pose.position.z = .18
+        arm.cartesian_move = Mock(return_value=False)
+    else:
+        arm.move_to_joint_target = Mock(return_value=stage == 'unverified')
     assert not APPROACH(arm)
     arm.compute_ik.assert_not_called()
+    assert all(call.args[1] != 'pick_approach'
+               for call in arm.move_to_joint_target.call_args_list)
+
+
+def test_lift_reporting_success_below_the_floor_cannot_start_joint_recovery():
+    arm, _, _ = arm_for_red3()
+    arm.tool_pose.position.z = .18
+    arm.cartesian_move = Mock(return_value=True)
+    assert not APPROACH(arm)
     arm.move_to_joint_target.assert_not_called()
+
+
+@pytest.mark.parametrize('scanned', [True, False])
+def test_scan_uses_the_forward_grasp_branch_before_recognition(scanned):
+    arm = SimpleNamespace(
+        wait_until_ready=lambda: True, update_stand_collision_objects=lambda *a: True,
+        publish_state=Mock(), enforce_arm_joint_limits=lambda: True,
+        move_pick_approach=Mock(return_value=scanned), pick_safe_pose=(.3, -.03, .32))
+    assert MODULE.MoveItPickPlace.run_scan_only(arm) is scanned
+    arm.move_pick_approach.assert_called_once_with(label='scan_pose')
+
+
+def visual_arm():
+    arm, _, _ = arm_for_red3()
+    arm.operation, arm.target_source = 'pick', 'perception'
+    arm.tool_pose = MODULE.pose_from_values((.30, -.03, .32), (0., 1., 0., 0.))
+    arm.positions.update(dict(zip(MODULE.ARM_JOINT_NAMES,
+                                  (-.10, .20, 1.15, 0., -1.79, -.10))))
+    arm.pick_pose = (.36012, -.01558, .0516)
+    arm.pick_lift_duration, arm.pick_descend_duration, arm.transport_x = 1.1, .6, .28
+    arm.move_visual_pick_approach = MethodType(
+        MODULE.MoveItPickPlace.move_visual_pick_approach, arm)
+    arm.descend_pick_vertically = MethodType(MODULE.MoveItPickPlace.descend_pick_vertically, arm)
+
+    def cartesian(xyz, label, **kwargs):
+        arm.tool_pose = MODULE.pose_from_values(xyz, arm.tool_orientation)
+        return True
+
+    arm.cartesian_move = Mock(side_effect=cartesian)
+    return arm
+
+
+def test_recognized_target_aligns_high_then_descends_without_homing_or_rising():
+    arm = visual_arm()
+    assert APPROACH(arm)
+    labels = [c.args[1] for c in arm.move_to_joint_target.call_args_list]
+    assert labels == ['pick_visual_align_plane_high']
+    assert all(c.args[0]['joint3'] == 1.15 for c in arm.move_to_joint_target.call_args_list)
+    paths = arm.cartesian_move.call_args_list
+    assert [c.args[1] for c in paths] == [
+        'pick_visual_align_xy_high', 'pick_visual_descend_to_safe']
+    assert all(c.args[0][2] <= .32 for c in paths)
+    assert paths[0].args[0][:2] == paths[1].args[0][:2]
+    assert paths[1].kwargs['avoid_collisions'] is True
+    assert arm.pick_pose[2] == .0516
+    arm.compute_ik.assert_not_called()
+
+
+@pytest.mark.parametrize('height,shoulder', [(.18, -.10), (.32, 2.8)])
+def test_unready_visual_pose_cannot_home_after_recognition(height, shoulder):
+    arm = visual_arm()
+    arm.tool_pose.position.z = height
+    arm.positions['joint1'] = shoulder
+    assert not APPROACH(arm)
+    arm.move_to_joint_target.assert_not_called()
+    arm.cartesian_move.assert_not_called()
+
+
+def test_visual_descent_keeps_the_original_xy_gate():
+    arm = visual_arm()
+    move = arm.cartesian_move.side_effect
+
+    def drift(xyz, label, **kwargs):
+        move(xyz, label, **kwargs)
+        arm.tool_pose.position.x += .01
+        return True
+
+    arm.cartesian_move.side_effect = drift
+    assert not APPROACH(arm)
+    assert all(c.args[1] != 'pick_visual_descend_to_safe'
+               for c in arm.cartesian_move.call_args_list)
+
+
+def test_uncertified_folded_configuration_cannot_start_a_joint_reset():
+    arm, _, _ = arm_for_red3()
+    arm.positions.update(joint2=1.2, joint3=1.5)
+    assert MODULE.pick_recovery_height_floor(arm.positions) < .25
+    assert not MODULE.MoveItPickPlace.recover_pick_plane_start(arm, arm.tool_pose, 0.)
+    arm.move_to_joint_target.assert_not_called()
+
+
+@pytest.mark.parametrize('sign', [-1., 1.])
+def test_entire_recovery_joint_box_keeps_the_original_physical_height_floor(sign):
+    import random
+    import numpy as np
+
+    # Independently compose the shipped URDF chain, including every wrist axis.
+    def rotation(axis, angle):
+        c, s = math.cos(angle), math.sin(angle)
+        return (np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]]) if axis == 'y'
+                else np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]]))
+
+    positions = dict(zip(MODULE.ARM_JOINT_NAMES,
+                         (sign * .12, sign * .35, sign * .72, .12, 2.1, -.55)))
+    constraints = MODULE.pick_recovery_constraints(positions)
+    assert constraints is not None
+    floor = MODULE.pick_recovery_height_floor(positions)
+    assert floor >= MODULE.PICK_PLANE_ALIGN_HEIGHT
+    rng = random.Random(42)
+    for _ in range(500):
+        q = [rng.uniform(j.position - j.tolerance_below,
+                         j.position + j.tolerance_above)
+             for j in constraints.joint_constraints]
+        r = rotation('z', q[0]) @ rotation('y', q[1])
+        xyz = np.array([0., 0., .18]) + r @ [0., 0., .14]
+        r = r @ rotation('y', q[2])
+        xyz += r @ [0., 0., .22]
+        r = r @ rotation('z', q[3])
+        xyz += r @ [0., 0., .06]
+        r = r @ rotation('y', -q[4])
+        xyz += r @ [0., 0., .06]
+        assert xyz[2] >= floor
+
+
+def test_recovery_bound_matches_the_shipped_arm_dimensions():
+    import re
+
+    urdf = Path(__file__).parents[2] / 'mybot_description/urdf'
+    arm = (urdf / 'arm.xacro').read_text()
+    values = dict(re.findall(r'name="(\w+)" value="([0-9.]+)"', arm))
+    assert float(values['link2_len']) == .14
+    assert float(values['link3_len']) + float(values['link4_len']) == .28
+    assert float(values['link5_len']) == .06
+    base = (urdf / 'large_base.xacro').read_text()
+    height = float(re.search(r'name="base_height" value="([0-9.]+)"', base)[1])
+    pedestal = height / 2 + .01 + float(values['base_h']) / 2 + float(values['link1_len'])
+    assert pedestal == pytest.approx(.18)
+
+
+def test_timed_out_recovery_drains_its_exact_action_before_returning():
+    future = object()
+    handle = SimpleNamespace(accepted=True, get_result_async=lambda: future)
+    arm = SimpleNamespace(
+        velocity_scaling=1., acceleration_scaling=1., latest_joint_state=None,
+        move_group_client=Mock(), publish_state=Mock(), get_logger=lambda: Mock(),
+        _wait_for_future=Mock(side_effect=[handle, None]),
+        _cancel_and_drain_execution=Mock(return_value=True), wait_for_joint_state=Mock())
+    assert not MODULE.MoveItPickPlace.move_to_joint_target(
+        arm, dict.fromkeys(MODULE.ARM_JOINT_NAMES, 0.),
+        'pick_plane_recovery_upright', result_timeout_sec=10.)
+    arm._cancel_and_drain_execution.assert_called_once_with(
+        handle, future, 'pick_plane_recovery_upright')
+    arm.wait_for_joint_state.assert_not_called()
 
 
 @pytest.mark.parametrize('outcome', ['failed', 'unverified'])
@@ -263,3 +453,24 @@ def test_cartesian_plane_violation_never_reaches_execution():
     arm.execute_client.send_goal_async.assert_not_called()
     request = arm.cartesian_client.call_async.call_args.args[0]
     assert len(request.path_constraints.joint_constraints) == 3
+
+
+def test_recovery_lift_keeps_the_scan_orientation_and_collision_checking():
+    response = SimpleNamespace(error_code=SimpleNamespace(val=-1))
+    arm = SimpleNamespace(
+        latest_joint_state=JointState(), tool_orientation=(0., 1., 0., 0.),
+        get_clock=lambda: SimpleNamespace(now=lambda: SimpleNamespace(
+            to_msg=lambda: MODULE.RobotState().joint_state.header.stamp)),
+        get_logger=lambda: Mock(), publish_state=Mock(),
+        cartesian_client=Mock(), execute_client=Mock(),
+        _wait_for_future=Mock(return_value=response))
+    scan_orientation = (0., 0., 0., 1.)
+    assert not MODULE.MoveItPickPlace.cartesian_move(
+        arm, (.3, -.03, .30), 'pick_plane_recovery_lift',
+        orientation=scan_orientation)
+    request = arm.cartesian_client.call_async.call_args.args[0]
+    q = request.waypoints[0].orientation
+    assert (q.x, q.y, q.z, q.w) == scan_orientation
+    assert request.avoid_collisions is True
+    assert arm.tool_orientation == (0., 1., 0., 0.)
+    arm.execute_client.send_goal_async.assert_not_called()
