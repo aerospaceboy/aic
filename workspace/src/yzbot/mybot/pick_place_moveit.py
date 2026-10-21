@@ -2726,7 +2726,24 @@ class MoveItPickPlace(Node):
                     staging_arm,
                     "return_home_after_world_slot",
                 ):
-                    return False
+                    # The cube is already released, stabilized and verified,
+                    # so the delivery is complete; a stow that timed out must
+                    # not discard it (2026-10-21 AB8-5 lost 4/5 this way).
+                    # Retract once with a simpler target and otherwise defer
+                    # the stow to the next manipulation, which starts with
+                    # enforce_arm_joint_limits() and a scan-pose move.
+                    self.get_logger().warn(
+                        "return_home_after_world_slot_failed_after_delivery"
+                    )
+                    if not self.move_to_pose(
+                        self.place_safe_pose, "place_retract_fallback"
+                    ):
+                        self.get_logger().warn(
+                            "deferred_stow: arm left at the delivery "
+                            "extension; recovered at the next manipulation"
+                        )
+                    else:
+                        self.get_logger().info("place_retract_fallback_ok")
             self.publish_state(f"place_complete:{self.cube_name}")
             succeeded = True
             return True
