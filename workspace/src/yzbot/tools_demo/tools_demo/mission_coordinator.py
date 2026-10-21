@@ -573,7 +573,7 @@ class MissionCoordinator(Node):
             [0.010, 0.001, 0.025],
         )
         self.declare_parameter("pick_safe_lift", 0.070)
-        self.declare_parameter("scan_pose", [0.300, -0.030, 0.320])
+        self.declare_parameter("scan_pose", [0.330, 0.000, 0.300])
         self.declare_parameter(
             "scan_tool_orientation",
             [0.0, 1.0, 0.0, 0.0],

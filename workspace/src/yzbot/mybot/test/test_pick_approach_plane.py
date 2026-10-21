@@ -190,8 +190,20 @@ def test_recognized_target_aligns_high_then_descends_without_homing_or_rising():
     assert all(c.args[0][2] <= .32 for c in paths)
     assert paths[0].args[0][:2] == paths[1].args[0][:2]
     assert paths[1].kwargs['avoid_collisions'] is True
+    assert paths[0].kwargs['duration_sec'] == .45
+    assert paths[1].kwargs['duration_sec'] == .90
+    assert all(c.kwargs['max_joint_velocity'] == .95 for c in paths)
     assert arm.pick_pose[2] == .0516
     arm.compute_ik.assert_not_called()
+
+
+def test_empty_approach_speed_does_not_change_the_final_contact_descent():
+    arm = visual_arm()
+    assert APPROACH(arm)
+    assert arm.descend_pick_vertically()
+    move = arm.cartesian_move.call_args
+    assert move.kwargs['duration_sec'] == arm.pick_descend_duration == .6
+    assert move.kwargs['max_joint_velocity'] is None
 
 
 @pytest.mark.parametrize('height,shoulder', [(.18, -.10), (.32, 2.8)])

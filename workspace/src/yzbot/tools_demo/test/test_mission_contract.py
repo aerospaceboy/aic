@@ -276,7 +276,7 @@ def test_mission_aims_wrist_rgbd_camera_at_pickup_inventory():
     assert "reachable_minimum_z: 0.005" in config
     assert "pickup_preferred_y: 0.0" in config
     assert "pick_tool_offset: [0.010, 0.001, 0.025]" in config
-    assert "scan_pose: [0.300, -0.030, 0.320]" in config
+    assert "scan_pose: [0.330, 0.000, 0.300]" in config
     assert '"tool_orientation":' in source
     assert "self.scan_tool_orientation" in source
     assert "self.pick_tool_orientation" in source

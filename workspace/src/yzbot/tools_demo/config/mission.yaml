@@ -82,7 +82,9 @@ competition_mission_coordinator:
     # remove that lateral miss without changing the validated X/Z approach.
     pick_tool_offset: [0.010, 0.001, 0.025]
     pick_safe_lift: 0.070
-    scan_pose: [0.300, -0.030, 0.320]
+    # Centre the scan yaw to avoid a separate turn from the upright pose;
+    # stay above the 0.25 m alignment floor and closer to the visual grasp.
+    scan_pose: [0.330, 0.000, 0.300]
     # Look down in the same forward wrist branch used for the vertical grasp.
     scan_tool_orientation: [0.0, 1.0, 0.0, 0.0]
     pick_tool_orientation: [0.0, 1.0, 0.0, 0.0]

@@ -105,6 +105,7 @@ def test_grasp_oriented_scan_keeps_the_cube_inside_the_wrist_camera_view():
         'competition_mission_coordinator']['ros__parameters']
     assert config['scan_tool_orientation'] == config['pick_tool_orientation']
     sx, sy, sz = config['scan_pose']
+    assert sy == 0.  # no separate side-axis turn from the upright start
     assert .25 <= sz <= .32
     # URDF: camera is (-.06, 0, -.03) in the downward-facing tool.
     camera = (sx + .06, sy, sz + .03)

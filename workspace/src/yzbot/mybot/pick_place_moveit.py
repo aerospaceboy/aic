@@ -72,6 +72,10 @@ PICK_SURFACE_CLEARANCE = 0.008
 PICK_HEIGHT_CORRECTION_LIMIT = 0.050
 PICK_PLANE_JOINT_TOLERANCE = 0.020
 PICK_PLANE_ALIGN_HEIGHT = 0.250
+# Empty-arm visual approach only. Keep the final contact descent unchanged.
+PICK_VISUAL_ALIGN_DURATION = 0.45
+PICK_VISUAL_DESCEND_DURATION = 0.90
+PICK_VISUAL_JOINT_VELOCITY = 0.95  # below the shipped URDF's 1 rad/s limit
 # Bounded correction applied to the descend target when the live cube pose
 # shows the requested grasp pose is off. The values match the bounds
 # _retry_grasp_with_correction has applied since 2026-09-11, so a pre-descend
@@ -369,7 +373,9 @@ def duration_from_seconds(seconds: float) -> Duration:
     return Duration(sec=whole_seconds, nanosec=nanoseconds)
 
 
-def retime_joint_trajectory(trajectory, duration_sec: float) -> None:
+def retime_joint_trajectory(
+    trajectory, duration_sec: float, max_joint_velocity: Optional[float] = None,
+) -> None:
     """Assign safe, strictly increasing timestamps to a joint trajectory.
 
     Invert a raised-cosine distance profile to get timestamps. Applying the
@@ -383,6 +389,9 @@ def retime_joint_trajectory(trajectory, duration_sec: float) -> None:
         raise ValueError("Cannot retime an empty trajectory")
     if not math.isfinite(duration_sec) or duration_sec <= 0.0:
         raise ValueError("Trajectory duration must be positive")
+    if max_joint_velocity is not None and (
+            not math.isfinite(max_joint_velocity) or max_joint_velocity <= 0.0):
+        raise ValueError("Maximum joint velocity must be positive")
 
     point_count = len(points)
     distances = [0.0]
@@ -420,6 +429,19 @@ def retime_joint_trajectory(trajectory, duration_sec: float) -> None:
         point.velocities = []
         point.accelerations = []
         point.effort = []
+    if max_joint_velocity is not None:
+        times = [p.time_from_start.sec + p.time_from_start.nanosec * 1e-9
+                 for p in points]
+        peak = max((abs(b - a) / (end - start)
+                    for previous, current, start, end in zip(
+                        points, points[1:], times, times[1:])
+                    for a, b in zip(previous.positions, current.positions)), default=0.)
+        if peak > max_joint_velocity:
+            # Stretch the entire smooth profile; never clip joint positions
+            # or shorten a path to satisfy a requested wall-clock duration.
+            stretch = peak / max_joint_velocity + 1e-6
+            for point, timestamp in zip(points, times):
+                point.time_from_start = duration_from_seconds(timestamp * stretch)
 
 
 def point_distance(first: Sequence[float], second: Sequence[float]) -> float:
@@ -1454,6 +1476,8 @@ class MoveItPickPlace(Node):
                 (self.pick_safe_pose[0], self.pick_safe_pose[1], height),
                 "pick_visual_align_xy_high", avoid_collisions=True,
                 plane_yaw=yaw,
+                duration_sec=PICK_VISUAL_ALIGN_DURATION,
+                max_joint_velocity=PICK_VISUAL_JOINT_VELOCITY,
             ):
                 break
         else:
@@ -1647,6 +1671,7 @@ class MoveItPickPlace(Node):
         via: Optional[Sequence[Sequence[float]]] = None,
         plane_yaw: Optional[float] = None,
         orientation: Optional[Sequence[float]] = None,
+        max_joint_velocity: Optional[float] = None,
     ) -> bool:
         """Compute, retime, and execute a short guarded Cartesian path."""
         if self.latest_joint_state is None:
@@ -1729,10 +1754,17 @@ class MoveItPickPlace(Node):
                     if duration_sec is not None
                     else self.cartesian_duration
                 ),
+                max_joint_velocity=max_joint_velocity,
             )
         except ValueError as exception:
             self.get_logger().error(str(exception))
             return False
+
+        end_time = response.solution.joint_trajectory.points[-1].time_from_start
+        self.get_logger().info(
+            f"cartesian_timing label={label} "
+            f"duration={end_time.sec + end_time.nanosec * 1e-9:.5f}"
+        )
 
         goal = ExecuteTrajectory.Goal()
         goal.trajectory = response.solution
@@ -2730,8 +2762,9 @@ class MoveItPickPlace(Node):
             if self.cartesian_move(
                 target, label if attempt == 0 else f"{label}_retry",
                 avoid_collisions=to_safe_pose,
-                duration_sec=(self.pick_lift_duration if to_safe_pose
+                duration_sec=(PICK_VISUAL_DESCEND_DURATION if to_safe_pose
                               else self.pick_descend_duration),
+                max_joint_velocity=(PICK_VISUAL_JOINT_VELOCITY if to_safe_pose else None),
                 plane_yaw=plane_yaw,
             ):
                 break
