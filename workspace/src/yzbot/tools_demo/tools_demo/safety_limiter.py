@@ -27,7 +27,7 @@ from tools_demo.navigation_math import CORRIDOR_TRANSIT_SPEED
 from tools_demo.navigation_math import UNIVERSAL_EAST_WAIT_Y
 from tools_demo.corridor_admission import spawn_corridor_admission
 
-from tools_demo.safety_math import compute_scale
+from tools_demo.safety_math import compute_scale, corridor_side_pass_scale
 
 
 class SafetyLimiter(Node):
@@ -113,6 +113,10 @@ class SafetyLimiter(Node):
             10,
         )
         self.create_timer(0.05, self.publish_base_hold)
+        # The velocity mux may remain silent while the navigator is waiting.
+        # Prove the window before the first moving command, rather than
+        # missing it and stopping again at the independent lane gate.
+        self.create_timer(0.05, self._prewarm_spawn_gates)
         self.create_subscription(
             Odometry,
             str(self.get_parameter("odom_topic").value),
@@ -200,7 +204,7 @@ class SafetyLimiter(Node):
             for model, (x_value, y_value, stamp) in self.obstacles.items()
             if 0 <= now - stamp <= timeout_ns
         }
-        return compute_scale(
+        scale = compute_scale(
             self.robot,
             fresh,
             self.danger,
@@ -208,6 +212,16 @@ class SafetyLimiter(Node):
             self.cone_half,
             motion_sign,
         )
+        if motion_sign <= 0.:
+            return scale
+        source_fresh = {
+            model: xy for model, xy in fresh.items()
+            if (model in getattr(self, "obstacle_source_stamps", {})
+                and 0 <= now * 1e-9 - self.obstacle_source_stamps[model]
+                <= self.obstacle_timeout)
+        }
+        return min(scale, corridor_side_pass_scale(
+            self.robot, source_fresh, self.danger, self.caution))
 
     def _spawn_admission_clear(self, model: str, rolling=False) -> bool:
         """Use the navigator's crossing proof with fresh source time."""

@@ -17,7 +17,7 @@ import yaml
 from tools_demo.corridor_admission import spawn_corridor_admission, wait_anchor_velocity
 from tools_demo.navigation_math import ZonePose
 from tools_demo.safety_limiter import SafetyLimiter
-from tools_demo.safety_math import compute_scale
+from tools_demo.safety_math import compute_scale, corridor_side_pass_scale
 from tools_demo.task_navigator import TaskNavigator
 
 
@@ -110,10 +110,10 @@ def test_stale_truth_cannot_release_either_owner():
 
 
 def test_duplicate_truth_packets_do_not_destroy_a_proven_direction():
-    _, guard, _, model = participants(9.8, 8.5, -.6, -.25)
+    _, guard, _, model = participants(9.8, 8.5, -.5, -.25)
     assert SafetyLimiter._spawn_admission_clear(guard, model)
     message = String(data=json.dumps({
-        'success': True, 'model': model, 'x': 8.5, 'y': -.6,
+        'success': True, 'model': model, 'x': 8.5, 'y': -.5,
         'stamp_sec': 100.}))
     for _ in range(3):
         SafetyLimiter.obstacle_callback(guard, message)
@@ -139,7 +139,7 @@ def test_stationary_truth_cannot_refresh_old_velocity_indefinitely():
     ([], False), ([(99_000_000_000, (9.8, .55, math.pi))], False),
 ])
 def test_clock_lag_uses_confirmed_odometry_without_admitting_future_data(history, release):
-    _, guard, _, model = participants(9.8, 8.5, -.6, -.25)
+    _, guard, _, model = participants(9.8, 8.5, -.5, -.25)
     guard.robot_stamp_ns = 100_012_000_000
     guard.odom_history = history
     assert SafetyLimiter._spawn_admission_clear(guard, model) is release
@@ -323,7 +323,7 @@ def test_wait_lane_merge_finishes_aligned_without_a_parked_turn(
 
 
 def test_stopped_guard_prearms_without_creating_a_motion_command():
-    _, guard, _, _ = participants(9.8, 8.5, -.6, -.25)
+    _, guard, _, _ = participants(9.8, 8.5, -.5, -.25)
     guard.base_hold = False
     guard.publisher = Mock()
     guard.east_gate_blocked = lambda _: False
@@ -334,6 +334,41 @@ def test_stopped_guard_prearms_without_creating_a_motion_command():
     assert guard.east_gate_open
     sent = guard.publisher.publish.call_args.args[0]
     assert sent.linear.x == sent.linear.y == sent.angular.z == 0.
+
+
+@pytest.mark.parametrize('source,release', [(100., True), (98., False)])
+def test_idle_timer_proves_the_window_without_any_velocity_message(source, release):
+    import rclpy
+    from rclpy.context import Context
+    from rclpy.executors import SingleThreadedExecutor
+    from rclpy.node import Node
+    from unittest.mock import patch
+
+    context = Context()
+    # Use a private context so this timer test does not disturb other nodes.
+    rclpy.init(context=context)
+    executor = SingleThreadedExecutor(context=context)
+    node_init = Node.__init__
+    with patch('tools_demo.safety_limiter.Node.__init__',
+               lambda self, name: node_init(self, name, context=context)):
+        node = SafetyLimiter()
+    try:
+        _, guard, _, model = participants(9.8, 8.5, -.5, -.25)
+        for name, value in vars(guard).items():
+            if name not in {'get_logger', 'get_clock'}:
+                setattr(node, name, value)
+        node.get_clock = clock
+        node.obstacle_source_stamps[model] = source
+        node.publisher = Mock()
+        deadline = time.monotonic() + .25
+        while time.monotonic() < deadline and not node.east_gate_open:
+            rclpy.spin_once(node, executor=executor, timeout_sec=.06)
+        assert node.east_gate_open is release
+        node.publisher.publish.assert_not_called()
+    finally:
+        node.destroy_node()
+        executor.shutdown()
+        rclpy.shutdown(context=context)
 
 
 @pytest.mark.parametrize('oy,known,release', [
@@ -460,9 +495,14 @@ def test_admitted_windows_remain_safe_with_the_live_guard_slowdown(
                         cleared = True
                         break
                     if t >= delay:
-                        scale = compute_scale(
-                            (robot_x, .55, math.pi), {'actor': (ox, ay)},
-                            .75, 1.60, math.radians(65), 1.)
+                        actor = ('competition_moving_obstacle_1' if ox == 8.5
+                                 else 'competition_moving_obstacle_2')
+                        actors = {actor: (ox, ay)}
+                        scale = min(compute_scale(
+                            (robot_x, .55, math.pi), actors,
+                            .75, 1.60, math.radians(65), 1.),
+                            corridor_side_pass_scale((robot_x, .55, math.pi),
+                                                     actors, .75, 1.60))
                         robot_x -= 1.1 * scale * .025
                 assert cleared
     assert admitted > 0

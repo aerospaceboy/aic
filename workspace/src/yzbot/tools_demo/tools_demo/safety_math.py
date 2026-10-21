@@ -76,3 +76,27 @@ def relative_positions(
         cos_y * dx + sin_y * dy,
         -sin_y * dx + cos_y * dy,
     )
+
+
+def corridor_side_pass_scale(
+    robot: Optional[Tuple[float, float, float]],
+    obstacles: Dict[str, Tuple[float, float]],
+    danger_radius: float, caution_radius: float,
+) -> float:
+    """Retain distance-based caution until an original mover is abeam."""
+    if robot is None or not all(math.isfinite(v) for v in robot):
+        return 1.
+    x, y, yaw = robot
+    if abs(y - .55) > .07 or abs(math.remainder(yaw - math.pi, 2 * math.pi)) > .04:
+        return 1.
+    actors = {}
+    for name, lane_x in (('competition_moving_obstacle_1', 8.5),
+                         ('competition_moving_obstacle_2', 5.)):
+        actor = obstacles.get(name)
+        if (actor is not None and all(math.isfinite(v) for v in actor)
+                and abs(actor[0] - lane_x) <= .05
+                and -.82 <= actor[1] <= .12 and -.60 <= x - lane_x <= 1.60):
+            actors[name] = actor
+    # Stop including the actor once it is behind. Holding the side-pass
+    # speed after crossing would leave the robot inside a returning sweep.
+    return compute_scale(robot, actors, danger_radius, caution_radius, math.pi / 2.)

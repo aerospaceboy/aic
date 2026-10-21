@@ -6,6 +6,38 @@ from tools_demo.navigation_math import (
     CORRIDOR_PATROL_SPEED, CORRIDOR_TRANSIT_SPEED, UNIVERSAL_EAST_WAIT_Y,
     corridor_crossing_clear, corridor_lane_release_clear,
 )
+from tools_demo.safety_math import compute_scale, corridor_side_pass_scale
+
+
+def guarded_corridor_crossing_clear(
+    pose: tuple[float, float, float], actor: tuple[float, float],
+    velocity: float, delay: float,
+) -> bool:
+    """Prove the variable-speed side-pass policy, including its slowdown."""
+    x, y, yaw = pose
+    ox, oy = actor
+    name = ('competition_moving_obstacle_1' if abs(ox - 8.5) <= .05
+            else 'competition_moving_obstacle_2')
+    direction = math.copysign(CORRIDOR_PATROL_SPEED, velocity)
+    phase_start = oy + .8 if direction > 0. else 1.8 - (oy + .8)
+    for step in range(241):
+        t = step * .025
+        phase = (phase_start + CORRIDOR_PATROL_SPEED * t) % 1.8
+        ay = -.8 + (phase if phase <= .9 else 1.8 - phase)
+        if math.hypot(x - ox, y - ay) < .60:
+            return False
+        if x <= ox - .60:
+            return True
+        if t < delay:
+            continue
+        actors = {name: (ox, ay)}
+        scale = min(compute_scale((x, y, yaw), actors, .75, 1.6,
+                                  math.radians(65)),
+                    corridor_side_pass_scale((x, y, yaw), actors, .75, 1.6))
+        travel = CORRIDOR_TRANSIT_SPEED * scale * .025
+        x += math.cos(yaw) * travel
+        y += math.sin(yaw) * travel
+    return False
 
 
 def wait_anchor_velocity(
@@ -58,4 +90,5 @@ def spawn_corridor_admission(pose, actor, velocity, rolling=False):
         x, y, yaw, ox, oy, velocity, crossing_speed=speed,
         dispatch_delay=delay, patrol_speed=CORRIDOR_PATROL_SPEED)
         for speed in (.56, .80, .85, CORRIDOR_TRANSIT_SPEED)
-        for delay in delays)
+        for delay in delays) and all(guarded_corridor_crossing_clear(
+            pose, actor, velocity, delay) for delay in delays)
