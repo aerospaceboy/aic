@@ -6,7 +6,7 @@ from tools_demo.navigation_math import (
     CORRIDOR_PATROL_SPEED, CORRIDOR_TRANSIT_SPEED, UNIVERSAL_EAST_WAIT_Y,
     corridor_crossing_clear, corridor_lane_release_clear,
 )
-from tools_demo.safety_math import compute_scale, corridor_side_pass_scale
+from tools_demo.safety_math import compute_scale
 
 
 def guarded_corridor_crossing_clear(
@@ -31,9 +31,7 @@ def guarded_corridor_crossing_clear(
         if t < delay:
             continue
         actors = {name: (ox, ay)}
-        scale = min(compute_scale((x, y, yaw), actors, .75, 1.6,
-                                  math.radians(65)),
-                    corridor_side_pass_scale((x, y, yaw), actors, .75, 1.6))
+        scale = compute_scale((x, y, yaw), actors, .75, 1.6, math.radians(65))
         travel = CORRIDOR_TRANSIT_SPEED * scale * .025
         x += math.cos(yaw) * travel
         y += math.sin(yaw) * travel

@@ -17,7 +17,7 @@ import yaml
 from tools_demo.corridor_admission import spawn_corridor_admission, wait_anchor_velocity
 from tools_demo.navigation_math import ZonePose
 from tools_demo.safety_limiter import SafetyLimiter
-from tools_demo.safety_math import compute_scale, corridor_side_pass_scale
+from tools_demo.safety_math import compute_scale
 from tools_demo.task_navigator import TaskNavigator
 
 
@@ -498,11 +498,9 @@ def test_admitted_windows_remain_safe_with_the_live_guard_slowdown(
                         actor = ('competition_moving_obstacle_1' if ox == 8.5
                                  else 'competition_moving_obstacle_2')
                         actors = {actor: (ox, ay)}
-                        scale = min(compute_scale(
+                        scale = compute_scale(
                             (robot_x, .55, math.pi), actors,
-                            .75, 1.60, math.radians(65), 1.),
-                            corridor_side_pass_scale((robot_x, .55, math.pi),
-                                                     actors, .75, 1.60))
+                            .75, 1.60, math.radians(65), 1.)
                         robot_x -= 1.1 * scale * .025
                 assert cleared
     assert admitted > 0
