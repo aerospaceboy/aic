@@ -30,3 +30,18 @@ def test_release_still_requires_verification_before_the_stow():
     stow = block.index("return_home_after_world_slot")
     assert verify < stow
     assert "Placement verification failed" in block[verify:stow]
+
+def test_stow_gets_a_short_budget_after_a_proven_delivery():
+    """AB8-5 spent 60 s on a stalled stow that no longer mattered."""
+    source = PICK_PLACE.read_text(encoding="utf-8")
+    assert "WORLD_SLOT_STOW_TIMEOUT = 8.0" in source
+    block = source[source.index("def run_place_only"):]
+    block = block[:block.index("def run_release_only")]
+    assert "result_timeout_sec=WORLD_SLOT_STOW_TIMEOUT" in block
+    # Every other arm move keeps the original mission-critical budget.
+    assert "result_timeout_sec: float = 60.0" in source
+
+
+def test_stow_timeout_logs_the_joint_state():
+    source = PICK_PLACE.read_text(encoding="utf-8")
+    assert "arm_joint_state_at_timeout" in source

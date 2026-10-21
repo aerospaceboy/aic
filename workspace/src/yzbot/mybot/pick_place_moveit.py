@@ -57,8 +57,21 @@ FINGER_INNER_GAP_OPEN = 0.065
 GRIPPER_CONTACT_MARGIN = 0.003
 GRIPPER_MAX_CLOSE_POSITION = 0.020
 MAX_ATTACHED_DRIFT = 0.020
+# After a delivery is already released, stabilized and verified, the
+# stow is housekeeping: give it a short budget instead of the 60 s used
+# for mission-critical arm motion (AB8-5 lost 60 s to a stalled action).
+WORLD_SLOT_STOW_TIMEOUT = 8.0
 GRASP_XY_LIMIT = 0.035
 GRASP_Z_LIMITS = (0.010, 0.090)
+# New guards for the final Cartesian descent, separate from cube clearance.
+PICK_VERTICAL_POSITION_TOLERANCE = 0.005
+PICK_ORIENTATION_TOLERANCE = 0.05  # radians, full quaternion rotation error
+# arm.xacro: finger centre Z=2*0.020+0.002, length along tool Z=0.080.
+PICK_FINGER_DOWN_REACH = 0.082
+PICK_SURFACE_CLEARANCE = 0.008
+PICK_HEIGHT_CORRECTION_LIMIT = 0.050
+PICK_PLANE_JOINT_TOLERANCE = 0.020
+PICK_PLANE_ALIGN_HEIGHT = 0.250
 # Bounded correction applied to the descend target when the live cube pose
 # shows the requested grasp pose is off. The values match the bounds
 # _retry_grasp_with_correction has applied since 2026-09-11, so a pre-descend
@@ -1137,6 +1150,8 @@ class MoveItPickPlace(Node):
         self,
         target: Dict[str, float],
         label: str,
+        path_constraints: Optional[Constraints] = None,
+        result_timeout_sec: float = 60.0,
     ) -> bool:
         """Plan and execute a collision-checked MoveGroup joint goal."""
         goal = MoveGroup.Goal()
@@ -1187,10 +1202,26 @@ class MoveItPickPlace(Node):
 
         wrapped_result = self._wait_for_future(
             goal_handle.get_result_async(),
-            timeout_sec=60.0,
+            timeout_sec=result_timeout_sec,
         )
         if wrapped_result is None:
-            self.get_logger().error(f"MoveGroup timed out for {label}")
+            self.get_logger().error(
+                f"MoveGroup timed out for {label} "
+                f"after {result_timeout_sec:.1f}s"
+            )
+            # A stalled arm action produced no completion and no error for
+            # 60 s (AB8-5); log the joint state so the next occurrence can
+            # be attributed instead of guessed.
+            joint_state = getattr(self, "latest_joint_state", None)
+            if joint_state is not None:
+                self.get_logger().error(
+                    "arm_joint_state_at_timeout "
+                    + " ".join(
+                        f"{name}={position:.3f}"
+                        for name, position in zip(
+                            joint_state.name, joint_state.position)
+                    )
+                )
             return False
         error_code = wrapped_result.result.error_code.val
         if error_code != MoveItErrorCodes.SUCCESS:
@@ -2725,6 +2756,7 @@ class MoveItPickPlace(Node):
                 if not self.move_to_joint_target(
                     staging_arm,
                     "return_home_after_world_slot",
+                    result_timeout_sec=WORLD_SLOT_STOW_TIMEOUT,
                 ):
                     # The cube is already released, stabilized and verified,
                     # so the delivery is complete; a stow that timed out must
