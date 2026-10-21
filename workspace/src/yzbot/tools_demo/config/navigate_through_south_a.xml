@@ -1,0 +1,23 @@
+<!-- Continuous south-to-A corridor. Retire only physically reached anchors. -->
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="SouthAInitialPlanThenTrackValidity">
+      <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="CentralExact"/>
+      <PipelineSequence name="SouthAReplanWhileFollowing">
+        <!-- Check arrivals every BT tick, not just at the 2 Hz replanning
+             cadence: a fast base can traverse a 0.20 m anchor in <0.5 s. -->
+        <RemovePassedGoals input_goals="{goals}" output_goals="{goals}"
+                           radius="0.20" robot_base_frame="base_footprint"/>
+        <RateController hz="2.0">
+            <Fallback>
+              <!-- Keep a valid path through broad turns; only changed
+                   occupancy requires replanning the unvisited suffix. -->
+              <IsPathValid path="{path}"/>
+              <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="CentralExact"/>
+            </Fallback>
+        </RateController>
+        <FollowPath path="{path}" controller_id="SmoothTransit" goal_checker_id="central_goal_checker"/>
+      </PipelineSequence>
+    </Sequence>
+  </BehaviorTree>
+</root>

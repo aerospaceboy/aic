@@ -40,6 +40,20 @@ OBSTACLE_2_WEST_UPPER_GATE = ZonePose(
 )
 
 
+def continuous_a_route(poses):
+    """Identify the south departure's ordered, physically checked corridor."""
+    return (len(poses) in (4, 5)
+            and [(p.zone, p.x, p.y) for p in poses[:3]] == [
+                ("A_SOUTH_OPEN_CLEAR", -1.20, -4.55),
+                ("A_WALL_SOUTH_CLEAR", -2.10, -.30),
+                ("A_WALL_NORTH_CLEAR", -2.10, 1.85)]
+            and poses[3].zone == "A_SOUTH_DOCK_APPROACH"
+            and poses[3].x == -4.15 and 3.4 <= poses[3].y <= 4.1
+            and (len(poses) == 4 or (
+                -5.2 <= poses[-1].x <= -4.8
+                and poses[-1].y == poses[3].y)))
+
+
 def bay_exit_staging(start, place, distance):
     """Keep the existing south-east departure on its open aisle."""
     x, y = start
@@ -220,6 +234,21 @@ def current_delivery_route(zone, start_x, start_y, place, backup=False,
     """Return validated delivery poses and the A-corridor ownership flag."""
     pending = list(base_guides) + [place]
     dedicated = False
+    if (zone == "A" and start_x is not None and start_y is not None
+            and -4.3 <= start_x <= -3.3 and -13.0 <= start_y <= -11.5
+            and -5.2 <= place.x <= -4.8 and 3.4 <= place.y <= 4.1):
+        # The lower diagonal joins Wall_107 on its west side. Plan around
+        # its east tip, then continue north outside the carts' west sweep.
+        # The old west and south-tip anchors sent this departure back west
+        # across open space after it had already cleared the diagonal.
+        pending = [
+            ZonePose("A_SOUTH_OPEN_CLEAR", -1.20, -4.55, math.pi / 2.0),
+            ZonePose("A_WALL_SOUTH_CLEAR", -2.10, -.30, math.pi / 2.0),
+            ZonePose("A_WALL_NORTH_CLEAR", -2.10, 1.85, math.pi / 2.0),
+            ZonePose("A_SOUTH_DOCK_APPROACH", -4.15, place.y, math.pi),
+            place]
+        log("A_south_continuous_route active")
+        return pending, True
     pocket = (wall57_pocket_waypoints(
         (start_x, start_y), (place.x, place.y))
         if zone == "A" and start_x is not None and start_y is not None

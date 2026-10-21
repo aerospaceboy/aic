@@ -1581,9 +1581,9 @@ def test_path_controller_tolerates_loaded_vm_transform_latency():
     controller = parameters.split("\ncontroller_server:\n", 1)[1].split(
         "\nlocal_costmap:\n", 1
     )[0]
-    # Ordinary, central and precision waiting controllers retain the same
+    # Ordinary, central, precision waiting and south A controllers retain the same
     # VM-safe TF tolerance; adding a profile must not weaken any of them.
-    assert _nav_scalars(controller, "transform_tolerance") == [1.0, 1.0, 1.0]
+    assert _nav_scalars(controller, "transform_tolerance") == [1.0, 1.0, 1.0, 1.0]
 
 
 def test_valid_path_keeps_rotation_shim_alignment_stable():
@@ -2833,7 +2833,7 @@ def test_continuous_nav2_route_preserves_recovery_state():
     assert "from nav2_msgs.action import NavigateThroughPoses" in source
     assert "goal.poses = [cls.stamped_pose(pose, stamp) for pose in poses]" in source
     assert 'self._fallback_batch_to_serial("batch_obstacle_reverse")' in source
-    assert "list(self.nav_batch_poses) + list(" in source
+    assert "list(self.nav_batch_poses[count:]) + list(" in source
     assert 'self.through_action_name = "/navigate_through_poses"' in source
     assert "nav_batch_stage_advanced" in source
     assert "self.progress_anchor_ns = now_ns" in source
