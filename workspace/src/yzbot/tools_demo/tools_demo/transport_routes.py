@@ -42,6 +42,7 @@ OBSTACLE_2_WEST_UPPER_GATE = ZonePose(
 
 def continuous_a_route(poses):
     """Identify the south departure's ordered, physically checked corridor."""
+    poses = [p for p in poses if not p.zone.startswith('FLOW_A_ARC_')]
     return (len(poses) in (4, 5)
             and [(p.zone, p.x, p.y) for p in poses[:3]] == [
                 ("A_SOUTH_OPEN_CLEAR", -1.20, -4.55),

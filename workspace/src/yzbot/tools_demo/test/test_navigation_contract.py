@@ -1583,7 +1583,7 @@ def test_path_controller_tolerates_loaded_vm_transform_latency():
     )[0]
     # Ordinary, central, precision waiting and south A controllers retain the same
     # VM-safe TF tolerance; adding a profile must not weaken any of them.
-    assert _nav_scalars(controller, "transform_tolerance") == [1.0, 1.0, 1.0, 1.0]
+    assert _nav_scalars(controller, "transform_tolerance") == [1.0] * 5
 
 
 def test_valid_path_keeps_rotation_shim_alignment_stable():

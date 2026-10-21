@@ -1,0 +1,29 @@
+<!-- Exact single arc-anchor fallback; original collision and arrival guards. -->
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <RecoveryNode number_of_retries="2" name="CornerNavigateRecovery">
+      <Sequence name="CornerInitialPlanThenTrackValidity">
+        <ComputePathToPose goal="{goal}" path="{path}" planner_id="CornerExact"/>
+        <PipelineSequence name="CornerReplanWhileFollowing">
+          <RateController hz="2.0">
+            <Fallback>
+              <IsPathValid path="{path}"/>
+              <ComputePathToPose goal="{goal}" path="{path}" planner_id="CornerExact"/>
+            </Fallback>
+          </RateController>
+          <FollowPath path="{path}" controller_id="CornerFlow" goal_checker_id="central_goal_checker"/>
+        </PipelineSequence>
+      </Sequence>
+      <ReactiveFallback name="CornerRecoveryFallback">
+        <GoalUpdated/>
+        <RoundRobin name="CornerRecoveryActions">
+          <Sequence name="CornerClearingActions">
+            <ClearEntireCostmap service_name="local_costmap/clear_entirely_local_costmap"/>
+            <ClearEntireCostmap service_name="global_costmap/clear_entirely_global_costmap"/>
+          </Sequence>
+          <Wait wait_duration="1"/>
+        </RoundRobin>
+      </ReactiveFallback>
+    </RecoveryNode>
+  </BehaviorTree>
+</root>

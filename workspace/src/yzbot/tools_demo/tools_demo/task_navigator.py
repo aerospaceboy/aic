@@ -93,6 +93,9 @@ from tools_demo.navigation_math import ZonePose
 # CUBE_DOCK_STANDOFF metres ahead of base_link in the configured dock yaw.
 # Entries stage behind the dock for a straight approach; the remaining
 # entries use un-inflated aisle gaps between two trays.
+from tools_demo.corner_flow import (
+    flow_prefix_size, has_corner_flow, round_navigation_corners,
+)
 from tools_demo.transport_routes import (
     CENTRAL_MOVER_GATE_WEST, CENTRAL_MOVER_GATE_EAST,
     CENTRAL_RED2_NORTH_ENTRY, CENTRAL_PATROL_NORTH_FLANK,
@@ -1874,7 +1877,8 @@ class TaskNavigator(Node):
                 [round(self.latest_x, 4), round(self.latest_y, 4)]
             )
         proven = (getattr(self, "nav_batch_proven_count", 0)
-                  if continuous_a_route(self.nav_batch_poses) else 0)
+                  if (continuous_a_route(self.nav_batch_poses)
+                      or has_corner_flow(self.nav_batch_poses)) else 0)
         # Active through-path precedes its pending suffix. Never draw a
         # return to already-proven anchors behind the moving base.
         for pose in list(self.nav_batch_poses[proven:]) + list(self.pending_poses):
@@ -2858,7 +2862,7 @@ class TaskNavigator(Node):
         # Scope this to adaptive central and south A routes; other batches retain
         # their original strict recovery semantics.
         poses = getattr(self, "nav_batch_poses", [])
-        if (continuous_a_route(poses) or any(
+        if (continuous_a_route(poses) or has_corner_flow(poses) or any(
                 p.zone.startswith("CENTRAL_MOVER_GATE_") for p in poses)):
             count = getattr(self, "nav_batch_proven_count", 0)
             while count < len(poses) - 1 and math.hypot(
@@ -2878,7 +2882,8 @@ class TaskNavigator(Node):
             or self.latest_y is None
         ):
             return
-        if (continuous_a_route(getattr(self, "nav_batch_poses", []))
+        if ((continuous_a_route(getattr(self, "nav_batch_poses", []))
+             or has_corner_flow(getattr(self, "nav_batch_poses", [])))
                 and not TaskNavigator._central_anchor_arrived(self)):
             return
         if not navigation_handoff_reached(
@@ -3352,6 +3357,18 @@ class TaskNavigator(Node):
                 self._recreate_action_client()
         return False
 
+    def _prepare_corner_flow(self) -> None:
+        """Expand only the two verified open turns before dispatch/alignment."""
+        if getattr(self, "use_legacy_layout_routes", True):
+            return
+        poses = round_navigation_corners(
+            (getattr(self, "latest_x", None), getattr(self, "latest_y", None)),
+            self.pending_poses, getattr(self, "active_zone", None))
+        if poses != self.pending_poses:
+            self.stage_total += len(poses) - len(self.pending_poses)
+            self.pending_poses = poses
+            self.get_logger().info(f"corner_flow_prepared stages={len(poses)}")
+
     def _send_next_goal(self) -> None:
         """Send the next pose in a staged navigation command."""
         if TaskNavigator._prune_blue3_encounter_loop(self):
@@ -3366,6 +3383,18 @@ class TaskNavigator(Node):
                 reason="action_server_unavailable",
             )
             self._clear_goal()
+            return
+        TaskNavigator._prepare_corner_flow(self)
+        count = flow_prefix_size(self.pending_poses)
+        if count > 1 and not getattr(self, "corner_flow_failed", False):
+            poses = self.pending_poses[:count]
+            self.pending_poses = self.pending_poses[count:]
+            self.nav_batch_attempted = True
+            self.nav_batch_poses = poses
+            self.nav_goal_pose = poses[-1]
+            self.nav_handoff_requested = False
+            self.stage_index += 1
+            self._send_pose_batch(poses)
             return
         if (continuous_a_route(self.pending_poses)
                 and not getattr(self, "nav_batch_attempted", False)):
@@ -3384,6 +3413,7 @@ class TaskNavigator(Node):
             return
         if (
             len(self.pending_poses) > 1
+            and not has_corner_flow(self.pending_poses)
             and not getattr(self, "nav_batch_attempted", False)
             and not self.pending_poses[0].zone.startswith("universal_")
             # These wall-tip anchors already have a safe serial route. A
@@ -3564,6 +3594,8 @@ class TaskNavigator(Node):
         # is unchanged.
         message.speed_limit = (
             0.75 if corner else approach_limits.get(stage, 0.0))
+        if stage is not None and stage.startswith('FLOW_'):
+            message.speed_limit = .75 if stage.startswith('FLOW_A_') else 1.2
         publisher.publish(message)
         self.get_logger().info(
             f"nav_stage_speed_limit limit={message.speed_limit:.2f} "
@@ -3643,6 +3675,9 @@ class TaskNavigator(Node):
         if pose.zone.startswith("WALL57_POCKET_"):
             goal.behavior_tree = str(Path(self.through_behavior_tree).with_name(
                 "navigate_clearance_to_pose.xml"))
+        if pose.zone.startswith('FLOW_'):
+            goal.behavior_tree = str(Path(self.through_behavior_tree).with_name(
+                "navigate_corner_to_pose.xml"))
         self.nav_request_id = getattr(self, "nav_request_id", 0) + 1
         request_id = self.nav_request_id
         future = self.action_client.send_goal_async(
@@ -3660,7 +3695,7 @@ class TaskNavigator(Node):
         self.nav_batch_proven_count = 0
         if getattr(self, "stage_speed_limit_publisher", None) is not None:
             self._publish_stage_speed_limit(
-                poses[0] if (continuous_a_route(poses) or any(
+                poses[0] if (continuous_a_route(poses) or has_corner_flow(poses) or any(
                     p.zone.startswith("CENTRAL_MOVER_GATE_")
                     for p in poses)) else None)
         # Batching is optional: do not block the executor for the regular
@@ -3694,6 +3729,9 @@ class TaskNavigator(Node):
             poses,
             self.get_clock().now().to_msg(),
             (str(Path(self.through_behavior_tree).with_name(
+                "navigate_through_corner.xml"))
+             if has_corner_flow(poses) else
+             str(Path(self.through_behavior_tree).with_name(
                 "navigate_through_south_a.xml"))
              if continuous_a_route(poses) else
              str(Path(self.through_behavior_tree).with_name(
@@ -3793,8 +3831,11 @@ class TaskNavigator(Node):
         # Keep the entire command serial, including later stages and backup
         # routes. Otherwise _send_next_goal immediately batches it again.
         self.nav_batch_attempted = True
+        if has_corner_flow(self.nav_batch_poses):
+            self.corner_flow_failed = True
         count = (getattr(self, "nav_batch_proven_count", 0)
-                 if (continuous_a_route(self.nav_batch_poses) or any(
+                 if (continuous_a_route(self.nav_batch_poses)
+                     or has_corner_flow(self.nav_batch_poses) or any(
                      p.zone.startswith("CENTRAL_MOVER_GATE_")
                      for p in self.nav_batch_poses)) else 0)
         self.pending_poses = list(self.nav_batch_poses[count:]) + list(
@@ -3913,7 +3954,7 @@ class TaskNavigator(Node):
     def _central_anchor_arrived(self) -> bool:
         """Do not trust a nearby planner fallback as a real gate arrival."""
         poses = getattr(self, "nav_batch_poses", [])
-        if continuous_a_route(poses):
+        if continuous_a_route(poses) or has_corner_flow(poses):
             x, y = getattr(self, "latest_x", None), getattr(self, "latest_y", None)
             return (getattr(self, "nav_batch_proven_count", 0) >= len(poses) - 1
                     and x is not None and y is not None
@@ -3925,7 +3966,7 @@ class TaskNavigator(Node):
                     and math.isfinite(x) and math.isfinite(y)
                     and math.hypot(x-pose.x, y-pose.y) <= .04)
         if pose is None or not (pose.zone.startswith(
-                ("CENTRAL_MOVER_GATE_", "central_red2_", "WALL57_POCKET_"))
+                ("CENTRAL_MOVER_GATE_", "central_red2_", "WALL57_POCKET_", "FLOW_"))
                 or pose.zone in ("A_WALL_CENTRAL_CLEAR", "A_WALL_RED2_NORTH_CLEAR")):
             return True
         x, y = getattr(self, "latest_x", None), getattr(self, "latest_y", None)
@@ -4102,6 +4143,7 @@ class TaskNavigator(Node):
     def start_pre_navigation_alignment(self) -> None:
         """Turn a large heading change before entering a narrow pickup leg."""
         TaskNavigator._prune_blue3_encounter_loop(self)
+        TaskNavigator._prepare_corner_flow(self)
         if self.latest_x is None or self.latest_y is None:
             self.refresh_map_pose()
         if (
@@ -4145,6 +4187,7 @@ class TaskNavigator(Node):
         # distant target behind walls. Nav2's rotation shim owns path entry.
         zone = getattr(self, "active_zone", None)
         path_alignment = (continuous_a_route(self.pending_poses)
+                          or flow_prefix_size(self.pending_poses) > 0
                           or (zone in VALID_ZONES
                               and len(self.pending_poses) == 1
                               and first_pose.zone in (
@@ -5116,7 +5159,8 @@ class TaskNavigator(Node):
         # route can be re-sent after escaping.
         if self.nav_batch_poses:
             count = (getattr(self, "nav_batch_proven_count", 0)
-                     if continuous_a_route(self.nav_batch_poses) else 0)
+                     if (continuous_a_route(self.nav_batch_poses)
+                         or has_corner_flow(self.nav_batch_poses)) else 0)
             self.recovery_pending_poses = list(self.nav_batch_poses[count:]) + list(
                 self.pending_poses
             )
@@ -5377,6 +5421,7 @@ class TaskNavigator(Node):
         self.nav_goal_pose = None
         self.nav_batch_poses = []
         self.nav_batch_attempted = False
+        self.corner_flow_failed = False
         self.nav_handoff_requested = False
         self.handoff_result_pending = False
         self.active_zone = None

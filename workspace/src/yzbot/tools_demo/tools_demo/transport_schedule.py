@@ -7,6 +7,7 @@ import math
 from pathlib import Path
 import statistics
 
+from tools_demo.corner_flow import round_navigation_corners
 from tools_demo.navigation_math import (
     A_NORTH_WALL_INNER_Y, ZonePose, angle_delta, dynamic_gate_waypoints,
     tray_crossing_waypoints,
@@ -90,13 +91,21 @@ class TransportTimeEstimator:
         speed = self.loaded_speed if loaded else self.empty_speed
         x, y, yaw = start
         result = 0.0
+        previous_flow = None
         for pose in poses:
             distance = math.hypot(pose.x - x, pose.y - y)
             heading = math.atan2(pose.y - y,
                                  pose.x - x) if distance > 1e-6 else yaw
-            result += distance / speed + \
-                abs(angle_delta(heading, yaw)) / self.turn_speed
-            result += self.stage_overhead
+            family = (pose.zone.split('_')[1]
+                      if pose.zone.startswith('FLOW_') else None)
+            cruise = min(speed, .75 if family == 'A' else 1.0) if family else speed
+            result += distance / cruise
+            # Arc samples are one moving action, not independent stops and
+            # stationary rotations. Charge entry overhead once per group.
+            if family is None or family != previous_flow:
+                result += abs(angle_delta(heading, yaw)) / self.turn_speed
+                result += self.stage_overhead
+            previous_flow = family
             x, y, yaw = pose.x, pose.y, heading
         if poses:
             result += abs(angle_delta(poses[-1].yaw, yaw)) / self.turn_speed
@@ -169,7 +178,8 @@ class TransportTimeEstimator:
             values = self.strategies['C'].get('return_waypoint')
             if values:
                 guides.insert(0, ZonePose('C_return', *values))
-        return guides + [candidate.entry]
+        return round_navigation_corners(
+            (start[0], start[1]), guides + [candidate.entry], candidate.cube.upper())
 
     def delivery_poses(self, candidate, zone, dock):
         """Start carrying at the tray-clear entry reached by direct backoff."""
@@ -184,7 +194,7 @@ class TransportTimeEstimator:
             poses = list(tray_crossing_waypoints(
                 self.cube_positions[candidate.cube], candidate.side,
                 (dock.x, dock.y), north_wall_y=A_NORTH_WALL_INNER_Y)) + poses
-        return poses
+        return round_navigation_corners((entry.x, entry.y), poses, zone)
 
     def components(self, start, candidate, zone, slot, final):
         """Separate explainable estimates for runtime prediction auditing."""
