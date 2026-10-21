@@ -586,9 +586,13 @@ def test_late_cube_detection_never_falls_back_to_a_blind_slot():
     ).read_text(encoding="utf-8")
     assert "perception_fallback_slot" not in source
     assert "hardest_first = False" in source
-    assert "perception_timeout_sec: 1.0" in config
+    # 1.5 s covers several 4 Hz camera frames; the rescan budget is one so a
+    # dead detector cannot multiply every pick by five waits.
+    assert "perception_timeout_sec: 1.5" in config
     assert "maximum_perception_retries: 1" in config
-    assert "perception_recovery_rescans: 5" in config
+    # One bounded rescan (not five): a dead detector must not multiply a
+    # pick by five full perception waits before the guarded fallback.
+    assert "perception_recovery_rescans: 1" in config
     assert "if candidate.index == job.index" in source
     assert "perception_cached_slot:" in source
     assert "self.inventory_scan_complete = False" in source

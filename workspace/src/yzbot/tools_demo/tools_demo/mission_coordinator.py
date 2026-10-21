@@ -524,6 +524,9 @@ class MissionCoordinator(Node):
             "/competition/mission/cancel",
         )
         self.declare_parameter("maximum_retries", 1)
+        # Grasping must be driven by the camera, not by the pre-recorded
+        # tray slots. Set false only for a deliberate known-slot run.
+        self.declare_parameter("require_perception", True)
         self.declare_parameter("maximum_perception_retries", 1)
         self.declare_parameter("maximum_cubes_per_color", 5)
         self.declare_parameter("enforce_color_order", False)
@@ -646,6 +649,9 @@ class MissionCoordinator(Node):
             float(
                 self.get_parameter("cube_group_preference_bonus").value
             ),
+        )
+        self.require_perception = bool(
+            self.get_parameter("require_perception").value
         )
         self.perception_timeout = self._positive_parameter(
             "perception_timeout_sec"
@@ -1553,6 +1559,10 @@ class MissionCoordinator(Node):
                 expected is not None
                 and abs(expected[1]) <= 0.025
             )
+            if self.require_perception:
+                # Every cube is measured by the wrist camera; a cached slot
+                # can describe a cube that was nudged by an earlier grasp.
+                cached_is_graspable = False
             if expected is not None and not cached_is_graspable:
                 self.get_logger().info(
                     "perception_cached_slot_rejected:"
@@ -1772,6 +1782,13 @@ class MissionCoordinator(Node):
                 "z": CUBE_SLOT_BASE_Z,
             },
         }
+        if self.require_perception:
+            # Grasping is supposed to be camera-driven; make the degraded
+            # path impossible to miss in the log instead of a quiet warn.
+            self.get_logger().error(
+                "perception_required_but_falling_back_to_slot:"
+                f"{job.cube_name}:x={cube_x:.3f},y={cube_y:.3f}"
+            )
         self.get_logger().warn(
             f"perception_slot_fallback:{job.cube_name}:"
             f"x={cube_x:.3f},y={cube_y:.3f}"

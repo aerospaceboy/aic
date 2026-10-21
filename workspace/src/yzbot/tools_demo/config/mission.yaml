@@ -25,6 +25,12 @@ competition_mission_coordinator:
     maximum_retries: 1
     # A failed grasp invalidates the cache. Allow one fresh RGB-D retry;
     # this changes only the recovery path and never repeats a stale pose.
+    # Enable only while the wrist camera is proven live; a dead detector
+    # with this on multiplies every pick by the rescan budget.
+    # Camera-driven selection is implemented and the detector now publishes
+    # reliably (see docs/VISION_GRASP_20261021.md). Keep it off until the
+    # pick plane-alignment guard accepts a perception-driven repeat pick.
+    require_perception: false
     maximum_perception_retries: 1
     maximum_cubes_per_color: 5
     # Soft delivery-zone group preference (C->upper, A/B->lower), metres.
@@ -34,14 +40,14 @@ competition_mission_coordinator:
     # frames; one same-pose retry plus one realigned scan still precedes the
     # guarded reachable-slot fallback, without repeating an unchanged scan
     # pose for 8--10 seconds when a tray is outside the wrist-camera FOV.
-    perception_timeout_sec: 1.0
+    perception_timeout_sec: 1.5
     # Realign and scan up to five times after the normal detector retry. One
     # bounded realign moves the base ~0.023 m, while measured dock errors reach
     # 0.19 m and the fallback grasp band is 0.10 m, so a single cycle cannot
     # recover a large dock error. Each cycle keeps the validated realign caps;
     # the fallback is accepted only when the Gazebo-relative slot stays inside
     # the strict grasp window, and a failed grasp still invalidates the cache.
-    perception_recovery_rescans: 5
+    perception_recovery_rescans: 1
     # A cancel that waits for a manipulation release must not gate the mission
     # watchdog forever; finish the cancel anyway after this long.
     cancel_timeout_sec: 15.0

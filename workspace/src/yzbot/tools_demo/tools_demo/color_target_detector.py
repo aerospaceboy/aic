@@ -2,16 +2,17 @@
 
 import json
 import math
+from collections import deque
 from typing import Optional, Sequence, Tuple
 
 from cv_bridge import CvBridge
 from cv_bridge import CvBridgeError
 import cv2
-import message_filters
 import numpy as np
 import rclpy
 from rclpy.duration import Duration
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy
 from rclpy.qos import qos_profile_sensor_data
 from rclpy.time import Time
 from sensor_msgs.msg import CameraInfo
@@ -28,6 +29,11 @@ from tools_demo.perception_math import depth_to_meters
 from tools_demo.perception_math import project_pixel_to_camera
 from tools_demo.perception_math import transform_point
 from tools_demo.perception_math import valid_depth_median
+
+
+def stamp_seconds(stamp) -> float:
+    """Return a builtin ROS stamp as floating-point seconds."""
+    return float(stamp.sec) + float(stamp.nanosec) * 1e-9
 
 
 class ColorTargetDetector(Node):
@@ -124,24 +130,36 @@ class ColorTargetDetector(Node):
             self.camera_info_callback,
             qos_profile_sensor_data,
         )
-        self.color_subscriber = message_filters.Subscriber(
-            self,
+        # Plain subscriptions plus a timer instead of a message_filters
+        # callback: the synchroniser callback could stall behind a blocking
+        # TF lookup and stop publishing for the rest of the mission (the
+        # deployed node was found silent with 36 threads parked on a futex
+        # while a fresh instance published immediately). The timer always
+        # takes the newest usable pair, so a dropped frame cannot wedge it.
+        self.color_buffer = deque(maxlen=8)
+        self.depth_buffer = deque(maxlen=8)
+        self.color_frames = 0
+        self.depth_frames = 0
+        self.processed_frames = 0
+        self.skipped_pairs = 0
+        self.last_processed_key: Optional[tuple] = None
+        # The camera publishes RELIABLE and best-effort readers were seen
+        # silently receiving nothing on this host; match the publisher.
+        image_qos = QoSProfile(depth=5, reliability=ReliabilityPolicy.RELIABLE)
+        self.create_subscription(
             Image,
             str(self.get_parameter("color_topic").value),
-            qos_profile=qos_profile_sensor_data,
+            self.color_callback,
+            image_qos,
         )
-        self.depth_subscriber = message_filters.Subscriber(
-            self,
+        self.create_subscription(
             Image,
             str(self.get_parameter("depth_topic").value),
-            qos_profile=qos_profile_sensor_data,
+            self.depth_callback,
+            image_qos,
         )
-        self.synchronizer = message_filters.ApproximateTimeSynchronizer(
-            [self.color_subscriber, self.depth_subscriber],
-            queue_size=10,
-            slop=self.maximum_stamp_delta,
-        )
-        self.synchronizer.registerCallback(self.image_callback)
+        self.create_timer(0.05, self.process_latest_pair)
+        self.create_timer(1.0, self.publish_status)
         self.last_warning_key: Optional[str] = None
 
     def _hsv_range(
@@ -188,24 +206,25 @@ class ColorTargetDetector(Node):
         stamp,
     ) -> Optional[Tuple[Tuple[float, ...], Tuple[float, ...]]]:
         """Look up target-frame translation and quaternion."""
+        # Latest available transform first and never block: a stamped
+        # lookup raised ExtrapolationException whenever the camera frame ran
+        # even 40 ms ahead of the TF buffer, and waiting inside the frame
+        # callback is what wedged the node. The scene is stationary while a
+        # scan is in progress, so the newest transform is the right one.
         try:
             transform = self.tf_buffer.lookup_transform(
                 self.target_frame,
                 source_frame,
-                Time.from_msg(stamp),
-                timeout=Duration(seconds=self.tf_timeout),
+                Time(),
+                timeout=Duration(seconds=0.0),
             )
         except TransformException:
-            # The stamped lookup can extrapolate a few tens of ms into the
-            # future while the wrist TF lags under load. The scene is static
-            # during a scan, so retry with the latest available transform
-            # before giving up on this frame.
             try:
                 transform = self.tf_buffer.lookup_transform(
                     self.target_frame,
                     source_frame,
-                    Time(),
-                    timeout=Duration(seconds=self.tf_timeout),
+                    Time.from_msg(stamp),
+                    timeout=Duration(seconds=0.05),
                 )
             except TransformException as exception:
                 self.warn_changed("tf", f"TF unavailable: {exception}")
@@ -216,6 +235,72 @@ class ColorTargetDetector(Node):
             (translation.x, translation.y, translation.z),
             (rotation.x, rotation.y, rotation.z, rotation.w),
         )
+
+    def color_callback(self, message: Image) -> None:
+        """Keep a short colour history; the timer matches it by stamp."""
+        self.color_buffer.append(message)
+        self.color_frames += 1
+
+    def depth_callback(self, message: Image) -> None:
+        """Keep a short depth history; the timer matches it by stamp."""
+        self.depth_buffer.append(message)
+        self.depth_frames += 1
+
+    def process_latest_pair(self) -> None:
+        """Process the newest RGB-D pair once, without blocking."""
+        if not self.color_buffer or not self.depth_buffer:
+            self.warn_changed(
+                "frames",
+                "Waiting for the first RGB-D frames",
+            )
+            return
+        # Match by stamp instead of taking the two newest frames: under load
+        # the depth topic can run exactly one camera period behind, so the
+        # newest pair differed by 0.250 s and every frame was discarded.
+        best = None
+        for color in reversed(self.color_buffer):
+            color_stamp = stamp_seconds(color.header.stamp)
+            for depth in reversed(self.depth_buffer):
+                delta = abs(color_stamp - stamp_seconds(depth.header.stamp))
+                if best is None or delta < best[0]:
+                    best = (delta, color, depth)
+        delta, color_message, depth_message = best
+        if delta > self.maximum_stamp_delta:
+            self.skipped_pairs += 1
+            self.warn_changed(
+                "sync",
+                f"RGB-D stamps differ by {delta:.3f}s",
+            )
+            return
+        key = (
+            stamp_seconds(color_message.header.stamp),
+            stamp_seconds(depth_message.header.stamp),
+        )
+        if key == self.last_processed_key:
+            return
+        self.last_processed_key = key
+        self.image_callback(color_message, depth_message)
+
+    def publish_status(self) -> None:
+        """Publish a liveness heartbeat so a silent node is detectable."""
+        message = String()
+        message.data = json.dumps(
+            {
+                "schema_version": "1.0",
+                "frame_id": self.target_frame,
+                "status": {
+                    "color_frames": self.color_frames,
+                    "depth_frames": self.depth_frames,
+                    "processed_frames": self.processed_frames,
+                    "skipped_pairs": self.skipped_pairs,
+                },
+                "targets": [],
+            },
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+        self.processed_frames += 1
+        self.targets_publisher.publish(message)
 
     def image_callback(
         self,
