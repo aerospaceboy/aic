@@ -65,6 +65,16 @@ class MovingObstacle(Node):
         # distance to the base, so a base that cannot clear the hysteresis
         # cannot deadlock the corridor.
         self.declare_parameter("robot_clearance_freeze_timeout_sec", 5.0)
+        # Competition runs are submitted after a variable startup delay.
+        # Re-anchor the two spawn actors to a known patrol phase when a new
+        # task plan arrives, so the first-two-response test is repeatable.
+        self.declare_parameter("reset_phase_on_plan", False)
+        # Separate from phase_offset_sec so the startup/world pose contract
+        # is unchanged; this offset applies only after a competition plan.
+        self.declare_parameter("mission_phase_offset_sec", 0.0)
+        self.declare_parameter(
+            "plan_topic", "/competition/task/plan"
+        )
         self.declare_parameter(
             "state_topic", "/competition/obstacle/state"
         )
@@ -86,6 +96,10 @@ class MovingObstacle(Node):
         self.phase_offset_sec = float(
             self.get_parameter("phase_offset_sec").value
         )
+        self.mission_phase_offset_sec = float(
+            self.get_parameter("mission_phase_offset_sec").value
+        )
+        self.motion_phase_offset_sec = self.phase_offset_sec
         self.motion_mode = str(
             self.get_parameter("motion_mode").value
         ).strip().lower()
@@ -179,6 +193,17 @@ class MovingObstacle(Node):
             10,
         )
         self.create_subscription(Odometry, "/odom", self.odom_callback, 20)
+        self.reset_phase_on_plan = bool(
+            self.get_parameter("reset_phase_on_plan").value
+        )
+        self.mission_task_id = None
+        if self.reset_phase_on_plan:
+            self.create_subscription(
+                String,
+                str(self.get_parameter("plan_topic").value),
+                self.plan_callback,
+                10,
+            )
         self.robot_stamp_ns = None
         self.continuous_response = ContinuousResponse(
             self.trigger_distance, self.response_distance, self.response_speed)
@@ -364,6 +389,34 @@ class MovingObstacle(Node):
             )
         )
 
+    def plan_callback(self, message: String) -> None:
+        """Re-anchor continuous patrol phase for one new competition plan."""
+        if not self.reset_phase_on_plan:
+            return
+        try:
+            payload = json.loads(message.data)
+            task_id = str(payload.get("task_id", ""))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return
+        if not task_id or task_id == self.mission_task_id:
+            return
+        self.mission_task_id = task_id
+        self.motion_elapsed_sec = 0.0
+        self.motion_phase_offset_sec = self.mission_phase_offset_sec
+        self.motion_started = False
+        self.last_motion_position = None
+        self.proximity_guard_paused = False
+        self.proximity_guard_paused_since = None
+        self.response_observed = False
+        self.response_kind = None
+        self.continuous_response = ContinuousResponse(
+            self.trigger_distance, self.response_distance,
+            self.response_speed,
+        )
+        self.get_logger().info(
+            "patrol_phase_reset task_id=" + task_id
+        )
+
     def _continuous_position(self) -> tuple:
         """Retain the original triangle motion for non-competition use."""
         # Advance at most one nominal controller step per accepted update.
@@ -375,11 +428,11 @@ class MovingObstacle(Node):
         patrol = getattr(self,"patrol",None)
         if patrol is not None:
             candidate = patrol.position(
-                candidate_elapsed + self.phase_offset_sec
+                candidate_elapsed + self.motion_phase_offset_sec
             )
         else:
             wave = triangle_wave(
-                candidate_elapsed + self.phase_offset_sec,
+                candidate_elapsed + self.motion_phase_offset_sec,
                 self.period_sec,
             )
             candidate = (

@@ -199,6 +199,10 @@ competition_moving_obstacle_1:
     enter_duration_sec: 0.80
     minimum_block_duration_sec: 0.40
     maximum_block_duration_sec: 2.50
+    # Keep the original response calibration.  Widening it to 2.0 m
+    # cross-counted obstacle_2's wait while obstacle_1 was 1.81 m away;
+    # 1.5 m does not capture the real slow approach either, so the metric
+    # stays at its validated 1.30 m / 0.80 m values.
     response_distance: 1.30
     response_speed: 0.80
     response_lateral_distance: 0.20
@@ -206,9 +210,15 @@ competition_moving_obstacle_1:
     amplitude_x: 0.00
     amplitude_y: 0.70
     # Y[-0.80, 0.60]: only the north endpoint is extended by 0.50 m.
-    # Preserve 0.25 m/s patrol speed and the 10 Hz truth feed.
-    period_sec: 11.2
+    # 10.18 s is the fastest cycle with a robust first-gate window.
+    # Re-anchor at task time: 3.54 s leaves this actor descending near
+    # the south end at the waiting anchor. Admission opens as it turns
+    # upward, so the base must really yield as it enters the lane.
+    period_sec: 10.181818181818182
     phase_offset_sec: 0.0
+    reset_phase_on_plan: true
+    mission_phase_offset_sec: 3.54
+    plan_topic: /competition/task/plan
     update_rate_hz: 10.0
     truth_read_rate_hz: 10.0
     state_topic: /competition/obstacles/obstacle_1
@@ -239,8 +249,13 @@ competition_moving_obstacle_2:
     exit_duration_sec: 0.80
     amplitude_x: 0.00
     amplitude_y: 0.70
-    period_sec: 11.2
-    phase_offset_sec: 5.6
+    period_sec: 10.181818181818182
+    # 0.29 s puts this actor at y=0.40 moving south at the same arrival;
+    # its return sweep supplies the second independent yield.
+    phase_offset_sec: 5.090909090909091
+    reset_phase_on_plan: true
+    mission_phase_offset_sec: 0.29
+    plan_topic: /competition/task/plan
     update_rate_hz: 10.0
     truth_read_rate_hz: 10.0
     state_topic: /competition/obstacles/obstacle_2

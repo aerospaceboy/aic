@@ -51,7 +51,21 @@ def wait_anchor_velocity(
     # arrival. Align to the lane instead, so admission needs no parked turn.
     target_yaw = math.pi - math.atan(2.5 * (target_y - y))
     error = math.remainder(target_yaw - yaw, 2 * math.pi)
-    speed = min(.35, max(.02, 1.2 * max(0., x - target_x)))
+    remaining = max(0., x - target_x)
+    # The checked approach may start 2.85 m before the waiting anchor.
+    # Reserve the original precision controller for its final 0.70 m;
+    # blend up to 0.70 m/s on the open prefix instead of crawling all of it.
+    # At 0.70 m/s, even 0.25 s observation/command lag plus braking at
+    # 1 m/s^2 fits within that unchanged slow-down reserve (0.42 m).
+    # Wall-tip completion can still carry angular velocity from Nav2.
+    # Merge at the original speed until both lateral and heading error
+    # settle; accelerating that turn overshot into the static-map guard.
+    settled = max(0., min(
+        1. - abs(target_y - y) / .10,
+        1. - abs(math.remainder(yaw - math.pi, 2 * math.pi)) / .30))
+    cruise = min(.35 + .35 * settled,
+                 .35 + .50 * max(0., remaining - .70))
+    speed = min(cruise, max(.02, 1.2 * remaining))
     # Bound lateral travel while an initial heading correction is settling.
     # This shrinks speed near the checked lane edge, rather than allowing
     # heading latency to carry the body outside the proved rectangle.

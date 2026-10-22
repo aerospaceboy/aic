@@ -6,11 +6,14 @@ from typing import Optional, Sequence
 
 
 # Spawn movers: extend only the positive Y endpoint by 0.50 m.
-# Preserve 0.25 m/s physical speed; the longer path needs an 11.2 s cycle.
+# Shorten the long-extended cycle so both actors cross the waiting lane
+# before the robot leaves the spawn corridor.  The 2.8 m sweep therefore
+# runs at 0.275 m/s.  This is the fastest speed that still leaves a robust
+# two-sample admission window at 10 Hz; the full swept-lane proof remains.
 CORRIDOR_PATROL_MIN_Y = -0.80
 CORRIDOR_PATROL_MAX_Y = 0.60
-CORRIDOR_PATROL_SPEED = 0.25
-CORRIDOR_PATROL_PERIOD = 11.2
+CORRIDOR_PATROL_PERIOD = 10.181818181818182
+CORRIDOR_PATROL_SPEED = 0.275
 CORRIDOR_TRANSIT_SPEED = 1.10
 
 

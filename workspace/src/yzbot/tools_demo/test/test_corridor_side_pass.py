@@ -7,7 +7,7 @@ import pytest
 
 from tools_demo.continuous_response import ContinuousResponse
 from tools_demo.corridor_admission import spawn_corridor_admission
-from tools_demo.navigation_math import corridor_crossing_clear
+from tools_demo.navigation_math import CORRIDOR_PATROL_SPEED, corridor_crossing_clear
 from tools_demo.safety_limiter import SafetyLimiter
 from tools_demo.safety_math import compute_scale
 
@@ -42,12 +42,13 @@ def test_front_obstacle_keeps_the_original_stop_and_caution(distance, expected):
 
 def test_restored_guard_admits_safe_window_but_rejects_the_turnaround():
     assert all(corridor_crossing_clear(
-        9.8, .55, math.pi, 8.5, -.65, -.25,
-        crossing_speed=speed, dispatch_delay=delay, patrol_speed=.25)
+        9.8, .55, math.pi, 8.5, -.60, -CORRIDOR_PATROL_SPEED,
+        crossing_speed=speed, dispatch_delay=delay,
+        patrol_speed=CORRIDOR_PATROL_SPEED)
         for speed in (.56, .8, .85, 1.1) for delay in (0., .4, .8))
-    assert spawn_corridor_admission((9.8, .55, math.pi), (8.5, -.65), -.25)
-    assert spawn_corridor_admission((9.8, .55, math.pi), (8.5, -.5), -.25)
-    assert not spawn_corridor_admission((9.8, .55, math.pi), (8.5, -.8), -.25)
+    assert spawn_corridor_admission((9.8, .55, math.pi), (8.5, -.60), -CORRIDOR_PATROL_SPEED)
+    assert spawn_corridor_admission((9.8, .55, math.pi), (8.5, -.5), -CORRIDOR_PATROL_SPEED)
+    assert not spawn_corridor_admission((9.8, .55, math.pi), (8.5, -.8), -CORRIDOR_PATROL_SPEED)
 
 
 def actor_y(phase):

@@ -3096,6 +3096,9 @@ class TaskNavigator(Node):
         """Idempotently transfer control from Nav2 to route staging."""
         if not self.nav_handoff_requested:
             return
+        corner_complete = has_corner_flow(
+            getattr(self, "nav_batch_poses", [])
+            or ([self.nav_goal_pose] if self.nav_goal_pose else []))
         self.goal_handle = None
         self.mover_hold_blocked = False
         self.mover_hold_topic = None
@@ -3127,7 +3130,7 @@ class TaskNavigator(Node):
                 f"robot=({self.latest_x:.3f},{self.latest_y:.3f})"
             )
         if self.pending_poses:
-            self._continue_staged_navigation()
+            self._continue_staged_navigation(path_alignment=corner_complete)
         else:
             self._finish_route_endpoint()
 
@@ -3160,11 +3163,16 @@ class TaskNavigator(Node):
         )
         return True
 
-    def _continue_staged_navigation(self) -> None:
-        """Align before sending every remaining route stage."""
-        if self.pending_poses:
+    def _continue_staged_navigation(self, path_alignment: bool = False) -> None:
+        """Let Nav2 own the outgoing tangent after a completed corner."""
+        if self.pending_poses and not path_alignment:
             self.start_pre_navigation_alignment()
             return
+        if self.pending_poses:
+            # A remote pickup may lie behind a wall. Turning toward its
+            # straight-line bearing here makes the base leave the tangent,
+            # then Nav2 must rotate it back to the collision-checked path.
+            self.get_logger().info("corner_continuation_alignment_owned_by_nav2")
         self._send_next_goal()
 
     def _blue3_responses_complete(self) -> bool:
@@ -4049,7 +4057,10 @@ class TaskNavigator(Node):
                 stage_completed=self.stage_index,
                 stage_total=self.stage_total,
             )
-            self._continue_staged_navigation()
+            self._continue_staged_navigation(
+                path_alignment=has_corner_flow(
+                    self.nav_batch_poses
+                    or ([self.nav_goal_pose] if self.nav_goal_pose else [])))
             return
         if (
             status == GoalStatus.STATUS_SUCCEEDED
@@ -5817,7 +5828,7 @@ class TaskNavigator(Node):
             frame = self._mover_base_frame(topic)
             if frame is None:
                 continue
-            _, _, forward, lateral, _, _, speed = frame
+            dx, _, forward, lateral, cos_yaw, _, speed = frame
             goal = getattr(self, "nav_goal_pose", None)
             if goal is not None:
                 ox, _ = self.obstacle_positions[topic]
@@ -5831,6 +5842,14 @@ class TaskNavigator(Node):
                     self.mover_admitted.discard(topic)
                 else:
                     continue
+            # A lateral mover can project slightly "ahead" after the base
+            # has already crossed its X and is driving away. Its remote
+            # goal may still be on the far side because Nav2 must round a
+            # wall first. Do not cancel that path, rotate 180 degrees and
+            # drive back across the patrol just to restore the X-side test.
+            # Real crossing admission requires motion toward the actor's X.
+            if dx * cos_yaw <= 0.0:
+                continue
             if forward <= 0.0:
                 continue
             stop_distance = speed * speed / (2.0 * self.mover_hold_decel)

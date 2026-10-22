@@ -141,6 +141,7 @@ def generate_launch_description():
                 "persistent": True,
                 "prepare_scene": False,
                 "verify_placement": False,
+                "defer_place_stow": True,
             }
         ],
         output="screen",

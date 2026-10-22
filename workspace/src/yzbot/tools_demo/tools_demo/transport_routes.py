@@ -334,12 +334,9 @@ def current_delivery_route(zone, start_x, start_y, place, backup=False,
             dedicated = True
             log(
                 "lower_east_corridor_route active")
-        elif (staging := bay_exit_staging(
-                (start_x, start_y), place, bay_distance)) is not None:
-            pending = [staging, place]
-            log(
-                "bay_exit_staging active "
-                f"from=({start_x:.2f},{start_y:.2f}) "
-                f"via=({staging.x:.2f},{staging.y:.2f})"
-            )
+        # Do not translate the departure north by a fixed distance in this
+        # layout. At blue5's west exit that invents (10.93, -11.00), only
+        # 0.14 m from Wall_132: the path rounds its east end then returns
+        # south toward the unusable anchor. Without a required clearance
+        # guide, plan the complete obstacle-aware transit to the dock.
     return pending, dedicated

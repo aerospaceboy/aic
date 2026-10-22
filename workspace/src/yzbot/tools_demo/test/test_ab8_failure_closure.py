@@ -12,13 +12,12 @@ def test_proven_delivery_survives_a_return_home_timeout():
     source = PICK_PLACE.read_text(encoding="utf-8")
     block = source[source.index("def run_place_only"):]
     block = block[:block.index("def run_release_only")]
-    stow = block.index("return_home_after_world_slot")
-    tail = block[stow:]
-    # The failure branch retracts and warns instead of returning False.
-    assert "return_home_after_world_slot_failed_after_delivery" in tail
-    assert "deferred_stow" in tail
-    failed_branch = tail[:tail.index("self.publish_state(f\"place_complete")]
-    assert "return False" not in failed_branch
+    # The helper retracts and warns after a stow timeout. Its caller must
+    # not turn that post-delivery failure into a failed mission.
+    assert "return_home_after_world_slot_failed_after_delivery" in block
+    assert "deferred_stow" in block
+    assert "self.finish_deferred_place_stow(staging_arm)" in block
+    assert "if not self.finish_deferred_place_stow" not in block
 
 
 def test_release_still_requires_verification_before_the_stow():

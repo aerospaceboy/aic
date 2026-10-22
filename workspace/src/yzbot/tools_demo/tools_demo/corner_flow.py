@@ -119,12 +119,29 @@ def round_navigation_corners(
                   and 5.0 <= end.x <= 8.5 and end.y >= 1.5)
         if to_b:
             group = _arc('EAST', (13.4, -3.5), 1., math.pi/2, -math.pi/2)
-            result = group + [_tag('EAST', 99, ZonePose(
+            # A single far-east goal rounds the roof's west tip toward
+            # mover 2, whose crossing recovery can put the base into that
+            # roof. First reach the existing open south lane, then follow
+            # its eastbound tangent. A separate FLOW family keeps this
+            # exact, physically confirmed approach ahead of the arc batch.
+            approach = _tag('APPROACH', 0, ZonePose(
+                'lower_east_lane', 4.4, -2.5, 0.))
+            result = [approach] + group + [_tag('EAST', 99, ZonePose(
                 'exit', 12.4, -4.6, math.pi))] + result
         elif from_b:
             group = _arc('EAST', (13.4, -3.5), 1., -math.pi/2, math.pi/2)
+            # Stay below mover 2, then turn northwest on a tangent arc.
+            # Ending at (4.4,-2.5) forced the next path's rotation shim to
+            # stop for a northward entry. Finish already aligned to the
+            # open west flank, outside the actor's whole patrol instead.
+            turn = _arc('EAST', (5.1, -1.3), 1.2, -math.pi/2, -3*math.pi/4)
+            turn = [_tag('EAST', 100+i, ZonePose(
+                f'west_arc_{i}', p.x, p.y, p.yaw)) for i, p in enumerate(turn)]
+            target = ZonePose('west_pickup_clear', 3.2,
+                              turn[-1].x + turn[-1].y - 3.2, 3*math.pi/4)
             result = group + [_tag('EAST', 99, ZonePose(
-                'exit', 12.4, -2.5, math.pi))] + result
+                'exit', 12.4, -2.5, math.pi))] + turn + [
+                    _tag('EAST', 199, target)] + result
     # Wall_72 ends at (12.508,-3.608). Radius 1m fits outside its east
     # tip and inside Wall_10 at x=15.923, with the full tracking reserve.
     for index, pose in enumerate(result):

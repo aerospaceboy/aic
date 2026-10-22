@@ -569,20 +569,33 @@ def test_correction_clears_moveit_start_state_allowance():
     assert MODULE.ARM_JOINT_LIMIT_MARGIN < start_state_max_bounds_error
 
 
-def test_deferred_stow_must_succeed_before_finishing():
-    """Do not acknowledge placement before checked stow has completed."""
+def test_verified_place_is_acknowledged_before_the_deferred_stow():
+    """The base may retreat while the empty arm stows, but a scan/pick
+    request must wait until that stow has run."""
     source = MODULE_PATH.read_text(encoding="utf-8")
     body = source.split("def run_place_only", 1)[1].split(
         "def run_release_only", 1
     )[0]
-    deferred = body.split("world_slot_release:defer_return_home", 1)[1]
-    before_complete = deferred.split("place_complete", 1)[0]
+    deferred = body.split("self._pending_stow_arm = dict(staging_arm)", 1)[1]
+    early = deferred.split("return True", 1)[0]
+    assert "self.publish_state(f\"place_ready:{self.cube_name}\")" in early
+    assert "verify_placement" in body[:body.index(
+        "self._pending_stow_arm = dict(staging_arm)")]
+    assert "finish_deferred_place_stow(staging_arm)" not in early
 
-    assert "self.enforce_arm_joint_limits()" in before_complete
-    assert "return False" in before_complete
-    assert "self.move_to_joint_target(" in before_complete
-    assert "self.start_joint_target_async(" not in before_complete
-    assert "return_home_after_world_slot" in before_complete
+    handler = source.split("def _handle_persistent_request", 1)[1].split(
+        "def main", 1
+    )[0]
+    publish = handler.index("self.result_publisher.publish(result)")
+    finish = handler.index("self.finish_deferred_place_stow()")
+    assert publish < finish
+    helper = source.split("def finish_deferred_place_stow", 1)[1].split(
+        "def run_release_only", 1
+    )[0]
+    assert "self.enforce_arm_joint_limits()" in helper
+    assert "return_home_after_world_slot" in helper
+    assert "self.start_joint_target_async(" not in helper
+    assert 'stow_complete' in helper
 
 
 def test_scan_corrects_joint_limits_before_planning():

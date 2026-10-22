@@ -49,14 +49,14 @@ def test_admission_latches_only_one_crossing_and_rearms_after_leaving():
         mover_hold_lateral=0.56, mover_hold_decel=1.5,
         mover_hold_standoff=1.05, mover_hold_entry_lateral=1.2,
         _corridor_mover_topics=lambda: (topic,),
-        _mover_base_frame=lambda t: (0, 0, 0.3, 0.3, 1, 0, 0.8),
+        _mover_base_frame=lambda t: (0.3, 0.3, 0.3, 0.3, 1, 0, 0.8),
         _mover_hold_clear=lambda t: False,
     )
     assert TaskNavigator._mover_yield_topic(harness) is None
-    harness._mover_base_frame = lambda t: (0, 0, -0.7, 0.3, 1, 0, 0.8)
+    harness._mover_base_frame = lambda t: (-0.7, 0.3, -0.7, 0.3, 1, 0, 0.8)
     assert TaskNavigator._mover_yield_topic(harness) is None
     assert topic not in harness.mover_admitted
-    harness._mover_base_frame = lambda t: (0, 0, 1.0, 0.3, 1, 0, 0.8)
+    harness._mover_base_frame = lambda t: (1.0, 0.3, 1.0, 0.3, 1, 0, 0.8)
     assert TaskNavigator._mover_yield_topic(harness) == topic
 
 

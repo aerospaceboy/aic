@@ -15,6 +15,7 @@ import pytest
 import yaml
 
 from tools_demo.corridor_admission import spawn_corridor_admission, wait_anchor_velocity
+from tools_demo.navigation_math import CORRIDOR_PATROL_SPEED
 from tools_demo.navigation_math import ZonePose
 from tools_demo.safety_limiter import SafetyLimiter
 from tools_demo.safety_math import compute_scale
@@ -89,7 +90,7 @@ def participants(x, ox, oy, velocity):
     (9.8, 8.5, False), (6.65, 5., False), (7.1, 5., True),
 ])
 @pytest.mark.parametrize('oy', [-.75, -.60, -.45, -.30, -.10, .05])
-@pytest.mark.parametrize('velocity', [-.25, .25])
+@pytest.mark.parametrize('velocity', [-CORRIDOR_PATROL_SPEED, CORRIDOR_PATROL_SPEED])
 def test_navigator_and_guard_make_the_same_window_decision(
     x, ox, rolling, oy, velocity,
 ):
@@ -102,7 +103,7 @@ def test_navigator_and_guard_make_the_same_window_decision(
 
 
 def test_stale_truth_cannot_release_either_owner():
-    nav, guard, topic, model = participants(9.8, 8.5, -.6, -.25)
+    nav, guard, topic, model = participants(9.8, 8.5, -.6, -CORRIDOR_PATROL_SPEED)
     nav.obstacle_source_stamps[topic] = 98.
     guard.obstacle_source_stamps[model] = 98.
     assert not TaskNavigator._mover_hold_clear(nav, topic)
@@ -110,7 +111,7 @@ def test_stale_truth_cannot_release_either_owner():
 
 
 def test_duplicate_truth_packets_do_not_destroy_a_proven_direction():
-    _, guard, _, model = participants(9.8, 8.5, -.5, -.25)
+    _, guard, _, model = participants(9.8, 8.5, -.5, -CORRIDOR_PATROL_SPEED)
     assert SafetyLimiter._spawn_admission_clear(guard, model)
     message = String(data=json.dumps({
         'success': True, 'model': model, 'x': 8.5, 'y': -.5,
@@ -118,11 +119,11 @@ def test_duplicate_truth_packets_do_not_destroy_a_proven_direction():
     for _ in range(3):
         SafetyLimiter.obstacle_callback(guard, message)
     assert SafetyLimiter._spawn_admission_clear(guard, model)
-    assert guard.obstacle_motion_velocities[model] == (-.25, 100.)
+    assert guard.obstacle_motion_velocities[model] == (-CORRIDOR_PATROL_SPEED, 100.)
 
 
 def test_stationary_truth_cannot_refresh_old_velocity_indefinitely():
-    _, guard, _, model = participants(9.8, 8.5, -.6, -.25)
+    _, guard, _, model = participants(9.8, 8.5, -.6, -CORRIDOR_PATROL_SPEED)
     guard.get_clock = lambda: SimpleNamespace(now=lambda: SimpleNamespace(
         nanoseconds=101_000_000_000))
     guard.robot_stamp_ns = 101_000_000_000
@@ -139,7 +140,7 @@ def test_stationary_truth_cannot_refresh_old_velocity_indefinitely():
     ([], False), ([(99_000_000_000, (9.8, .55, math.pi))], False),
 ])
 def test_clock_lag_uses_confirmed_odometry_without_admitting_future_data(history, release):
-    _, guard, _, model = participants(9.8, 8.5, -.5, -.25)
+    _, guard, _, model = participants(9.8, 8.5, -.5, -CORRIDOR_PATROL_SPEED)
     guard.robot_stamp_ns = 100_012_000_000
     guard.odom_history = history
     assert SafetyLimiter._spawn_admission_clear(guard, model) is release
@@ -307,7 +308,9 @@ def test_wait_lane_merge_finishes_aligned_without_a_parked_turn(
                 math.remainder(yaw - math.pi, 2 * math.pi)) <= .04:
             break
         v, w = wait_anchor_velocity((x, y, yaw), (9.825, .525))
-        assert 0. < v <= .35  # Turning correction is carried while moving.
+        assert 0. < v <= .70  # Turning correction is carried while moving.
+        if x - 9.825 <= .70:
+            assert v <= .35  # Retain the original precision approach.
         assert abs(w) <= .60
         delayed.append((v, w))
         index = max(0, len(delayed) - 1 - round(latency / dt))
@@ -323,7 +326,7 @@ def test_wait_lane_merge_finishes_aligned_without_a_parked_turn(
 
 
 def test_stopped_guard_prearms_without_creating_a_motion_command():
-    _, guard, _, _ = participants(9.8, 8.5, -.5, -.25)
+    _, guard, _, _ = participants(9.8, 8.5, -.5, -CORRIDOR_PATROL_SPEED)
     guard.base_hold = False
     guard.publisher = Mock()
     guard.east_gate_blocked = lambda _: False
@@ -353,7 +356,7 @@ def test_idle_timer_proves_the_window_without_any_velocity_message(source, relea
                lambda self, name: node_init(self, name, context=context)):
         node = SafetyLimiter()
     try:
-        _, guard, _, model = participants(9.8, 8.5, -.5, -.25)
+        _, guard, _, model = participants(9.8, 8.5, -.5, -CORRIDOR_PATROL_SPEED)
         for name, value in vars(guard).items():
             if name not in {'get_logger', 'get_clock'}:
                 setattr(node, name, value)
@@ -375,7 +378,7 @@ def test_idle_timer_proves_the_window_without_any_velocity_message(source, relea
     (-.3, True, True), (.05, True, False), (-.3, False, False),
 ])
 def test_moving_guard_proves_the_second_window_before_its_gate(oy, known, release):
-    _, guard, _, _ = participants(7.1, 5., oy, -.25)
+    _, guard, _, _ = participants(7.1, 5., oy, -CORRIDOR_PATROL_SPEED)
     guard.robot_speed = .9
     if not known:
         guard.obstacle_motion_velocities.clear()
@@ -452,7 +455,7 @@ def test_admitted_phases_preserve_physical_margin_at_intermediate_speeds(
 ):
     admitted = 0
     for oy in (-.7, -.6, -.45, -.3, -.1):
-        velocity = -.25
+        velocity = -CORRIDOR_PATROL_SPEED
         if not spawn_corridor_admission((x, .55, math.pi), (ox, oy),
                                         velocity, rolling):
             continue
@@ -478,7 +481,7 @@ def test_admitted_windows_remain_safe_with_the_live_guard_slowdown(
     admitted = 0
     for phase_index in range(37):
         oy = -.8 + 1.4 * phase_index / 36
-        for velocity in (-.25, .25):
+        for velocity in (-CORRIDOR_PATROL_SPEED, CORRIDOR_PATROL_SPEED):
             if not spawn_corridor_admission((x, .55, math.pi), (ox, oy),
                                             velocity, rolling):
                 continue
@@ -504,3 +507,47 @@ def test_admitted_windows_remain_safe_with_the_live_guard_slowdown(
                         robot_x -= 1.1 * scale * .025
                 assert cleared
     assert admitted > 0
+
+
+@pytest.mark.parametrize('observation_lag,command_lag', [
+    (0., 0.), (.10, .10), (.15, .10),
+])
+@pytest.mark.parametrize('initial_angular_velocity', [0., 1.47])
+def test_fast_wait_prefix_reaches_the_same_proof_with_latency_and_braking(
+    observation_lag, command_lag, initial_angular_velocity,
+):
+    # Recorded post-wall-tip start from OB2-BLUE1-REPLAY-2. Model slower
+    # acceleration/braking than the deployed smoother, plus delayed feedback.
+    x, y, yaw = 12.647, .279, 3.05
+    vx, wz = 0., initial_angular_velocity
+    dt = .01
+    observations, commands = [], []
+    maximum_speed = 0.
+    for step in range(1200):
+        observations.append((x, y, yaw))
+        pose = observations[max(
+            0, len(observations) - 1 - round(observation_lag / dt))]
+        distance = math.hypot(pose[0] - 9.825, pose[1] - .525)
+        aligned = abs(math.remainder(pose[2] - math.pi, 2 * math.pi)) <= .04
+        command = ((0., 0.) if distance <= .03 and aligned
+                   else wait_anchor_velocity(pose, (9.825, .525)))
+        commands.append(command)
+        v, w = commands[max(
+            0, len(commands) - 1 - round(command_lag / dt))]
+        vx += max(-dt, min(dt, v - vx))
+        wz += max(-4. * dt, min(4. * dt, w - wz))
+        x += vx * math.cos(yaw) * dt
+        y += vx * math.sin(yaw) * dt
+        yaw += wz * dt
+        maximum_speed = max(maximum_speed, vx)
+        assert 9.75 <= x <= 12.85 and .20 <= y <= .55
+        if (math.hypot(x - 9.825, y - .525) <= .03
+                and abs(math.remainder(yaw - math.pi, 2 * math.pi)) <= .04
+                and vx <= .05):
+            break
+    else:
+        pytest.fail('Failed to stop inside the original waiting-anchor proof')
+    assert maximum_speed > .60
+    # The original controller took about 9s on these delayed, rotating starts.
+    # Budget the initial turn rather than accelerating through its residual.
+    assert step * dt < 8.5

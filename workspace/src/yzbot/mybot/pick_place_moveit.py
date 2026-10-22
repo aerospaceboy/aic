@@ -681,6 +681,10 @@ class MoveItPickPlace(Node):
         self.declare_parameter("persistent", False)
         self.declare_parameter("prepare_scene", True)
         self.declare_parameter("verify_placement", True)
+        # Persistent mode may acknowledge a verified delivery before the
+        # unloaded arm stow completes. The base then starts its retreat while
+        # the next operation is still gated behind the stow.
+        self.declare_parameter("defer_place_stow", False)
         self.declare_parameter(
             "state_topic",
             "/competition/manipulation/state",
@@ -757,6 +761,9 @@ class MoveItPickPlace(Node):
         self.prepare_scene_enabled = self.get_parameter("prepare_scene").value
         self.verify_placement_enabled = bool(
             self.get_parameter("verify_placement").value
+        )
+        self.defer_place_stow_enabled = bool(
+            self.get_parameter("defer_place_stow").value
         )
         self.pick_pose = tuple(self.get_parameter("pick_pose").value)
         self.pick_safe_pose = tuple(
@@ -913,6 +920,9 @@ class MoveItPickPlace(Node):
             FollowJointTrajectory,
             "/arm_controller/follow_joint_trajectory",
         )
+        # Set only after a verified delivery; the serve loop clears it before
+        # accepting the next scan/pick request.
+        self._pending_stow_arm = None
 
     def _joint_state_callback(self, message: JointState) -> None:
         self.latest_joint_state = message
@@ -3257,10 +3267,18 @@ class MoveItPickPlace(Node):
             ):
                 self.get_logger().error("Placement verification failed")
                 return False
-            # Acknowledging a place before an asynchronous stow result hid
-            # INVALID_MOTION_PLAN and let the base begin the next pickup
-            # from a self-colliding arm state. Finish the collision-checked
-            # return before reporting success, including the final delivery.
+            # The delivery is proven and the cube is no longer attached.
+            # In persistent mode, acknowledge it now so the base can retreat
+            # while the unloaded arm stows; the serve loop runs the checked
+            # stow before accepting any next manipulation request.
+            if (
+                self.release_world_pose is not None
+                and self.defer_place_stow_enabled
+            ):
+                self._pending_stow_arm = dict(staging_arm)
+                self.publish_state(f"place_ready:{self.cube_name}")
+                succeeded = True
+                return True
             if self.release_world_pose is None:
                 if not self.move_to_joint_target(
                     staging_arm,
@@ -3271,31 +3289,10 @@ class MoveItPickPlace(Node):
                 self.get_logger().info(
                     "world_slot_release:defer_return_home"
                 )
-                if not self.enforce_arm_joint_limits():
-                    return False
-                if not self.move_to_joint_target(
-                    staging_arm,
-                    "return_home_after_world_slot",
-                    result_timeout_sec=WORLD_SLOT_STOW_TIMEOUT,
-                ):
-                    # The cube is already released, stabilized and verified,
-                    # so the delivery is complete; a stow that timed out must
-                    # not discard it (2026-10-21 AB8-5 lost 4/5 this way).
-                    # Retract once with a simpler target and otherwise defer
-                    # the stow to the next manipulation, which starts with
-                    # enforce_arm_joint_limits() and a scan-pose move.
-                    self.get_logger().warn(
-                        "return_home_after_world_slot_failed_after_delivery"
-                    )
-                    if not self.move_to_pose(
-                        self.place_safe_pose, "place_retract_fallback"
-                    ):
-                        self.get_logger().warn(
-                            "deferred_stow: arm left at the delivery "
-                            "extension; recovered at the next manipulation"
-                        )
-                    else:
-                        self.get_logger().info("place_retract_fallback_ok")
+                # A verified delivery survives a bounded stow failure; the
+                # fallback leaves the arm inside the next scan's recovery
+                # guard. Do not turn a completed delivery into a failure.
+                self.finish_deferred_place_stow(staging_arm)
             self.publish_state(f"place_complete:{self.cube_name}")
             succeeded = True
             return True
@@ -3306,6 +3303,44 @@ class MoveItPickPlace(Node):
                 )
             if self.base_stabilized:
                 self.release_base()
+
+    def finish_deferred_place_stow(self, staging_arm=None) -> bool:
+        """Finish the unloaded stow after a verified delivery.
+
+        The base may already be retreating. This method never runs the
+        gripper, detach or placement path again; it only retracts the empty
+        arm. Failures are bounded and leave the next manipulation's joint
+        limit guard to recover the arm.
+        """
+        arm = dict(staging_arm or self._pending_stow_arm or {})
+        self._pending_stow_arm = None
+        if not arm:
+            arm = dict.fromkeys(ARM_JOINT_NAMES, 0.0)
+        if not self.enforce_arm_joint_limits():
+            return False
+        if self.move_to_joint_target(
+            arm,
+            "return_home_after_world_slot",
+            result_timeout_sec=WORLD_SLOT_STOW_TIMEOUT,
+        ):
+            self.publish_state(f"stow_complete:{self.cube_name}")
+            return True
+        # The cube is already released, stabilized and verified, so a stow
+        # that timed out must not discard it (2026-10-21 AB8-5 lost 4/5
+        # this way). Retract once and let the next manipulation recover.
+        self.get_logger().warn(
+            "return_home_after_world_slot_failed_after_delivery"
+        )
+        if not self.move_to_pose(
+            self.place_safe_pose, "place_retract_fallback"
+        ):
+            self.get_logger().warn(
+                "deferred_stow: arm left at the delivery extension; "
+                "recovered at the next manipulation"
+            )
+        else:
+            self.get_logger().info("place_retract_fallback_ok")
+        return False
 
     def run_release_only(self) -> bool:
         """Best-effort detach and open operation for mission recovery."""
@@ -3638,6 +3673,11 @@ class MoveItPickPlace(Node):
                 f"persistent_result id={request_id} success={success} "
                 f"detail={detail}"
             )
+            # The result is already visible to the mission coordinator, which
+            # may start the base retreat. Keep this worker busy until the
+            # empty-arm stow finishes so scan/pick cannot race the recovery.
+            if self._pending_stow_arm is not None:
+                self.finish_deferred_place_stow()
 
 
 def main(args=None) -> None:

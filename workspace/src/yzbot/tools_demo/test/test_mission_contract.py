@@ -899,3 +899,13 @@ def test_runtime_mission_deadline_matches_competition_limit():
     assert mission["competition_mission_coordinator"]["ros__parameters"][
         "mission_timeout_sec"
     ] == 300.0
+
+
+
+def test_persistent_pick_place_defers_stow_for_overlap():
+    """The base may retreat while the persistent worker stows the empty arm."""
+    source = (
+        REPOSITORY / "tools_demo" / "launch" / "mission.launch.py"
+    ).read_text(encoding="utf-8")
+    assert '"persistent": True' in source
+    assert '"defer_place_stow": True' in source

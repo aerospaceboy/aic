@@ -122,10 +122,37 @@ def test_upper_right_tray_uses_the_same_east_arc_without_old_lane_guides(start, 
     dock = ZonePose(zone, *end, 0.)
     result = round_navigation_corners(start, [dock], zone)
     assert result[-1] == dock
-    assert flow_prefix_size(result) > 10
+    arc = result[1:] if zone == 'B' else result
+    assert flow_prefix_size(arc) > 10
     assert max(p.x for p in result[:-1]) == pytest.approx(14.4)
     assert any(p.x == 13.4 and abs(p.y+2.5) < 1e-6 for p in result[:-1])
     assert round_navigation_corners(start, result, zone) == result
+
+
+def test_upper_right_loaded_approach_clears_the_roof_before_the_east_arc():
+    dock = ZonePose('B', 11.3, -5., 0.)
+    result = round_navigation_corners((8.3, 3.6), [dock], 'B')
+    approach = result[0]
+    assert (approach.x, approach.y) == (4.4, -2.5)
+    assert flow_prefix_size(result) == 1
+    assert flow_prefix_size(result[1:]) > 10
+    boxes = loaded_boxes()
+    for i in range(101):
+        x = approach.x + (result[1].x - approach.x) * i / 100
+        assert min(_point_to_oriented_box(x, -2.5, box) - .28 - .20
+                   for _, box in boxes) >= .10
+    node = RouteHarness()
+    node.use_legacy_layout_routes = False
+    node.active_zone = 'B'
+    node.latest_x, node.latest_y = 8.3, 3.6
+    node.pending_poses = list(result)
+    node._send_next_goal()
+    assert node.sent_serial == [approach]
+    assert not node.sent_batches
+    node.latest_x, node.latest_y = approach.x, approach.y
+    assert TaskNavigator._central_anchor_arrived(node)
+    node._send_next_goal()
+    assert node.sent_batches == [result[1:-1]]
 
 
 def test_corner_behavior_trees_reference_registered_collision_safe_plugins():
