@@ -173,6 +173,11 @@ esac
 # own 420 s restart budget. Harness only.
 deadline=$((SECONDS + ${STARTUP_TIMEOUT_SEC:-330}))
 ready_checks=0
+gui_ready=False
+case "${COSTUDIO_HEADLESS:-False}:${COSTUDIO_DEBUG_GUI:-True}" in
+    [Tt]rue:*|1:*|*:[Ff]alse|*:0) gui_ready=True ;;
+esac
+gui_deadline=$((SECONDS + ${GAZEBO_GUI_TIMEOUT_SEC:-90}))
 while (( SECONDS < deadline )); do
     if grep -aqE 'process has died|failed to send response: client will not receive response' "$run_dir/launch.log" "$run_dir/cobridge.log"; then
         echo "启动子进程故障；禁止出题。日志：$run_dir/launch.log" >&2
@@ -185,6 +190,16 @@ while (( SECONDS < deadline )); do
     if ! kill -0 "$bridge_pid" 2>/dev/null; then
         echo "coBridge 提前退出；查看 $run_dir/cobridge.log" >&2
         exit 1
+    fi
+    # A running gzclient or a healthy /clock does not prove the main window
+    # rendered. The client-only plugin reports this after scene/camera init.
+    if [[ "$gui_ready" != True ]]; then
+        if grep -aq 'YZBot low-load GUI active:' "$run_dir/launch.log"; then
+            gui_ready=True
+        elif (( SECONDS >= gui_deadline )); then
+            echo "Gazebo 图形窗口未就绪（仍停在启动画面）；禁止出题。日志：$run_dir/launch.log" >&2
+            exit 1
+        fi
     fi
     nodes=$(timeout 8 ros2 node list 2>/dev/null || true)
     status_info=$(timeout 8 ros2 topic info /competition/status 2>/dev/null || true)
@@ -298,7 +313,7 @@ while (( SECONDS < deadline )); do
         && grep -Eq "Publisher count: [1-9]" <<<"$safe_out" \
         && grep -Fq "Node name: competition_task_parser" <<<"$parse_info" \
         && grep -q "^active" <<<"$simulation_state" \
-        && [[ "$processes_ready" == True ]]; then
+        && [[ "$processes_ready" == True && "$gui_ready" == True ]]; then
         ready_checks=$((ready_checks + 1))
     else
         ready_checks=0

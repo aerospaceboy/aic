@@ -2,7 +2,7 @@ import os
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.actions import ExecuteProcess, RegisterEventHandler
-from launch.conditions import IfCondition, UnlessCondition
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from ament_index_python.packages import get_package_prefix
 from launch_ros.actions import Node
@@ -16,6 +16,13 @@ import re
 def remove_comments(text):
     pattern = r'<!--(.*?)-->'
     return re.sub(pattern, '', text, flags=re.DOTALL)
+
+
+def client_after_spawn(event, context, *, clients):
+    """Open the GUI only after the running world accepted the robot."""
+    if event.returncode != 0:
+        return []
+    return list(clients)
  
 def generate_launch_description():
     robot_name_in_model = 'six_arm'
@@ -69,29 +76,25 @@ def generate_launch_description():
         ' and ', LaunchConfiguration('debug_gui'),
     ]))
 
-    # Start Gazebo server and, unless headless, one of the graphical clients.
-    # The debug plugin only changes client-side rendering and window settings.
+    # A simultaneous `gazebo` server/client start can leave gzclient at the
+    # splash screen while ROS services are healthy. Give launch ownership of
+    # both processes and gate the client on successful world/entity creation.
     start_gazebo_cmd = ExecuteProcess(
-        cmd=['gazebo', '--verbose',
-             world_file_path,
-             '-s', 'libgazebo_ros_init.so', 
-             '-s', 'libgazebo_ros_factory.so'],
+        cmd=['gzclient', '--verbose'],
         condition=standard_gui_condition,
+        emulate_tty=True,
         output='screen')
     start_gazebo_debug_cmd = ExecuteProcess(
-        cmd=['gazebo', '--verbose',
-             '--gui-client-plugin', debug_gui_plugin,
-             world_file_path,
-             '-s', 'libgazebo_ros_init.so',
-             '-s', 'libgazebo_ros_factory.so'],
+        cmd=['gzclient', '--verbose',
+             '--gui-client-plugin', debug_gui_plugin],
         condition=debug_gui_condition,
+        emulate_tty=True,
         output='screen')
     start_gzserver_cmd = ExecuteProcess(
         cmd=['gzserver', '--verbose',
              world_file_path,
              '-s', 'libgazebo_ros_init.so',
              '-s', 'libgazebo_ros_factory.so'],
-        condition=IfCondition(LaunchConfiguration('headless')),
         output='screen')
  
  
@@ -124,6 +127,15 @@ def generate_launch_description():
             '-Y', LaunchConfiguration('robot_yaw'),
         ],
         output='screen')
+
+    open_client_after_spawn = RegisterEventHandler(
+        OnProcessExit(
+            target_action=spawn_entity_cmd,
+            on_exit=lambda event, context: client_after_spawn(
+                event, context,
+                clients=(start_gazebo_cmd, start_gazebo_debug_cmd)),
+        )
+    )
  
  
     # # Launch the robot, 这个是通过传递文件路径来在gazebo里生成模型.此时要求urdf文件里面没有xacro的语句
@@ -198,9 +210,8 @@ def generate_launch_description():
     ld.add_action(close_evt1)
     ld.add_action(close_evt2)
     ld.add_action(close_evt3)
+    ld.add_action(open_client_after_spawn)
  
-    ld.add_action(start_gazebo_cmd)
-    ld.add_action(start_gazebo_debug_cmd)
     ld.add_action(start_gzserver_cmd)
     ld.add_action(node_robot_state_publisher)
     ld.add_action(spawn_entity_cmd)

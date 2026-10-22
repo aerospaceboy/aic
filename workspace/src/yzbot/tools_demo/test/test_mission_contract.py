@@ -452,7 +452,10 @@ def test_acceptance_requires_live_rgbd_publishers_and_core_interfaces():
     assert "self.count_publishers(topic) == 0" in source
     assert "COMPETITION_ACCEPTANCE=" in source
     assert "start_gzserver_cmd" in gazebo
-    assert "IfCondition(LaunchConfiguration('headless'))" in gazebo
+    # The same independent server owns sensors in GUI and headless modes;
+    # only the client is conditional (exercised by test_gazebo_client_startup).
+    assert "ld.add_action(start_gzserver_cmd)" in gazebo
+    assert "condition=IfCondition(LaunchConfiguration('headless'))" not in gazebo
 
 
 def test_blue_c_routes_prefer_b1_then_b2_with_current_rpp():
