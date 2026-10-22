@@ -141,8 +141,6 @@ def test_official_world_uses_a_control_rate_physics_step():
     rounds with manipulator failures (attachment_anchor_retry, truncated
     pick_descend, "Attached cube settled more than 20 mm") plus a clearance
     penetration of -0.0498 m, and all five re-tested clean on the same code.
-    The project had already recorded the same direction once: "250 Hz 测试会
-    引入抓取失败，已回退 500 Hz" (docs/AGENT_HISTORY.md:1232).
 
     500 Hz is the accepted operating point: on the 28-core dev host gzserver
     goes 52% -> 76% CPU while RTF stays 0.987-0.998, so sim time still tracks

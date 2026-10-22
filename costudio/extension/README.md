@@ -11,7 +11,7 @@
 题目面板把两项输入编码为 JSON 分片，发布到 `/competition/task/problem_chunk`；
 后端完成大模型解析与确定性校验后发布 `/competition/task/plan` 和
 `/competition/task/parse_result`，`legacy_costudio_status` 再汇入
-`/competition/status` 供面板显示。显示契约见 `docs/costudio/PARSE_DISPLAY.md`。
+`/competition/status` 供面板显示。操作说明见项目根目录 README 和 `workspace/src/yzbot/docs/competition_operator_guide.md`。
 
 实时模式下面板不会用演示数据补齐缺失字段：未收到解析结果时显示等待状态，
 解析失败时清空本题指令，避免把旧结果或示例数字显示为当前解析结果。
@@ -32,7 +32,7 @@ npm run build -- --mode production
 把 `dist/extension.js` 覆盖到已安装扩展目录后重启 coStudio：
 
 ```
-%USERPROFILE%\.coStudio\extensions\aerospaceboy.yzbot-competition-<version>\dist\extension.js
+$HOME/.coStudio/extensions/aerospaceboy.yzbot-competition-<version>/dist/extension.js
 ```
 
 `displayName` 必须保持 `aerospaceboy.yzbot-competition`，以匹配正式布局中的

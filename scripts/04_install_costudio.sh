@@ -3,7 +3,13 @@ set -eo pipefail
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib.sh"
 [[ $(id -u) != 0 ]] || { echo '请以比赛桌面用户执行，不能把扩展装到 root HOME。' >&2; exit 2; }
 if ! command -v costudio >/dev/null && ! command -v coStudio >/dev/null && ! command -v honeybee >/dev/null && [[ ! -x /opt/coStudio/honeybee ]]; then
-    sudo apt-get install -y "$USB_ROOT"/vendor/linux/coStudio_*linux_amd64.deb
+    shopt -s nullglob
+    client_packages=("$USB_ROOT"/vendor/linux/coStudio_*linux_amd64.deb)
+    if (( ${#client_packages[@]} == 0 )); then
+        echo 'CoStudio 未安装；请使用含安装包的部署包，或先安装比赛环境提供的客户端。' >&2
+        exit 2
+    fi
+    sudo apt-get install -y "${client_packages[@]}"
 fi
 source_dir="$USB_ROOT/costudio/extension"
 # coStudio 0.4.0 只在启动时扫描 $HOME/.coStudio/extensions/<publisher.name>-<version>，
