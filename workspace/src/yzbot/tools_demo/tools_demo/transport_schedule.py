@@ -17,6 +17,25 @@ from tools_demo.transport_routes import (
 )
 
 
+def current_task_response_proof(payload, task_id, earliest_epoch):
+    """Use two distinct navigator-verified responses from this task only."""
+    epoch = payload.get('encounter_epoch_sec')
+    if (not task_id or payload.get('encounter_task_id') != task_id
+            or not isinstance(epoch, (int, float))
+            or not math.isfinite(epoch) or epoch < earliest_epoch):
+        return False
+    known = {'competition_moving_obstacle_1',
+             'competition_moving_obstacle_2', 'crossing_cart_1', 'crossing_cart_2'}
+    verified = set()
+    for field in ('verified_effective_responses', 'verified_central_responses'):
+        responses = payload.get(field, [])
+        if not isinstance(responses, list) or not all(
+                isinstance(name, str) for name in responses):
+            return False
+        verified.update(set(responses) & known)
+    return len(verified) >= 2
+
+
 def centered_slot_offset(slot, count, spacing, maximum_abs_y):
     """Share the production zone-slot spacing with the route estimator."""
     if not 0 <= slot < count <= 5:

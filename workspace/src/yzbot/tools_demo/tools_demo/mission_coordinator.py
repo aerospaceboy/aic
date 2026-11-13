@@ -60,6 +60,7 @@ from tools_demo.pick_order_policy import validate_pick_entries
 from tools_demo.unordered_schedule import optimize_schedule
 from tools_demo.transport_schedule import (
     TransportTimeEstimator, centered_slot_offset, load_timing_profile, route_estimate,
+    current_task_response_proof,
 )
 
 
@@ -1057,14 +1058,8 @@ class MissionCoordinator(Node):
             return
         state = payload.get("state")
         if getattr(self, "_transport_automatic", False):
-            epoch = payload.get("encounter_epoch_sec")
-            responses = payload.get("verified_central_responses")
-            if (payload.get("encounter_task_id") == self.active_task_id
-                    and isinstance(epoch, (int, float)) and math.isfinite(epoch)
-                    and epoch >= self._transport_epoch_sec
-                    and isinstance(responses, list) and all(isinstance(r, str) for r in responses)
-                    and set(responses)
-                    >= {"crossing_cart_1", "crossing_cart_2"}):
+            if current_task_response_proof(
+                    payload, self.active_task_id, self._transport_epoch_sec):
                 self._transport_responses_complete = True
         if state in {"sending", "active", "canceling", "timing_out"}:
             self.navigation_seen_active = True
@@ -2198,9 +2193,9 @@ class MissionCoordinator(Node):
                 responses_complete=self._transport_responses_complete,
                 navigation_parameters=nav,
                 timing_samples=timing_samples)
-            # A geometry-only replacement must not silently remove the only
-            # planned central encounter. Real proof still comes from Nav2's
-            # timestamped, current-epoch response verification, not this DP.
+            # Retain an encounter route until two real current-task responses
+            # are verified. Any two known movers satisfy the same acceptance
+            # contract; planned crossings alone never provide that proof.
             required = ()
             if (not self._transport_responses_complete
                     and "blue_cube_3" not in self._cube_done

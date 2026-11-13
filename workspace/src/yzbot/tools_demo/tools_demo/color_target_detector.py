@@ -299,7 +299,6 @@ class ColorTargetDetector(Node):
             separators=(",", ":"),
             sort_keys=True,
         )
-        self.processed_frames += 1
         self.targets_publisher.publish(message)
 
     def image_callback(
@@ -445,6 +444,7 @@ class ColorTargetDetector(Node):
         )
         debug_message.header = color_message.header
         self.debug_publisher.publish(debug_message)
+        self.processed_frames += 1
         self.last_warning_key = None
 
     def draw_region(
