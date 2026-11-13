@@ -15,6 +15,7 @@ SOURCE_DIRS = ('scripts', 'examples', 'rules', 'costudio', 'workspace/src')
 SKIP_DIRS = {
     '.git', '__pycache__', '.pytest_cache', '.mypy_cache', '.ruff_cache',
     'node_modules', 'build', 'install', 'log', '.ros', '.idea', '.vscode',
+    'world_backups', 'runs', 'acceptance',
 }
 PRIVATE = re.compile(
     rb'sk-[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16}|'

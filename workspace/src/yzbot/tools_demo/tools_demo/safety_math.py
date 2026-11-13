@@ -76,3 +76,25 @@ def relative_positions(
         cos_y * dx + sin_y * dy,
         -sin_y * dx + cos_y * dy,
     )
+
+
+def spawn_corridor_scale(
+    robot: Optional[Tuple[float, float, float]],
+    obstacles: Dict[str, Tuple[float, float]],
+    motion_sign: float = 1.0,
+) -> float:
+    """Protect the side-front return sweep in the admitted westbound lane.
+
+    Use the same envelope in live control and admission prediction. Outside
+    this audited lane the ordinary navigation guard remains authoritative.
+    No response counters, task phase or elapsed-time trigger control motion.
+    """
+    if robot is None or motion_sign <= 0.0:
+        return 1.0
+    x, y, yaw = robot
+    if (not 3.8 <= x <= 12.85 or not .48 <= y <= .62
+            or abs(math.remainder(yaw - math.pi, 2 * math.pi)) > .04):
+        return 1.0
+    actors = {name: xy for name, xy in obstacles.items() if name in {
+        'competition_moving_obstacle_1', 'competition_moving_obstacle_2'}}
+    return compute_scale(robot, actors, .75, 1.60, math.pi / 2)

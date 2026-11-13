@@ -27,7 +27,7 @@ from tools_demo.navigation_math import CORRIDOR_TRANSIT_SPEED
 from tools_demo.navigation_math import UNIVERSAL_EAST_WAIT_Y
 from tools_demo.corridor_admission import spawn_corridor_admission
 
-from tools_demo.safety_math import compute_scale
+from tools_demo.safety_math import compute_scale, spawn_corridor_scale
 
 
 class SafetyLimiter(Node):
@@ -204,14 +204,14 @@ class SafetyLimiter(Node):
             for model, (x_value, y_value, stamp) in self.obstacles.items()
             if 0 <= now - stamp <= timeout_ns
         }
-        return compute_scale(
+        return min(compute_scale(
             self.robot,
             fresh,
             self.danger,
             self.caution,
             self.cone_half,
             motion_sign,
-        )
+        ), spawn_corridor_scale(self.robot, fresh, motion_sign))
 
     def _spawn_admission_clear(self, model: str, rolling=False) -> bool:
         """Use the navigator's crossing proof with fresh source time."""

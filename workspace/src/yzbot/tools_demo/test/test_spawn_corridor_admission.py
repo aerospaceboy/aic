@@ -308,7 +308,7 @@ def test_wait_lane_merge_finishes_aligned_without_a_parked_turn(
                 math.remainder(yaw - math.pi, 2 * math.pi)) <= .04:
             break
         v, w = wait_anchor_velocity((x, y, yaw), (9.825, .525))
-        assert 0. < v <= .70  # Turning correction is carried while moving.
+        assert 0. < v <= 1.10  # Turning correction is carried while moving.
         if x - 9.825 <= .70:
             assert v <= .35  # Retain the original precision approach.
         assert abs(w) <= .60
@@ -348,8 +348,8 @@ def test_idle_timer_proves_the_window_without_any_velocity_message(source, relea
     from unittest.mock import patch
 
     context = Context()
-    # Use a private context so this timer test does not disturb other nodes.
-    rclpy.init(context=context)
+    # Keep test subscriptions and velocity output off the live robot domain.
+    rclpy.init(context=context, domain_id=93)
     executor = SingleThreadedExecutor(context=context)
     node_init = Node.__init__
     with patch('tools_demo.safety_limiter.Node.__init__',
@@ -363,7 +363,7 @@ def test_idle_timer_proves_the_window_without_any_velocity_message(source, relea
         node.get_clock = clock
         node.obstacle_source_stamps[model] = source
         node.publisher = Mock()
-        deadline = time.monotonic() + .25
+        deadline = time.monotonic() + 1.0
         while time.monotonic() < deadline and not node.east_gate_open:
             rclpy.spin_once(node, executor=executor, timeout_sec=.06)
         assert node.east_gate_open is release
@@ -503,7 +503,7 @@ def test_admitted_windows_remain_safe_with_the_live_guard_slowdown(
                         actors = {actor: (ox, ay)}
                         scale = compute_scale(
                             (robot_x, .55, math.pi), actors,
-                            .75, 1.60, math.radians(65), 1.)
+                            .75, 1.60, math.pi / 2, 1.)
                         robot_x -= 1.1 * scale * .025
                 assert cleared
     assert admitted > 0

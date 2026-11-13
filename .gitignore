@@ -4,10 +4,10 @@
 # 发布包由 scripts/package_submission.py 生成，不包含开发过程记录。
 # ---------------------------------------------------------------------------
 
-# 第三方安装包与解包副本（~883 MiB）
+# 第三方安装包与解包副本
 /vendor/
 
-# 历史验收与实验材料（~473 MiB）
+# 历史验收与实验材料
 /acceptance/
 
 # 运行期证据与临时输出
@@ -44,8 +44,9 @@ __pycache__/
 *.pre_*
 *.pre_shengsai_relocation
 
-# 已归档的损坏快照 Git 仓库（见 项目分析/运行环境备份/yzbot-broken-git-20261021）
+# 本地历史仓库与旧场景快照
 /workspace/src/yzbot/.git.broken-*/
+/workspace/src/yzbot/world_backups/
 
 # 凭据、录制与发布产物
 .env

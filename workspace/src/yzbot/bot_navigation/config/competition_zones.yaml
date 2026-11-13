@@ -210,14 +210,13 @@ competition_moving_obstacle_1:
     amplitude_x: 0.00
     amplitude_y: 0.70
     # Y[-0.80, 0.60]: only the north endpoint is extended by 0.50 m.
-    # 10.18 s is the fastest cycle with a robust first-gate window.
-    # Re-anchor at task time: 3.54 s leaves this actor descending near
-    # the south end at the waiting anchor. Admission opens as it turns
-    # upward, so the base must really yield as it enters the lane.
-    period_sec: 10.181818181818182
+    # A 0.225 m/s patrol leaves a wider complete crossing window, including
+    # side-front braking. Coordinate phase with the actual spawn approach;
+    # live admission still refuses stale or unsafe observations.
+    period_sec: 12.444444444444445
     phase_offset_sec: 0.0
     reset_phase_on_plan: true
-    mission_phase_offset_sec: 3.54
+    mission_phase_offset_sec: 7.7
     plan_topic: /competition/task/plan
     update_rate_hz: 10.0
     truth_read_rate_hz: 10.0
@@ -249,12 +248,13 @@ competition_moving_obstacle_2:
     exit_duration_sec: 0.80
     amplitude_x: 0.00
     amplitude_y: 0.70
-    period_sec: 10.181818181818182
-    # 0.29 s puts this actor at y=0.40 moving south at the same arrival;
-    # its return sweep supplies the second independent yield.
-    phase_offset_sec: 5.090909090909091
+    period_sec: 12.444444444444445
+    # Present the second actor near the lane as the base arrives. The live
+    # crossing proof opens two to three seconds after the safe staging stop;
+    # no fixed sleep or response-counter override is used.
+    phase_offset_sec: 6.222222222222222
     reset_phase_on_plan: true
-    mission_phase_offset_sec: 0.29
+    mission_phase_offset_sec: 11.9
     plan_topic: /competition/task/plan
     update_rate_hz: 10.0
     truth_read_rate_hz: 10.0

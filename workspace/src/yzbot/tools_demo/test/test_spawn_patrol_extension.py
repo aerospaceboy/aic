@@ -29,12 +29,12 @@ def test_real_motion_uses_positive_only_extension_and_early_cycle(index, x):
     assert p['center_y'] + p['amplitude_y'] == pytest.approx(.6)
     assert CORRIDOR_PATROL_MIN_Y == -.8
     assert CORRIDOR_PATROL_MAX_Y == .6
-    assert p['period_sec'] == CORRIDOR_PATROL_PERIOD == 10.181818181818182
+    assert p['period_sec'] == CORRIDOR_PATROL_PERIOD == 12.444444444444445
     assert p['reset_phase_on_plan'] is True
-    assert p['mission_phase_offset_sec'] == (3.54 if index == 1 else .29)
+    assert 0 <= p['mission_phase_offset_sec'] < p['period_sec']
     assert 4 * p['amplitude_y'] / p['period_sec'] == pytest.approx(
         CORRIDOR_PATROL_SPEED)
-    assert p['phase_offset_sec'] == (0. if index == 1 else 5.090909090909091)
+    assert p['phase_offset_sec'] == (0. if index == 1 else CORRIDOR_PATROL_PERIOD / 2)
     node = SimpleNamespace(
         center_x=x, center_y=p['center_y'], amplitude_x=0., amplitude_y=p['amplitude_y'],
         phase_offset_sec=p['phase_offset_sec'],

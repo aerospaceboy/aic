@@ -9,14 +9,7 @@ if ! flock -n 9; then
     echo "手动 CoStudio 模式正在启动；请等待现有启动完成。" >&2
     exit 1
 fi
-# HARNESS PATCH for the sway-bisect experiment (not part of 7ca1ba3).
-# The readiness loop runs many `ros2` CLI calls; the first one auto-starts the
-# per-user ROS 2 daemon, and a daemon spawned while fd 9 is open inherits the
-# lock for the rest of the session. Every later start then dies with
-# '手动 CoStudio 模式正在启动' even though nothing is running (observed
-# 2026-10-03: lock held by ros2-daemon pid 261890). Start the daemon here with
-# fd 9 closed so it can never hold the lock. Harness only - no effect on robot
-# behaviour, controller tuning, physics or acceptance gates.
+# Detached ROS processes must close fd 9 so they cannot retain this startup lock.
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 # Resolve the workspace from this file, so a delivery tree that is itself
@@ -165,12 +158,7 @@ case "${start_rviz,,}" in
         ;;
 esac
 
-# HARNESS PATCH for the sway bisect experiment (not part of 7ca1ba3).
-# 240 s was tuned headless. With the Gazebo GUI + RViz + the coStudio bridge
-# plus the 200 Hz ground-truth probe the graph needs longer; a measured GUI
-# cycle reached a fully healthy graph (all lifecycle nodes active, TF
-# connected) right at the old deadline. 330 s still fits inside the runner's
-# own 420 s restart budget. Harness only.
+# GUI, bridge and navigation readiness share this bounded startup budget.
 deadline=$((SECONDS + ${STARTUP_TIMEOUT_SEC:-330}))
 ready_checks=0
 gui_ready=False

@@ -7,7 +7,7 @@ from tools_demo.navigation_math import (
     CORRIDOR_TRANSIT_SPEED, UNIVERSAL_EAST_WAIT_Y,
     corridor_crossing_clear, corridor_lane_release_clear,
 )
-from tools_demo.safety_math import compute_scale
+from tools_demo.safety_math import spawn_corridor_scale
 
 
 def guarded_corridor_crossing_clear(
@@ -34,7 +34,7 @@ def guarded_corridor_crossing_clear(
         if t < delay:
             continue
         actors = {name: (ox, ay)}
-        scale = compute_scale((x, y, yaw), actors, .75, 1.6, math.radians(65))
+        scale = spawn_corridor_scale((x, y, yaw), actors)
         travel = CORRIDOR_TRANSIT_SPEED * scale * .025
         x += math.cos(yaw) * travel
         y += math.sin(yaw) * travel
@@ -53,18 +53,17 @@ def wait_anchor_velocity(
     error = math.remainder(target_yaw - yaw, 2 * math.pi)
     remaining = max(0., x - target_x)
     # The checked approach may start 2.85 m before the waiting anchor.
-    # Reserve the original precision controller for its final 0.70 m;
-    # blend up to 0.70 m/s on the open prefix instead of crawling all of it.
-    # At 0.70 m/s, even 0.25 s observation/command lag plus braking at
-    # 1 m/s^2 fits within that unchanged slow-down reserve (0.42 m).
+    # Use normal transit only after heading and lateral error settle.
+    # The 1.10 m braking reserve covers 0.88 m needed to stop from 1.10 m/s
+    # at 1 m/s^2 with 0.25 s combined lag; the precision tail is unchanged.
     # Wall-tip completion can still carry angular velocity from Nav2.
     # Merge at the original speed until both lateral and heading error
     # settle; accelerating that turn overshot into the static-map guard.
     settled = max(0., min(
         1. - abs(target_y - y) / .10,
         1. - abs(math.remainder(yaw - math.pi, 2 * math.pi)) / .30))
-    cruise = min(.35 + .35 * settled,
-                 .35 + .50 * max(0., remaining - .70))
+    cruise = min(.35 + .75 * settled,
+                 .35 + 1.20 * max(0., remaining - 1.10))
     speed = min(cruise, max(.02, 1.2 * remaining))
     # Bound lateral travel while an initial heading correction is settling.
     # This shrinks speed near the checked lane edge, rather than allowing
