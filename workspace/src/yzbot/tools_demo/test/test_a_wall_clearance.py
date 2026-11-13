@@ -95,7 +95,7 @@ def test_corner_speed_is_released_and_handoff_cannot_cut_the_tip():
             node, ZonePose(stage, 0, 0, 0) if stage else None)
     # Corner reserve raised to 0.75 with the 20261014 matrix (0.6 left the
     # heaviest rounds within seconds of the 300 s limit).
-    assert [m.speed_limit for m in published] == [1.2, .75, 0., 0.]
+    assert [m.speed_limit for m in published] == [1.5, .75, 0., 0.]
 
 
 def test_a_guides_preserve_the_existing_lower_east_bay_exit():

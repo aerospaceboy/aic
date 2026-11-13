@@ -3575,8 +3575,8 @@ class TaskNavigator(Node):
         # it was the slowest straight on the route while remaining a straight
         # line with no turn in it (20261014 request), so it takes 1.05: still
         # below the 1.2 south straight and well above the 0.6 corner reserve.
-        approach_limits = {"A_WALL_SOUTH_CLEAR": 1.2,
-                           "A_WALL_WEST_CLEAR": 1.20,
+        approach_limits = {"A_WALL_SOUTH_CLEAR": 1.5,
+                           "A_WALL_WEST_CLEAR": 1.50,
                            "central_patrol_north_flank": 1.0,
                            "central_patrol_south_flank": 1.0,
                            "CENTRAL_MOVER_GATE_WEST": 1.0,
@@ -3584,10 +3584,10 @@ class TaskNavigator(Node):
                            "central_red2_north_entry": 1.0}
         approach_limits.update({"A_WALL_CENTRAL_CLEAR": 1.0,
                                 "A_WALL_RED2_NORTH_CLEAR": 1.0,
-                                "north_pickup_tray_west_clear": 1.2,
-                                "north_pickup_tray_east_clear": 1.2,
-                                "north_delivery_tray_west_clear": 1.2,
-                                "north_delivery_tray_east_clear": 1.2})
+                                "north_pickup_tray_west_clear": 1.5,
+                                "north_pickup_tray_east_clear": 1.5,
+                                "north_delivery_tray_west_clear": 1.5,
+                                "north_delivery_tray_east_clear": 1.5})
         if stage is not None and stage.startswith("WALL57_POCKET_"):
             approach_limits[stage] = 1.60
         # Bay-pocket exit anchors turn within 1.0 m of the wall; 0.6 m/s
