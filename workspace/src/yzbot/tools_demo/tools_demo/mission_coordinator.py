@@ -122,6 +122,16 @@ CUBE_SLOT_BASE_Z = 0.0266
 # moved; otherwise the mission fails closed with the cube retained.
 PLACE_REPEAT_POSE_TOLERANCE = 0.010
 PLACE_REPEAT_YAW_TOLERANCE = 0.020
+# Lateral placement centring. Measured successful placements keep the arm's
+# base-frame lateral target at |y| <= 0.05 m, while the arm refuses beyond
+# 0.12 m. A docking cross-track outlier (0.058 m observed) plus a slot line can
+# reach 0.122 m and then fails deterministically while holding the cube.
+# Above this threshold the base does one bounded lateral centring move before
+# the placement request; the arm's 0.12 m window stays the final authority.
+PLACE_LATERAL_CENTER_THRESHOLD = 0.08
+# After centring, a target still this far outside the arm window fails closed
+# with the cube retained, as before, instead of sending a known-bad request.
+PLACE_LATERAL_ALLOW = 0.119
 # Keep a delivery slot at least this far inside the pad edge after the
 # approach bias, so the cube never straddles the painted boundary.
 DELIVERY_SLOT_EDGE_MARGIN = 0.10
@@ -163,6 +173,15 @@ SLOT_FALLBACK_MAX_ABS_Y = 0.10
 # consume the grasp-failure budget that controls exclusion.
 APPROACH_REJECTION_LIMIT = 2
 
+
+
+def place_lateral_centering_needed(local_y) -> bool:
+    """Whether a placement target needs one bounded lateral centring move."""
+    return (
+        isinstance(local_y, (int, float))
+        and math.isfinite(float(local_y))
+        and abs(float(local_y)) > PLACE_LATERAL_CENTER_THRESHOLD
+    )
 
 
 def selection_pose_after_universal_staging(
@@ -2534,6 +2553,37 @@ class MissionCoordinator(Node):
             self.publish_error("Manipulation action omitted its job")
             return
         if action.kind == "place":
+            # getattr keeps the light-weight route harnesses working; a
+            # stand-in without the helper keeps the frozen pre-check path.
+            local_resolver = getattr(self, "_place_slot_local", None)
+            local = (
+                local_resolver(job) if local_resolver is not None else None
+            )
+            if local is not None and place_lateral_centering_needed(local[1]):
+                self.get_logger().info(
+                    "place_lateral_center "
+                    f"cube={job.cube_name} "
+                    f"local=({local[0]:.3f},{local[1]:.3f})"
+                )
+                self._center_target_laterally(local[1])
+                local = local_resolver(job)
+                if local is None or abs(local[1]) > PLACE_LATERAL_ALLOW:
+                    self.publish_error(
+                        "place_lateral_center_failed "
+                        f"local={local if local is None else (round(local[0], 3), round(local[1], 3))}")
+                    self.machine.state = "failed"
+                    self.machine.detail = (
+                        "place_failed:slot_unreachable:holding_cube"
+                    )
+                    self.handle_action(
+                        MissionAction("done", reason=self.machine.detail)
+                    )
+                    return
+                self.get_logger().info(
+                    "place_lateral_centered "
+                    f"cube={job.cube_name} "
+                    f"local=({local[0]:.3f},{local[1]:.3f})"
+                )
             repeat = self._place_repeat_refusal(job)
             if repeat is not None:
                 # The slot and the measured base pose are unchanged, so the
@@ -2932,6 +2982,17 @@ class MissionCoordinator(Node):
             slot_x + shift * dx / norm,
             slot_y + shift * dy / norm,
         )
+
+    def _place_slot_local(self, job) -> Optional[tuple]:
+        """Return the world slot target in the current base frame, or None."""
+        pose = self._odom_pose()
+        if pose is None or job is None:
+            return None
+        try:
+            slot = self._delivery_slot_world(job)
+            return world_target_in_base(pose, slot)
+        except (TypeError, ValueError):
+            return None
 
     def _delivery_slot_offset(self, job) -> tuple:
         """Return the job's centered zone-slot offset and stable index."""
