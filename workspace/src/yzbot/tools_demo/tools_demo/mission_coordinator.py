@@ -3028,10 +3028,32 @@ class MissionCoordinator(Node):
             slot_y + shift * dy / norm,
         )
 
+    def _wait_base_stationary(self, timeout: float = 2.0) -> bool:
+        """Wait until the measured base pose stops changing."""
+        deadline = time.monotonic() + timeout
+        previous = self._odom_pose()
+        while time.monotonic() < deadline:
+            time.sleep(0.1)
+            current = self._odom_pose()
+            if previous is None or current is None:
+                previous = current
+                continue
+            if (math.hypot(current[0] - previous[0],
+                           current[1] - previous[1]) <= 0.003
+                    and abs(angle_delta(current[2], previous[2])) <= 0.01):
+                return True
+            previous = current
+        return False
+
     def _bounded_place_shift(self, forward: float, lateral: float) -> None:
-        """Command one bounded closed-loop base displacement in both axes."""
+        """Command one bounded, time-exact base displacement in both axes.
+
+        A fixed duration per correction avoids a runaway command when the
+        sampled odometry update skips past the tolerance band; the caller
+        re-measures after every step and closes the loop.
+        """
         speed = 0.18
-        deadline = time.monotonic() + 2.5
+        duration = min(1.2, max(abs(forward), abs(lateral)) / speed + 0.10)
         start = self._odom_pose()
         if start is None:
             return
@@ -3044,24 +3066,16 @@ class MissionCoordinator(Node):
             if abs(lateral) > 0.012 else 0.0
         self.get_logger().info(
             "place_base_shift "
-            f"forward={forward:+.3f} lateral={lateral:+.3f}"
+            f"forward={forward:+.3f} lateral={lateral:+.3f} "
+            f"duration={duration:.2f}"
         )
+        deadline = time.monotonic() + duration
         while time.monotonic() < deadline:
-            current = self._odom_pose()
-            if current is None:
-                break
-            dx = current[0] - start[0]
-            dy = current[1] - start[1]
-            moved_forward = cos_yaw * dx + sin_yaw * dy
-            moved_lateral = -sin_yaw * dx + cos_yaw * dy
-            if (abs(moved_forward - forward) <= 0.012
-                    and abs(moved_lateral - lateral) <= 0.012):
-                break
             self.cmd_vel_publisher.publish(twist)
             time.sleep(0.05)
         twist.linear.x = 0.0
         twist.linear.y = 0.0
-        for _ in range(5):
+        for _ in range(6):
             self.cmd_vel_publisher.publish(twist)
             time.sleep(0.02)
         current = self._odom_pose()
@@ -3076,13 +3090,14 @@ class MissionCoordinator(Node):
 
     def _reposition_for_place(self, job) -> Optional[tuple]:
         """Iteratively drive the arm-frame slot target into its window."""
+        self._wait_base_stationary()
         local = self._place_slot_local(job)
         for _ in range(PLACE_REPOSITION_ITERATIONS):
             correction = place_reposition_correction(local)
             if correction is None:
                 break
             self._bounded_place_shift(*correction)
-            time.sleep(0.25)   # let the base physically settle
+            self._wait_base_stationary()
             local = self._place_slot_local(job)
         return local
 
