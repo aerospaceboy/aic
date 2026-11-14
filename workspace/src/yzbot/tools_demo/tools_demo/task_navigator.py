@@ -6110,6 +6110,8 @@ class TaskNavigator(Node):
         origin_x = robot.x
         origin_y = robot.y
 
+        now_ns = self.get_clock().now().nanoseconds
+
         def check(x_local: float, y_local: float, radius: float) -> float:
             world_x = origin_x + x_local * cos_yaw - y_local * sin_yaw
             world_y = origin_y + x_local * sin_yaw + y_local * cos_yaw
@@ -6119,6 +6121,16 @@ class TaskNavigator(Node):
                 px = world_x + ring * math.cos(angle)
                 py = world_y + ring * math.sin(angle)
                 if not self._costmap_cell_free(px, py):
+                    if now_ns - getattr(self, "_dynamic_probe_log_ns", 0) \
+                            >= 1_000_000_000:
+                        self._dynamic_probe_log_ns = now_ns
+                        self.get_logger().info(
+                            "dynamic_static_probe "
+                            f"local=({x_local:.2f},{y_local:.2f}) "
+                            f"world=({world_x:.2f},{world_y:.2f}) "
+                            f"angle={(angle_index * 45)} "
+                            f"cost={self._global_cost_at(px, py)} "
+                            f"ring={ring:.2f}")
                     return 0.0
             return 0.10
 
