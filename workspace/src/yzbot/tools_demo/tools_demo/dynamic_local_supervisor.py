@@ -140,8 +140,7 @@ def actor_snapshots(obstacles: Dict[str, dict],
             vx=vx_local,
             vy=vy_local,
             uncertainty=0.05 if age < 0.25 else 0.10,
-            confident=(age <= confidence_age
-                       and math.hypot(vx_world, vy_world) > 0.04),
+            confident=(age <= confidence_age),
             was_moving=math.hypot(vx_world, vy_world) > 0.04,
             history=tuple(history[-7:]),
         ))
@@ -210,8 +209,8 @@ class DynamicLocalSupervisor:
         self.decisions: List[dict] = []
 
     def step(self, now: float, robot: sp.RobotState, payload: bool,
-             obstacles: Dict[str, dict], goal_local: Tuple[float, float]
-             ) -> SupervisorOutput:
+             obstacles: Dict[str, dict], goal_local: Tuple[float, float],
+             static_check=None) -> SupervisorOutput:
         """Advance one control cycle and return the command/lease decision."""
         config = self.config
         if config.mode == 'off':
@@ -224,30 +223,35 @@ class DynamicLocalSupervisor:
         local_robot = sp.RobotState(stamp=robot.stamp, vx=local_vx,
                                     vy=local_vy, w=robot.w, yaw=0.0)
         tracks = actor_snapshots(obstacles, frame_origin, now)
-        # A stale/occluded mover inside the corridor cannot be certified as
-        # clear: hold or brake until a fresh observation arrives, and say so.
+        # A real observation dropout very close to the base is never certified
+        # clear. Release the direct channel at once (the downstream collision
+        # monitor and Nav2 stay in charge) rather than holding a stop command
+        # that fights the navigation stack; the event is recorded.
         stale_nearby = any(
-            not track.confident
-            and -0.5 <= track.x <= config.activation_ahead_m
-            and abs(track.y) <= config.activation_lateral_m
+            now - track.stamp > 1.0
+            and math.hypot(track.x, track.y) <= 2.5
             for track in tracks)
         if stale_nearby:
-            self.state = 'fallback'
+            was_owner = self.state == 'active'
+            self.state = 'released'
+            self.last_plan = None
             decision = {
                 'stamp': round(now, 3),
                 'state': 'stale_occluded',
+                'released_owner': was_owner,
                 'tracks': [{'track_id': track.track_id,
                             'x': round(track.x, 2),
                             'y': round(track.y, 2),
-                            'stamp': round(track.stamp, 2)}
+                            'age': round(now - track.stamp, 2)}
                            for track in tracks],
             }
             self.decisions.append(decision)
-            command = self._fallback_command(None, robot)
-            return SupervisorOutput('fallback', command, False, False,
-                                    decision)
+            return SupervisorOutput('fallback', None, False,
+                                    was_owner, decision)
         active = conflict_active(tracks, config)
         if not active:
+            if self.state == 'released':
+                self.state = 'observing'
             if self.state == 'active':
                 self.conflict_lost_sec = self.conflict_lost_sec or now
                 if now - self.conflict_lost_sec >= config.release_sec:
@@ -292,7 +296,8 @@ class DynamicLocalSupervisor:
             retreat_available=None)
         result = sp.plan(local_robot, payload, frame, predictions, legal,
                          previous_kind=self.previous_kind,
-                         config=sp.PlanConfig(prefix_sec=config.prefix_sec))
+                         config=sp.PlanConfig(prefix_sec=config.prefix_sec),
+                         static_check=static_check)
         decision = {
             'stamp': round(now, 3),
             'activation': self.activation_count,
@@ -325,9 +330,12 @@ class DynamicLocalSupervisor:
         if result.selected is None:
             self.fallback_count += 1
             self.decisions.append(decision)
-            command = self._fallback_command(result, robot)
-            return SupervisorOutput('fallback', command, False,
-                                    result.fallback == 'blocked_no_safe_action',
+            was_owner = self.state == 'active'
+            self.state = 'released'
+            self.last_plan = None
+            command = (self._fallback_command(result, robot)
+                       if was_owner else None)
+            return SupervisorOutput('fallback', command, False, was_owner,
                                     decision)
         self.previous_kind = result.selected.strategy.kind
         self.last_plan = result

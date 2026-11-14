@@ -269,7 +269,8 @@ def build_trajectory(strategy: Strategy, robot: RobotState,
         # Hold at the wait anchor until every observed conflict window has
         # closed, so the candidate cost reflects the real waiting time rather
         # than looking artificially cheap for stopping early.
-        if strategy.kind == 'wait' and strategy.resume_after_sec > 0.0:
+        if strategy.kind in ('wait', 'retreat') \
+                and strategy.resume_after_sec > 0.0:
             hold_until = max(0.0, strategy.resume_after_sec - robot.stamp)
             if t_cursor < hold_until:
                 samples.append((hold_until, current[0], current[1], 0.0))
@@ -279,7 +280,7 @@ def build_trajectory(strategy: Strategy, robot: RobotState,
             arrival = t_cursor
     trajectory = Trajectory(tuple(samples), strategy, arrival_sec=arrival,
                             stops=stops, effort=effort)
-    if strategy.kind == 'wait':
+    if strategy.kind in ('wait', 'retreat'):
         resume = (max(0.0, strategy.resume_after_sec - robot.stamp)
                   if strategy.resume_after_sec > 0.0 else t_cursor)
         transit = (abs(frame.crossing_x) / max(config.min_speed,

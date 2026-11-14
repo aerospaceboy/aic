@@ -14,6 +14,8 @@
 
 """Launch Nav2 and competition navigation helpers for Gazebo."""
 
+import os
+
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
@@ -177,6 +179,15 @@ def generate_launch_description():
         ],
         output="screen",
     )
+    dynamic_planner_mode = os.environ.get(
+        "YZBOT_DYNAMIC_PLANNER_MODE", "observe")
+    declare_dynamic_planner = DeclareLaunchArgument(
+        "dynamic_planner_mode",
+        default_value=dynamic_planner_mode,
+        description="Dynamic-avoidance innovation: off | observe | active",
+    )
+    # Reuse the enclosing LaunchDescription by appending through the returned
+    # list below; the navigator node reads the LaunchConfiguration.
     right_wheel_tf = Node(
         package="tf2_ros",
         executable="static_transform_publisher",
@@ -202,6 +213,8 @@ def generate_launch_description():
             LaunchConfiguration("zones_file"),
             {"risk_zones_file": LaunchConfiguration("risk_zones_file")},
             {"use_sim_time": LaunchConfiguration("use_sim_time")},
+            {"dynamic_planner_mode":
+                LaunchConfiguration("dynamic_planner_mode")},
         ],
         output="screen",
     )
@@ -282,6 +295,7 @@ def generate_launch_description():
         [
             map_argument,
             params_argument,
+            declare_dynamic_planner,
             zones_argument,
             risk_zones_argument,
             sim_time_argument,

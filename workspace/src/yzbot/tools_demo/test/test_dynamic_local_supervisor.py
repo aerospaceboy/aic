@@ -103,12 +103,14 @@ def test_active_mode_returns_a_safe_command_or_explicit_fallback():
 def test_stale_mover_keeps_its_reachable_space_blocked_in_decisions():
     supervisor = sup.DynamicLocalSupervisor(config(mode='observe'))
     stale = {'track_id': 1, 'x': 2.0, 'y': 0.3, 'vx': 0.2, 'vy': 0.0,
-             'stamp_sec': 99.0, 'radius': 0.25, 'history': []}
+             'stamp_sec': 98.0, 'radius': 0.25, 'history': []}
     obstacles = {'/competition/obstacles/obstacle_1': stale}
+    supervisor.state = 'active'                # drop the lease if it was held
     output = supervisor.step(100.0, robot_state(vx=0.4), False, obstacles,
                              (5.0, 0.0))
-    assert output.state == 'fallback'          # stale space is never certified clear
-    assert output.command is not None
+    assert output.state == 'fallback'
+    assert output.command is None              # never fight the navigation stack
+    assert output.release_lease is True
     assert supervisor.decisions[-1]['state'] == 'stale_occluded'
 
 

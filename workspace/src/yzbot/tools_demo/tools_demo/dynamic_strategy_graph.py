@@ -456,11 +456,15 @@ def strategy_candidates(predictions: Sequence[Prediction],
     # 4. Bounded retreat then re-enter: only when the caller supplies a
     #    previously traversed retreat pose. Never a generic reverse.
     if retreat_available is not None:
+        clear_times = [window[1] + margin for window in windows.values()]
+        resume_after = (max(clear_times) if clear_times
+                        else now + WAIT_DWELL_SEC)
         add(Strategy('retreat_reenter', 'retreat',
                      tuple(PassageDecision(track_id, 'after')
                            for track_id in track_ids), 0.0,
                      (retreat_available,),
-                     retreat_pose=retreat_available, tag='bounded_retreat'))
+                     retreat_pose=retreat_available,
+                     resume_after_sec=resume_after, tag='bounded_retreat'))
     else:
         rejected.append(RejectedStrategy(
             'retreat_reenter', 'no validated retreat pose supplied'))

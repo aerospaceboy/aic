@@ -6062,6 +6062,32 @@ class TaskNavigator(Node):
             obstacles[topic] = record
         return obstacles
 
+    def _dynamic_static_check(self, robot):
+        """Return a local-frame static-free predicate bound to the costmap.
+
+        The supervisor plans in the robot-local frame; this closure maps the
+        sampled local point back to the world frame and queries the global
+        costmap, so a side passage cannot be selected through a wall.
+        """
+        cos_yaw = math.cos(robot.yaw)
+        sin_yaw = math.sin(robot.yaw)
+        origin_x = robot.x
+        origin_y = robot.y
+
+        def check(x_local: float, y_local: float, radius: float) -> float:
+            world_x = origin_x + x_local * cos_yaw - y_local * sin_yaw
+            world_y = origin_y + x_local * sin_yaw + y_local * cos_yaw
+            ring = max(0.10, radius)
+            for angle_index in range(8):
+                angle = angle_index * math.pi / 4.0
+                px = world_x + ring * math.cos(angle)
+                py = world_y + ring * math.sin(angle)
+                if not self._costmap_cell_free(px, py):
+                    return 0.0
+            return 0.10
+
+        return check
+
     def _dynamic_planner_step(self) -> bool:
         """Run one dynamic-planner cycle; True when it owns the base command.
 
@@ -6110,17 +6136,18 @@ class TaskNavigator(Node):
             payload = getattr(self, "delivery_slot_world", None) is not None
             output = supervisor.step(
                 stamp, robot, payload,
-                self._dynamic_planner_obstacles(), goal_local)
+                self._dynamic_planner_obstacles(), goal_local,
+                static_check=self._dynamic_static_check(robot))
             now_ns = self.get_clock().now().nanoseconds
+            if output.release_lease and getattr(self, "dynamic_owner", False):
+                self._release_direct_control()
+                self.dynamic_owner = False
             if output.command is not None and output.state != 'idle':
                 command = Twist()
                 command.linear.x = max(-1.2, min(1.2, output.command[0]))
                 command.linear.y = max(-1.2, min(1.2, output.command[1]))
                 self._publish_direct_velocity(command)
                 self.dynamic_owner = True
-            elif output.release_lease and getattr(self, "dynamic_owner", False):
-                self._release_direct_control()
-                self.dynamic_owner = False
             if output.decision and now_ns - self.dynamic_supervisor_last_log_ns \
                     >= 300_000_000:
                 self.dynamic_supervisor_last_log_ns = now_ns
