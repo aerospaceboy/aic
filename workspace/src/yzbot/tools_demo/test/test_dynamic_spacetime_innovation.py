@@ -111,13 +111,15 @@ def test_pause_hypothesis_decelerates_to_a_stop():
 
 
 def two_mover_predictions(now=100.0):
-    one = crossing_track(track_id=1, x=1.2, y=-1.4, vy=0.30,
+    # Movers several seconds away from the band: a full clear crossing gap
+    # exists now, so the gap planner must offer an executable crossing.
+    one = crossing_track(track_id=1, x=1.2, y=-2.4, vy=0.30,
                          history=((95.0, 1.2, -0.7), (97.0, 1.2, 0.6),
-                                  (99.0, 1.2, -1.3)))
-    two = crossing_track(track_id=2, x=1.2, y=1.3, vy=-0.30,
+                                  (99.0, 1.2, -2.3)))
+    two = crossing_track(track_id=2, x=1.2, y=2.3, vy=-0.30,
                          history=((95.0, 1.2, 0.6), (97.0, 1.2, -0.6),
-                                  (99.0, 1.2, 1.2)))
-    return predict([one, two], now=now)
+                                  (99.0, 1.2, 2.2)))
+    return predict([one, two], now=now, horizon=8.0)
 
 
 def frame(**overrides):
@@ -140,9 +142,9 @@ def test_strategy_candidates_prune_before_when_robot_is_too_late():
     assert any(rejected_strategy.reason for rejected_strategy in rejected)
     assert 'wait_at_-0.43' in names or any(
         strategy.kind == 'wait' for strategy in legal)
-    # At least one order candidate and one side candidate must survive for a
-    # corridor with room on both sides.
-    assert any(strategy.kind in ('before', 'after', 'mixed')
+    # The gap-based crossing generator must leave at least one executable
+    # crossing decision (an immediate 'before' or a planned 'gap').
+    assert any(strategy.kind in ('before', 'after', 'mixed', 'gap')
                for strategy in legal)
 
 

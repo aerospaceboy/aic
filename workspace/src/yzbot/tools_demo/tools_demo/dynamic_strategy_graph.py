@@ -33,6 +33,7 @@ DEFAULT_BODY_MARGIN = 0.10
 DEFAULT_MAX_LATERAL = 0.80
 WAIT_DWELL_SEC = 1.5
 DEFAULT_ORDER_OPTIONS = ('before', 'after', 'wait')
+DEFAULT_MIN_CLEAR_SEC = 1.2     # robot needs this long inside the clear gap
 
 
 @dataclass(frozen=True)
@@ -193,6 +194,70 @@ def _crossing_windows(predictions: Sequence[Prediction],
     return windows
 
 
+def band_occupancy_timeline(predictions: Sequence[Prediction],
+                            frame: ConflictFrame, payload: bool,
+                            now: float, horizon: float,
+                            sample_dt: float = 0.05
+                            ) -> List[Tuple[float, float]]:
+    """Merged time intervals in which any plausible body blocks the band.
+
+    The band is the crossing strip the robot must clear (oriented along the
+    robot heading at the conflict point). Taking the union over low-weight
+    modes is intentional: a mode is only dropped below MIN_MODE_WEIGHT.
+    """
+    half_length = (frame.obstacle_radius + frame.envelope(payload)
+                   + DEFAULT_BODY_MARGIN)
+    half_width = half_length
+    blocked = []
+    t = now
+    end = now + horizon
+    while t <= end + 1e-9:
+        occupied = False
+        for prediction in predictions:
+            if prediction.stale and not prediction.hypotheses:
+                continue
+            for x, y, radius in _body_at(prediction, t):
+                if (abs(x - frame.crossing_x) <= half_length + radius
+                        and abs(y) <= half_width + radius):
+                    occupied = True
+                    break
+            if occupied:
+                break
+        blocked.append((t, occupied))
+        t += sample_dt
+    intervals: List[Tuple[float, float]] = []
+    start = None
+    for stamp, occupied in blocked:
+        if occupied and start is None:
+            start = stamp
+        elif not occupied and start is not None:
+            intervals.append((start, stamp))
+            start = None
+    if start is not None:
+        intervals.append((start, end))
+    return intervals
+
+
+def clear_crossing_gaps(predictions: Sequence[Prediction],
+                        frame: ConflictFrame, payload: bool,
+                        now: float, horizon: float,
+                        min_clear_sec: float = DEFAULT_MIN_CLEAR_SEC,
+                        sample_dt: float = 0.05
+                        ) -> List[Tuple[float, float]]:
+    """Clear gaps of at least ``min_clear_sec`` inside the crossing band."""
+    blocked = band_occupancy_timeline(predictions, frame, payload, now,
+                                      horizon, sample_dt)
+    gaps: List[Tuple[float, float]] = []
+    cursor = now
+    for start, end in blocked:
+        if start - cursor >= min_clear_sec:
+            gaps.append((cursor, start))
+        cursor = max(cursor, end)
+    if now + horizon - cursor >= min_clear_sec:
+        gaps.append((cursor, now + horizon))
+    return gaps
+
+
 def _wait_anchor_candidates(frame: ConflictFrame, payload: bool
                             ) -> List[Tuple[float, float]]:
     """Back off along the approach line until outside every swept band."""
@@ -318,86 +383,58 @@ def strategy_candidates(predictions: Sequence[Prediction],
     def add(strategy: Strategy) -> None:
         legal.append(strategy)
 
-    # 1. Before-all / after-all / mixed order for independent obstacles.
-    if not track_ids:
-        add(Strategy('cruise', 'before', (), 0.0,
-                     ((-0.3, 0.0), (frame.crossing_x + 0.8, 0.0)),
-                     earliest_cross_sec=now, tag='no_conflict'))
-        return legal, rejected, windows
-    order_options = [('before',) * len(track_ids)] if len(track_ids) == 1 \
-        else None
-    if order_options is None:
-        for relation in ('before', 'after'):
-            decisions = tuple(PassageDecision(track_id, relation)
-                              for track_id in track_ids)
-            add(Strategy('%s_all' % relation, relation, decisions, 0.0,
-                         ((-0.2, 0.0), (frame.crossing_x, 0.0),
-                          (frame.crossing_x + 0.8, 0.0)),
-                         tag='order_%s_all' % relation))
-        # Mixed: first obstacle before, second after and the mirrored choice.
-        for first_relation, second_relation in (('before', 'after'),
-                                                ('after', 'before')):
-            decisions = (PassageDecision(track_ids[0], first_relation),
-                         PassageDecision(track_ids[1], second_relation))
-            add(Strategy('%s_%s' % (first_relation, second_relation),
-                         'mixed', decisions, 0.0,
-                         ((-0.2, 0.0), (frame.crossing_x, 0.0),
-                          (frame.crossing_x + 0.8, 0.0)),
-                         tag='order_mixed'))
-    else:
-        add(Strategy('single_before', 'before',
-                     (PassageDecision(track_ids[0], 'before'),), 0.0,
-                     ((-0.2, 0.0), (frame.crossing_x, 0.0),
-                      (frame.crossing_x + 0.8, 0.0)),
-                     tag='order_single'))
-        add(Strategy('single_after', 'after',
-                     (PassageDecision(track_ids[0], 'after'),), 0.0,
-                     ((-0.2, 0.0), (frame.crossing_x, 0.0),
-                      (frame.crossing_x + 0.8, 0.0)),
-                     tag='order_single'))
-
-    # Feasibility of the "before" group: every 'before' obstacle window must
-    # start after the robot can arrive, with the validated time margin.
+    # 1. Crossing decisions derived from *clear gaps* in the band occupancy
+    #    timeline. A gap is real free space (all plausible modes outside the
+    #    band), so a pause/reversal branch that stops a body inside the band
+    #    blocks only the interval in which it actually sits there, instead of
+    #    disqualifying the whole planning horizon.
+    horizon = max(2.0, min(8.0, frame.crossing_duration(payload=payload) + 3.0))
+    band_transit = 2.0 * (frame.obstacle_radius + frame.envelope(payload)
+                          + DEFAULT_BODY_MARGIN) / max(
+        0.20, min(frame.limit_speed, max(frame.robot_speed, 0.20)))
+    min_clear = max(DEFAULT_MIN_CLEAR_SEC, band_transit)
     margin = 0.35
-    for strategy in list(legal):
-        before_decisions = [d for d in strategy.decisions
-                            if d.relation == 'before']
-        after_decisions = [d for d in strategy.decisions
-                           if d.relation == 'after']
-        before_ids = [d.track_id for d in before_decisions]
-        after_ids = [d.track_id for d in after_decisions]
-        infeasible = None
-        for track_id in before_ids:
-            window = windows.get(track_id)
-            if window is not None and cross_start + margin > window[0]:
-                infeasible = ('cannot arrive before track %d window '
-                              '[%.2f,%.2f]' % (track_id, window[0], window[1]))
-                break
-        if infeasible is None:
-            for track_id in after_ids:
-                window = windows.get(track_id)
-                if window is None:
-                    continue
-                if window[1] + margin + duration > now + 8.0:
-                    infeasible = ('after-window for track %d closes at %.2f '
-                                  'beyond planning horizon'
-                                  % (track_id, window[1]))
-                    break
-        if infeasible is not None:
-            rejected.append(RejectedStrategy(strategy.name, infeasible))
-            legal.remove(strategy)
+    gaps = clear_crossing_gaps(predictions, frame, payload, now, horizon,
+                               min_clear_sec=min_clear)
+
+    def add_order(name: str, kind: str, gap_start: float, gap_end: float,
+                  wait_pose: Optional[Tuple[float, float]]) -> None:
+        relation = 'before' if kind == 'before' else 'after'
+        decisions = tuple(PassageDecision(track_id, relation)
+                          for track_id in track_ids)
+        if wait_pose is None:
+            waypoints = ((-0.2, 0.0), (frame.crossing_x, 0.0),
+                         (frame.crossing_x + 0.8, 0.0))
         else:
-            strategy.earliest_cross_sec = cross_start
-            strategy.latest_cross_sec = min(
-                [windows[d.track_id][0] - margin
-                 for d in before_decisions if d.track_id in windows]
-                or [math.inf])
-            if after_decisions:
-                strategy.earliest_cross_sec = max(
-                    strategy.earliest_cross_sec,
-                    max([windows[d.track_id][1] + margin
-                         for d in after_decisions if d.track_id in windows]
-                        or [strategy.earliest_cross_sec]))
+            waypoints = ((-0.2, 0.0), wait_pose, (frame.crossing_x, 0.0),
+                         (frame.crossing_x + 0.8, 0.0))
+        strategy = Strategy(
+            name, kind, decisions, 0.0, waypoints,
+            wait_pose=wait_pose,
+            resume_after_sec=(gap_start if wait_pose is not None else 0.0),
+            earliest_cross_sec=gap_start,
+            latest_cross_sec=max(gap_start, gap_end - min_clear),
+            tag='gap_cross' if wait_pose is not None else 'cross_now')
+        add(strategy)
+
+    if not gaps:
+        rejected.append(RejectedStrategy(
+            'order_crossing',
+            'no clear crossing gap of %.2fs within %.1fs (all plausible '
+            'modes occupy the band)' % (min_clear, horizon)))
+    else:
+        immediate = gaps[0]
+        if immediate[0] <= now + 0.20:
+            add_order('cross_now', 'before', immediate[0], immediate[1], None)
+        planned = 0
+        for gap_start, gap_end in gaps:
+            if gap_start <= now + 0.20:
+                continue
+            add_order('gap_after_%d' % planned, 'gap', gap_start, gap_end,
+                      (-0.5, 0.0))
+            planned += 1
+            if planned >= 2:
+                break
 
     # 2. Lateral side passages: shift the crossing point sideways so the
     #    obstacle's swept band is never entered. Requires corridor room beyond

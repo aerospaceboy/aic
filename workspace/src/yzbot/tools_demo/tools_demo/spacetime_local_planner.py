@@ -275,6 +275,17 @@ def build_trajectory(strategy: Strategy, robot: RobotState,
             if t_cursor < hold_until:
                 samples.append((hold_until, current[0], current[1], 0.0))
                 t_cursor = hold_until
+        # A gap-crossing plan holds at the pre-band pose until the learned
+        # clear gap opens, then continues through the band. The hold is part
+        # of the plan (not an out-of-band trick) and is priced by its duration.
+        elif (strategy.kind == 'gap' and strategy.wait_pose is not None
+              and strategy.resume_after_sec > 0.0
+              and abs(current[0] - strategy.wait_pose[0]) < 1e-6
+              and abs(current[1] - strategy.wait_pose[1]) < 1e-6):
+            hold_until = max(0.0, strategy.resume_after_sec - robot.stamp)
+            if t_cursor < hold_until:
+                samples.append((hold_until, current[0], current[1], 0.0))
+                t_cursor = hold_until
         if math.hypot(current[0] - crossing_point[0],
                       current[1] - crossing_point[1]) < 0.45:
             arrival = t_cursor
