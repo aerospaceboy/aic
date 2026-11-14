@@ -532,7 +532,7 @@ class TaskNavigator(Node):
         # observe records what the planner would decide without touching the
         # base; active takes the direct channel inside a conflict corridor and
         # hands it back when the corridor clears.
-        self.declare_parameter("dynamic_planner_mode", "observe")
+        self.declare_parameter("dynamic_planner_mode", "off")
         self.declare_parameter("dynamic_planner_replan_sec", 0.20)
         self.declare_parameter("dynamic_planner_prefix_sec", 0.30)
         self.declare_parameter("dynamic_planner_horizon_sec", 4.0)
