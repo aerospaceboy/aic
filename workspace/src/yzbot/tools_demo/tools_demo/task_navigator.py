@@ -946,10 +946,17 @@ class TaskNavigator(Node):
         self.dynamic_supervisor = None
         self.dynamic_supervisor_error = None
         self.dynamic_supervisor_last_log_ns = 0
+        mode_override = os.environ.get("YZBOT_DYNAMIC_PLANNER_MODE")
+        if mode_override is not None:
+            mode_value = mode_override.strip().lower()
+            if mode_value in ("off", "false", "0", "disabled", "none"):
+                mode_value = "disabled"
+        else:
+            mode_value = str(self.get_parameter(
+                "dynamic_planner_mode").value)
         try:
             supervisor_config = SupervisorConfig(
-                mode=str(self.get_parameter(
-                    "dynamic_planner_mode").value),
+                mode=mode_value,
                 replan_sec=float(self.get_parameter(
                     "dynamic_planner_replan_sec").value),
                 prefix_sec=float(self.get_parameter(

@@ -54,7 +54,7 @@ class SupervisorConfig:
     limit_speed: float = 1.0
 
     def valid(self) -> bool:
-        return (self.mode in ('off', 'observe', 'active')
+        return (self.mode in ('off', 'disabled', 'observe', 'active')
                 and 0.05 <= self.replan_sec <= 1.0
                 and 0.05 <= self.prefix_sec <= 1.0
                 and 0.0 <= self.release_sec <= 2.0)
@@ -214,7 +214,7 @@ class DynamicLocalSupervisor:
              ) -> SupervisorOutput:
         """Advance one control cycle and return the command/lease decision."""
         config = self.config
-        if config.mode == 'off':
+        if config.mode in ('off', 'disabled'):
             return self._release('off')
         already_owner = self.state == 'active'
         frame_origin = (robot.x, robot.y, robot.yaw)
@@ -334,7 +334,7 @@ class DynamicLocalSupervisor:
             'goal_local': [round(goal_local[0], 2),
                            round(goal_local[1], 2)],
         }
-        if config.mode == 'observe' or (not takeover_allowed
+        if config.mode in ('observe', 'disabled') or (not takeover_allowed
                                         and not already_owner):
             # Evidence-only cycle: the normal navigation/mover logic keeps
             # control unless the existing coordinator was about to hold for
