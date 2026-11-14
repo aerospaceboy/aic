@@ -40,6 +40,8 @@ DEFAULT_MIN_CLEAR_SEC = 1.2     # robot needs this long inside the clear gap
 # near-field checked before the robot actually enters it.
 NEAR_HARD_SEC = 1.2
 FAR_NOMINAL_ONLY = True
+FAR_GROWTH = 0.03          # far-field uncertainty growth (m per second)
+BAND_MARGIN = 0.03         # same clearance the trajectory filter requires
 
 
 @dataclass(frozen=True)
@@ -305,9 +307,14 @@ def offset_band_intervals(predictions: Sequence[Prediction],
                 continue
             bodies = (_body_at(prediction, t) if near
                       else _nominal_body(prediction, t))
+            growth = (0.0 if near
+                      else FAR_GROWTH * max(0.0, t - now - near_hard_sec))
             for x, y, radius in bodies:
-                if (abs(x - frame.crossing_x) <= half_length + radius
-                        and abs(y - lateral_offset) <= half_width + radius):
+                radius += growth
+                if (abs(x - frame.crossing_x)
+                        <= half_length + radius + BAND_MARGIN
+                        and abs(y - lateral_offset)
+                        <= half_width + radius + BAND_MARGIN):
                     occupied = True
                     break
             if occupied:

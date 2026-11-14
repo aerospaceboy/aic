@@ -41,7 +41,7 @@ DEFAULT_REACTION_SEC = 0.25
 # collision rejection; every executed prefix is re-validated by the supervisor,
 # so a planned crossing is near-field checked again before commitment.
 DEFAULT_NEAR_HARD_SEC = 1.2
-DEFAULT_FAR_GROWTH = 0.10
+DEFAULT_FAR_GROWTH = 0.03
 
 
 @dataclass(frozen=True)
