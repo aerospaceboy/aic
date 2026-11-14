@@ -3053,24 +3053,31 @@ class MissionCoordinator(Node):
         re-measures after every step and closes the loop.
         """
         speed = 0.18
-        duration = min(1.2, max(abs(forward), abs(lateral)) / speed + 0.10)
+        forward_time = (min(1.2, abs(forward) / speed + 0.02)
+                        if abs(forward) > 0.012 else 0.0)
+        lateral_time = (min(1.2, abs(lateral) / speed + 0.02)
+                        if abs(lateral) > 0.012 else 0.0)
+        duration = max(forward_time, lateral_time)
         start = self._odom_pose()
         if start is None:
             return
         cos_yaw = math.cos(start[2])
         sin_yaw = math.sin(start[2])
         twist = Twist()
-        twist.linear.x = math.copysign(speed, forward) \
-            if abs(forward) > 0.012 else 0.0
-        twist.linear.y = math.copysign(speed, lateral) \
-            if abs(lateral) > 0.012 else 0.0
         self.get_logger().info(
             "place_base_shift "
             f"forward={forward:+.3f} lateral={lateral:+.3f} "
             f"duration={duration:.2f}"
         )
-        deadline = time.monotonic() + duration
-        while time.monotonic() < deadline:
+        began = time.monotonic()
+        while True:
+            elapsed = time.monotonic() - began
+            if elapsed >= duration:
+                break
+            twist.linear.x = math.copysign(speed, forward) \
+                if (forward_time > 0.0 and elapsed < forward_time) else 0.0
+            twist.linear.y = math.copysign(speed, lateral) \
+                if (lateral_time > 0.0 and elapsed < lateral_time) else 0.0
             self.cmd_vel_publisher.publish(twist)
             time.sleep(0.05)
         twist.linear.x = 0.0
