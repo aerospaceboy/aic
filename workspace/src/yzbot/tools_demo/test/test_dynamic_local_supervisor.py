@@ -138,3 +138,35 @@ def test_world_to_local_roundtrip():
         back_x, back_y = sup.world_to_local(world_x, world_y, 0.0, 0.0, yaw)
         assert abs(back_x - vx) < 1e-9
         assert abs(back_y - vy) < 1e-9
+
+
+def test_conflict_behind_goal_does_not_activate():
+    supervisor = sup.DynamicLocalSupervisor(config(mode='active'))
+    # Mover crosses 3 m ahead, but the navigation goal is only 1 m ahead:
+    # the conflict is behind the goal and must not move the base away.
+    obstacles = {'/competition/obstacles/obstacle_1':
+                 mover_record(1, 3.0, 0.8, vy=-0.3, stamp=100.0)}
+    output = supervisor.step(100.0, robot_state(vx=0.4), False, obstacles,
+                             (2.0, 0.0))
+    assert output.state == 'idle'
+    assert output.command is None
+
+
+def test_docking_proximity_does_not_activate():
+    supervisor = sup.DynamicLocalSupervisor(config(mode='active'))
+    obstacles = {'/competition/obstacles/obstacle_1':
+                 mover_record(1, 1.0, 0.8, vy=-0.3, stamp=100.0)}
+    output = supervisor.step(100.0, robot_state(vx=0.4), False, obstacles,
+                             (0.8, 0.0))
+    assert output.state == 'idle'
+    assert output.command is None
+
+
+def test_stationary_base_does_not_take_a_transit_plan():
+    supervisor = sup.DynamicLocalSupervisor(config(mode='active'))
+    obstacles = {'/competition/obstacles/obstacle_1':
+                 mover_record(1, 2.5, 0.9, vy=-0.3, stamp=100.0)}
+    output = supervisor.step(100.0, robot_state(vx=0.0, vy=0.0), False,
+                             obstacles, (5.0, 0.0))
+    assert output.state == 'idle'
+    assert output.command is None

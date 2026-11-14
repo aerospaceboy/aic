@@ -215,6 +215,7 @@ class DynamicLocalSupervisor:
         config = self.config
         if config.mode == 'off':
             return self._release('off')
+        already_owner = self.state == 'active'
         frame_origin = (robot.x, robot.y, robot.yaw)
         # ``robot`` arrives with a world-frame pose and world-frame velocity;
         # the planner works in the robot-local frame (+x forward, +y left).
@@ -248,7 +249,13 @@ class DynamicLocalSupervisor:
             self.decisions.append(decision)
             return SupervisorOutput('fallback', None, False,
                                     was_owner, decision)
-        active = conflict_active(tracks, config)
+        # The conflict is only relevant when it lies *on the way to the
+        # current navigation goal*. A moving obstacle behind the goal (typical
+        # during the final pickup/delivery dock) must not drag the base away
+        # from its target, and a docking robot is handled by the existing
+        # precision-zone logic, not by this transit planner.
+        goal_forward = math.hypot(goal_local[0], goal_local[1])
+        active = conflict_active(tracks, config) and goal_forward >= 1.5
         if not active:
             if self.state == 'released':
                 self.state = 'observing'
@@ -278,6 +285,10 @@ class DynamicLocalSupervisor:
         crossing = crossing_point(tracks, predictions, config)
         if crossing is None:
             return self._release('no_predicted_crossing')
+        if crossing[0] > goal_forward + 0.40:
+            return self._release('conflict_beyond_goal')
+        if robot.speed() < 0.10 and not already_owner:
+            return self._release('base_not_transiting')
         crossing_x = max(0.30, min(crossing[0], config.activation_ahead_m))
         frame = dsg.ConflictFrame(
             crossing_x=crossing_x,
