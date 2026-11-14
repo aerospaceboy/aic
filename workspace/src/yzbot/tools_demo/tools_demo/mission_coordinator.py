@@ -912,6 +912,12 @@ class MissionCoordinator(Node):
             10,
         )
         self.odom_pose: Optional[tuple] = None
+        # Freshness metadata for safety-critical closed-loop moves: a repeated
+        # cached pose must never be mistaken for a stationary base.
+        self.odom_sequence = 0
+        self.odom_received_monotonic: Optional[float] = None
+        self.odom_linear_speed = math.inf
+        self.odom_angular_speed = math.inf
         self.placed_cubes = {}
         self._odom_callback_group = MutuallyExclusiveCallbackGroup()
         self.create_subscription(
@@ -2617,7 +2623,26 @@ class MissionCoordinator(Node):
             # getattr keeps the light-weight route harnesses working; a
             # stand-in without the helpers keeps the frozen pre-check path.
             resolver = getattr(self, "_reposition_for_place", None)
-            local = resolver(job) if resolver is not None else None
+            local = None
+            reposition_error = None
+            if resolver is not None:
+                outcome = resolver(job)
+                if isinstance(outcome, tuple) and len(outcome) == 2:
+                    local, reposition_error = outcome
+                else:
+                    local = outcome
+            if reposition_error is not None:
+                self.publish_error(
+                    f"place_reposition_blocked:{reposition_error} "
+                    f"cube={job.cube_name}")
+                self.machine.state = "failed"
+                self.machine.detail = (
+                    "place_failed:base_not_stationary:holding_cube"
+                )
+                self.handle_action(
+                    MissionAction("done", reason=self.machine.detail)
+                )
+                return
             if local is not None and not place_target_inside_arm_window(local):
                 self.publish_error(
                     "place_target_outside_arm_window "
@@ -3039,21 +3064,55 @@ class MissionCoordinator(Node):
             slot_y + shift * dy / norm,
         )
 
-    def _wait_base_stationary(self, timeout: float = 2.0) -> bool:
-        """Wait until the measured base pose stops changing."""
+    def _wait_base_stationary(
+        self,
+        timeout: float = 2.0,
+        required_samples: int = 3,
+        max_linear_speed: float = 0.02,
+        max_angular_speed: float = 0.05,
+        max_sample_age: float = 0.35,
+        max_pose_step: float = 0.003,
+        max_yaw_step: float = 0.01,
+    ) -> bool:
+        """Wait for consecutive *fresh* odom samples showing a stationary base.
+
+        The previous implementation compared the same cached pose twice, so a
+        frozen /odom stream looked stationary. This version requires the odom
+        sequence to advance, bounds the sample age, and checks the measured
+        twist, so missing odometry returns False instead of passing.
+        """
+        if not (0 < required_samples and max_sample_age > 0.0):
+            return False
         deadline = time.monotonic() + timeout
-        previous = self._odom_pose()
+        previous = self._odom_sample()
+        stable = 0
         while time.monotonic() < deadline:
-            time.sleep(0.1)
-            current = self._odom_pose()
-            if previous is None or current is None:
+            time.sleep(0.05)
+            current = self._odom_sample()
+            if current is None:
+                return False
+            if (time.monotonic() - current['received'] > max_sample_age):
+                previous = current
+                stable = 0
+                continue
+            if previous is None:
                 previous = current
                 continue
-            if (math.hypot(current[0] - previous[0],
-                           current[1] - previous[1]) <= 0.003
-                    and abs(angle_delta(current[2], previous[2])) <= 0.01):
-                return True
+            if current['sequence'] == previous['sequence']:
+                continue                     # no new sample: not evidence
+            step = math.hypot(current['pose'][0] - previous['pose'][0],
+                              current['pose'][1] - previous['pose'][1])
+            yaw_step = abs(angle_delta(current['pose'][2], previous['pose'][2]))
+            still = (
+                current['linear_speed'] <= max_linear_speed
+                and current['angular_speed'] <= max_angular_speed
+                and step <= max_pose_step
+                and yaw_step <= max_yaw_step
+            )
             previous = current
+            stable = stable + 1 if still else 0
+            if stable >= required_samples:
+                return True
         return False
 
     def _bounded_place_shift(self, forward: float, lateral: float) -> None:
@@ -3069,40 +3128,46 @@ class MissionCoordinator(Node):
         lateral_time = (min(1.2, abs(lateral) / speed + 0.02)
                         if abs(lateral) > 0.012 else 0.0)
         duration = max(forward_time, lateral_time)
-        start = self._odom_pose()
-        if start is None:
-            return
-        cos_yaw = math.cos(start[2])
-        sin_yaw = math.sin(start[2])
         twist = Twist()
-        self.get_logger().info(
-            "place_base_shift "
-            f"forward={forward:+.3f} lateral={lateral:+.3f} "
-            f"duration={duration:.2f}"
-        )
-        began = time.monotonic()
-        while True:
-            elapsed = time.monotonic() - began
-            if elapsed >= duration:
-                break
-            twist.linear.x = math.copysign(speed, forward) \
-                if (forward_time > 0.0 and elapsed < forward_time) else 0.0
-            twist.linear.y = math.copysign(speed, lateral) \
-                if (lateral_time > 0.0 and elapsed < lateral_time) else 0.0
-            # The holonomic base yaws while translating sideways; hold the
-            # heading closed-loop or the lateral correction rotates the arm
-            # frame and corrupts the next measurement.
-            current = self._odom_pose()
-            if current is not None:
-                error = math.remainder(start[2] - current[2], 2 * math.pi)
-                twist.angular.z = max(-0.35, min(0.35, 2.5 * error))
-            self.cmd_vel_publisher.publish(twist)
-            time.sleep(0.05)
-        twist.linear.x = 0.0
-        twist.linear.y = 0.0
-        for _ in range(6):
-            self.cmd_vel_publisher.publish(twist)
-            time.sleep(0.02)
+        stop = Twist()
+        try:
+            start = self._odom_pose()
+            if start is None:
+                return
+            cos_yaw = math.cos(start[2])
+            sin_yaw = math.sin(start[2])
+            self.get_logger().info(
+                "place_base_shift "
+                f"forward={forward:+.3f} lateral={lateral:+.3f} "
+                f"duration={duration:.2f}"
+            )
+            began = time.monotonic()
+            while True:
+                elapsed = time.monotonic() - began
+                if elapsed >= duration:
+                    break
+                twist.linear.x = math.copysign(speed, forward) \
+                    if (forward_time > 0.0 and elapsed < forward_time) else 0.0
+                twist.linear.y = math.copysign(speed, lateral) \
+                    if (lateral_time > 0.0 and elapsed < lateral_time) else 0.0
+                # The holonomic base yaws while translating sideways; hold the
+                # heading closed-loop or the lateral correction rotates the
+                # arm frame and corrupts the next measurement.
+                current = self._odom_pose()
+                if current is not None:
+                    error = math.remainder(start[2] - current[2], 2 * math.pi)
+                    twist.angular.z = max(-0.35, min(0.35, 2.5 * error))
+                self.cmd_vel_publisher.publish(twist)
+                time.sleep(0.05)
+        finally:
+            # Full zero Twist on normal, timeout, cancellation and exception
+            # exits. A reused Twist kept the last angular.z alive before, so
+            # the base could still be rotating when placement geometry was
+            # measured. Publishing a fresh all-zero Twist ends this action's
+            # command lease on the velocity selector.
+            for _ in range(6):
+                self.cmd_vel_publisher.publish(stop)
+                time.sleep(0.02)
         current = self._odom_pose()
         if current is not None:
             dx = current[0] - start[0]
@@ -3113,18 +3178,25 @@ class MissionCoordinator(Node):
                 f"lateral={-sin_yaw * dx + cos_yaw * dy:+.3f}"
             )
 
-    def _reposition_for_place(self, job) -> Optional[tuple]:
-        """Iteratively drive the arm-frame slot target into its window."""
-        self._wait_base_stationary()
+    def _reposition_for_place(self, job):
+        """Iteratively drive the arm-frame slot target into its window.
+
+        Returns ``(local, error_reason)``. ``error_reason`` is non-None when
+        the base never became certifiably stationary: placement must then be
+        blocked instead of being measured from a moving/rotating base.
+        """
+        if not self._wait_base_stationary():
+            return None, 'base_not_stationary_before_place'
         local = self._place_slot_local(job)
         for _ in range(PLACE_REPOSITION_ITERATIONS):
             correction = place_reposition_correction(local)
             if correction is None:
                 break
             self._bounded_place_shift(*correction)
-            self._wait_base_stationary()
+            if not self._wait_base_stationary():
+                return None, 'base_not_stationary_after_shift'
             local = self._place_slot_local(job)
-        return local
+        return local, None
 
     def _place_slot_local(self, job) -> Optional[tuple]:
         """Return the world slot target in the current base frame, or None."""
@@ -3394,10 +3466,28 @@ class MissionCoordinator(Node):
             * (quaternion.y * quaternion.y + quaternion.z * quaternion.z),
         )
         self.odom_pose = (pose.position.x, pose.position.y, yaw)
+        twist = message.twist.twist
+        self.odom_linear_speed = math.hypot(
+            float(twist.linear.x), float(twist.linear.y))
+        self.odom_angular_speed = abs(float(twist.angular.z))
+        self.odom_received_monotonic = time.monotonic()
+        self.odom_sequence += 1
 
     def _odom_pose(self):
         """Return the latest (x, y, yaw) base pose from /odom or None."""
         return self.odom_pose
+
+    def _odom_sample(self) -> Optional[dict]:
+        """Return one pose sample with receive time, sequence and speeds."""
+        if self.odom_pose is None or self.odom_received_monotonic is None:
+            return None
+        return {
+            'pose': self.odom_pose,
+            'sequence': self.odom_sequence,
+            'received': self.odom_received_monotonic,
+            'linear_speed': self.odom_linear_speed,
+            'angular_speed': self.odom_angular_speed,
+        }
 
     def _lateral_displacement(self, start):
         """Return base-frame lateral travel since the start pose, or None."""
