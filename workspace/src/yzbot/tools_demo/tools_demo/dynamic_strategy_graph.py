@@ -460,6 +460,29 @@ def strategy_candidates(predictions: Sequence[Prediction],
             offsets.append(distance)
         if room_right >= distance:
             offsets.append(-distance)
+    # Derive offsets that clear a body actually sitting in the strip: pass on
+    # the side of it that the measured corridor still allows.
+    clearance = (frame.obstacle_radius + frame.envelope(payload)
+                 + DEFAULT_BODY_MARGIN)
+    for prediction in predictions:
+        for hypothesis in prediction.nominal():
+            if hypothesis.positions[0][0] > now + 0.2:
+                continue
+            _, body_x, body_y = hypothesis.position_at(now)
+            if abs(body_x - frame.crossing_x) > 1.0:
+                continue
+            for candidate in (body_y + clearance, body_y - clearance):
+                if abs(candidate) <= 1e-9:
+                    continue
+                if candidate > 0 and candidate > room_left:
+                    continue
+                if candidate < 0 and -candidate > room_right:
+                    continue
+                offsets.append(round(candidate, 3))
+    deduped = {}
+    for offset in offsets:
+        deduped[round(offset, 3)] = offset
+    offsets = sorted(deduped.values(), key=abs)
     crossing_candidates = 0
     for offset_rank, lateral_offset in enumerate(offsets):
         blocked = offset_band_intervals(predictions, frame, payload, now,
