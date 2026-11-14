@@ -3496,6 +3496,37 @@ class TaskNavigator(Node):
         cost = self._global_cost_at(x_value, y_value)
         return cost is not None and 0 <= cost < 50
 
+    # Recovery moves are the last resort before a leg fails, so the escape
+    # pose must fit the *rotated chassis* with a margin, not just one centre
+    # cell. A review reproduction of 4bC_1rB found the chassis corner 8 mm
+    # inside a 1.0 m world box while the centre cell was free; a single-cell
+    # check cannot see that.
+    RECOVERY_CHASSIS_HALF_DIAGONAL = 0.226
+    RECOVERY_POSE_MARGIN = 0.04
+
+    def _recovery_pose_clearance(self, x_value: float, y_value: float
+                                 ) -> tuple:
+        """Whether a recovery pose keeps the rotated chassis inside free cells.
+
+        Samples the circumscribed chassis circle plus its diagonals on the
+        global costmap. Returns ``(ok, minimum_margin_m)``; without a costmap
+        the historical permissive behaviour is preserved and reported.
+        """
+        if self.global_costmap is None:
+            return True, float("nan")
+        radius = (self.RECOVERY_CHASSIS_HALF_DIAGONAL
+                  + self.RECOVERY_POSE_MARGIN)
+        rings = (0.0, 0.12, radius)
+        angles = range(0, 360, 30)
+        for ring in rings:
+            for angle_deg in angles:
+                angle = math.radians(angle_deg)
+                px = x_value + ring * math.cos(angle)
+                py = y_value + ring * math.sin(angle)
+                if not self._costmap_cell_free(px, py):
+                    return False, 0.0
+        return True, radius
+
     def _global_cost_at(self, x_value: float, y_value: float) -> Optional[int]:
         """Return the occupancy-grid cost at one map position."""
         costmap = self.global_costmap
@@ -5104,6 +5135,16 @@ class TaskNavigator(Node):
                         self.latest_yaw,
                     )
                     if not self._costmap_cell_free(candidate.x, candidate.y):
+                        continue
+                    clearance_gate = getattr(
+                        self, "_recovery_pose_clearance", None)
+                    if clearance_gate is not None and not clearance_gate(
+                            candidate.x, candidate.y)[0]:
+                        self.get_logger().warn(
+                            "recovery_candidate_chassis_reject "
+                            f"pose=({candidate.x:.2f},{candidate.y:.2f}) "
+                            f"offset_deg={offset_deg:.0f}"
+                        )
                         continue
                     if not self._costmap_segment_clear(
                         self.latest_x,
