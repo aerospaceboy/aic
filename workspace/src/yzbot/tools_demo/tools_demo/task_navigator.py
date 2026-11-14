@@ -6069,6 +6069,17 @@ class TaskNavigator(Node):
             obstacles[topic] = record
         return obstacles
 
+    # The global costmap reports ordinary inflation in 1..252 and lethal /
+    # inscribed obstacles at 253-254. The innovation planner only needs a
+    # "no hard obstacle" predicate: using the strict free threshold (<50)
+    # rejected every real corridor because the robot-footprint inflation
+    # ring sits at 50-90 there (verified by dynamic_static_probe logs).
+    DYNAMIC_HARD_COST_LIMIT = 200
+
+    def _dynamic_cell_free(self, x_value: float, y_value: float) -> bool:
+        cost = self._global_cost_at(x_value, y_value)
+        return cost is not None and 0 <= cost < self.DYNAMIC_HARD_COST_LIMIT
+
     def _dynamic_corridor_room(self, robot):
         """Measure verified lateral free room at several forward distances.
 
@@ -6089,7 +6100,7 @@ class TaskNavigator(Node):
                 while free + step <= 1.2:
                     probe_x = (base_x - direction * (free + step) * sin_yaw)
                     probe_y = (base_y + direction * (free + step) * cos_yaw)
-                    if not self._costmap_cell_free(probe_x, probe_y):
+                    if not self._dynamic_cell_free(probe_x, probe_y):
                         break
                     free += step
                 if attribute == 'left':
@@ -6120,7 +6131,7 @@ class TaskNavigator(Node):
                 angle = angle_index * math.pi / 4.0
                 px = world_x + ring * math.cos(angle)
                 py = world_y + ring * math.sin(angle)
-                if not self._costmap_cell_free(px, py):
+                if not self._dynamic_cell_free(px, py):
                     if now_ns - getattr(self, "_dynamic_probe_log_ns", 0) \
                             >= 1_000_000_000:
                         self._dynamic_probe_log_ns = now_ns

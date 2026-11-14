@@ -78,6 +78,8 @@ def build_node(supervisor, goal=SimpleNamespace(x=5.0, y=0.0)):
     node._release_direct_control = (
         TaskNavigator._release_direct_control.__get__(node))
     node._costmap_cell_free = lambda x, y: True
+    node._dynamic_cell_free = lambda x, y: True
+    node.DYNAMIC_HARD_COST_LIMIT = TaskNavigator.DYNAMIC_HARD_COST_LIMIT
     node._dynamic_static_check = (
         TaskNavigator._dynamic_static_check.__get__(node))
     node._dynamic_corridor_room = (
