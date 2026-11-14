@@ -6,6 +6,7 @@ import pytest
 
 from tools_demo import dynamic_local_supervisor as sup
 from tools_demo import dynamic_hypotheses as dh
+from tools_demo import dynamic_strategy_graph as dsg
 from tools_demo import spacetime_local_planner as sp
 
 
@@ -57,16 +58,31 @@ def test_approach_activates_observe_mode_and_records_decision():
     assert supervisor.last_plan is None          # observe never acts
 
 
-def test_active_mode_acquires_lease_with_bounded_command():
+def test_execute_prefix_emits_a_bounded_local_command():
     supervisor = sup.DynamicLocalSupervisor(config())
+    strategy = dsg.Strategy('pass_before', 'before',
+                            (dsg.PassageDecision(1, 'before'),), 0.0,
+                            ((-0.2, 0.0), (1.0, 0.0), (2.0, 0.0)),
+                            earliest_cross_sec=100.0)
+    trajectory = sp.Trajectory(
+        ((0.0, 0.0, 0.0, 0.5), (0.3, 0.12, -0.03, 0.5)),
+        strategy, arrival_sec=1.2)
+    result = sp.PlanResult(trajectory, [trajectory], 'ok', '', 0.3)
+    output = supervisor._execute_prefix(100.0, result)
+    assert output.state == 'active'
+    assert output.acquire_lease is True
+    assert output.command is not None
+    assert math.hypot(output.command[0], output.command[1]) <= 1.2
+
+
+def test_wait_plan_is_delegated_even_when_hold_opportunity_exists():
+    supervisor = sup.DynamicLocalSupervisor(config(mode='active'))
     obstacles = {'/competition/obstacles/obstacle_1':
                  mover_record(1, 2.5, 0.9, vy=-0.3, stamp=100.0)}
-    output = supervisor.step(100.0, robot_state(vx=0.4), False, obstacles,
-                             (5.0, 0.0))
-    assert output.state in ('active', 'fallback')
-    assert output.acquire_lease in (True, False)
-    if output.command is not None:
-        assert math.hypot(output.command[0], output.command[1]) <= 1.2
+    output = supervisor.step(100.0, robot_state(vx=0.5), False, obstacles,
+                             (5.0, 0.0), takeover_allowed=True)
+    assert output.state == 'observing'
+    assert output.command is None
 
 
 def test_corridor_clears_releases_if_resume_is_close():
@@ -183,12 +199,26 @@ def test_active_mode_without_hold_opportunity_only_observes():
     assert supervisor.decisions
 
 
-def test_active_mode_with_hold_opportunity_takes_control():
+
+
+def test_wait_plans_are_delegated_not_executed():
+    # The shipped mover-hold chain already implements safe waiting; the
+    # innovation supervisor must not duplicate it with a proxy corridor hold.
     supervisor = sup.DynamicLocalSupervisor(config(mode='active'))
     obstacles = {'/competition/obstacles/obstacle_1':
                  mover_record(1, 2.5, 0.9, vy=-0.3, stamp=100.0)}
     output = supervisor.step(100.0, robot_state(vx=0.5), False, obstacles,
                              (5.0, 0.0), takeover_allowed=True)
-    assert output.state in ('active', 'fallback')
-    if output.state == 'active':
-        assert output.acquire_lease is True
+    if output.state == 'observing':
+        assert output.command is None
+
+
+def test_handback_when_owning_and_plan_turns_into_a_wait():
+    supervisor = sup.DynamicLocalSupervisor(config(mode='active'))
+    supervisor.state = 'active'
+    obstacles = {'/competition/obstacles/obstacle_1':
+                 mover_record(1, 2.5, 0.9, vy=-0.3, stamp=100.0)}
+    output = supervisor.step(100.0, robot_state(vx=0.5), False, obstacles,
+                             (5.0, 0.0), takeover_allowed=True)
+    if output.state == 'observing':
+        assert output.release_lease is True

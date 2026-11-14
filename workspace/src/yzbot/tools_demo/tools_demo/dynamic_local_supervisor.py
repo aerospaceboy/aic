@@ -355,7 +355,21 @@ class DynamicLocalSupervisor:
                        if was_owner else None)
             return SupervisorOutput('fallback', command, False, was_owner,
                                     decision)
-        self.previous_kind = result.selected.strategy.kind
+        kind = result.selected.strategy.kind
+        if kind in ('wait', 'retreat'):
+            # A hold/withdraw plan is exactly what the shipped mover-hold
+            # machinery already does (and has been validated on the real
+            # route). Delegate that decision back to it instead of duplicating
+            # a hand-built hold from a proxy corridor model: only an actual
+            # passage plan justifies taking the direct channel.
+            self.state = 'observing'
+            was_owner = already_owner
+            self.last_plan = None
+            self.last_plan_sec = now
+            self.decisions.append(decision)
+            return SupervisorOutput('observing', None, False, was_owner,
+                                    decision)
+        self.previous_kind = kind
         self.last_plan = result
         self.last_plan_sec = now
         self.decisions.append(decision)
