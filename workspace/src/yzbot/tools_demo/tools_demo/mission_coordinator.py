@@ -132,6 +132,13 @@ PLACE_LATERAL_CENTER_THRESHOLD = 0.08
 # After centring, a target still this far outside the arm window fails closed
 # with the cube retained, as before, instead of sending a known-bad request.
 PLACE_LATERAL_ALLOW = 0.119
+# Arm placement window (mirrors pick_place_moveit.loaded_slot_tool_pose).
+PLACE_ARM_MIN_FORWARD = 0.25
+PLACE_ARM_MAX_FORWARD = 0.38
+PLACE_ARM_FORWARD_TARGET = 0.33
+PLACE_REPOSITION_STEP = 0.15
+PLACE_REPOSITION_TOLERANCE = 0.02
+PLACE_REPOSITION_ITERATIONS = 3
 # Keep a delivery slot at least this far inside the pad edge after the
 # approach bias, so the cube never straddles the painted boundary.
 DELIVERY_SLOT_EDGE_MARGIN = 0.10
@@ -181,6 +188,49 @@ def place_lateral_centering_needed(local_y) -> bool:
         isinstance(local_y, (int, float))
         and math.isfinite(float(local_y))
         and abs(float(local_y)) > PLACE_LATERAL_CENTER_THRESHOLD
+    )
+
+
+def place_reposition_correction(local) -> Optional[tuple]:
+    """Return bounded (forward, lateral) base displacement for one placement.
+
+    The base-frame slot target is (forward distance, lateral offset). The arm
+    accepts 0.25-0.38 m forward and |lateral| <= 0.12 m; aim at the forward
+    window centre and zero lateral offset. Returns None when the target is
+    already inside tolerance or the input is unusable.
+    """
+    if local is None or len(local) < 2:
+        return None
+    try:
+        forward = float(local[0])
+        lateral = float(local[1])
+    except (TypeError, ValueError):
+        return None
+    if not (math.isfinite(forward) and math.isfinite(lateral)):
+        return None
+    dx = forward - PLACE_ARM_FORWARD_TARGET
+    dy = lateral
+    if abs(dx) <= PLACE_REPOSITION_TOLERANCE \
+            and abs(dy) <= PLACE_REPOSITION_TOLERANCE:
+        return None
+    return (max(-PLACE_REPOSITION_STEP, min(PLACE_REPOSITION_STEP, dx)),
+            max(-PLACE_REPOSITION_STEP, min(PLACE_REPOSITION_STEP, dy)))
+
+
+def place_target_inside_arm_window(local) -> bool:
+    """Arm-view authority: forward and lateral limits from the move node."""
+    if local is None or len(local) < 2:
+        return False
+    try:
+        forward = float(local[0])
+        lateral = float(local[1])
+    except (TypeError, ValueError):
+        return False
+    return (
+        math.isfinite(forward)
+        and math.isfinite(lateral)
+        and PLACE_ARM_MIN_FORWARD <= forward <= PLACE_ARM_MAX_FORWARD
+        and abs(lateral) <= PLACE_LATERAL_ALLOW
     )
 
 
@@ -2554,33 +2604,28 @@ class MissionCoordinator(Node):
             return
         if action.kind == "place":
             # getattr keeps the light-weight route harnesses working; a
-            # stand-in without the helper keeps the frozen pre-check path.
-            local_resolver = getattr(self, "_place_slot_local", None)
-            local = (
-                local_resolver(job) if local_resolver is not None else None
-            )
-            if local is not None and place_lateral_centering_needed(local[1]):
-                self.get_logger().info(
-                    "place_lateral_center "
+            # stand-in without the helpers keeps the frozen pre-check path.
+            resolver = getattr(self, "_reposition_for_place", None)
+            local = resolver(job) if resolver is not None else None
+            if local is not None and not place_target_inside_arm_window(local):
+                self.publish_error(
+                    "place_target_outside_arm_window "
                     f"cube={job.cube_name} "
-                    f"local=({local[0]:.3f},{local[1]:.3f})"
+                    f"local=({local[0]:.3f},{local[1]:.3f})")
+                self.machine.state = "failed"
+                self.machine.detail = (
+                    "place_failed:slot_unreachable:holding_cube"
                 )
-                self._center_target_laterally(local[1])
-                local = local_resolver(job)
-                if local is None or abs(local[1]) > PLACE_LATERAL_ALLOW:
-                    self.publish_error(
-                        "place_lateral_center_failed "
-                        f"local={local if local is None else (round(local[0], 3), round(local[1], 3))}")
-                    self.machine.state = "failed"
-                    self.machine.detail = (
-                        "place_failed:slot_unreachable:holding_cube"
-                    )
-                    self.handle_action(
-                        MissionAction("done", reason=self.machine.detail)
-                    )
-                    return
+                self.handle_action(
+                    MissionAction("done", reason=self.machine.detail)
+                )
+                return
+            if local is not None and (
+                    place_lateral_centering_needed(local[1])
+                    or abs(local[0] - PLACE_ARM_FORWARD_TARGET)
+                    > PLACE_LATERAL_CENTER_THRESHOLD):
                 self.get_logger().info(
-                    "place_lateral_centered "
+                    "place_repositioned "
                     f"cube={job.cube_name} "
                     f"local=({local[0]:.3f},{local[1]:.3f})"
                 )
@@ -2982,6 +3027,64 @@ class MissionCoordinator(Node):
             slot_x + shift * dx / norm,
             slot_y + shift * dy / norm,
         )
+
+    def _bounded_place_shift(self, forward: float, lateral: float) -> None:
+        """Command one bounded closed-loop base displacement in both axes."""
+        speed = 0.18
+        deadline = time.monotonic() + 2.5
+        start = self._odom_pose()
+        if start is None:
+            return
+        cos_yaw = math.cos(start[2])
+        sin_yaw = math.sin(start[2])
+        twist = Twist()
+        twist.linear.x = math.copysign(speed, forward) \
+            if abs(forward) > 0.012 else 0.0
+        twist.linear.y = math.copysign(speed, lateral) \
+            if abs(lateral) > 0.012 else 0.0
+        self.get_logger().info(
+            "place_base_shift "
+            f"forward={forward:+.3f} lateral={lateral:+.3f}"
+        )
+        while time.monotonic() < deadline:
+            current = self._odom_pose()
+            if current is None:
+                break
+            dx = current[0] - start[0]
+            dy = current[1] - start[1]
+            moved_forward = cos_yaw * dx + sin_yaw * dy
+            moved_lateral = -sin_yaw * dx + cos_yaw * dy
+            if (abs(moved_forward - forward) <= 0.012
+                    and abs(moved_lateral - lateral) <= 0.012):
+                break
+            self.cmd_vel_publisher.publish(twist)
+            time.sleep(0.05)
+        twist.linear.x = 0.0
+        twist.linear.y = 0.0
+        for _ in range(5):
+            self.cmd_vel_publisher.publish(twist)
+            time.sleep(0.02)
+        current = self._odom_pose()
+        if current is not None:
+            dx = current[0] - start[0]
+            dy = current[1] - start[1]
+            self.get_logger().info(
+                "place_base_shift_result "
+                f"forward={cos_yaw * dx + sin_yaw * dy:+.3f} "
+                f"lateral={-sin_yaw * dx + cos_yaw * dy:+.3f}"
+            )
+
+    def _reposition_for_place(self, job) -> Optional[tuple]:
+        """Iteratively drive the arm-frame slot target into its window."""
+        local = self._place_slot_local(job)
+        for _ in range(PLACE_REPOSITION_ITERATIONS):
+            correction = place_reposition_correction(local)
+            if correction is None:
+                break
+            self._bounded_place_shift(*correction)
+            time.sleep(0.25)   # let the base physically settle
+            local = self._place_slot_local(job)
+        return local
 
     def _place_slot_local(self, job) -> Optional[tuple]:
         """Return the world slot target in the current base frame, or None."""
