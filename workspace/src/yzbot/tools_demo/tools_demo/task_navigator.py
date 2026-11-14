@@ -12,6 +12,11 @@ from tools_demo.c_clearance_route import c_clearance_waypoints
 from tools_demo.b_delivery_route import b_central_north_waypoints
 from tools_demo.b_delivery_route import b_northeast_waypoints
 from tools_demo.b_delivery_route import b_south_waypoints
+from tools_demo.dynamic_local_supervisor import (
+    DynamicLocalSupervisor,
+    RobotState as DynamicRobotState,
+    SupervisorConfig,
+)
 from tools_demo.dynamic_retreat import distance_to_patrol, retreat_admitted
 from tools_demo.corridor_admission import spawn_corridor_admission, wait_anchor_velocity
 from tools_demo.mission_state_machine import MISSION_STATES
@@ -523,6 +528,16 @@ class TaskNavigator(Node):
         self.declare_parameter("reverse_recovery_speed", 0.25)
         self.declare_parameter("reverse_recovery_max_distance", 1.5)
         self.declare_parameter("max_recovery_attempts", 2)
+        # Dynamic-avoidance innovation: off | observe | active.
+        # observe records what the planner would decide without touching the
+        # base; active takes the direct channel inside a conflict corridor and
+        # hands it back when the corridor clears.
+        self.declare_parameter("dynamic_planner_mode", "observe")
+        self.declare_parameter("dynamic_planner_replan_sec", 0.20)
+        self.declare_parameter("dynamic_planner_prefix_sec", 0.30)
+        self.declare_parameter("dynamic_planner_horizon_sec", 4.0)
+        self.declare_parameter("dynamic_planner_activation_ahead_m", 7.0)
+        self.declare_parameter("dynamic_planner_activation_lateral_m", 1.6)
         self.declare_parameter("obstacle_block_distance", 0.60)
         self.declare_parameter("obstacle_reverse_distance", 0.15)
         # obstacle_1 (spawn board) reverse is wall-limited; obstacle_2
@@ -925,6 +940,38 @@ class TaskNavigator(Node):
         )
         self.obstacle_positions: Dict[str, tuple] = {}
         self.obstacle_source_stamps: Dict[str, float] = {}
+        # Rolling history and fitted world velocity for the local planner.
+        self.dynamic_obstacle_history: Dict[str, list] = {}
+        self.dynamic_obstacle_velocity: Dict[str, tuple] = {}
+        self.dynamic_supervisor = None
+        self.dynamic_supervisor_error = None
+        self.dynamic_supervisor_last_log_ns = 0
+        try:
+            supervisor_config = SupervisorConfig(
+                mode=str(self.get_parameter(
+                    "dynamic_planner_mode").value),
+                replan_sec=float(self.get_parameter(
+                    "dynamic_planner_replan_sec").value),
+                prefix_sec=float(self.get_parameter(
+                    "dynamic_planner_prefix_sec").value),
+                horizon_sec=float(self.get_parameter(
+                    "dynamic_planner_horizon_sec").value),
+                activation_ahead_m=float(self.get_parameter(
+                    "dynamic_planner_activation_ahead_m").value),
+                activation_lateral_m=float(self.get_parameter(
+                    "dynamic_planner_activation_lateral_m").value),
+            )
+            self.dynamic_supervisor = DynamicLocalSupervisor(supervisor_config)
+        except Exception as error:      # never let the innovation stop the run
+            self.dynamic_supervisor_error = repr(error)
+            self.get_logger().warn(
+                f"dynamic_planner_disabled:{self.dynamic_supervisor_error}")
+        self.obstacle_radius_map = {}
+        for name in ("competition_moving_obstacle_1",
+                     "competition_moving_obstacle_2"):
+            self.obstacle_radius_map[name] = 0.18
+        for name in ("crossing_cart_1", "crossing_cart_2"):
+            self.obstacle_radius_map[name] = 0.14
         self.central_patrols = [list(self.get_parameter(name).value)
                                 for name in ('central_patrol_1', 'central_patrol_2')]
         self.obstacle_boxes: Dict[str, tuple] = {}
@@ -5647,6 +5694,17 @@ class TaskNavigator(Node):
         stamp = payload.get("stamp_sec")
         if isinstance(stamp, (int, float)) and math.isfinite(stamp):
             self.obstacle_source_stamps[topic] = float(stamp)
+            history = self.dynamic_obstacle_history.setdefault(topic, [])
+            history.append((float(stamp), position[0], position[1]))
+            del history[:-12]
+            if len(history) >= 2:
+                first, last = history[-2], history[-1]
+                span = last[0] - first[0]
+                if span > 1e-3:
+                    self.dynamic_obstacle_velocity[topic] = (
+                        (last[1] - first[1]) / span,
+                        (last[2] - first[2]) / span,
+                    )
         self._update_mover_track(topic, float(y_value))
         if payload.get("response_observed") is True:
             self.mover_response_seen.add(topic)
@@ -5980,8 +6038,114 @@ class TaskNavigator(Node):
         if self.goal_handle is not None:
             self.goal_handle.cancel_goal_async()
 
+    def _dynamic_planner_obstacles(self) -> Dict[str, dict]:
+        """Assemble the planner's obstacle snapshot from live truth topics."""
+        obstacles = {}
+        for index, (topic, position) in enumerate(
+                sorted(self.obstacle_positions.items()), start=1):
+            model = str(getattr(self, "obstacle_topics", {}).get(topic, ""))
+            vx_world, vy_world = self.dynamic_obstacle_velocity.get(
+                topic, (0.0, 0.0))
+            record = {
+                "track_id": index,
+                "x": position[0],
+                "y": position[1],
+                "stamp_sec": self.obstacle_source_stamps.get(topic, 0.0),
+                "vx": vx_world,
+                "vy": vy_world,
+                "radius": 0.18,
+                "history": list(self.dynamic_obstacle_history.get(topic, ())),
+            }
+            for radius_name, radius in self.obstacle_radius_map.items():
+                if radius_name in topic:
+                    record["radius"] = radius
+            obstacles[topic] = record
+        return obstacles
+
+    def _dynamic_planner_step(self) -> bool:
+        """Run one dynamic-planner cycle; True when it owns the base command.
+
+        The direct channel lease is the same one the mover/recovery machinery
+        uses, and the collision monitor / safety limiter remain downstream, so
+        this adds a planner but never bypasses the safety chain. Any exception
+        disables the innovation for the rest of the run and releases control.
+        """
+        supervisor = getattr(self, "dynamic_supervisor", None)
+        if supervisor is None:
+            return False
+        if (self.latest_x is None or self.latest_y is None
+                or self.latest_yaw is None):
+            return False
+        goal = getattr(self, "nav_goal_pose", None)
+        if goal is None:
+            if getattr(self, "dynamic_owner", False):
+                self._release_direct_control()
+                self.dynamic_owner = False
+            return False
+        try:
+            stamp = self.get_clock().now().nanoseconds / 1e9
+            # /odom twist is in the base frame; the supervisor expects a
+            # world-frame velocity for its obstacle/prediction math.
+            base_vx = float(getattr(self, "latest_vx", 0.0) or 0.0)
+            base_vy = float(getattr(self, "latest_vy", 0.0) or 0.0)
+            world_vx = (base_vx * math.cos(self.latest_yaw)
+                        - base_vy * math.sin(self.latest_yaw))
+            world_vy = (base_vx * math.sin(self.latest_yaw)
+                        + base_vy * math.cos(self.latest_yaw))
+            robot = DynamicRobotState(
+                x=self.latest_x, y=self.latest_y, yaw=self.latest_yaw,
+                vx=world_vx, vy=world_vy, stamp=stamp,
+            )
+            goal_dx = goal.x - self.latest_x
+            goal_dy = goal.y - self.latest_y
+            goal_local = (
+                goal_dx * math.cos(self.latest_yaw)
+                + goal_dy * math.sin(self.latest_yaw),
+                -goal_dx * math.sin(self.latest_yaw)
+                + goal_dy * math.cos(self.latest_yaw),
+            )
+            # A delivery command carries the fixed world slot; pickup legs do
+            # not. Until the mission publishes an explicit payload signal this
+            # is the documented conservative proxy for the loaded envelope.
+            payload = getattr(self, "delivery_slot_world", None) is not None
+            output = supervisor.step(
+                stamp, robot, payload,
+                self._dynamic_planner_obstacles(), goal_local)
+            now_ns = self.get_clock().now().nanoseconds
+            if output.command is not None and output.state != 'idle':
+                command = Twist()
+                command.linear.x = max(-1.2, min(1.2, output.command[0]))
+                command.linear.y = max(-1.2, min(1.2, output.command[1]))
+                self._publish_direct_velocity(command)
+                self.dynamic_owner = True
+            elif output.release_lease and getattr(self, "dynamic_owner", False):
+                self._release_direct_control()
+                self.dynamic_owner = False
+            if output.decision and now_ns - self.dynamic_supervisor_last_log_ns \
+                    >= 300_000_000:
+                self.dynamic_supervisor_last_log_ns = now_ns
+                self.get_logger().info(
+                    "dynamic_planner_decision "
+                    + json.dumps(output.decision, sort_keys=True)
+                )
+            return bool(output.state in ('active', 'fallback')
+                        and output.acquire_lease
+                        and getattr(self, "dynamic_owner", False))
+        except Exception as error:
+            self.dynamic_supervisor_error = repr(error)
+            self.dynamic_supervisor = None
+            self.get_logger().error(
+                f"dynamic_planner_disabled_by_error:{error}")
+            if getattr(self, "dynamic_owner", False):
+                self._release_direct_control()
+                self.dynamic_owner = False
+            return False
+
     def _obstacle_reverse_tick(self) -> None:
         """Advance the small obstacle-avoidance reverse state machine."""
+        planner_step = getattr(self, "_dynamic_planner_step", None)
+        if planner_step is not None and planner_step():
+            return
         if getattr(self, "recovery_target", None) is not None:
             # A checked escape already owns cmd_vel. A simultaneous retreat
             # corrupted its route in manual-20261015T104805.
