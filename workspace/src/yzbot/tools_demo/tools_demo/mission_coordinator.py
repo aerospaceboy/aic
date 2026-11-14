@@ -136,9 +136,9 @@ PLACE_LATERAL_ALLOW = 0.119
 PLACE_ARM_MIN_FORWARD = 0.25
 PLACE_ARM_MAX_FORWARD = 0.38
 PLACE_ARM_FORWARD_TARGET = 0.33
-PLACE_REPOSITION_STEP = 0.15
+PLACE_REPOSITION_STEP = 0.12
 PLACE_REPOSITION_TOLERANCE = 0.02
-PLACE_REPOSITION_ITERATIONS = 3
+PLACE_REPOSITION_ITERATIONS = 4
 # Only reposition when the target is outside the comfort band; measured
 # successful placements sit at |y| <= 0.05, so ordinary rounds must not pay
 # a double-leg centring move for a couple of centimetres.
@@ -3089,6 +3089,13 @@ class MissionCoordinator(Node):
                 if (forward_time > 0.0 and elapsed < forward_time) else 0.0
             twist.linear.y = math.copysign(speed, lateral) \
                 if (lateral_time > 0.0 and elapsed < lateral_time) else 0.0
+            # The holonomic base yaws while translating sideways; hold the
+            # heading closed-loop or the lateral correction rotates the arm
+            # frame and corrupts the next measurement.
+            current = self._odom_pose()
+            if current is not None:
+                error = math.remainder(start[2] - current[2], 2 * math.pi)
+                twist.angular.z = max(-0.35, min(0.35, 2.5 * error))
             self.cmd_vel_publisher.publish(twist)
             time.sleep(0.05)
         twist.linear.x = 0.0
