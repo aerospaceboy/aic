@@ -258,6 +258,63 @@ def clear_crossing_gaps(predictions: Sequence[Prediction],
     return gaps
 
 
+def offset_band_intervals(predictions: Sequence[Prediction],
+                          frame: ConflictFrame, payload: bool,
+                          now: float, horizon: float,
+                          lateral_offset: float,
+                          sample_dt: float = 0.05
+                          ) -> List[Tuple[float, float]]:
+    """Occupied intervals for a crossing path at a fixed lateral offset.
+
+    A robot crossing the mover strip at ``lateral_offset`` conflicts with a
+    body when the body is within its expanded clearance box around that path.
+    Passing at a small lateral offset is therefore a real option even while a
+    stopped/paused body sits inside the strip centre.
+    """
+    half_length = (frame.obstacle_radius + frame.envelope(payload)
+                   + DEFAULT_BODY_MARGIN)
+    half_width = half_length
+    intervals: List[Tuple[float, float]] = []
+    start = None
+    t = now
+    end = now + horizon
+    while t <= end + 1e-9:
+        occupied = False
+        for prediction in predictions:
+            if prediction.stale and not prediction.hypotheses:
+                continue
+            for x, y, radius in _body_at(prediction, t):
+                if (abs(x - frame.crossing_x) <= half_length + radius
+                        and abs(y - lateral_offset) <= half_width + radius):
+                    occupied = True
+                    break
+            if occupied:
+                break
+        if occupied and start is None:
+            start = t
+        elif not occupied and start is not None:
+            intervals.append((start, t))
+            start = None
+        t += sample_dt
+    if start is not None:
+        intervals.append((start, end))
+    return intervals
+
+
+def gaps_from_intervals(blocked: Sequence[Tuple[float, float]],
+                        now: float, horizon: float,
+                        min_clear_sec: float) -> List[Tuple[float, float]]:
+    gaps: List[Tuple[float, float]] = []
+    cursor = now
+    for start, end in blocked:
+        if start - cursor >= min_clear_sec:
+            gaps.append((cursor, start))
+        cursor = max(cursor, end)
+    if now + horizon - cursor >= min_clear_sec:
+        gaps.append((cursor, now + horizon))
+    return gaps
+
+
 def _wait_anchor_candidates(frame: ConflictFrame, payload: bool
                             ) -> List[Tuple[float, float]]:
     """Back off along the approach line until outside every swept band."""
@@ -383,58 +440,69 @@ def strategy_candidates(predictions: Sequence[Prediction],
     def add(strategy: Strategy) -> None:
         legal.append(strategy)
 
-    # 1. Crossing decisions derived from *clear gaps* in the band occupancy
-    #    timeline. A gap is real free space (all plausible modes outside the
-    #    band), so a pause/reversal branch that stops a body inside the band
-    #    blocks only the interval in which it actually sits there, instead of
-    #    disqualifying the whole planning horizon.
+    # 1. Crossing decisions from clear gaps at several lateral path offsets.
+    #    A gap is real free space (all plausible modes outside the expanded
+    #    clearance box around that path), so a paused/reversing body blocks
+    #    only where it actually sits; passing at a small verified lateral
+    #    offset remains available instead of waiting for a full strip clear.
     horizon = max(2.0, min(8.0, frame.crossing_duration(payload=payload) + 3.0))
     band_transit = 2.0 * (frame.obstacle_radius + frame.envelope(payload)
                           + DEFAULT_BODY_MARGIN) / max(
         0.20, min(frame.limit_speed, max(frame.robot_speed, 0.20)))
     min_clear = max(DEFAULT_MIN_CLEAR_SEC, band_transit)
     margin = 0.35
-    gaps = clear_crossing_gaps(predictions, frame, payload, now, horizon,
-                               min_clear_sec=min_clear)
-
-    def add_order(name: str, kind: str, gap_start: float, gap_end: float,
-                  wait_pose: Optional[Tuple[float, float]]) -> None:
-        relation = 'before' if kind == 'before' else 'after'
-        decisions = tuple(PassageDecision(track_id, relation)
-                          for track_id in track_ids)
-        if wait_pose is None:
-            waypoints = ((-0.2, 0.0), (frame.crossing_x, 0.0),
-                         (frame.crossing_x + 0.8, 0.0))
-        else:
-            waypoints = ((-0.2, 0.0), wait_pose, (frame.crossing_x, 0.0),
-                         (frame.crossing_x + 0.8, 0.0))
-        strategy = Strategy(
-            name, kind, decisions, 0.0, waypoints,
-            wait_pose=wait_pose,
-            resume_after_sec=(gap_start if wait_pose is not None else 0.0),
-            earliest_cross_sec=gap_start,
-            latest_cross_sec=max(gap_start, gap_end - min_clear),
-            tag='gap_cross' if wait_pose is not None else 'cross_now')
-        add(strategy)
-
-    if not gaps:
+    room_left = frame.corridor_left - frame.envelope(payload) - 0.05
+    room_right = frame.corridor_right - frame.envelope(payload) - 0.05
+    offsets = [0.0]
+    step = 0.15
+    for distance in (step, 2 * step, 3 * step):
+        if room_left >= distance:
+            offsets.append(distance)
+        if room_right >= distance:
+            offsets.append(-distance)
+    crossing_candidates = 0
+    for offset_rank, lateral_offset in enumerate(offsets):
+        blocked = offset_band_intervals(predictions, frame, payload, now,
+                                        horizon, lateral_offset)
+        gaps = gaps_from_intervals(blocked, now, horizon, min_clear)
+        if not gaps:
+            continue
+        for gap_start, gap_end in gaps[:2]:
+            if crossing_candidates >= 8:
+                break
+            relation = 'before' if (not blocked or gap_end <= blocked[0][0]) \
+                else 'after'
+            decisions = tuple(PassageDecision(track_id, relation)
+                              for track_id in track_ids)
+            if gap_start <= now + 0.20 and abs(lateral_offset) < 1e-9:
+                name = 'cross_now'
+                kind = 'before'
+                wait_pose = None
+                resume_after = 0.0
+                waypoints = ((-0.2, 0.0), (frame.crossing_x, 0.0),
+                             (frame.crossing_x + 0.8, 0.0))
+            else:
+                name = 'gap_%+.2f_%d' % (lateral_offset, crossing_candidates)
+                kind = 'gap'
+                wait_pose = (-0.45, 0.0)
+                resume_after = gap_start
+                waypoints = ((-0.2, 0.0), wait_pose,
+                             (frame.crossing_x, lateral_offset),
+                             (frame.crossing_x + 0.8, 0.0))
+            strategy = Strategy(
+                name, kind, decisions, lateral_offset, waypoints,
+                wait_pose=wait_pose, resume_after_sec=resume_after,
+                earliest_cross_sec=gap_start,
+                latest_cross_sec=max(gap_start, gap_end - min_clear),
+                tag='gap_cross' if wait_pose is not None else 'cross_now')
+            add(strategy)
+            crossing_candidates += 1
+    if crossing_candidates == 0:
         rejected.append(RejectedStrategy(
             'order_crossing',
-            'no clear crossing gap of %.2fs within %.1fs (all plausible '
-            'modes occupy the band)' % (min_clear, horizon)))
-    else:
-        immediate = gaps[0]
-        if immediate[0] <= now + 0.20:
-            add_order('cross_now', 'before', immediate[0], immediate[1], None)
-        planned = 0
-        for gap_start, gap_end in gaps:
-            if gap_start <= now + 0.20:
-                continue
-            add_order('gap_after_%d' % planned, 'gap', gap_start, gap_end,
-                      (-0.5, 0.0))
-            planned += 1
-            if planned >= 2:
-                break
+            'no clear crossing gap of %.2fs within %.1fs at any verified '
+            'lateral offset (all plausible modes occupy the strip)'
+            % (min_clear, horizon)))
 
     # 2. Lateral side passages: shift the crossing point sideways so the
     #    obstacle's swept band is never entered. Requires corridor room beyond
