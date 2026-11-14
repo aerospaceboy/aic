@@ -331,6 +331,12 @@ class DynamicLocalSupervisor:
                      else result.selected.strategy.kind),
             'reason': result.reason,
             'fallback': result.fallback,
+            'plan_candidates': [
+                {'strategy': candidate.strategy.name,
+                 'feasible': candidate.feasible,
+                 'reject_reason': candidate.reject_reason}
+                for candidate in result.candidates],
+            'plan_decision': result.decision,
             'goal_local': [round(goal_local[0], 2),
                            round(goal_local[1], 2)],
         }
