@@ -5703,7 +5703,7 @@ class TaskNavigator(Node):
             self.obstacle_source_stamps[topic] = float(stamp)
             history = self.dynamic_obstacle_history.setdefault(topic, [])
             history.append((float(stamp), position[0], position[1]))
-            del history[:-12]
+            del history[:-120]
             if len(history) >= 2:
                 first, last = history[-2], history[-1]
                 span = last[0] - first[0]

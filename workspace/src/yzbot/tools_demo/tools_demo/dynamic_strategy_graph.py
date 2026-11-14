@@ -34,6 +34,12 @@ DEFAULT_MAX_LATERAL = 0.80
 WAIT_DWELL_SEC = 1.5
 DEFAULT_ORDER_OPTIONS = ('before', 'after', 'wait')
 DEFAULT_MIN_CLEAR_SEC = 1.2     # robot needs this long inside the clear gap
+# Near-term (<= NEAR_HARD_SEC) every plausible mode is a hard obstacle; beyond
+# that only the per-track nominal mode is used for ordering/preheating. The
+# executed prefix is always re-validated, so a far planned crossing becomes
+# near-field checked before the robot actually enters it.
+NEAR_HARD_SEC = 1.2
+FAR_NOMINAL_ONLY = True
 
 
 @dataclass(frozen=True)
@@ -126,6 +132,18 @@ def _body_at(prediction: Prediction, t: float, min_weight: float = 0.02
     """All non-negligible mode bodies of one track at time t (local frame)."""
     bodies = []
     for hypothesis in prediction.near_field(until=None, min_weight=min_weight):
+        if hypothesis.positions[0][0] > t:
+            continue
+        _, x, y = hypothesis.position_at(t)
+        bodies.append((x, y, hypothesis.radius_at(t)))
+    return bodies
+
+
+def _nominal_body(prediction: Prediction, t: float
+                  ) -> List[Tuple[float, float, float]]:
+    """Highest-weight mode only: far-field ordering, never near-field safety."""
+    bodies = []
+    for hypothesis in prediction.nominal():
         if hypothesis.positions[0][0] > t:
             continue
         _, x, y = hypothesis.position_at(t)
@@ -262,7 +280,8 @@ def offset_band_intervals(predictions: Sequence[Prediction],
                           frame: ConflictFrame, payload: bool,
                           now: float, horizon: float,
                           lateral_offset: float,
-                          sample_dt: float = 0.05
+                          sample_dt: float = 0.05,
+                          near_hard_sec: float = NEAR_HARD_SEC
                           ) -> List[Tuple[float, float]]:
     """Occupied intervals for a crossing path at a fixed lateral offset.
 
@@ -280,10 +299,13 @@ def offset_band_intervals(predictions: Sequence[Prediction],
     end = now + horizon
     while t <= end + 1e-9:
         occupied = False
+        near = t <= now + near_hard_sec
         for prediction in predictions:
             if prediction.stale and not prediction.hypotheses:
                 continue
-            for x, y, radius in _body_at(prediction, t):
+            bodies = (_body_at(prediction, t) if near
+                      else _nominal_body(prediction, t))
+            for x, y, radius in bodies:
                 if (abs(x - frame.crossing_x) <= half_length + radius
                         and abs(y - lateral_offset) <= half_width + radius):
                     occupied = True

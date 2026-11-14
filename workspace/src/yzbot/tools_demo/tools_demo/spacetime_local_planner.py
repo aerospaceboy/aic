@@ -28,7 +28,8 @@ from dataclasses import dataclass, field
 import math
 from typing import Callable, Dict, Iterable, List, Optional, Sequence, Tuple
 
-from tools_demo.dynamic_hypotheses import (Prediction, conservative_bodies)
+from tools_demo.dynamic_hypotheses import (Prediction, conservative_bodies,
+                                         nominal_bodies)
 from tools_demo.dynamic_strategy_graph import (ConflictFrame, Strategy)
 
 DEFAULT_DT = 0.1
@@ -36,6 +37,11 @@ DEFAULT_HORIZON = 2.4
 DEFAULT_PREFIX_SEC = 0.4
 DEFAULT_CLEARANCE = 0.03
 DEFAULT_REACTION_SEC = 0.25
+# Beyond the near hard horizon only the per-track nominal mode is used for
+# collision rejection; every executed prefix is re-validated by the supervisor,
+# so a planned crossing is near-field checked again before commitment.
+DEFAULT_NEAR_HARD_SEC = 1.2
+DEFAULT_FAR_GROWTH = 0.10
 
 
 @dataclass(frozen=True)
@@ -79,6 +85,8 @@ class PlanConfig:
     cruise_speed: float = 0.7
     min_speed: float = 0.12
     static_clearance: float = 0.02
+    near_hard_sec: float = DEFAULT_NEAR_HARD_SEC
+    far_growth: float = DEFAULT_FAR_GROWTH
 
 
 @dataclass
@@ -326,10 +334,17 @@ def _static_ok(check: Optional[Callable[[float, float, float], float]],
 def _dynamic_clearance(predictions: Sequence[Prediction],
                        trajectory: Trajectory, robot_stamp: float,
                        envelope: float, config: PlanConfig) -> Tuple[bool, float]:
-    """Conservative swept-circle clearance against every plausible body."""
+    """Swept-circle clearance: union near-term, nominal far-field."""
     minimum = math.inf
     for t, x, y, speed in trajectory.samples:
-        bodies = conservative_bodies(predictions, robot_stamp + t)
+        absolute = robot_stamp + t
+        if t <= config.near_hard_sec:
+            bodies = conservative_bodies(predictions, absolute)
+        else:
+            growth = config.far_growth * (t - config.near_hard_sec)
+            bodies = [(bx, by, radius + growth)
+                      for bx, by, radius in nominal_bodies(predictions,
+                                                          absolute)]
         for bx, by, radius in bodies:
             clearance = math.hypot(x - bx, y - by) - radius - envelope
             minimum = min(minimum, clearance)
@@ -366,8 +381,15 @@ def _stopping_ok(trajectory: Trajectory, predictions: Sequence[Prediction],
             if static_check is not None:
                 if float(static_check(px, py, envelope)) < config.static_clearance:
                     return False, 'braking_path_blocked_at_t=%.2f' % t
-            for bx, by, radius in conservative_bodies(
-                    predictions, robot_stamp + stop_time):
+            absolute = robot_stamp + stop_time
+            if stop_time <= config.near_hard_sec:
+                bodies = conservative_bodies(predictions, absolute)
+            else:
+                growth = config.far_growth * (stop_time - config.near_hard_sec)
+                bodies = [(bx, by, radius + growth)
+                          for bx, by, radius in nominal_bodies(predictions,
+                                                              absolute)]
+            for bx, by, radius in bodies:
                 if math.hypot(px - bx, py - by) - radius - envelope < config.clearance:
                     return False, 'braking_path_enters_obstacle_at_t=%.2f' % t
     return True, ''
