@@ -6069,6 +6069,35 @@ class TaskNavigator(Node):
             obstacles[topic] = record
         return obstacles
 
+    def _dynamic_corridor_room(self, robot):
+        """Measure verified lateral free room at several forward distances.
+
+        The planner's default corridor envelope is deliberately narrow; with
+        the live global costmap we can measure how much free lateral space
+        actually exists ahead, which is what makes a legal side passage
+        possible instead of a false "no room" rejection.
+        """
+        cos_yaw = math.cos(robot.yaw)
+        sin_yaw = math.sin(robot.yaw)
+        left = right = 1.6
+        for forward in (1.0, 2.0, 3.0):
+            base_x = robot.x + forward * cos_yaw
+            base_y = robot.y + forward * sin_yaw
+            for direction, attribute in ((1.0, 'left'), (-1.0, 'right')):
+                free = 0.0
+                step = 0.05
+                while free + step <= 1.2:
+                    probe_x = (base_x - direction * (free + step) * sin_yaw)
+                    probe_y = (base_y + direction * (free + step) * cos_yaw)
+                    if not self._costmap_cell_free(probe_x, probe_y):
+                        break
+                    free += step
+                if attribute == 'left':
+                    left = min(left, free)
+                else:
+                    right = min(right, free)
+        return left, right
+
     def _dynamic_static_check(self, robot):
         """Return a local-frame static-free predicate bound to the costmap.
 
@@ -6141,6 +6170,10 @@ class TaskNavigator(Node):
             # not. Until the mission publishes an explicit payload signal this
             # is the documented conservative proxy for the loaded envelope.
             payload = getattr(self, "delivery_slot_world", None) is not None
+            room_stamp = getattr(self, "_dynamic_room_stamp", 0.0)
+            if stamp - room_stamp >= 0.5:
+                self._dynamic_room = self._dynamic_corridor_room(robot)
+                self._dynamic_room_stamp = stamp
             # Take control only where the existing mover chain would itself
             # stop/hold: an ordinary transit keeps Nav2 in charge.
             takeover_allowed = (
@@ -6150,7 +6183,8 @@ class TaskNavigator(Node):
                 stamp, robot, payload,
                 self._dynamic_planner_obstacles(), goal_local,
                 static_check=self._dynamic_static_check(robot),
-                takeover_allowed=takeover_allowed)
+                takeover_allowed=takeover_allowed,
+                corridor_bounds=getattr(self, "_dynamic_room", None))
             now_ns = self.get_clock().now().nanoseconds
             if output.release_lease and getattr(self, "dynamic_owner", False):
                 self._release_direct_control()

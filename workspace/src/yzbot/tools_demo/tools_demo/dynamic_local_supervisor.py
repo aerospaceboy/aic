@@ -210,7 +210,8 @@ class DynamicLocalSupervisor:
 
     def step(self, now: float, robot: sp.RobotState, payload: bool,
              obstacles: Dict[str, dict], goal_local: Tuple[float, float],
-             static_check=None, takeover_allowed: bool = True
+             static_check=None, takeover_allowed: bool = True,
+             corridor_bounds: Optional[Tuple[float, float]] = None
              ) -> SupervisorOutput:
         """Advance one control cycle and return the command/lease decision."""
         config = self.config
@@ -291,11 +292,15 @@ class DynamicLocalSupervisor:
         if robot.speed() < 0.10 and not already_owner:
             return self._release('base_not_transiting')
         crossing_x = max(0.30, min(crossing[0], config.activation_ahead_m))
+        left_room, right_room = config.corridor_left, config.corridor_right
+        if corridor_bounds is not None:
+            left_room = max(0.30, min(1.6, float(corridor_bounds[0])))
+            right_room = max(0.30, min(1.6, float(corridor_bounds[1])))
         frame = dsg.ConflictFrame(
             crossing_x=crossing_x,
             obstacle_radius=0.18,
-            corridor_left=config.corridor_left,
-            corridor_right=config.corridor_right,
+            corridor_left=left_room,
+            corridor_right=right_room,
             corridor_min_x=-1.0,
             corridor_max_x=max(4.0, crossing_x + 2.0),
             robot_speed=max(0.15, robot.speed()),
@@ -339,6 +344,7 @@ class DynamicLocalSupervisor:
             'plan_decision': result.decision,
             'goal_local': [round(goal_local[0], 2),
                            round(goal_local[1], 2)],
+            'corridor_room': [round(left_room, 2), round(right_room, 2)],
         }
         if config.mode in ('observe', 'disabled') or (not takeover_allowed
                                         and not already_owner):

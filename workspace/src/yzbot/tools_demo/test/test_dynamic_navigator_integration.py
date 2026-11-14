@@ -80,6 +80,8 @@ def build_node(supervisor, goal=SimpleNamespace(x=5.0, y=0.0)):
     node._costmap_cell_free = lambda x, y: True
     node._dynamic_static_check = (
         TaskNavigator._dynamic_static_check.__get__(node))
+    node._dynamic_corridor_room = (
+        TaskNavigator._dynamic_corridor_room.__get__(node))
     return node
 
 
