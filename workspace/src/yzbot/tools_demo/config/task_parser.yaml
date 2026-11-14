@@ -8,7 +8,7 @@ competition_task_question:
 competition_task_parser:
   ros__parameters:
     base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
-    model: qwen3.8-max
+    model: qwen3.8-flash
     api_key_env: DASHSCOPE_API_KEY
     llm_enable_thinking: false
     llm_max_tokens: 4096

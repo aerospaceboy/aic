@@ -5,7 +5,7 @@ directory="$HOME/.config/yzbot"
 mkdir -p "$directory"; chmod 700 "$directory"
 printf 'OpenAI兼容根地址（含 /compatible-mode/v1，回车保留原配置）: '
 read -r endpoint
-printf '模型名（回车保留原配置 qwen3.8-max）: '
+printf '模型名（回车保留当前配置）: '
 read -r model
 read -r -s -p 'API Key（不回显）: ' secret; printf '\n'
 [[ -n "$secret" ]] || { echo '未输入 Key；没有保存或修改。' >&2; exit 2; }
