@@ -31,7 +31,7 @@ class StubSupervisor:
         self.error = error
         self.calls = 0
 
-    def step(self, now, robot, payload, obstacles, goal_local):
+    def step(self, now, robot, payload, obstacles, goal_local, **kwargs):
         self.calls += 1
         if self.error is not None:
             raise self.error
@@ -75,6 +75,9 @@ def build_node(supervisor, goal=SimpleNamespace(x=5.0, y=0.0)):
         TaskNavigator._publish_direct_velocity.__get__(node))
     node._release_direct_control = (
         TaskNavigator._release_direct_control.__get__(node))
+    node._costmap_cell_free = lambda x, y: True
+    node._dynamic_static_check = (
+        TaskNavigator._dynamic_static_check.__get__(node))
     return node
 
 
