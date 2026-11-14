@@ -139,6 +139,12 @@ PLACE_ARM_FORWARD_TARGET = 0.33
 PLACE_REPOSITION_STEP = 0.15
 PLACE_REPOSITION_TOLERANCE = 0.02
 PLACE_REPOSITION_ITERATIONS = 3
+# Only reposition when the target is outside the comfort band; measured
+# successful placements sit at |y| <= 0.05, so ordinary rounds must not pay
+# a double-leg centring move for a couple of centimetres.
+PLACE_FORWARD_COMFORT_MIN = 0.27
+PLACE_FORWARD_COMFORT_MAX = 0.37
+PLACE_LATERAL_COMFORT = 0.08
 # Keep a delivery slot at least this far inside the pad edge after the
 # approach bias, so the cube never straddles the painted boundary.
 DELIVERY_SLOT_EDGE_MARGIN = 0.10
@@ -208,8 +214,13 @@ def place_reposition_correction(local) -> Optional[tuple]:
         return None
     if not (math.isfinite(forward) and math.isfinite(lateral)):
         return None
-    dx = forward - PLACE_ARM_FORWARD_TARGET
-    dy = lateral
+    forward_off = not (PLACE_FORWARD_COMFORT_MIN <= forward
+                       <= PLACE_FORWARD_COMFORT_MAX)
+    lateral_off = abs(lateral) > PLACE_LATERAL_COMFORT
+    if not (forward_off or lateral_off):
+        return None
+    dx = (forward - PLACE_ARM_FORWARD_TARGET) if forward_off else 0.0
+    dy = lateral if lateral_off else 0.0
     if abs(dx) <= PLACE_REPOSITION_TOLERANCE \
             and abs(dy) <= PLACE_REPOSITION_TOLERANCE:
         return None

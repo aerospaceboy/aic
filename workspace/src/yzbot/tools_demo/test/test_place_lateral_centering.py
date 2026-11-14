@@ -30,8 +30,13 @@ def test_only_a_meaningful_lateral_offset_triggers_centring(
 @pytest.mark.parametrize("local,expected", [
     ((0.33, 0.0), None),
     ((0.34, 0.01), None),
+    ((0.33, 0.05), None),
+    ((0.33, -0.05), None),
+    ((0.30, 0.06), None),
     ((0.33, -0.122), (0.0, -0.122)),
     ((0.203, -0.132), (-0.127, -0.132)),
+    ((0.26, 0.0), (-0.07, 0.0)),
+    ((0.40, 0.0), (0.07, 0.0)),
     ((0.50, 0.30), (0.15, 0.15)),
     ((None, None), None),
     ((0.33,), None),
