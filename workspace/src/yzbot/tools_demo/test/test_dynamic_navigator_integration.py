@@ -58,7 +58,9 @@ def build_node(supervisor, goal=SimpleNamespace(x=5.0, y=0.0)):
         direct_control_publisher=Recorder(),
         _direct_control=False,
         _ignored=[],
+        mover_hold_topic=None,
     )
+    node._mover_yield_topic = lambda: '/competition/obstacles/obstacle_1'
     node.get_clock = lambda: Clock()
     node.get_logger = lambda: SimpleNamespace(
         info=lambda *a, **k: None, warn=lambda *a, **k: None,

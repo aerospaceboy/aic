@@ -210,7 +210,8 @@ class DynamicLocalSupervisor:
 
     def step(self, now: float, robot: sp.RobotState, payload: bool,
              obstacles: Dict[str, dict], goal_local: Tuple[float, float],
-             static_check=None) -> SupervisorOutput:
+             static_check=None, takeover_allowed: bool = True
+             ) -> SupervisorOutput:
         """Advance one control cycle and return the command/lease decision."""
         config = self.config
         if config.mode == 'off':
@@ -333,7 +334,13 @@ class DynamicLocalSupervisor:
             'goal_local': [round(goal_local[0], 2),
                            round(goal_local[1], 2)],
         }
-        if config.mode == 'observe':
+        if config.mode == 'observe' or (not takeover_allowed
+                                        and not already_owner):
+            # Evidence-only cycle: the normal navigation/mover logic keeps
+            # control unless the existing coordinator was about to hold for
+            # this mover. This prevents the planner from taking the base away
+            # from an ordinary transit/docking just because a mover is visible.
+            self.state = 'observing'
             self.last_plan_sec = now
             self.last_plan = None
             self.decisions.append(decision)

@@ -6134,10 +6134,16 @@ class TaskNavigator(Node):
             # not. Until the mission publishes an explicit payload signal this
             # is the documented conservative proxy for the loaded envelope.
             payload = getattr(self, "delivery_slot_world", None) is not None
+            # Take control only where the existing mover chain would itself
+            # stop/hold: an ordinary transit keeps Nav2 in charge.
+            takeover_allowed = (
+                getattr(self, "mover_hold_topic", None) is not None
+                or self._mover_yield_topic() is not None)
             output = supervisor.step(
                 stamp, robot, payload,
                 self._dynamic_planner_obstacles(), goal_local,
-                static_check=self._dynamic_static_check(robot))
+                static_check=self._dynamic_static_check(robot),
+                takeover_allowed=takeover_allowed)
             now_ns = self.get_clock().now().nanoseconds
             if output.release_lease and getattr(self, "dynamic_owner", False):
                 self._release_direct_control()

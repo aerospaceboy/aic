@@ -170,3 +170,25 @@ def test_stationary_base_does_not_take_a_transit_plan():
                              obstacles, (5.0, 0.0))
     assert output.state == 'idle'
     assert output.command is None
+
+
+def test_active_mode_without_hold_opportunity_only_observes():
+    supervisor = sup.DynamicLocalSupervisor(config(mode='active'))
+    obstacles = {'/competition/obstacles/obstacle_1':
+                 mover_record(1, 2.5, 0.9, vy=-0.3, stamp=100.0)}
+    output = supervisor.step(100.0, robot_state(vx=0.5), False, obstacles,
+                             (5.0, 0.0), takeover_allowed=False)
+    assert output.state == 'observing'
+    assert output.command is None
+    assert supervisor.decisions
+
+
+def test_active_mode_with_hold_opportunity_takes_control():
+    supervisor = sup.DynamicLocalSupervisor(config(mode='active'))
+    obstacles = {'/competition/obstacles/obstacle_1':
+                 mover_record(1, 2.5, 0.9, vy=-0.3, stamp=100.0)}
+    output = supervisor.step(100.0, robot_state(vx=0.5), False, obstacles,
+                             (5.0, 0.0), takeover_allowed=True)
+    assert output.state in ('active', 'fallback')
+    if output.state == 'active':
+        assert output.acquire_lease is True
