@@ -3,6 +3,7 @@
 // Nav2 Humble MPPI integration. Sensor forecasts are time indexed; simulator
 // actor state is used only by the independent downstream safety monitor.
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <memory>
@@ -18,6 +19,7 @@
 #include <std_msgs/msg/string.hpp>
 #include <tf2/utils.h>
 #include "bot_navigation/remaining_path.hpp"
+#include "bot_navigation/controller_fallback.hpp"
 
 namespace bot_navigation
 {
@@ -124,6 +126,7 @@ public:
     dynamic_=loader_->createSharedInstance("nav2_mppi_controller::MPPIController");
     nominal_->configure(parent,name+".Nominal",tf,costmap);
     dynamic_->configure(parent,name+".Dynamic",tf,costmap);
+    nominal_max_=node_->get_parameter(name+".Nominal.desired_linear_vel").as_double();
     tracks_.configure(node_,costmap);
     status_=node_->create_publisher<std_msgs::msg::String>("/competition/dynamic_controller/state",10);
     RCLCPP_INFO(node_->get_logger(),"%s adaptive controller: static follower + sensor-time MPPI",name.c_str());
@@ -136,6 +139,7 @@ public:
   }
   void setSpeedLimit(const double & speed,const bool & percentage)override {
     nominal_->setSpeedLimit(speed,percentage);dynamic_->setSpeedLimit(speed,percentage);
+    speed_limit_.store(percentage?nominal_max_*speed/100.:speed);
   }
   geometry_msgs::msg::TwistStamped computeVelocityCommands(
     const geometry_msgs::msg::PoseStamped & pose,const geometry_msgs::msg::Twist & velocity,
@@ -166,7 +170,9 @@ public:
     if(active_)nominal_->setPlan(remainingPath(path_,nearest));
     try{baseline=nominal_->computeVelocityCommands(pose,velocity,checker);}
     catch(...){nominal_error=std::current_exception();}
-    const double preview_speed=std::max(.6,std::hypot(baseline.twist.linear.x,baseline.twist.linear.y));
+    const double preview_speed=std::max({.6,
+      std::hypot(velocity.linear.x,velocity.linear.y),
+      std::hypot(baseline.twist.linear.x,baseline.twist.linear.y)});
     bool conflict=false;std::vector<int> ids;
     for(const auto & a:tracks) {
       if(std::hypot(a.x-pose.pose.position.x,a.y-pose.pose.position.y)>4.)continue;
@@ -187,19 +193,26 @@ public:
       if(intersects){conflict=true;ids.push_back(a.id);}
     }
     if(conflict)last_conflict_=now;
-    const bool use_dynamic=conflict || (active_ && now-last_conflict_<.3);
+    bool use_dynamic=conflict || (active_ && now-last_conflict_<.3);
     if(!use_dynamic && nominal_error)std::rethrow_exception(nominal_error);
     if(use_dynamic && (!active_ || dynamic_plan_pending_)) {
       dynamic_->setPlan(remainingPath(path_,nearest));
       dynamic_plan_pending_=false;
     }
-    auto command=use_dynamic?dynamic_->computeVelocityCommands(pose,velocity,checker):baseline;
+    std::string fallback_reason;
+    auto command=use_dynamic?dynamicWithFallback(
+      [&]{return dynamic_->computeVelocityCommands(pose,velocity,checker);},
+      baseline,nominal_error,use_dynamic,fallback_reason):baseline;
+    // Humble MPPI resets its constraints to base values after idle/failure.
+    // Never let that reset silently lift a navigation stage's speed limit.
+    capTranslation(command.twist,speed_limit_.load());
     if(use_dynamic!=active_ || now-last_status_>.19) {
       active_=use_dynamic;last_status_=now;
       nlohmann::json j={{"stamp",now},{"controller",name_},{"mode",active_?"sensor_mppi":"nominal"},
         {"track_ids",ids},{"source","laser_stamped_map_tf"},
         {"selected_command",{command.twist.linear.x,command.twist.linear.y,command.twist.angular.z}},
         {"frame_id",pose.header.frame_id}};
+      if(!fallback_reason.empty())j["dynamic_fallback"]=fallback_reason;
       if(use_dynamic) {
         // Read-only comparison: never publish this command to the actuator.
         try {
@@ -219,6 +232,7 @@ private:
   SensorTracks tracks_;nav_msgs::msg::Path path_;
   rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::String>::SharedPtr status_;
   bool active_{false},dynamic_plan_pending_{true};
+  std::atomic<double> speed_limit_{0.};double nominal_max_{1.78};
   double last_conflict_{-100.},last_status_{-100.};
 };
 } // namespace bot_navigation

@@ -35,9 +35,23 @@ def test_mppi_and_actuator_lateral_limits_are_consistent():
     controller = config['controller_server']['ros__parameters']
     smoother = config['velocity_smoother']['ros__parameters']
     assert controller['min_y_velocity_threshold'] < .01
-    for name in ('FollowPath', 'CentralTransit', 'SmoothTransit', 'CornerFlow'):
+    for name in ('FollowPath', 'CentralTransit', 'SmoothTransit', 'CornerFlow', 'CornerFlowA'):
         assert controller[name]['Dynamic']['vy_max'] <= smoother['max_velocity'][1]
         assert controller[name]['Dynamic']['model_dt'] == 1/controller['controller_frequency']
+
+
+def test_stage_models_keep_full_lateral_authority_without_reset_speed_increase():
+    config = yaml.safe_load((ROOT / 'bot_navigation/config/dense_nav2.yaml').read_text())
+    controller = config['controller_server']['ros__parameters']
+    for name, speed in [('CornerFlowA', .75), ('CornerFlow', 1.2),
+                        ('SmoothTransit', 1.5), ('CentralTransit', 1.)]:
+        assert controller[name]['Dynamic']['vx_max'] == speed
+        assert controller[name]['Dynamic']['vy_max'] == .4
+    for name in ('navigate_through_corner_a_dense.xml', 'navigate_corner_a_dense_to_pose.xml'):
+        tree = ET.parse(ROOT / 'tools_demo/config' / name)
+        for follower in tree.iter('FollowPath'):
+            assert follower.attrib['controller_id'] == 'CornerFlowA'
+            assert 'CornerFlowA' in controller['controller_plugins']
 
 
 def test_live_costmap_marks_survive_static_map_composition():
@@ -50,3 +64,21 @@ def test_live_costmap_marks_survive_static_map_composition():
             if live in plugins:
                 assert plugins.index('static_layer') < plugins.index(live)
                 assert plugins.index(live) < plugins.index('inflation_layer')
+
+
+def test_dense_route_guidance_retains_static_and_cargo_with_live_local_protection():
+    config = yaml.safe_load((ROOT / 'bot_navigation/config/dense_nav2.yaml').read_text())
+    global_map = config['global_costmap']['global_costmap']['ros__parameters']
+    local_map = config['local_costmap']['local_costmap']['ros__parameters']
+    # Periodic movers must not repeatedly reverse the chosen homotopy. Static
+    # geometry, placed deliveries and the original unsafe stripe remain hard.
+    assert global_map['obstacle_layer']['enabled']
+    assert 'placed_cubes' in global_map['obstacle_layer']['observation_sources']
+    assert global_map['sweep_band_layer']['enabled']
+    assert not global_map['dynamic_layer']['enabled']
+    assert not global_map['prediction_layer']['enabled']
+    # Only global guidance is persistent: current local laser occupancy and
+    # current/forecast sensor tracks continue to constrain executable motion.
+    assert local_map['obstacle_layer']['enabled']
+    assert 'scan' in local_map['obstacle_layer']['observation_sources']
+    assert local_map['prediction_layer']['enabled']

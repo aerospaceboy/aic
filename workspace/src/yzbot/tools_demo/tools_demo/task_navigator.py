@@ -3793,6 +3793,8 @@ class TaskNavigator(Node):
                 "navigate_clearance_to_pose.xml"))
         if pose.zone.startswith('FLOW_'):
             goal.behavior_tree = str(Path(self.through_behavior_tree).with_name(
+                "navigate_corner_a_dense_to_pose.xml"
+                if dense_enabled() and pose.zone.startswith('FLOW_A_') else
                 "navigate_corner_to_pose.xml"))
         self.nav_request_id = getattr(self, "nav_request_id", 0) + 1
         request_id = self.nav_request_id
@@ -3857,7 +3859,9 @@ class TaskNavigator(Node):
             poses,
             self.get_clock().now().to_msg(),
             (str(Path(self.through_behavior_tree).with_name(
-                "navigate_through_corner.xml"))
+                "navigate_through_corner_a_dense.xml"
+                if dense_enabled() and any(p.zone.startswith('FLOW_A_') for p in poses)
+                else "navigate_through_corner.xml"))
              if has_corner_flow(poses) else
              str(Path(self.through_behavior_tree).with_name(
                 "navigate_through_south_a.xml"))
