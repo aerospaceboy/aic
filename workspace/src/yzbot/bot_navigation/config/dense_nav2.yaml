@@ -761,7 +761,7 @@ global_costmap:
       - inflation_layer
       prediction_layer:
         plugin: bot_navigation::PredictionLayer
-        enabled: true
+        enabled: false
         timeout: 0.5
         robot_egress_radius: 0.33
       dynamic_layer:

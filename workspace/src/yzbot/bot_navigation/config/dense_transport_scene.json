@@ -73,24 +73,24 @@
     {
       "name": "transport_mover_04",
       "start": [
-        -4.446,
-        -1.102
+        -6,
+        -3.05
       ],
       "end": [
-        -4.363,
-        -2.6
+        -6,
+        -2.35
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.32,
       "phase_fraction": 0.52786,
       "clearance": {
-        "map_surface_margin": 0.2043,
-        "dock_surface_margin": 3.3268,
-        "cube_surface_margin": 3.0034,
-        "zone_surface_margin": 4.854
+        "map_surface_margin": 0.9999,
+        "dock_surface_margin": 1.72,
+        "cube_surface_margin": 1.36,
+        "zone_surface_margin": 6.0392
       },
-      "traffic_distance": 0.0238
+      "traffic_distance": 0.1631
     },
     {
       "name": "transport_mover_05",
@@ -140,23 +140,23 @@
       "name": "transport_mover_07",
       "start": [
         -13.407,
-        -5.08
+        -6.45
       ],
       "end": [
         -12.635,
-        -4.869
+        -6.239
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.32,
       "phase_fraction": 0.67376,
       "clearance": {
-        "map_surface_margin": 0.2927,
-        "dock_surface_margin": 0.8966,
-        "cube_surface_margin": 1.651,
-        "zone_surface_margin": 11.1514
+        "map_surface_margin": 0.2933,
+        "dock_surface_margin": 0.8339,
+        "cube_surface_margin": 1.6154,
+        "zone_surface_margin": 12.2344
       },
-      "traffic_distance": 0.0014
+      "traffic_distance": 0.7359
     },
     {
       "name": "transport_mover_08",
