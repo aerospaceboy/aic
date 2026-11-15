@@ -96,11 +96,13 @@ def test_time_indexed_predictions_replace_only_future_spatial_union():
     config = yaml.safe_load((base / 'dense_nav2.yaml').read_text())
     local = config['local_costmap']['local_costmap']['ros__parameters']
     assert local['prediction_layer']['timed_future_cost']
-    # MPPI may not cut into the global planner's static inflation shell.
-    assert local['static_layer']['map_topic'] == '/competition/dense_static_map'
+    # Original RPP collision projection must use physical wall geometry, not
+    # a second hard padding shell. MPPI is separately gated to open space.
+    assert local['static_layer']['map_topic'] == '/map'
     global_map = config['global_costmap']['global_costmap']['ros__parameters']
     assert global_map['static_layer']['map_topic'] == '/competition/dense_global_static_map'
-    assert math.isclose(local['robot_radius'] + .20, global_map['robot_radius'] + .10)
+    assert global_map['robot_radius'] + .10 >= .48 - 1.e-9
+    assert local['robot_radius'] >= .28
     sensor = yaml.safe_load((base / 'dense_scene_overrides.yaml').read_text())['competition_dynamic_obstacles']['ros__parameters']
     assert sensor['prediction_robot_radius'] == local['robot_radius']
     assert sensor['small_body_clearance'] + local['robot_radius'] >= .46 - 1.e-9

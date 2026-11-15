@@ -1,4 +1,4 @@
-"""Derived local-only static clearance; original map and moving bodies stay intact."""
+"""Conservative global guidance and raw-map clearance for controller arbitration."""
 import copy
 import math
 import cv2
@@ -49,7 +49,6 @@ class DenseStaticMargin(Node):
     def __init__(self):
         super().__init__('competition_dense_static_margin')
         qos = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
-        self.publisher = self.create_publisher(OccupancyGrid, '/competition/dense_static_map', qos)
         self.global_publisher = self.create_publisher(OccupancyGrid, '/competition/dense_global_static_map', qos)
         self.region_publisher = self.create_publisher(String, '/competition/static_clearance', 10)
         self.map = None
@@ -67,24 +66,20 @@ class DenseStaticMargin(Node):
             q = info.origin.orientation
             yaw = math.atan2(2*(q.w*q.z+q.x*q.y), 1-2*(q.y*q.y+q.z*q.z))
             origin = (info.origin.position.x, info.origin.position.y, yaw)
-            maps = []
-            for margin in (.20, .10):
-                cells = static_margin_cells(message.data, info.width, info.height, info.resolution, margin)
-                maps.append(preserve_spawn_corridor(message.data, cells, info.width,
-                                                    info.height, info.resolution, origin))
+            cells = static_margin_cells(message.data, info.width, info.height, info.resolution, .10)
+            cells = preserve_spawn_corridor(message.data, cells, info.width,
+                                            info.height, info.resolution, origin)
         except ValueError as error:
             self.get_logger().error(str(error))
             return
         derived = copy.deepcopy(message)
-        derived.data = maps[0]
-        self.publisher.publish(derived)
-        derived.data = maps[1]
+        derived.data = cells
         self.global_publisher.publish(derived)
         self.map = message
         cells = np.asarray(message.data).reshape(info.height, info.width)
         free = ((cells >= 0) & (cells < 65)).astype(np.uint8)
         self.distance = cv2.distanceTransform(free, cv2.DIST_L2, cv2.DIST_MASK_PRECISE)*info.resolution
-        self.get_logger().info('dense_static_clearance local=0.20 global=0.10 original_spawn_preserved=true')
+        self.get_logger().info('dense_static_clearance local=original global=0.10 original_spawn_preserved=true')
 
     def region(self):
         now = self.get_clock().now().nanoseconds*1.e-9
