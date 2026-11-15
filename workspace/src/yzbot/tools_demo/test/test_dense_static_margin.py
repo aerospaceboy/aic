@@ -37,6 +37,7 @@ def test_original_spawn_gate_lane_is_preserved_without_erasing_its_wall():
     padded = static_margin_cells(data, 300, 30, .05)
     result = np.array(preserve_spawn_corridor(data, padded, 300, 30, .05,
                                             (0., 0., 0.))).reshape(30, 300)
-    assert result[17, 20] == 100
+    assert result[17, 5] == 100
+    assert result[17, 75] == cells[17, 75] == 0
     assert result[17, 100] == cells[17, 100] == 0
     assert np.all(result[19, :] == 100)

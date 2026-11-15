@@ -80,6 +80,7 @@ def test_dense_route_guidance_retains_static_and_cargo_with_live_local_protectio
     assert global_map['dynamic_layer']['enabled']
     assert global_map['prediction_layer']['enabled']
     assert global_map['prediction_layer']['timed_future_cost']
+    assert global_map['prediction_layer']['robot_egress_radius'] > global_map['robot_radius'] + .05
     # Only global guidance is persistent: current local laser occupancy and
     # current/forecast sensor tracks continue to constrain executable motion.
     assert local_map['obstacle_layer']['enabled']

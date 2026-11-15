@@ -13,13 +13,15 @@ class PredictionTest : public ::testing::Test
 {
 protected:
   virtual bool timedFutureCost() const {return false;}
+  virtual double egressRadius() const {return .33;}
   static void SetUpTestSuite() {rclcpp::init(0, nullptr);}
   static void TearDownTestSuite() {rclcpp::shutdown();}
   void SetUp() override
   {
     lifecycle = std::make_shared<nav2_util::LifecycleNode>("prediction_unit", "",
       rclcpp::NodeOptions().parameter_overrides({
-        rclcpp::Parameter("prediction.timed_future_cost", timedFutureCost())}));
+        rclcpp::Parameter("prediction.timed_future_cost", timedFutureCost()),
+        rclcpp::Parameter("prediction.robot_egress_radius", egressRadius())}));
     sender = std::make_shared<rclcpp::Node>("prediction_sender");
     buffer = std::make_shared<tf2_ros::Buffer>(lifecycle->get_clock());
     parent = std::make_unique<nav2_costmap_2d::LayeredCostmap>("map", false, false);
@@ -89,6 +91,26 @@ class TimedPredictionTest : public PredictionTest
 protected:
   bool timedFutureCost() const override {return true;}
 };
+
+class GlobalEgressTest : public PredictionTest
+{
+protected:
+  double egressRadius() const override {return .45;}
+};
+
+TEST_F(GlobalEgressTest, ForecastEgressExceedsTheGlobalRobotInflationShell)
+{
+  // Global inflation uses .38 m, so carving only the local .33 m reserve
+  // still leaves the start inside forecast inflation. Raw/static layers are
+  // not touched by this forecast-only exclusion.
+  send(.40, .05);
+  bounds();
+  EXPECT_EQ(layer->getCost(4, 0), nav2_costmap_2d::NO_INFORMATION);
+  auto master = parent->getCostmap();
+  master->setCost(4, 0, nav2_costmap_2d::LETHAL_OBSTACLE);
+  merge();
+  EXPECT_EQ(master->getCost(4, 0), nav2_costmap_2d::LETHAL_OBSTACLE);
+}
 
 TEST_F(TimedPredictionTest, TimedCriticReplacesFutureUnionButKeepsHardCurrentBodies)
 {

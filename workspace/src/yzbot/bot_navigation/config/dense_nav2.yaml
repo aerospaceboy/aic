@@ -918,7 +918,7 @@ global_costmap:
         plugin: bot_navigation::PredictionLayer
         enabled: true
         timeout: 0.5
-        robot_egress_radius: 0.33
+        robot_egress_radius: 0.45
         timed_future_cost: true
       dynamic_layer:
         plugin: nav2_costmap_2d::ObstacleLayer

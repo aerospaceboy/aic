@@ -30,8 +30,8 @@ void PredictionLayer::onInitialize()
   if (timeout_ <= 0.0 || timeout_ > 1.0) {
     throw std::runtime_error("Prediction timeout must be in (0, 1] seconds");
   }
-  if (robot_egress_radius_ < 0.28 || robot_egress_radius_ > 0.40) {
-    throw std::runtime_error("Prediction robot egress radius must be in [0.28, 0.40]");
+  if (robot_egress_radius_ < 0.28 || robot_egress_radius_ > 0.50) {
+    throw std::runtime_error("Prediction robot egress radius must be in [0.28, 0.50]");
   }
   default_value_ = nav2_costmap_2d::NO_INFORMATION;
   matchSize();

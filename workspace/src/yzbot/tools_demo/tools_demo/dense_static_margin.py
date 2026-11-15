@@ -36,7 +36,9 @@ def preserve_spawn_corridor(original, padded, width, height, resolution, origin)
     y = (iy+.5)*resolution
     wx = ox+math.cos(yaw)*x-math.sin(yaw)*y
     wy = oy+math.sin(yaw)*x+math.cos(yaw)*y
-    mask = (wx >= 3.8) & (wx <= 14.) & (wy >= -1.6) & (wy <= 1.)
+    # End beyond the wall tip, not at the existing x=3.8 check point: a
+    # padding discontinuity through that point traps the next planner start.
+    mask = (wx >= .5) & (wx <= 14.) & (wy >= -1.6) & (wy <= 1.)
     result = np.asarray(padded, dtype=np.int8).reshape(height, width).copy()
     source = np.asarray(original, dtype=np.int8).reshape(height, width)
     result[mask] = source[mask]
