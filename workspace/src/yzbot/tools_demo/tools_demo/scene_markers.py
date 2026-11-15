@@ -37,6 +37,9 @@ def entity_style(name):
         }
         return ('zones', zone, Marker.CUBE,
                 (1.0, 0.5, 0.025), zone_colors[zone])
+    if name.startswith('transport_mover_'):
+        return ('obstacles', 'Transport ' + name[-2:], Marker.CYLINDER,
+                (0.28, 0.28, 0.50), (0.1, 0.7, 0.6, 0.95))
     if name in ('crossing_cart_1', 'crossing_cart_2'):
         return ('obstacles', 'Central cart ' + name[-1], Marker.CYLINDER,
                 (0.28, 0.28, 0.50), (0.65, 0.18, 0.85, 0.9))

@@ -1,0 +1,305 @@
+{
+  "schema_version": 1,
+  "source": "two recorded baseline transport routes; complete patrol swept against static raster, SDF boxes, all docks/cubes/zones",
+  "new_actor_count": 14,
+  "original_actor_count": 4,
+  "actors": [
+    {
+      "name": "transport_mover_01",
+      "start": [
+        1.929,
+        3.647
+      ],
+      "end": [
+        0.867,
+        2.587
+      ],
+      "radius": 0.14,
+      "height": 0.5,
+      "speed": 0.32,
+      "phase_fraction": 0.38197,
+      "clearance": {
+        "map_surface_margin": 0.4089,
+        "dock_surface_margin": 1.2104,
+        "cube_surface_margin": 1.3313,
+        "zone_surface_margin": 6.2438
+      }
+    },
+    {
+      "name": "transport_mover_02",
+      "start": [
+        -2.82,
+        1.776
+      ],
+      "end": [
+        -1.653,
+        2.718
+      ],
+      "radius": 0.14,
+      "height": 0.5,
+      "speed": 0.36,
+      "phase_fraction": 0.76393,
+      "clearance": {
+        "map_surface_margin": 0.6279,
+        "dock_surface_margin": 1.1779,
+        "cube_surface_margin": 1.8354,
+        "zone_surface_margin": 3.1387
+      }
+    },
+    {
+      "name": "transport_mover_03",
+      "start": [
+        -0.245,
+        -0.339
+      ],
+      "end": [
+        1.117,
+        0.29
+      ],
+      "radius": 0.14,
+      "height": 0.5,
+      "speed": 0.28,
+      "phase_fraction": 0.1459,
+      "clearance": {
+        "map_surface_margin": 0.6663,
+        "dock_surface_margin": 0.7491,
+        "cube_surface_margin": 1.1269,
+        "zone_surface_margin": 6.4709
+      }
+    },
+    {
+      "name": "transport_mover_04",
+      "start": [
+        -4.446,
+        -1.102
+      ],
+      "end": [
+        -4.363,
+        -2.6
+      ],
+      "radius": 0.14,
+      "height": 0.5,
+      "speed": 0.32,
+      "phase_fraction": 0.52786,
+      "clearance": {
+        "map_surface_margin": 0.2042,
+        "dock_surface_margin": 3.3267,
+        "cube_surface_margin": 3.0034,
+        "zone_surface_margin": 4.8544
+      }
+    },
+    {
+      "name": "transport_mover_05",
+      "start": [
+        2.342,
+        -3.815
+      ],
+      "end": [
+        2.894,
+        -5.209
+      ],
+      "radius": 0.14,
+      "height": 0.5,
+      "speed": 0.36,
+      "phase_fraction": 0.90983,
+      "clearance": {
+        "map_surface_margin": 0.4555,
+        "dock_surface_margin": 3.865,
+        "cube_surface_margin": 4.7019,
+        "zone_surface_margin": 6.7625
+      }
+    },
+    {
+      "name": "transport_mover_06",
+      "start": [
+        -1.932,
+        -4.533
+      ],
+      "end": [
+        -0.434,
+        -4.614
+      ],
+      "radius": 0.14,
+      "height": 0.5,
+      "speed": 0.28,
+      "phase_fraction": 0.2918,
+      "clearance": {
+        "map_surface_margin": 0.3219,
+        "dock_surface_margin": 1.2799,
+        "cube_surface_margin": 1.3284,
+        "zone_surface_margin": 8.2255
+      }
+    },
+    {
+      "name": "transport_mover_07",
+      "start": [
+        -13.107,
+        -5.08
+      ],
+      "end": [
+        -12.335,
+        -4.869
+      ],
+      "radius": 0.14,
+      "height": 0.5,
+      "speed": 0.32,
+      "phase_fraction": 0.67376,
+      "clearance": {
+        "map_surface_margin": 0.204,
+        "dock_surface_margin": 0.7109,
+        "cube_surface_margin": 1.3824,
+        "zone_surface_margin": 10.9617
+      }
+    },
+    {
+      "name": "transport_mover_08",
+      "start": [
+        12.35,
+        -6.6
+      ],
+      "end": [
+        13.65,
+        -6.6
+      ],
+      "radius": 0.14,
+      "height": 0.5,
+      "speed": 0.36,
+      "phase_fraction": 0.05573,
+      "clearance": {
+        "map_surface_margin": 0.8496,
+        "dock_surface_margin": 1.7738,
+        "cube_surface_margin": 3.198,
+        "zone_surface_margin": 1.587
+      }
+    },
+    {
+      "name": "transport_mover_09",
+      "start": [
+        -9.405,
+        -7.457
+      ],
+      "end": [
+        -8.723,
+        -6.121
+      ],
+      "radius": 0.14,
+      "height": 0.5,
+      "speed": 0.28,
+      "phase_fraction": 0.43769,
+      "clearance": {
+        "map_surface_margin": 0.6432,
+        "dock_surface_margin": 1.3231,
+        "cube_surface_margin": 2.1246,
+        "zone_surface_margin": 10.3226
+      }
+    },
+    {
+      "name": "transport_mover_10",
+      "start": [
+        -5.145,
+        -6.785
+      ],
+      "end": [
+        -3.786,
+        -7.419
+      ],
+      "radius": 0.14,
+      "height": 0.5,
+      "speed": 0.32,
+      "phase_fraction": 0.81966,
+      "clearance": {
+        "map_surface_margin": 0.4119,
+        "dock_surface_margin": 1.5328,
+        "cube_surface_margin": 2.1408,
+        "zone_surface_margin": 8.352
+      }
+    },
+    {
+      "name": "transport_mover_11",
+      "start": [
+        0.214,
+        -7.192
+      ],
+      "end": [
+        -1.286,
+        -7.183
+      ],
+      "radius": 0.14,
+      "height": 0.5,
+      "speed": 0.36,
+      "phase_fraction": 0.20163,
+      "clearance": {
+        "map_surface_margin": 0.595,
+        "dock_surface_margin": 1.0438,
+        "cube_surface_margin": 1.2413,
+        "zone_surface_margin": 5.6574
+      }
+    },
+    {
+      "name": "transport_mover_12",
+      "start": [
+        2.734,
+        -10.56
+      ],
+      "end": [
+        1.734,
+        -11.017
+      ],
+      "radius": 0.14,
+      "height": 0.5,
+      "speed": 0.28,
+      "phase_fraction": 0.58359,
+      "clearance": {
+        "map_surface_margin": 0.2099,
+        "dock_surface_margin": 1.3297,
+        "cube_surface_margin": 3.0076,
+        "zone_surface_margin": 1.4962
+      }
+    },
+    {
+      "name": "transport_mover_13",
+      "start": [
+        10.15,
+        -11.9
+      ],
+      "end": [
+        11.45,
+        -11.9
+      ],
+      "radius": 0.14,
+      "height": 0.5,
+      "speed": 0.32,
+      "phase_fraction": 0.96556,
+      "clearance": {
+        "map_surface_margin": 0.1938,
+        "dock_surface_margin": 0.96,
+        "cube_surface_margin": 1.0143,
+        "zone_surface_margin": 6.7129
+      }
+    },
+    {
+      "name": "transport_mover_14",
+      "start": [
+        6.239,
+        -12.457
+      ],
+      "end": [
+        6.32,
+        -13.955
+      ],
+      "radius": 0.14,
+      "height": 0.5,
+      "speed": 0.36,
+      "phase_fraction": 0.34752,
+      "clearance": {
+        "map_surface_margin": 0.6447,
+        "dock_surface_margin": 3.218,
+        "cube_surface_margin": 5.3838,
+        "zone_surface_margin": 2.8205
+      }
+    }
+  ],
+  "original_world_sha256": "b9586f54a42fa4cf21484f2dc9b7bdd46c118c4212201e4dba8a58530b80b908",
+  "original_map_sha256": "f4fcccfa873d576bae47fa7d9b5474fcdc298ecc9e91a8a055d088edf815797d",
+  "protected_geometry": "all ten cubes and both approach sides, all three delivery/parking regions; sampled entire patrols against raster and SDF boxes"
+}

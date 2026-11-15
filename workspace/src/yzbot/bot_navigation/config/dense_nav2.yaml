@@ -1,0 +1,1045 @@
+# Experimental: native static follower with sensor-driven Omni MPPI.
+amcl:
+  ros__parameters:
+    use_sim_time: true
+    alpha1: 0.2
+    alpha2: 0.2
+    alpha3: 0.2
+    alpha4: 0.2
+    alpha5: 0.2
+    base_frame_id: base_footprint
+    beam_skip_distance: 0.5
+    beam_skip_error_threshold: 0.9
+    beam_skip_threshold: 0.3
+    do_beamskip: false
+    global_frame_id: map
+    lambda_short: 0.1
+    laser_likelihood_max_dist: 2.0
+    laser_max_range: 100.0
+    laser_min_range: -1.0
+    laser_model_type: likelihood_field
+    max_beams: 60
+    max_particles: 2000
+    min_particles: 500
+    odom_frame_id: odom
+    pf_err: 0.05
+    pf_z: 0.99
+    recovery_alpha_fast: 0.0
+    recovery_alpha_slow: 0.0
+    resample_interval: 1
+    robot_model_type: nav2_amcl::DifferentialMotionModel
+    save_pose_rate: 0.5
+    sigma_hit: 0.2
+    tf_broadcast: false
+    transform_tolerance: 1.0
+    update_min_a: 0.2
+    update_min_d: 0.25
+    set_initial_pose: true
+    always_reset_initial_pose: false
+    initial_pose:
+      x: 13.2
+      y: -0.95
+      z: 0.0
+      yaw: 3.14159
+    z_hit: 0.5
+    z_max: 0.05
+    z_rand: 0.5
+    z_short: 0.05
+    scan_topic: scan
+bt_navigator:
+  ros__parameters:
+    use_sim_time: true
+    global_frame: map
+    robot_base_frame: base_footprint
+    odom_topic: /odom
+    bt_loop_duration: 10
+    default_server_timeout: 20
+    wait_for_service_timeout: 1000
+    action_server_result_timeout: 900.0
+    navigators:
+    - navigate_to_pose
+    - navigate_through_poses
+    navigate_to_pose:
+      plugin: nav2_bt_navigator/NavigateToPoseNavigator
+    navigate_through_poses:
+      plugin: nav2_bt_navigator/NavigateThroughPosesNavigator
+    plugin_lib_names:
+    - nav2_compute_path_to_pose_action_bt_node
+    - nav2_compute_path_through_poses_action_bt_node
+    - nav2_smooth_path_action_bt_node
+    - nav2_follow_path_action_bt_node
+    - nav2_spin_action_bt_node
+    - nav2_wait_action_bt_node
+    - nav2_assisted_teleop_action_bt_node
+    - nav2_back_up_action_bt_node
+    - nav2_drive_on_heading_bt_node
+    - nav2_clear_costmap_service_bt_node
+    - nav2_is_stuck_condition_bt_node
+    - nav2_goal_reached_condition_bt_node
+    - nav2_goal_updated_condition_bt_node
+    - nav2_globally_updated_goal_condition_bt_node
+    - nav2_is_path_valid_condition_bt_node
+    - nav2_initial_pose_received_condition_bt_node
+    - nav2_reinitialize_global_localization_service_bt_node
+    - nav2_rate_controller_bt_node
+    - nav2_distance_controller_bt_node
+    - nav2_speed_controller_bt_node
+    - nav2_truncate_path_action_bt_node
+    - nav2_truncate_path_local_action_bt_node
+    - nav2_goal_updater_node_bt_node
+    - nav2_recovery_node_bt_node
+    - nav2_pipeline_sequence_bt_node
+    - nav2_round_robin_node_bt_node
+    - nav2_transform_available_condition_bt_node
+    - nav2_time_expired_condition_bt_node
+    - nav2_path_expiring_timer_condition
+    - nav2_distance_traveled_condition_bt_node
+    - nav2_single_trigger_bt_node
+    - nav2_goal_updated_controller_bt_node
+    - nav2_is_battery_low_condition_bt_node
+    - nav2_navigate_through_poses_action_bt_node
+    - nav2_navigate_to_pose_action_bt_node
+    - nav2_remove_passed_goals_action_bt_node
+    - nav2_planner_selector_bt_node
+    - nav2_controller_selector_bt_node
+    - nav2_goal_checker_selector_bt_node
+    - nav2_controller_cancel_bt_node
+    - nav2_path_longer_on_approach_bt_node
+    - nav2_wait_cancel_bt_node
+    - nav2_spin_cancel_bt_node
+    - nav2_back_up_cancel_bt_node
+    - nav2_assisted_teleop_cancel_bt_node
+    - nav2_drive_on_heading_cancel_bt_node
+    - nav2_is_battery_charging_condition_bt_node
+    - dynamic_prediction_path_clear
+    default_nav_to_pose_bt_xml: /home/ros/dev_ws/src/yzbot/bot_navigation/config/navigate_to_pose_recovery.xml
+    error_code_names:
+    - compute_path_error_code
+    - follow_path_error_code
+bt_navigator_navigate_through_poses_rclcpp_node:
+  ros__parameters:
+    use_sim_time: true
+bt_navigator_navigate_to_pose_rclcpp_node:
+  ros__parameters:
+    use_sim_time: true
+controller_server:
+  ros__parameters:
+    use_sim_time: true
+    controller_frequency: 15.0
+    min_x_velocity_threshold: 0.001
+    min_y_velocity_threshold: 0.5
+    min_theta_velocity_threshold: 0.001
+    failure_tolerance: 2.0
+    progress_checker_plugins:
+    - progress_checker
+    goal_checker_plugins:
+    - general_goal_checker
+    - central_goal_checker
+    - corridor_wait_goal_checker
+    controller_plugins:
+    - FollowPath
+    - CentralTransit
+    - CorridorApproach
+    - SmoothTransit
+    - CornerFlow
+    use_realtime_priority: false
+    progress_checker:
+      plugin: nav2_controller::SimpleProgressChecker
+      required_movement_radius: 0.1
+      movement_time_allowance: 12.0
+    general_goal_checker:
+      stateful: true
+      plugin: nav2_controller::SimpleGoalChecker
+      xy_goal_tolerance: 0.2
+      yaw_goal_tolerance: 6.28
+    central_goal_checker:
+      stateful: true
+      plugin: nav2_controller::SimpleGoalChecker
+      xy_goal_tolerance: 0.15
+      yaw_goal_tolerance: 6.28
+    corridor_wait_goal_checker:
+      stateful: true
+      plugin: nav2_controller::SimpleGoalChecker
+      xy_goal_tolerance: 0.003
+      yaw_goal_tolerance: 6.28
+    FollowPath:
+      plugin: bot_navigation::AdaptiveDynamicController
+      nominal_plugin: nav2_rotation_shim_controller::RotationShimController
+      Nominal:
+        transform_tolerance: 1.0
+        plugin: nav2_rotation_shim_controller::RotationShimController
+        primary_controller: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
+        angular_dist_threshold: 0.45
+        angular_disengage_threshold: 0.2
+        forward_sampling_distance: 0.5
+        simulate_ahead_time: 1.0
+        debug_trajectory_details: false
+        desired_linear_vel: 1.78
+        lookahead_dist: 0.7
+        min_lookahead_dist: 0.6
+        max_lookahead_dist: 1.2
+        lookahead_time: 0.8
+        use_velocity_scaled_lookahead_dist: true
+        min_approach_linear_velocity: 0.1
+        approach_velocity_scaling_dist: 0.8
+        use_regulated_linear_velocity_scaling: true
+        regulated_linear_scaling_min_radius: 0.9
+        regulated_linear_scaling_min_speed: 0.25
+        use_cost_regulated_linear_velocity_scaling: true
+        cost_scaling_dist: 0.45
+        cost_scaling_gain: 1.0
+        inflation_cost_scaling_factor: 10.0
+        use_rotate_to_heading: false
+        rotate_to_heading_angular_vel: 1.4
+        rotate_to_heading_min_angle: 0.45
+        max_angular_accel: 5.0
+        allow_reversing: false
+        use_collision_detection: true
+        max_allowed_time_to_collision_up_to_carrot: 0.65
+        max_robot_pose_search_dist: 10.0
+        use_interpolation: true
+      Dynamic:
+        plugin: nav2_mppi_controller::MPPIController
+        motion_model: Omni
+        time_steps: 36
+        model_dt: 0.05
+        batch_size: 1000
+        iteration_count: 1
+        vx_std: 0.35
+        vy_std: 0.22
+        wz_std: 0.4
+        vx_max: 1.78
+        vx_min: -0.1
+        vy_max: 0.55
+        wz_max: 1.8
+        temperature: 0.2
+        gamma: 0.015
+        prune_distance: 3.5
+        transform_tolerance: 1.0
+        visualize: false
+        retry_attempt_limit: 1
+        reset_period: 0.6
+        critics:
+        - ConstraintCritic
+        - CostCritic
+        - SensorTimeCritic
+        - GoalCritic
+        - PathAlignCritic
+        - PathFollowCritic
+        - PathAngleCritic
+        - PreferForwardCritic
+        - TwirlingCritic
+        ConstraintCritic:
+          enabled: true
+          cost_weight: 4.0
+          cost_power: 1
+        CostCritic:
+          enabled: true
+          cost_weight: 3.0
+          cost_power: 1
+          critical_cost: 300.0
+          collision_cost: 1000000.0
+          consider_footprint: false
+          near_goal_distance: 0.6
+        SensorTimeCritic:
+          enabled: true
+          cost_weight: 12.0
+          clearance: 0.1
+          collision_cost: 1000000.0
+        GoalCritic:
+          enabled: true
+          cost_weight: 7.0
+          cost_power: 1
+          threshold_to_consider: 1.8
+        PathAlignCritic:
+          enabled: true
+          cost_weight: 7.0
+          cost_power: 1
+          max_path_occupancy_ratio: 0.05
+          trajectory_point_step: 3
+          threshold_to_consider: 0.5
+          offset_from_furthest: 18
+          use_path_orientations: false
+        PathFollowCritic:
+          enabled: true
+          cost_weight: 8.0
+          cost_power: 1
+          offset_from_furthest: 8
+          threshold_to_consider: 1.8
+        PathAngleCritic:
+          enabled: true
+          cost_weight: 1.5
+          cost_power: 1
+          offset_from_furthest: 4
+          threshold_to_consider: 0.5
+          max_angle_to_furthest: 1.0
+          forward_preference: true
+        PreferForwardCritic:
+          enabled: true
+          cost_weight: 3.0
+          cost_power: 1
+          threshold_to_consider: 0.5
+        TwirlingCritic:
+          enabled: true
+          cost_weight: 8.0
+          cost_power: 1
+    CentralTransit:
+      plugin: bot_navigation::AdaptiveDynamicController
+      nominal_plugin: nav2_rotation_shim_controller::RotationShimController
+      Nominal:
+        transform_tolerance: 1.0
+        plugin: nav2_rotation_shim_controller::RotationShimController
+        primary_controller: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
+        angular_dist_threshold: 0.45
+        angular_disengage_threshold: 0.2
+        forward_sampling_distance: 0.5
+        simulate_ahead_time: 1.0
+        debug_trajectory_details: false
+        desired_linear_vel: 1.0
+        lookahead_dist: 0.5
+        min_lookahead_dist: 0.35
+        max_lookahead_dist: 0.7
+        lookahead_time: 0.7
+        use_velocity_scaled_lookahead_dist: true
+        min_approach_linear_velocity: 0.1
+        approach_velocity_scaling_dist: 0.8
+        use_regulated_linear_velocity_scaling: true
+        regulated_linear_scaling_min_radius: 0.9
+        regulated_linear_scaling_min_speed: 0.25
+        use_cost_regulated_linear_velocity_scaling: true
+        cost_scaling_dist: 0.45
+        cost_scaling_gain: 1.0
+        inflation_cost_scaling_factor: 10.0
+        use_rotate_to_heading: false
+        rotate_to_heading_angular_vel: 1.4
+        rotate_to_heading_min_angle: 0.45
+        max_angular_accel: 5.0
+        allow_reversing: false
+        use_collision_detection: true
+        max_allowed_time_to_collision_up_to_carrot: 0.65
+        max_robot_pose_search_dist: 10.0
+        use_interpolation: true
+      Dynamic:
+        plugin: nav2_mppi_controller::MPPIController
+        motion_model: Omni
+        time_steps: 36
+        model_dt: 0.05
+        batch_size: 1000
+        iteration_count: 1
+        vx_std: 0.35
+        vy_std: 0.22
+        wz_std: 0.4
+        vx_max: 1.0
+        vx_min: -0.1
+        vy_max: 0.4
+        wz_max: 1.8
+        temperature: 0.2
+        gamma: 0.015
+        prune_distance: 3.5
+        transform_tolerance: 1.0
+        visualize: false
+        retry_attempt_limit: 1
+        reset_period: 0.6
+        critics:
+        - ConstraintCritic
+        - CostCritic
+        - SensorTimeCritic
+        - GoalCritic
+        - PathAlignCritic
+        - PathFollowCritic
+        - PathAngleCritic
+        - PreferForwardCritic
+        - TwirlingCritic
+        ConstraintCritic:
+          enabled: true
+          cost_weight: 4.0
+          cost_power: 1
+        CostCritic:
+          enabled: true
+          cost_weight: 3.0
+          cost_power: 1
+          critical_cost: 300.0
+          collision_cost: 1000000.0
+          consider_footprint: false
+          near_goal_distance: 0.6
+        SensorTimeCritic:
+          enabled: true
+          cost_weight: 12.0
+          clearance: 0.1
+          collision_cost: 1000000.0
+        GoalCritic:
+          enabled: true
+          cost_weight: 7.0
+          cost_power: 1
+          threshold_to_consider: 1.8
+        PathAlignCritic:
+          enabled: true
+          cost_weight: 7.0
+          cost_power: 1
+          max_path_occupancy_ratio: 0.05
+          trajectory_point_step: 3
+          threshold_to_consider: 0.5
+          offset_from_furthest: 18
+          use_path_orientations: false
+        PathFollowCritic:
+          enabled: true
+          cost_weight: 8.0
+          cost_power: 1
+          offset_from_furthest: 8
+          threshold_to_consider: 1.8
+        PathAngleCritic:
+          enabled: true
+          cost_weight: 1.5
+          cost_power: 1
+          offset_from_furthest: 4
+          threshold_to_consider: 0.5
+          max_angle_to_furthest: 1.0
+          forward_preference: true
+        PreferForwardCritic:
+          enabled: true
+          cost_weight: 3.0
+          cost_power: 1
+          threshold_to_consider: 0.5
+        TwirlingCritic:
+          enabled: true
+          cost_weight: 8.0
+          cost_power: 1
+    SmoothTransit:
+      plugin: bot_navigation::AdaptiveDynamicController
+      nominal_plugin: nav2_rotation_shim_controller::RotationShimController
+      Nominal:
+        transform_tolerance: 1.0
+        plugin: nav2_rotation_shim_controller::RotationShimController
+        primary_controller: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
+        angular_dist_threshold: 1.0
+        angular_disengage_threshold: 0.2
+        forward_sampling_distance: 0.5
+        simulate_ahead_time: 1.0
+        debug_trajectory_details: false
+        desired_linear_vel: 1.0
+        lookahead_dist: 0.3
+        min_lookahead_dist: 0.25
+        max_lookahead_dist: 0.35
+        lookahead_time: 0.7
+        use_velocity_scaled_lookahead_dist: true
+        min_approach_linear_velocity: 0.1
+        approach_velocity_scaling_dist: 0.8
+        use_regulated_linear_velocity_scaling: true
+        regulated_linear_scaling_min_radius: 0.9
+        regulated_linear_scaling_min_speed: 0.25
+        use_cost_regulated_linear_velocity_scaling: true
+        cost_scaling_dist: 0.45
+        cost_scaling_gain: 1.0
+        inflation_cost_scaling_factor: 10.0
+        use_rotate_to_heading: false
+        rotate_to_heading_angular_vel: 1.4
+        rotate_to_heading_min_angle: 0.45
+        max_angular_accel: 5.0
+        allow_reversing: false
+        use_collision_detection: true
+        max_allowed_time_to_collision_up_to_carrot: 0.65
+        max_robot_pose_search_dist: 10.0
+        use_interpolation: true
+      Dynamic:
+        plugin: nav2_mppi_controller::MPPIController
+        motion_model: Omni
+        time_steps: 36
+        model_dt: 0.05
+        batch_size: 1000
+        iteration_count: 1
+        vx_std: 0.35
+        vy_std: 0.22
+        wz_std: 0.4
+        vx_max: 1.78
+        vx_min: -0.1
+        vy_max: 0.55
+        wz_max: 1.8
+        temperature: 0.2
+        gamma: 0.015
+        prune_distance: 3.5
+        transform_tolerance: 1.0
+        visualize: false
+        retry_attempt_limit: 1
+        reset_period: 0.6
+        critics:
+        - ConstraintCritic
+        - CostCritic
+        - SensorTimeCritic
+        - GoalCritic
+        - PathAlignCritic
+        - PathFollowCritic
+        - PathAngleCritic
+        - PreferForwardCritic
+        - TwirlingCritic
+        ConstraintCritic:
+          enabled: true
+          cost_weight: 4.0
+          cost_power: 1
+        CostCritic:
+          enabled: true
+          cost_weight: 3.0
+          cost_power: 1
+          critical_cost: 300.0
+          collision_cost: 1000000.0
+          consider_footprint: false
+          near_goal_distance: 0.6
+        SensorTimeCritic:
+          enabled: true
+          cost_weight: 12.0
+          clearance: 0.1
+          collision_cost: 1000000.0
+        GoalCritic:
+          enabled: true
+          cost_weight: 7.0
+          cost_power: 1
+          threshold_to_consider: 1.8
+        PathAlignCritic:
+          enabled: true
+          cost_weight: 7.0
+          cost_power: 1
+          max_path_occupancy_ratio: 0.05
+          trajectory_point_step: 3
+          threshold_to_consider: 0.5
+          offset_from_furthest: 18
+          use_path_orientations: false
+        PathFollowCritic:
+          enabled: true
+          cost_weight: 8.0
+          cost_power: 1
+          offset_from_furthest: 8
+          threshold_to_consider: 1.8
+        PathAngleCritic:
+          enabled: true
+          cost_weight: 1.5
+          cost_power: 1
+          offset_from_furthest: 4
+          threshold_to_consider: 0.5
+          max_angle_to_furthest: 1.0
+          forward_preference: true
+        PreferForwardCritic:
+          enabled: true
+          cost_weight: 3.0
+          cost_power: 1
+          threshold_to_consider: 0.5
+        TwirlingCritic:
+          enabled: true
+          cost_weight: 8.0
+          cost_power: 1
+    CornerFlow:
+      plugin: bot_navigation::AdaptiveDynamicController
+      nominal_plugin: nav2_rotation_shim_controller::RotationShimController
+      Nominal:
+        transform_tolerance: 1.0
+        plugin: nav2_rotation_shim_controller::RotationShimController
+        primary_controller: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
+        angular_dist_threshold: 1.0
+        angular_disengage_threshold: 0.2
+        forward_sampling_distance: 0.5
+        simulate_ahead_time: 1.0
+        debug_trajectory_details: false
+        desired_linear_vel: 1.2
+        lookahead_dist: 0.45
+        min_lookahead_dist: 0.35
+        max_lookahead_dist: 0.9
+        lookahead_time: 0.75
+        use_velocity_scaled_lookahead_dist: true
+        min_approach_linear_velocity: 0.1
+        approach_velocity_scaling_dist: 0.35
+        use_regulated_linear_velocity_scaling: true
+        regulated_linear_scaling_min_radius: 1.2
+        regulated_linear_scaling_min_speed: 0.25
+        use_cost_regulated_linear_velocity_scaling: true
+        cost_scaling_dist: 0.45
+        cost_scaling_gain: 1.0
+        inflation_cost_scaling_factor: 10.0
+        use_rotate_to_heading: false
+        rotate_to_heading_angular_vel: 1.4
+        rotate_to_heading_min_angle: 0.45
+        max_angular_accel: 5.0
+        allow_reversing: false
+        use_collision_detection: true
+        max_allowed_time_to_collision_up_to_carrot: 0.65
+        max_robot_pose_search_dist: 10.0
+        use_interpolation: true
+      Dynamic:
+        plugin: nav2_mppi_controller::MPPIController
+        motion_model: Omni
+        time_steps: 36
+        model_dt: 0.05
+        batch_size: 1000
+        iteration_count: 1
+        vx_std: 0.35
+        vy_std: 0.22
+        wz_std: 0.4
+        vx_max: 1.78
+        vx_min: -0.1
+        vy_max: 0.55
+        wz_max: 1.8
+        temperature: 0.2
+        gamma: 0.015
+        prune_distance: 3.5
+        transform_tolerance: 1.0
+        visualize: false
+        retry_attempt_limit: 1
+        reset_period: 0.6
+        critics:
+        - ConstraintCritic
+        - CostCritic
+        - SensorTimeCritic
+        - GoalCritic
+        - PathAlignCritic
+        - PathFollowCritic
+        - PathAngleCritic
+        - PreferForwardCritic
+        - TwirlingCritic
+        ConstraintCritic:
+          enabled: true
+          cost_weight: 4.0
+          cost_power: 1
+        CostCritic:
+          enabled: true
+          cost_weight: 3.0
+          cost_power: 1
+          critical_cost: 300.0
+          collision_cost: 1000000.0
+          consider_footprint: false
+          near_goal_distance: 0.6
+        SensorTimeCritic:
+          enabled: true
+          cost_weight: 12.0
+          clearance: 0.1
+          collision_cost: 1000000.0
+        GoalCritic:
+          enabled: true
+          cost_weight: 7.0
+          cost_power: 1
+          threshold_to_consider: 1.8
+        PathAlignCritic:
+          enabled: true
+          cost_weight: 7.0
+          cost_power: 1
+          max_path_occupancy_ratio: 0.05
+          trajectory_point_step: 3
+          threshold_to_consider: 0.5
+          offset_from_furthest: 18
+          use_path_orientations: false
+        PathFollowCritic:
+          enabled: true
+          cost_weight: 8.0
+          cost_power: 1
+          offset_from_furthest: 8
+          threshold_to_consider: 1.8
+        PathAngleCritic:
+          enabled: true
+          cost_weight: 1.5
+          cost_power: 1
+          offset_from_furthest: 4
+          threshold_to_consider: 0.5
+          max_angle_to_furthest: 1.0
+          forward_preference: true
+        PreferForwardCritic:
+          enabled: true
+          cost_weight: 3.0
+          cost_power: 1
+          threshold_to_consider: 0.5
+        TwirlingCritic:
+          enabled: true
+          cost_weight: 8.0
+          cost_power: 1
+    CorridorApproach:
+      transform_tolerance: 1.0
+      plugin: nav2_rotation_shim_controller::RotationShimController
+      primary_controller: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
+      angular_dist_threshold: 0.45
+      angular_disengage_threshold: 0.2
+      forward_sampling_distance: 0.5
+      simulate_ahead_time: 1.0
+      debug_trajectory_details: false
+      desired_linear_vel: 0.75
+      lookahead_dist: 0.25
+      min_lookahead_dist: 0.15
+      max_lookahead_dist: 0.4
+      lookahead_time: 0.5
+      use_velocity_scaled_lookahead_dist: true
+      min_approach_linear_velocity: 0.03
+      approach_velocity_scaling_dist: 0.8
+      use_regulated_linear_velocity_scaling: true
+      regulated_linear_scaling_min_radius: 0.9
+      regulated_linear_scaling_min_speed: 0.25
+      use_cost_regulated_linear_velocity_scaling: true
+      cost_scaling_dist: 0.45
+      cost_scaling_gain: 1.0
+      inflation_cost_scaling_factor: 10.0
+      use_rotate_to_heading: false
+      rotate_to_heading_angular_vel: 1.4
+      rotate_to_heading_min_angle: 0.45
+      max_angular_accel: 5.0
+      allow_reversing: false
+      use_collision_detection: true
+      max_allowed_time_to_collision_up_to_carrot: 0.65
+      max_robot_pose_search_dist: 10.0
+      use_interpolation: true
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      use_sim_time: true
+      update_frequency: 10.0
+      publish_frequency: 5.0
+      global_frame: odom
+      robot_base_frame: base_footprint
+      rolling_window: true
+      width: 7
+      height: 7
+      resolution: 0.05
+      transform_tolerance: 1.0
+      robot_radius: 0.28
+      plugins:
+      - obstacle_layer
+      - static_layer
+      - prediction_layer
+      - inflation_layer
+      prediction_layer:
+        plugin: bot_navigation::PredictionLayer
+        enabled: false
+        timeout: 0.5
+        robot_egress_radius: 0.33
+      inflation_layer:
+        plugin: nav2_costmap_2d::InflationLayer
+        cost_scaling_factor: 10.0
+        inflation_radius: 0.45
+      obstacle_layer:
+        plugin: nav2_costmap_2d::ObstacleLayer
+        enabled: true
+        footprint_clearing_enabled: true
+        track_unknown_space: true
+        max_obstacle_height: 2.0
+        observation_sources: scan placed_cubes
+        scan:
+          topic: /scan_payload_masked
+          min_obstacle_height: 0.2
+          max_obstacle_height: 2.0
+          clearing: true
+          marking: true
+          data_type: LaserScan
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 4.0
+          obstacle_min_range: 0.0
+        placed_cubes:
+          topic: /competition/placed_cubes
+          data_type: PointCloud2
+          min_obstacle_height: 0.0
+          max_obstacle_height: 0.3
+          obstacle_max_range: 30.0
+          clearing: false
+          marking: true
+      static_layer:
+        plugin: nav2_costmap_2d::StaticLayer
+        map_subscribe_transient_local: true
+        footprint_clearing_enabled: true
+      always_send_full_costmap: false
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      use_sim_time: true
+      update_frequency: 5.0
+      publish_frequency: 2.0
+      global_frame: map
+      robot_base_frame: base_footprint
+      robot_radius: 0.38
+      resolution: 0.05
+      track_unknown_space: true
+      plugins:
+      - static_layer
+      - obstacle_layer
+      - dynamic_layer
+      - prediction_layer
+      - sweep_band_layer
+      - inflation_layer
+      prediction_layer:
+        plugin: bot_navigation::PredictionLayer
+        enabled: false
+        timeout: 0.5
+        robot_egress_radius: 0.33
+      dynamic_layer:
+        plugin: nav2_costmap_2d::ObstacleLayer
+        enabled: true
+        observation_sources: scan_clear dynamic_points
+        scan_clear:
+          topic: /scan_payload_masked
+          data_type: LaserScan
+          marking: false
+          clearing: true
+          inf_is_valid: true
+          min_obstacle_height: 0.2
+          max_obstacle_height: 2.0
+          raytrace_max_range: 4.5
+          raytrace_min_range: 0.0
+        dynamic_points:
+          topic: /competition/dynamic_obstacles
+          data_type: PointCloud2
+          marking: true
+          clearing: false
+          min_obstacle_height: 0.2
+          max_obstacle_height: 2.0
+          obstacle_max_range: 4.0
+          obstacle_min_range: 0.0
+      sweep_band_layer:
+        plugin: nav2_costmap_2d::ObstacleLayer
+        enabled: true
+        footprint_clearing_enabled: true
+        observation_sources: keepout_points
+        keepout_points:
+          topic: /competition/sweep_band_keepout
+          data_type: PointCloud2
+          marking: true
+          clearing: false
+          min_obstacle_height: 0.0
+          max_obstacle_height: 2.0
+          obstacle_max_range: 30.0
+          obstacle_min_range: 0.0
+      obstacle_layer:
+        plugin: nav2_costmap_2d::ObstacleLayer
+        enabled: true
+        footprint_clearing_enabled: true
+        observation_sources: placed_cubes
+        placed_cubes:
+          topic: /competition/placed_cubes
+          data_type: PointCloud2
+          min_obstacle_height: 0.0
+          max_obstacle_height: 0.3
+          obstacle_max_range: 30.0
+          clearing: false
+          marking: true
+      static_layer:
+        plugin: nav2_costmap_2d::StaticLayer
+        map_subscribe_transient_local: true
+        footprint_clearing_enabled: true
+      inflation_layer:
+        plugin: nav2_costmap_2d::InflationLayer
+        cost_scaling_factor: 10.0
+        inflation_radius: 0.65
+      always_send_full_costmap: false
+map_server:
+  ros__parameters:
+    yaml_filename: ''
+    use_sim_time: true
+map_saver:
+  ros__parameters:
+    use_sim_time: true
+    save_map_timeout: 5.0
+    free_thresh_default: 0.25
+    occupied_thresh_default: 0.65
+    map_subscribe_transient_local: true
+planner_server:
+  ros__parameters:
+    use_sim_time: true
+    expected_planner_frequency: 1.0
+    planner_plugins:
+    - GridBased
+    - CentralExact
+    - CorridorWaitExact
+    - CornerExact
+    GridBased:
+      plugin: nav2_smac_planner/SmacPlanner2D
+      tolerance: 0.5
+      downsample_costmap: false
+      allow_unknown: true
+      max_iterations: 1000000
+      max_on_approach_iterations: 1000
+      cost_travel_multiplier: 8.0
+      smooth_paths: true
+      minimum_turning_radius: 0.2
+      use_astar: true
+      debug_visualizations: false
+    CorridorWaitExact:
+      plugin: nav2_smac_planner/SmacPlanner2D
+      tolerance: 0.0
+      downsample_costmap: false
+      allow_unknown: true
+      max_iterations: 1000000
+      max_on_approach_iterations: 1000
+      cost_travel_multiplier: 8.0
+      smooth_paths: true
+      minimum_turning_radius: 0.2
+      use_astar: true
+      debug_visualizations: false
+    CornerExact:
+      plugin: nav2_smac_planner/SmacPlanner2D
+      tolerance: 0.0
+      downsample_costmap: false
+      allow_unknown: true
+      max_iterations: 1000000
+      max_on_approach_iterations: 1000
+      cost_travel_multiplier: 8.0
+      smooth_paths: true
+      minimum_turning_radius: 0.2
+      use_astar: true
+      debug_visualizations: false
+    CentralExact:
+      plugin: nav2_smac_planner/SmacPlanner2D
+      tolerance: 0.0
+      downsample_costmap: false
+      allow_unknown: true
+      max_iterations: 1000000
+      max_on_approach_iterations: 1000
+      cost_travel_multiplier: 0.1
+      smooth_paths: true
+      minimum_turning_radius: 0.2
+      use_astar: true
+      debug_visualizations: false
+smoother_server:
+  ros__parameters:
+    use_sim_time: true
+    smoother_plugins:
+    - simple_smoother
+    simple_smoother:
+      plugin: nav2_smoother::SimpleSmoother
+      tolerance: 1.0e-10
+      max_its: 1000
+      do_refinement: true
+behavior_server:
+  ros__parameters:
+    use_sim_time: true
+    local_costmap_topic: local_costmap/costmap_raw
+    global_costmap_topic: global_costmap/costmap_raw
+    local_footprint_topic: local_costmap/published_footprint
+    global_footprint_topic: global_costmap/published_footprint
+    cycle_frequency: 10.0
+    behavior_plugins:
+    - spin
+    - backup
+    - drive_on_heading
+    - assisted_teleop
+    - wait
+    spin:
+      plugin: nav2_behaviors/Spin
+    backup:
+      plugin: nav2_behaviors/BackUp
+    drive_on_heading:
+      plugin: nav2_behaviors/DriveOnHeading
+    wait:
+      plugin: nav2_behaviors/Wait
+    assisted_teleop:
+      plugin: nav2_behaviors/AssistedTeleop
+    local_frame: odom
+    global_frame: map
+    robot_base_frame: base_footprint
+    transform_tolerance: 0.1
+    simulate_ahead_time: 2.0
+    max_rotational_vel: 0.5
+    min_rotational_vel: 0.1
+    rotational_acc_lim: 0.8
+waypoint_follower:
+  ros__parameters:
+    use_sim_time: true
+    loop_rate: 20
+    stop_on_failure: false
+    action_server_result_timeout: 900.0
+    waypoint_task_executor_plugin: wait_at_waypoint
+    wait_at_waypoint:
+      plugin: nav2_waypoint_follower::WaitAtWaypoint
+      enabled: true
+      waypoint_pause_duration: 200
+velocity_smoother:
+  ros__parameters:
+    use_sim_time: true
+    smoothing_frequency: 20.0
+    scale_velocities: false
+    feedback: OPEN_LOOP
+    max_velocity:
+    - 2.3
+    - 0.22
+    - 3.2
+    min_velocity:
+    - -0.8
+    - -0.22
+    - -3.2
+    max_accel:
+    - 5.0
+    - 1.0
+    - 5.0
+    max_decel:
+    - -4.5
+    - -1.0
+    - -4.0
+    odom_topic: odom
+    odom_duration: 0.1
+    deadband_velocity:
+    - 0.0
+    - 0.0
+    - 0.0
+    velocity_timeout: 1.0
+collision_monitor:
+  ros__parameters:
+    use_sim_time: true
+    base_frame_id: base_footprint
+    odom_frame_id: odom
+    cmd_vel_in_topic: /cmd_vel
+    cmd_vel_out_topic: /cmd_vel_collision_safe
+    state_topic: collision_monitor_state
+    transform_tolerance: 0.5
+    source_timeout: 1.0
+    base_shift_correction: false
+    stop_pub_timeout: 2.0
+    polygons:
+    - BodyStop
+    - NearSlow
+    BodyStop:
+      type: circle
+      radius: 0.26
+      action_type: stop
+      max_points: 2
+      visualize: false
+      enabled: true
+    NearSlow:
+      type: circle
+      radius: 0.38
+      action_type: slowdown
+      max_points: 3
+      slowdown_ratio: 0.7
+      visualize: false
+      enabled: true
+    observation_sources:
+    - scan
+    scan:
+      type: scan
+      topic: /scan_payload_masked
+      min_height: 0.2
+      max_height: 2.0
+      enabled: true
+docking_server:
+  ros__parameters:
+    use_sim_time: true
+    controller_frequency: 50.0
+    initial_perception_timeout: 5.0
+    wait_charge_timeout: 5.0
+    dock_approach_timeout: 30.0
+    undock_linear_tolerance: 0.05
+    undock_angular_tolerance: 0.1
+    max_retries: 3
+    base_frame: base_link
+    fixed_frame: odom
+    dock_backwards: false
+    dock_prestaging_tolerance: 0.5
+    dock_plugins:
+    - simple_charging_dock
+    simple_charging_dock:
+      plugin: opennav_docking/SimpleChargingDock
+      docking_threshold: 0.05
+      staging_x_offset: -0.7
+      use_external_detection_pose: true
+      use_battery_status: false
+      use_stall_detection: false
+      external_detection_timeout: 1.0
+      external_detection_translation_x: -0.18
+      external_detection_translation_y: 0.0
+      external_detection_rotation_roll: -1.57
+      external_detection_rotation_pitch: -1.57
+      external_detection_rotation_yaw: 0.0
+      filter_coef: 0.1
+    controller:
+      k_phi: 3.0
+      k_delta: 2.0
+      v_linear_min: 0.15
+      v_linear_max: 0.15

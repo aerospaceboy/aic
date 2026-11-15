@@ -22,11 +22,13 @@ from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
+from tools_demo.transport_scene import dense_enabled
 
 
 def generate_launch_description():
     """Create the non-blocking mission orchestration launch description."""
     share = FindPackageShare("tools_demo")
+    dense = dense_enabled()
     task_parameters = PathJoinSubstitution(
         [share, "config", "task_parser.yaml"]
     )
@@ -102,7 +104,7 @@ def generate_launch_description():
             {"use_sim_time": True},
             {
                 "cmd_vel_in": "/cmd_vel_collision_safe",
-                "cmd_vel_out": "/cmd_vel_safe",
+                "cmd_vel_out": "/cmd_vel_dense_input" if dense else "/cmd_vel_safe",
                 # This truth guard only covers short scan dropouts. Nav2 and
                 # Collision Monitor retain ownership of route avoidance.
                 "danger_radius": 0.70,
@@ -154,6 +156,11 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration("dashboard")),
         output="screen",
     )
+    dense_guard = [Node(
+        package="tools_demo", executable="dense_safety_guard",
+        name="competition_dense_safety_guard",
+        parameters=[{"use_sim_time": True}], output="screen",
+    )] if dense else []
     return LaunchDescription(
         [
             generate_question,
@@ -165,6 +172,7 @@ def generate_launch_description():
             legacy_costudio_status,
             detector,
             safety_limiter,
+            *dense_guard,
             coordinator,
             pick_place,
             dashboard_node,

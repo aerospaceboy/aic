@@ -17,6 +17,7 @@ from tf2_ros import Buffer, TransformException, TransformListener
 
 from tools_demo.dynamic_obstacle_filter import static_return, transform_point
 from tools_demo.dynamic_prediction import MotionTracker, scan_detections
+from tools_demo.transport_motion import sensor_forecast
 
 
 class DynamicObstacleNode(Node):
@@ -48,6 +49,7 @@ class DynamicObstacleNode(Node):
         self.track_publisher = self.create_publisher(
             String, '/competition/dynamic_tracks', 1)
         self.tracker = MotionTracker()
+        self.track_history = {}
         self.create_subscription(
             OccupancyGrid, '/map', self.map_callback,
             QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
@@ -162,10 +164,19 @@ class DynamicObstacleNode(Node):
             # directions are retired after reversal. A briefly occluded known
             # mover retains a bounded reachable disc, not its obsolete heading.
             self.prediction_publisher.publish(forecast)
+            tracks = self.tracker.snapshot(stamp)
+            for track in tracks:
+                history = self.track_history.setdefault(track['id'], deque(maxlen=160))
+                if not history or track['stamp'] > history[-1][0]:
+                    history.append((track['stamp'], track['x'], track['y']))
+                track['forecast'], track['forecast_model'] = sensor_forecast(track, history)
+            live_ids = {track['id'] for track in tracks}
+            self.track_history = {key: value for key, value in self.track_history.items() if key in live_ids}
             self.track_publisher.publish(String(data=json.dumps({
                 'source': 'laser_stamped_map_tf', 'stamp': stamp,
+                'frame_id': grid.header.frame_id,
                 'horizon': self.tracker.horizon,
-                'tracks': self.tracker.snapshot(stamp),
+                'tracks': tracks,
             })))
         return True
 

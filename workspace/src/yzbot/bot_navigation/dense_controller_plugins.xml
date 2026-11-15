@@ -1,0 +1,5 @@
+<library path="dense_dynamic_controller">
+  <class type="bot_navigation::AdaptiveDynamicController" base_class_type="nav2_core::Controller">
+    <description>Static follower with early sensor-driven Omni MPPI conflict handling.</description>
+  </class>
+</library>

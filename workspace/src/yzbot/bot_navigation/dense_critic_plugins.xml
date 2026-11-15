@@ -1,0 +1,5 @@
+<library path="dense_dynamic_controller">
+  <class type="mppi::critics::SensorTimeCritic" base_class_type="mppi::critics::CriticFunction">
+    <description>Matched-time sensor forecast clearance for MPPI trajectories.</description>
+  </class>
+</library>

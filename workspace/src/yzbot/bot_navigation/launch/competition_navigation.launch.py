@@ -29,6 +29,7 @@ from launch_ros.actions import Node
 from launch_ros.actions import SetParameter
 from launch_ros.actions import SetRemap
 from nav2_common.launch import RewrittenYaml
+from tools_demo.transport_scene import dense_enabled, load_dense_scene
 
 
 def generate_launch_description():
@@ -36,6 +37,8 @@ def generate_launch_description():
     navigation_share = get_package_share_directory("bot_navigation")
     tools_share = get_package_share_directory("tools_demo")
     nav2_share = get_package_share_directory("nav2_bringup")
+    dense = dense_enabled()
+    scene = load_dense_scene() if dense else None
     # Resolve the same project BT through the installed package, so a new
     # Linux user/workspace does not inherit the original VM source path.
     portable_nav2_params = RewrittenYaml(
@@ -60,7 +63,8 @@ def generate_launch_description():
     )
     params_argument = DeclareLaunchArgument(
         "params_file",
-        default_value=f"{navigation_share}/param/originbot_nav2.yaml",
+        default_value=(f"{navigation_share}/config/dense_nav2.yaml" if dense
+                       else f"{navigation_share}/param/originbot_nav2.yaml"),
     )
     zones_argument = DeclareLaunchArgument(
         "zones_file",
@@ -211,7 +215,9 @@ def generate_launch_description():
         package="tools_demo", executable="dynamic_obstacles",
         name="competition_dynamic_obstacles",
         parameters=[LaunchConfiguration("zones_file"),
-                    {"use_sim_time": LaunchConfiguration("use_sim_time")}],
+                    {"use_sim_time": LaunchConfiguration("use_sim_time")},
+                    ({"prediction_exclusion_bounds": [0.0, 0.0, 0.0, 0.0],
+                      "maximum_range": 5.0} if dense else {})],
         output="screen",
     )
     # The costmaps and the collision monitor read /scan_payload_masked (see
@@ -268,6 +274,27 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration("moving_obstacle")),
         output="screen",
     )
+    dense_nodes = [Node(
+        package="tools_demo", executable="dense_actors",
+        name="competition_dense_actors",
+        parameters=[{"use_sim_time": LaunchConfiguration("use_sim_time")}],
+        condition=IfCondition(LaunchConfiguration("moving_obstacle")),
+        output="screen",
+    )] if dense else []
+    monitor_overrides = {}
+    if dense:
+        actors = scene['actors']
+        monitor_overrides = {
+            "obstacle_topics": ["/competition/obstacles/obstacle_1",
+                                "/competition/obstacles/obstacle_2",
+                                "/competition/obstacles/crossing_cart_1",
+                                "/competition/obstacles/crossing_cart_2"] +
+                               ["/competition/obstacles/" + a['name'] for a in actors],
+            "additional_obstacles": ["crossing_cart_1", "crossing_cart_2"] + [a['name'] for a in actors],
+            "circular_obstacles": ["crossing_cart_1:0.14", "crossing_cart_2:0.14"] +
+                                  [f"{a['name']}:{a['radius']}" for a in actors],
+            "expected_obstacle_count": 4 + len(actors),
+        }
     avoidance_monitor = Node(
         package="tools_demo",
         executable="avoidance_monitor",
@@ -275,6 +302,7 @@ def generate_launch_description():
         parameters=[
             LaunchConfiguration("zones_file"),
             {"use_sim_time": LaunchConfiguration("use_sim_time")},
+            monitor_overrides,
         ],
         condition=IfCondition(LaunchConfiguration("moving_obstacle")),
         output="screen",
@@ -300,6 +328,7 @@ def generate_launch_description():
             payload_scan_mask,
             sweep_band_keepout,
             *extra_carts,
+            *dense_nodes,
             obstacle_1,
             obstacle_2,
             avoidance_monitor,
