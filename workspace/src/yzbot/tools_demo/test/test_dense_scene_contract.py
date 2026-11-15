@@ -111,7 +111,11 @@ def test_time_indexed_predictions_replace_only_future_spatial_union():
         assert model['StaticClearanceCritic']['enabled']
         assert model['StaticClearanceCritic']['clearance'] >= .48
         assert model['SensorTimeCritic']['enabled']
-        assert model['GoalAngleCritic']['enabled'] == (name == 'FollowPath')
+        # Every Nav2 goal checker ignores yaw; exact pickup/drop alignment
+        # belongs to TaskNavigator. MPPI must respect that same contract.
+        assert not model['GoalAngleCritic']['enabled']
+        for checker in ('general_goal_checker', 'central_goal_checker', 'corridor_wait_goal_checker'):
+            assert config['controller_server']['ros__parameters'][checker]['yaw_goal_tolerance'] >= math.pi
         # The largest bounded future penalty must not dominate a hard
         # current/static collision penalty, which native CostCritic normalizes.
         future_bound = (2*model['SensorTimeCritic']['collision_cost'] + 20)*model['model_dt']*model['time_steps']

@@ -35,22 +35,22 @@
     {
       "name": "transport_mover_02",
       "start": [
-        -1.1307,
-        -0.9969
+        -0.55,
+        -0.8
       ],
       "end": [
-        -1.6893,
-        -1.2161
+        -0.55,
+        -1.4
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.36,
       "phase_fraction": 0.76393,
       "clearance": {
-        "map_surface_margin": 1.2604,
-        "dock_surface_margin": 1.7851,
-        "cube_surface_margin": 1.6871,
-        "zone_surface_margin": 6.0994
+        "map_surface_margin": 1.3049,
+        "dock_surface_margin": 1.4638,
+        "cube_surface_margin": 1.4794,
+        "zone_surface_margin": 6.5445
       },
       "raw_static_center_clearance": 1.4004,
       "historical_loaded_rounds": 30,
