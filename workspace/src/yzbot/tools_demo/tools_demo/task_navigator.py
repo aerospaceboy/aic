@@ -20,6 +20,8 @@ from tools_demo.dynamic_local_supervisor import (
 from tools_demo.dynamic_retreat import distance_to_patrol, retreat_admitted
 from tools_demo.corridor_admission import spawn_corridor_admission, wait_anchor_velocity
 from tools_demo.mission_state_machine import MISSION_STATES
+from tools_demo.transit_anchor import resolve_transit_anchor
+from tools_demo.transport_scene import dense_enabled
 
 from ament_index_python.packages import get_package_share_directory
 from action_msgs.msg import GoalStatus
@@ -3694,8 +3696,29 @@ class TaskNavigator(Node):
             f"nav_stage_speed_limit limit={message.speed_limit:.2f} "
             f"stage={pose.zone if pose is not None else 'released'}")
 
+    def _dense_transit_anchor(self, pose, following=None, previous=None):
+        if (not dense_enabled() or getattr(self, 'static_map', None) is None
+                or getattr(self, 'global_costmap', None) is None):
+            return pose
+        if previous is None:
+            x, y = getattr(self, 'latest_x', None), getattr(self, 'latest_y', None)
+            previous = None if x is None or y is None else (x, y)
+        target = resolve_transit_anchor(
+            pose, previous, following, self._global_cost_at,
+            lambda a, b: static_footprint_line_clear(
+                getattr(self, 'static_map', None), a, b, radius=.40))
+        if target != pose:
+            self.get_logger().info(
+                f'dense_virtual_anchor_relocated stage={pose.zone} '
+                f'old=({pose.x:.3f},{pose.y:.3f}) new=({target.x:.3f},{target.y:.3f})')
+        return target
+
     def _send_pose(self, pose: ZonePose) -> None:
         """Send one Nav2 goal for the current zone/stage pose."""
+        pending = getattr(self, 'pending_poses', [])
+        following = (pending[0].x, pending[0].y) if pending else None
+        pose = TaskNavigator._dense_transit_anchor(self, pose, following)
+        self.nav_goal_pose = pose
         if not self._wait_for_action_server():
             self.publish_error("Navigation action server is unavailable")
             self.publish_state(
@@ -3785,10 +3808,22 @@ class TaskNavigator(Node):
         """Send existing route stages as one continuous Nav2 action."""
         if not poses:
             return
+        original_poses = poses
+        if dense_enabled():
+            adapted = []
+            for index, pose in enumerate(poses):
+                next_pose = (poses[index+1] if index+1 < len(poses) else
+                             self.pending_poses[0] if self.pending_poses else None)
+                following = (next_pose.x, next_pose.y) if next_pose else None
+                previous = (adapted[-1].x, adapted[-1].y) if adapted else None
+                adapted.append(TaskNavigator._dense_transit_anchor(self, pose, following, previous))
+            poses = adapted
+            self.nav_batch_poses = poses
+            self.nav_goal_pose = poses[-1]
         self.nav_batch_proven_count = 0
         if getattr(self, "stage_speed_limit_publisher", None) is not None:
             self._publish_stage_speed_limit(
-                poses[0] if (continuous_a_route(poses) or has_corner_flow(poses) or any(
+                poses[0] if (continuous_a_route(original_poses) or has_corner_flow(poses) or any(
                     p.zone.startswith("CENTRAL_MOVER_GATE_")
                     for p in poses)) else None)
         # Batching is optional: do not block the executor for the regular
@@ -3826,7 +3861,7 @@ class TaskNavigator(Node):
              if has_corner_flow(poses) else
              str(Path(self.through_behavior_tree).with_name(
                 "navigate_through_south_a.xml"))
-             if continuous_a_route(poses) else
+             if continuous_a_route(original_poses) else
              str(Path(self.through_behavior_tree).with_name(
                  "navigate_through_central_adaptive.xml"))
              if any(p.zone.startswith("CENTRAL_MOVER_GATE_") for p in poses)

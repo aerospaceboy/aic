@@ -114,7 +114,7 @@ public:
     std::string name,std::shared_ptr<tf2_ros::Buffer> tf,
     std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap) override
   {
-    node_=parent.lock();name_=name;
+    node_=parent.lock();name_=name;tf_=tf;
     nav2_util::declare_parameter_if_not_declared(node_,name+".nominal_plugin",
       rclcpp::ParameterValue("nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"));
     auto nominal_plugin=node_->get_parameter(name+".nominal_plugin").as_string();
@@ -141,6 +141,13 @@ public:
     nav2_core::GoalChecker * checker)override
   {
     const double now=node_->now().seconds();auto tracks=tracks_.snapshot(now);
+    double tx=0,ty=0,heading=0;
+    if(path_.header.frame_id!=pose.header.frame_id) {
+      const auto transform=tf_->lookupTransform(pose.header.frame_id,path_.header.frame_id,tf2::TimePointZero);
+      tx=transform.transform.translation.x;ty=transform.transform.translation.y;
+      heading=tf2::getYaw(transform.transform.rotation);
+    }
+    const double cosine=std::cos(heading),sine=std::sin(heading);
     bool conflict=false;std::vector<int> ids;
     for(const auto & a:tracks) {
       if(std::hypot(a.x-pose.pose.position.x,a.y-pose.pose.position.y)>4.)continue;
@@ -149,8 +156,9 @@ public:
         auto f=SensorTracks::at(a,std::max(0.,now-a.stamp)+t);
         for(size_t i=0;i<path_.poses.size();i+=3) {
           const auto & p=path_.poses[i].pose.position;
-          if(std::hypot(p.x-pose.pose.position.x,p.y-pose.pose.position.y)>4.)continue;
-          if(std::hypot(f.x-p.x,f.y-p.y)<a.radius+.65){intersects=true;break;}
+          const double px=tx+cosine*p.x-sine*p.y,py=ty+sine*p.x+cosine*p.y;
+          if(std::hypot(px-pose.pose.position.x,py-pose.pose.position.y)>4.)continue;
+          if(std::hypot(f.x-px,f.y-py)<a.radius+.65){intersects=true;break;}
         }
         if(intersects)break;
       }
@@ -158,18 +166,29 @@ public:
     }
     if(conflict)last_conflict_=now;
     const bool use_dynamic=conflict || (active_ && now-last_conflict_<.6);
-    if(use_dynamic!=active_ || now-last_status_>1.) {
+    auto command=use_dynamic?dynamic_->computeVelocityCommands(pose,velocity,checker):
+      nominal_->computeVelocityCommands(pose,velocity,checker);
+    if(use_dynamic!=active_ || now-last_status_>.19) {
       active_=use_dynamic;last_status_=now;
       nlohmann::json j={{"stamp",now},{"controller",name_},{"mode",active_?"sensor_mppi":"nominal"},
-        {"track_ids",ids},{"source","laser_stamped_map_tf"}};
+        {"track_ids",ids},{"source","laser_stamped_map_tf"},
+        {"selected_command",{command.twist.linear.x,command.twist.linear.y,command.twist.angular.z}},
+        {"frame_id",pose.header.frame_id}};
+      if(use_dynamic) {
+        // Read-only comparison: never publish this command to the actuator.
+        try {
+          auto baseline=nominal_->computeVelocityCommands(pose,velocity,checker);
+          j["nominal_command"]={baseline.twist.linear.x,baseline.twist.linear.y,baseline.twist.angular.z};
+        }catch(const std::exception & error){j["nominal_rejected"]=error.what();}
+      }
       std_msgs::msg::String m;m.data=j.dump();status_->publish(m);
     }
-    if(use_dynamic)return dynamic_->computeVelocityCommands(pose,velocity,checker);
-    return nominal_->computeVelocityCommands(pose,velocity,checker);
+    return command;
   }
 private:
   rclcpp_lifecycle::LifecycleNode::SharedPtr node_;std::string name_;
   std::unique_ptr<pluginlib::ClassLoader<nav2_core::Controller>> loader_;
+  std::shared_ptr<tf2_ros::Buffer> tf_;
   nav2_core::Controller::Ptr nominal_,dynamic_;
   SensorTracks tracks_;nav_msgs::msg::Path path_;
   rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::String>::SharedPtr status_;
@@ -203,13 +222,20 @@ public:
         for(size_t i=0;i<rows;++i) {
           double dx=data.trajectories.x(i,k)-p.x,dy=data.trajectories.y(i,k)-p.y;
           const double d=std::hypot(dx,dy)-r;
-          if(d<0)collision[i]=1;
+          // Uncertain tracks retain a hard short reaction horizon. The
+          // expanding reachable set after that is a risk cost, otherwise a
+          // briefly occluded distant mover makes *every* 1.8 s rollout fail.
+          // Raw current occupancy and the downstream stopping guard remain
+          // hard throughout; this is not a long-horizon safety certificate.
+          if(d<0 && (a.confident || t<=.4))collision[i]=1;
           else if(d<.35)data.costs(i)+=weight_*(.35-d)*data.model_dt;
         }
       }
     }
     bool all=rows>0;
     for(size_t i=0;i<rows;++i){if(collision[i])data.costs(i)+=collision_cost_;else all=false;}
+    if(all)RCLCPP_WARN_THROTTLE(parent_.lock()->get_logger(),*parent_.lock()->get_clock(),1000,
+      "sensor_time_all_rollouts_blocked tracks=%zu",tracks.size());
     data.fail_flag=data.fail_flag || all;
   }
 private:

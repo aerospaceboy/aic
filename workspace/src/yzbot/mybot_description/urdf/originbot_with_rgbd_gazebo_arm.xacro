@@ -53,7 +53,10 @@
     <!-- The arm pedestal intersects the lidar plane and produces false
          0.26-0.29 m returns. Include the 0.01 m Gaussian-noise margin so a
          clipped self return cannot enter Collision Monitor's BodyStop zone. -->
-    <xacro:lidar prefix="laser" gz_visualize="false" range_min="0.38" />
+    <xacro:arg name="dense_scene" default="$(optenv YZBOT_DENSE_SCENE 1)" />
+    <xacro:property name="dense_lidar" value="${'$(arg dense_scene)'.lower() in ['1', 'true', 'on']}" />
+    <xacro:lidar prefix="laser" gz_visualize="false" range_min="0.38"
+        samples="${720 if dense_lidar else 240}" update_rate="${20 if dense_lidar else 10}" />
 
     <!-- arm -->
     <xacro:property name="arm_offset_x" value="0.0" />

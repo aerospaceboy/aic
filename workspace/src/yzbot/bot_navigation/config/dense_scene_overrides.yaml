@@ -6,6 +6,7 @@ competition_dynamic_obstacles:
     - 0.0
     - 0.0
     maximum_range: 5.0
+    publish_rate_hz: 10.0
 competition_avoidance_monitor:
   ros__parameters:
     obstacle_topics:

@@ -402,7 +402,8 @@ def test_lidar_and_local_costmap_track_moving_obstacles_at_high_rate():
         / "param"
         / "originbot_nav2.yaml"
     ).read_text(encoding="utf-8")
-    assert "<update_rate>10</update_rate>" in lidar
+    assert "update_rate:=10" in lidar
+    assert "<update_rate>${update_rate}</update_rate>" in lidar
     # The lidar shares its scan plane with the arm pedestal. Keep it centred
     # so both the pedestal and the verified low payload stay inside the
     # existing self mask without changing collision-monitor boundaries.

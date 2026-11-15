@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="laser">
 
     <xacro:macro name="lidar"
-        params="prefix:=laser gz_visualize:=false range_min:=0.10 range_max:=30.0">
+        params="prefix:=laser gz_visualize:=false range_min:=0.10 range_max:=30.0 samples:=240 update_rate:=10">
         <!-- Create laser reference frame -->
         <link name="${prefix}_link">
             <inertial>
@@ -37,12 +37,12 @@
             <sensor type="ray" name="lidar">
                 <!-- Track moving obstacles at 20 Hz so Nav2 receives a fresh
                      scan before each 10 Hz local-costmap update. -->
-                <update_rate>10</update_rate>
+                <update_rate>${update_rate}</update_rate>
                 <visualize>${gz_visualize}</visualize>
                 <ray>
                     <scan>
                         <horizontal>
-                            <samples>240</samples>
+                            <samples>${samples}</samples>
                             <resolution>1</resolution>
                             <min_angle>-3.14</min_angle>
                             <max_angle>3.14</max_angle>
