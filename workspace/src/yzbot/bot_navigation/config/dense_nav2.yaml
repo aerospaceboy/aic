@@ -414,7 +414,7 @@ controller_server:
           cost_weight: 0.5
           cost_power: 1
         GoalAngleCritic:
-          enabled: true
+          enabled: false
           cost_weight: 3.0
           cost_power: 1
           threshold_to_consider: 0.8
@@ -542,7 +542,7 @@ controller_server:
           cost_weight: 0.5
           cost_power: 1
         GoalAngleCritic:
-          enabled: true
+          enabled: false
           cost_weight: 3.0
           cost_power: 1
           threshold_to_consider: 0.8
@@ -670,7 +670,7 @@ controller_server:
           cost_weight: 0.5
           cost_power: 1
         GoalAngleCritic:
-          enabled: true
+          enabled: false
           cost_weight: 3.0
           cost_power: 1
           threshold_to_consider: 0.8
@@ -831,7 +831,7 @@ controller_server:
           cost_weight: 0.5
           cost_power: 1
         GoalAngleCritic:
-          enabled: true
+          enabled: false
           cost_weight: 3.0
           cost_power: 1
           threshold_to_consider: 0.8

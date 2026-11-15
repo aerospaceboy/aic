@@ -98,7 +98,7 @@ def test_time_indexed_predictions_replace_only_future_spatial_union():
     for name in ('FollowPath', 'CentralTransit', 'SmoothTransit', 'CornerFlow', 'CornerFlowA'):
         model = config['controller_server']['ros__parameters'][name]['Dynamic']
         assert model['SensorTimeCritic']['enabled']
-        assert model['GoalAngleCritic']['enabled']
+        assert model['GoalAngleCritic']['enabled'] == (name == 'FollowPath')
         # The largest bounded future penalty must not dominate a hard
         # current/static collision penalty, which native CostCritic normalizes.
         future_bound = (2*model['SensorTimeCritic']['collision_cost'] + 20)*model['model_dt']*model['time_steps']
