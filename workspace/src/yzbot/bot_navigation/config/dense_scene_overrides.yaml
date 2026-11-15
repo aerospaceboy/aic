@@ -28,11 +28,7 @@ competition_avoidance_monitor:
     - /competition/obstacles/transport_mover_10
     - /competition/obstacles/transport_mover_11
     - /competition/obstacles/transport_mover_12
-    - /competition/obstacles/transport_mover_13
-    - /competition/obstacles/transport_mover_14
     additional_obstacles:
-    - crossing_cart_1
-    - crossing_cart_2
     - transport_mover_01
     - transport_mover_02
     - transport_mover_03
@@ -45,8 +41,6 @@ competition_avoidance_monitor:
     - transport_mover_10
     - transport_mover_11
     - transport_mover_12
-    - transport_mover_13
-    - transport_mover_14
     circular_obstacles:
     - crossing_cart_1:0.14
     - crossing_cart_2:0.14
@@ -62,6 +56,4 @@ competition_avoidance_monitor:
     - transport_mover_10:0.14
     - transport_mover_11:0.14
     - transport_mover_12:0.14
-    - transport_mover_13:0.14
-    - transport_mover_14:0.14
-    expected_obstacle_count: 18
+    expected_obstacle_count: 16

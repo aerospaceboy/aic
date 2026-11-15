@@ -35,6 +35,9 @@ def test_mppi_and_actuator_lateral_limits_are_consistent():
     config = yaml.safe_load((ROOT / 'bot_navigation/config/dense_nav2.yaml').read_text())
     controller = config['controller_server']['ros__parameters']
     smoother = config['velocity_smoother']['ros__parameters']
+    from tools_demo.transport_motion import STOP_BRAKE_X, STOP_BRAKE_Y
+    assert abs(smoother['max_decel'][0]) >= STOP_BRAKE_X
+    assert abs(smoother['max_decel'][1]) >= STOP_BRAKE_Y
     assert controller['min_y_velocity_threshold'] < .01
     for name in ('FollowPath', 'CentralTransit', 'SmoothTransit', 'CornerFlow', 'CornerFlowA'):
         assert controller[name]['Dynamic']['vy_max'] <= smoother['max_velocity'][1]

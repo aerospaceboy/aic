@@ -52,3 +52,28 @@ def test_loaded_body_requires_more_clearance_than_empty():
 
 def test_rotation_and_wait_do_not_create_a_false_forward_conflict():
     assert dense_velocity_scale((0,0,0),(0,0,1.),[dict(x=1,y=0,radius=.14)])==1.
+
+
+def test_small_lateral_correction_keeps_independent_forward_braking():
+    from tools_demo.transport_motion import stopping_sweep
+    horizon, samples = stopping_sweep((0,0,0), (1.5,.3,0.))
+    assert horizon == pytest.approx(.7)
+    assert samples[-1][1] == pytest.approx(.2*1.5+1.5**2/(2*3.))
+    assert samples[-1][2] == pytest.approx(.2*.3+.3**2/2)
+    actor = dict(x=.7,y=.6,vx=0.,vy=.36,radius=.14)
+    assert dense_velocity_scale((0,0,0),(1.5,.3,0.),[actor],True) == 1.
+    # Independent fine-time evaluation of both actual constant motion and the
+    # stop sweep: allowing the command does not trade away physical clearance.
+    minimum = min(math.hypot(.7-1.5*t,.6+(.36-.3)*t)-.34-.14
+                  for t in [i*.001 for i in range(701)])
+    assert minimum > .10
+
+
+def test_lateral_braking_and_turn_uncertainty_are_not_treated_as_forward_braking():
+    from tools_demo.transport_motion import stopping_sweep
+    horizon, samples = stopping_sweep((0,0,0), (0.,.6,1.))
+    assert horizon == pytest.approx(.8)
+    assert samples[-1][2] == pytest.approx(.2*.6+.6**2/2)
+    assert samples[-1][3] > 0.
+    actor = [dict(x=.1,y=.5,vx=0.,vy=0.,radius=.14)]
+    assert dense_velocity_scale((0,0,0),(0.,.6,1.),actor,True) < 1.

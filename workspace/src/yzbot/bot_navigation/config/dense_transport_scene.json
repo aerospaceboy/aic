@@ -1,320 +1,350 @@
 {
   "schema_version": 1,
   "source": "two recorded baseline transport routes; complete patrol swept against static raster, SDF boxes, all docks/cubes/zones",
-  "new_actor_count": 14,
+  "new_actor_count": 12,
   "original_actor_count": 4,
   "actors": [
     {
       "name": "transport_mover_01",
       "start": [
-        1.929,
-        3.647
+        4.0533,
+        3.455
       ],
       "end": [
-        0.867,
-        2.587
+        3.0542,
+        3.4127
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.32,
       "phase_fraction": 0.38197,
       "clearance": {
-        "map_surface_margin": 0.4091,
-        "dock_surface_margin": 1.21,
-        "cube_surface_margin": 1.331,
-        "zone_surface_margin": 6.2433
+        "map_surface_margin": 1.2948,
+        "dock_surface_margin": 2.311,
+        "cube_surface_margin": 2.9386,
+        "zone_surface_margin": 8.323
       },
-      "traffic_distance": 0.0124
+      "raw_static_center_clearance": 1.4348,
+      "historical_loaded_rounds": 12,
+      "benchmark_loaded_distance": [
+        3.7876,
+        0.291
+      ],
+      "region": "north_east"
     },
     {
       "name": "transport_mover_02",
       "start": [
-        -3.4775,
-        2.8705
+        -1.1307,
+        -0.9969
       ],
       "end": [
-        -2.9775,
-        3.4945
+        -1.6893,
+        -1.2161
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.36,
       "phase_fraction": 0.76393,
       "clearance": {
-        "map_surface_margin": 1.2551,
-        "dock_surface_margin": 0.849,
-        "cube_surface_margin": 2.8531,
-        "zone_surface_margin": 1.9954
+        "map_surface_margin": 1.2604,
+        "dock_surface_margin": 1.7851,
+        "cube_surface_margin": 1.6871,
+        "zone_surface_margin": 6.0994
       },
-      "traffic_distance": 0.0007
+      "raw_static_center_clearance": 1.4004,
+      "historical_loaded_rounds": 30,
+      "benchmark_loaded_distance": [
+        2.1862,
+        0.0195
+      ],
+      "region": "central_upper"
     },
     {
       "name": "transport_mover_03",
       "start": [
-        -0.245,
-        -1.139
+        -5.4662,
+        -3.0638
       ],
       "end": [
-        1.117,
-        -0.51
+        -5.3265,
+        -2.4803
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.28,
       "phase_fraction": 0.1459,
       "clearance": {
-        "map_surface_margin": 0.867,
-        "dock_surface_margin": 1.4757,
-        "cube_surface_margin": 1.853,
-        "zone_surface_margin": 6.9992
+        "map_surface_margin": 1.13,
+        "dock_surface_margin": 2.2683,
+        "cube_surface_margin": 1.9108,
+        "zone_surface_margin": 6.1408
       },
-      "traffic_distance": 0.0207
+      "raw_static_center_clearance": 1.27,
+      "historical_loaded_rounds": 14,
+      "benchmark_loaded_distance": [
+        4.2179,
+        3.6431
+      ],
+      "region": "central_middle"
     },
     {
       "name": "transport_mover_04",
       "start": [
-        -6,
-        -3.05
+        -0.1083,
+        -5.8825
       ],
       "end": [
-        -6,
-        -2.35
+        0.4556,
+        -5.6776
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.32,
       "phase_fraction": 0.52786,
       "clearance": {
-        "map_surface_margin": 0.9999,
-        "dock_surface_margin": 1.72,
-        "cube_surface_margin": 1.36,
-        "zone_surface_margin": 6.0392
+        "map_surface_margin": 1.1298,
+        "dock_surface_margin": 0.8586,
+        "cube_surface_margin": 1.7553,
+        "zone_surface_margin": 6.884
       },
-      "traffic_distance": 0.1631
+      "raw_static_center_clearance": 1.2698,
+      "historical_loaded_rounds": 24,
+      "benchmark_loaded_distance": [
+        0.6445,
+        0.4287
+      ],
+      "region": "central_middle"
     },
     {
       "name": "transport_mover_05",
       "start": [
-        2.342,
-        -3.815
+        -6.3409,
+        -6.3652
       ],
       "end": [
-        2.894,
-        -5.209
+        -5.7417,
+        -6.3965
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.36,
       "phase_fraction": 0.90983,
       "clearance": {
-        "map_surface_margin": 0.4558,
-        "dock_surface_margin": 3.8647,
-        "cube_surface_margin": 4.7015,
-        "zone_surface_margin": 6.7629
+        "map_surface_margin": 1.5072,
+        "dock_surface_margin": 2.7292,
+        "cube_surface_margin": 3.6089,
+        "zone_surface_margin": 10.0604
       },
-      "traffic_distance": 0.0004
+      "raw_static_center_clearance": 1.6472,
+      "historical_loaded_rounds": 9,
+      "benchmark_loaded_distance": [
+        0.897,
+        0.2513
+      ],
+      "region": "central_lower"
     },
     {
       "name": "transport_mover_06",
       "start": [
-        0.1,
-        -5.8
+        5.0879,
+        -6.4668
       ],
       "end": [
-        1.1,
-        -5.8
+        6.087,
+        -6.4242
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.28,
       "phase_fraction": 0.2918,
       "clearance": {
-        "map_surface_margin": 0.8377,
-        "dock_surface_margin": 1.0766,
-        "cube_surface_margin": 1.9695,
-        "zone_surface_margin": 6.5331
+        "map_surface_margin": 1.1329,
+        "dock_surface_margin": 4.3073,
+        "cube_surface_margin": 5.9154,
+        "zone_surface_margin": 5.6509
       },
-      "traffic_distance": 0.233
+      "raw_static_center_clearance": 1.2729,
+      "historical_loaded_rounds": 36,
+      "benchmark_loaded_distance": [
+        4.5462,
+        4.2616
+      ],
+      "region": "central_lower"
     },
     {
       "name": "transport_mover_07",
       "start": [
-        -13.407,
-        -6.45
+        -8.4801,
+        -6.7456
       ],
       "end": [
-        -12.635,
-        -6.239
+        -7.485,
+        -6.6461
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.32,
       "phase_fraction": 0.67376,
       "clearance": {
-        "map_surface_margin": 0.2933,
-        "dock_surface_margin": 0.8339,
-        "cube_surface_margin": 1.6154,
-        "zone_surface_margin": 12.2344
+        "map_surface_margin": 1.3754,
+        "dock_surface_margin": 1.844,
+        "cube_surface_margin": 2.6281,
+        "zone_surface_margin": 10.5122
       },
-      "traffic_distance": 0.7359
+      "raw_static_center_clearance": 1.5154,
+      "historical_loaded_rounds": 9,
+      "benchmark_loaded_distance": [
+        0.2275,
+        0.02
+      ],
+      "region": "west_lower"
     },
     {
       "name": "transport_mover_08",
       "start": [
-        12.35,
-        -6.6
+        13.5405,
+        -9.136
       ],
       "end": [
-        13.65,
-        -6.6
+        12.9411,
+        -9.1631
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.36,
       "phase_fraction": 0.05573,
       "clearance": {
-        "map_surface_margin": 0.8496,
-        "dock_surface_margin": 1.7738,
-        "cube_surface_margin": 3.198,
-        "zone_surface_margin": 1.587
+        "map_surface_margin": 1.1857,
+        "dock_surface_margin": 1.7612,
+        "cube_surface_margin": 1.5275,
+        "zone_surface_margin": 4.2042
       },
-      "traffic_distance": 5.641
+      "raw_static_center_clearance": 1.3257,
+      "historical_loaded_rounds": 8,
+      "benchmark_loaded_distance": [
+        4.3473,
+        10.5129
+      ],
+      "region": "east_lower"
     },
     {
       "name": "transport_mover_09",
       "start": [
-        -9.405,
-        -7.457
+        -2.7235,
+        -11.6865
       ],
       "end": [
-        -8.723,
-        -6.121
+        -3.4355,
+        -10.9843
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.28,
       "phase_fraction": 0.43769,
       "clearance": {
-        "map_surface_margin": 0.6429,
-        "dock_surface_margin": 1.3233,
-        "cube_surface_margin": 2.1249,
-        "zone_surface_margin": 10.3227
+        "map_surface_margin": 1.5438,
+        "dock_surface_margin": 1.6559,
+        "cube_surface_margin": 1.7559,
+        "zone_surface_margin": 5.8977
       },
-      "traffic_distance": 0.0151
+      "raw_static_center_clearance": 1.6838,
+      "historical_loaded_rounds": 15,
+      "benchmark_loaded_distance": [
+        3.2298,
+        3.8089
+      ],
+      "region": "south_west"
     },
     {
       "name": "transport_mover_10",
       "start": [
-        -5.145,
-        -6.785
+        -0.9318,
+        -11.5721
       ],
       "end": [
-        -3.786,
-        -7.419
+        0.0565,
+        -11.7247
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.32,
       "phase_fraction": 0.81966,
       "clearance": {
-        "map_surface_margin": 0.4119,
-        "dock_surface_margin": 1.5329,
-        "cube_surface_margin": 2.1411,
-        "zone_surface_margin": 8.3525
+        "map_surface_margin": 1.1839,
+        "dock_surface_margin": 2.3608,
+        "cube_surface_margin": 2.6656,
+        "zone_surface_margin": 3.1251
       },
-      "traffic_distance": 0.0028
+      "raw_static_center_clearance": 1.3239,
+      "historical_loaded_rounds": 10,
+      "benchmark_loaded_distance": [
+        2.3592,
+        2.4212
+      ],
+      "region": "south_middle"
     },
     {
       "name": "transport_mover_11",
       "start": [
-        -0.6,
-        -6.82
+        5.3453,
+        -11.9123
       ],
       "end": [
-        0.6,
-        -6.82
+        5.1735,
+        -12.8974
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.36,
       "phase_fraction": 0.20163,
       "clearance": {
-        "map_surface_margin": 0.2037,
-        "dock_surface_margin": 0.8204,
-        "cube_surface_margin": 1.4825,
-        "zone_surface_margin": 5.7903
+        "map_surface_margin": 1.7022,
+        "dock_surface_margin": 2.2367,
+        "cube_surface_margin": 6.2725,
+        "zone_surface_margin": 1.8427
       },
-      "traffic_distance": 0.04
+      "raw_static_center_clearance": 1.8422,
+      "historical_loaded_rounds": 15,
+      "benchmark_loaded_distance": [
+        0.0337,
+        2.4795
+      ],
+      "region": "south_middle"
     },
     {
       "name": "transport_mover_12",
       "start": [
-        1.8,
-        -10.1
+        9.3226,
+        -13.3026
       ],
       "end": [
-        1.8,
-        -9.3
+        8.327,
+        -13.3961
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.28,
       "phase_fraction": 0.58359,
       "clearance": {
-        "map_surface_margin": 0.3502,
-        "dock_surface_margin": 0.9702,
-        "cube_surface_margin": 2.2137,
-        "zone_surface_margin": 2.36
+        "map_surface_margin": 1.1946,
+        "dock_surface_margin": 1.4661,
+        "cube_surface_margin": 2.3558,
+        "zone_surface_margin": 5.0514
       },
-      "traffic_distance": 0.0238
-    },
-    {
-      "name": "transport_mover_13",
-      "start": [
-        10.15,
-        -11.9
+      "raw_static_center_clearance": 1.3346,
+      "historical_loaded_rounds": 8,
+      "benchmark_loaded_distance": [
+        0.278,
+        5.6888
       ],
-      "end": [
-        11.45,
-        -11.9
-      ],
-      "radius": 0.14,
-      "height": 0.5,
-      "speed": 0.32,
-      "phase_fraction": 0.96556,
-      "clearance": {
-        "map_surface_margin": 0.1938,
-        "dock_surface_margin": 0.96,
-        "cube_surface_margin": 1.0143,
-        "zone_surface_margin": 6.7129
-      },
-      "traffic_distance": 0.9093
-    },
-    {
-      "name": "transport_mover_14",
-      "start": [
-        6.239,
-        -12.457
-      ],
-      "end": [
-        6.32,
-        -13.955
-      ],
-      "radius": 0.14,
-      "height": 0.5,
-      "speed": 0.36,
-      "phase_fraction": 0.34752,
-      "clearance": {
-        "map_surface_margin": 0.6447,
-        "dock_surface_margin": 3.218,
-        "cube_surface_margin": 5.3836,
-        "zone_surface_margin": 2.8206
-      },
-      "traffic_distance": 0.0589
+      "region": "south_east"
     }
   ],
   "original_world_sha256": "b9586f54a42fa4cf21484f2dc9b7bdd46c118c4212201e4dba8a58530b80b908",
   "original_map_sha256": "f4fcccfa873d576bae47fa7d9b5474fcdc298ecc9e91a8a055d088edf815797d",
   "protected_geometry": "Full patrol against map raster and horizontal SDF boxes; every cube/dock/entry and A/B/C approach/retreat/return/escape; >0.95m center separation from parking/egress points",
-  "minimum_new_actor_pair_surface_all_phases": 0.74
+  "minimum_new_actor_pair_surface_all_phases": 0.8965,
+  "design": "12 patrols on recorded LOADED routes from 59 historical rounds; whole-patrol raw static clearance >=1.25m, parking clearance >0.95m, transit-goal clearance >=0.85m; original four actors preserved",
+  "historical_loaded_bins": 551
 }
