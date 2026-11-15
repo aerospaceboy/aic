@@ -216,8 +216,7 @@ def generate_launch_description():
         name="competition_dynamic_obstacles",
         parameters=[LaunchConfiguration("zones_file"),
                     {"use_sim_time": LaunchConfiguration("use_sim_time")},
-                    ({"prediction_exclusion_bounds": [0.0, 0.0, 0.0, 0.0],
-                      "maximum_range": 5.0} if dense else {})],
+                    *([f"{navigation_share}/config/dense_scene_overrides.yaml"] if dense else [])],
         output="screen",
     )
     # The costmaps and the collision monitor read /scan_payload_masked (see
@@ -281,20 +280,6 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration("moving_obstacle")),
         output="screen",
     )] if dense else []
-    monitor_overrides = {}
-    if dense:
-        actors = scene['actors']
-        monitor_overrides = {
-            "obstacle_topics": ["/competition/obstacles/obstacle_1",
-                                "/competition/obstacles/obstacle_2",
-                                "/competition/obstacles/crossing_cart_1",
-                                "/competition/obstacles/crossing_cart_2"] +
-                               ["/competition/obstacles/" + a['name'] for a in actors],
-            "additional_obstacles": ["crossing_cart_1", "crossing_cart_2"] + [a['name'] for a in actors],
-            "circular_obstacles": ["crossing_cart_1:0.14", "crossing_cart_2:0.14"] +
-                                  [f"{a['name']}:{a['radius']}" for a in actors],
-            "expected_obstacle_count": 4 + len(actors),
-        }
     avoidance_monitor = Node(
         package="tools_demo",
         executable="avoidance_monitor",
@@ -302,7 +287,7 @@ def generate_launch_description():
         parameters=[
             LaunchConfiguration("zones_file"),
             {"use_sim_time": LaunchConfiguration("use_sim_time")},
-            monitor_overrides,
+            *([f"{navigation_share}/config/dense_scene_overrides.yaml"] if dense else []),
         ],
         condition=IfCondition(LaunchConfiguration("moving_obstacle")),
         output="screen",

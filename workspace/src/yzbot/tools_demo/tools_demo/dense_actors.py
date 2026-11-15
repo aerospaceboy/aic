@@ -8,8 +8,8 @@ from pathlib import Path
 from ament_index_python.packages import get_package_share_directory, get_package_prefix
 import rclpy
 from rclpy.node import Node
-from gazebo_msgs.msg import ModelStates,EntityState
-from gazebo_msgs.srv import SpawnEntity,SetEntityState
+from gazebo_msgs.msg import ModelStates
+from gazebo_msgs.srv import SpawnEntity
 from nav_msgs.msg import Odometry
 from std_msgs.msg import String, Bool
 from rclpy.qos import QoSProfile, DurabilityPolicy
@@ -46,9 +46,12 @@ class DenseActors(Node):
         for n,p in zip(msg.name,msg.pose):
             xy=(p.position.x,p.position.y,p.position.z)
             old=self.previous.get(n)
-            if old and now>old[0]+.02:
+            if old is None or now < old[0]:
+                self.previous[n]=(now,*xy[:2])
+            elif now-old[0]>=.19:
                 self.velocity[n]=((xy[0]-old[1])/(now-old[0]),(xy[1]-old[2])/(now-old[0]))
-            self.previous[n]=(now,*xy[:2]);self.actual[n]=xy
+                self.previous[n]=(now,*xy[:2])
+            self.actual[n]=xy
 
     def odom(self,msg):
         p=msg.pose.pose.position;self.robot=(p.x,p.y)

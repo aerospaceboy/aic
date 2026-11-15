@@ -1,0 +1,64 @@
+competition_dynamic_obstacles:
+  ros__parameters:
+    prediction_exclusion_bounds:
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    maximum_range: 5.0
+competition_avoidance_monitor:
+  ros__parameters:
+    obstacle_topics:
+    - /competition/obstacles/obstacle_1
+    - /competition/obstacles/obstacle_2
+    - /competition/obstacles/crossing_cart_1
+    - /competition/obstacles/crossing_cart_2
+    - /competition/obstacles/transport_mover_01
+    - /competition/obstacles/transport_mover_02
+    - /competition/obstacles/transport_mover_03
+    - /competition/obstacles/transport_mover_04
+    - /competition/obstacles/transport_mover_05
+    - /competition/obstacles/transport_mover_06
+    - /competition/obstacles/transport_mover_07
+    - /competition/obstacles/transport_mover_08
+    - /competition/obstacles/transport_mover_09
+    - /competition/obstacles/transport_mover_10
+    - /competition/obstacles/transport_mover_11
+    - /competition/obstacles/transport_mover_12
+    - /competition/obstacles/transport_mover_13
+    - /competition/obstacles/transport_mover_14
+    additional_obstacles:
+    - crossing_cart_1
+    - crossing_cart_2
+    - transport_mover_01
+    - transport_mover_02
+    - transport_mover_03
+    - transport_mover_04
+    - transport_mover_05
+    - transport_mover_06
+    - transport_mover_07
+    - transport_mover_08
+    - transport_mover_09
+    - transport_mover_10
+    - transport_mover_11
+    - transport_mover_12
+    - transport_mover_13
+    - transport_mover_14
+    circular_obstacles:
+    - crossing_cart_1:0.14
+    - crossing_cart_2:0.14
+    - transport_mover_01:0.14
+    - transport_mover_02:0.14
+    - transport_mover_03:0.14
+    - transport_mover_04:0.14
+    - transport_mover_05:0.14
+    - transport_mover_06:0.14
+    - transport_mover_07:0.14
+    - transport_mover_08:0.14
+    - transport_mover_09:0.14
+    - transport_mover_10:0.14
+    - transport_mover_11:0.14
+    - transport_mover_12:0.14
+    - transport_mover_13:0.14
+    - transport_mover_14:0.14
+    expected_obstacle_count: 18
