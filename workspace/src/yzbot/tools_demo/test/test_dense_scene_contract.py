@@ -38,3 +38,15 @@ def test_mppi_and_actuator_lateral_limits_are_consistent():
     for name in ('FollowPath', 'CentralTransit', 'SmoothTransit', 'CornerFlow'):
         assert controller[name]['Dynamic']['vy_max'] <= smoother['max_velocity'][1]
         assert controller[name]['Dynamic']['model_dt'] == 1/controller['controller_frequency']
+
+
+def test_live_costmap_marks_survive_static_map_composition():
+    config = yaml.safe_load((ROOT / 'bot_navigation/config/dense_nav2.yaml').read_text())
+    for name in ('local_costmap', 'global_costmap'):
+        plugins = config[name][name]['ros__parameters']['plugins']
+        # Native StaticLayer overwrites free-space cells. Dynamic observations
+        # and placed cargo must be composed afterwards, before inflation.
+        for live in ('obstacle_layer', 'dynamic_layer', 'prediction_layer'):
+            if live in plugins:
+                assert plugins.index('static_layer') < plugins.index(live)
+                assert plugins.index(live) < plugins.index('inflation_layer')

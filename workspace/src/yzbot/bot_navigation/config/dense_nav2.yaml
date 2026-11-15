@@ -693,8 +693,8 @@ local_costmap:
       transform_tolerance: 1.0
       robot_radius: 0.28
       plugins:
-      - obstacle_layer
       - static_layer
+      - obstacle_layer
       - prediction_layer
       - inflation_layer
       prediction_layer:
