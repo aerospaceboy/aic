@@ -160,6 +160,10 @@ public:
     }
     geometry_msgs::msg::TwistStamped baseline;
     std::exception_ptr nominal_error;
+    // RotationShim samples from its private path's beginning. While MPPI
+    // drives, that beginning can fall behind the vehicle; refresh it before
+    // evaluating the nominal alternative or returning control to it.
+    if(active_)nominal_->setPlan(remainingPath(path_,nearest));
     try{baseline=nominal_->computeVelocityCommands(pose,velocity,checker);}
     catch(...){nominal_error=std::current_exception();}
     const double preview_speed=std::max(.6,std::hypot(baseline.twist.linear.x,baseline.twist.linear.y));
@@ -177,7 +181,7 @@ public:
           const double elapsed=std::max(0.,now-a.stamp)+std::max(0.,arrival+slack);
           auto f=a.confident?SensorTracks::at(a,elapsed):ForecastPoint{
             elapsed,a.x+a.vx*elapsed,a.y+a.vy*elapsed,a.uncertainty};
-          if(std::hypot(f.x-path[i].first,f.y-path[i].second)<a.radius+.62){intersects=true;break;}
+          if(std::hypot(f.x-path[i].first,f.y-path[i].second)<a.radius+.85){intersects=true;break;}
         }
       }
       if(intersects){conflict=true;ids.push_back(a.id);}

@@ -24,6 +24,30 @@ def test_moving_body_plan_stays_outside_unchanged_final_guard():
         tracker.cost_points(1.2, planning_clearance=.1)
 
 
+@pytest.mark.parametrize('radius', [.10, .14, .17])
+def test_small_cylinder_buffer_protects_load_without_deadlocking_actor_stop(radius):
+    tracker = MotionTracker()
+    for i in range(7):
+        tracker.update(i*.2, [Detection(i*.2*.24, -5, radius)])
+    hard = [p for p in tracker.cost_points(1.2, small_body_clearance=.18)
+            if p[3] == 254]
+    extent = max(math.hypot(p[0]-.288, p[1]+5) for p in hard) + .28
+    # Rasterized hard body + robot inflation still reserve loaded radius and
+    # .10 m physical separation. At the last-resort actor stop boundary the
+    # robot starts OUTSIDE this inflated body and can plan an escape.
+    assert extent >= radius + .34 + .10
+    assert extent < .70
+    with pytest.raises(ValueError):
+        tracker.cost_points(1.2, small_body_clearance=.17)
+
+
+def test_large_movers_keep_their_original_guard_reserve_in_dense_scene():
+    tracker = MotionTracker()
+    for i in range(7):
+        tracker.update(i*.2, [Detection(i*.2*.24, -5, .18)])
+    assert tracker.cost_points(1.2, small_body_clearance=.18) == tracker.cost_points(1.2)
+
+
 def test_prediction_union_keeps_hard_cells_and_does_not_repeat_geometry():
     points = [(.01,.01,.25,200),(.02,.02,.25,254),(.06,.01,.25,200)]
     merged = merge_cost_cells(points)

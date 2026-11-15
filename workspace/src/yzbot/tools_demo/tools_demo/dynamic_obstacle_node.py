@@ -18,6 +18,7 @@ from tf2_ros import Buffer, TransformException, TransformListener
 from tools_demo.dynamic_obstacle_filter import static_return, transform_point
 from tools_demo.dynamic_prediction import MotionTracker, scan_detections
 from tools_demo.transport_motion import sensor_forecast
+from tools_demo.transport_scene import dense_enabled
 
 
 class DynamicObstacleNode(Node):
@@ -146,7 +147,8 @@ class DynamicObstacleNode(Node):
         detections = [d for d in scan_detections(indexed_world_points)
                       if not (x0 <= d.x <= x1 and y0 <= d.y <= y1)]
         if self.tracker.update(stamp, detections):
-            predicted = self.tracker.cost_points(stamp)
+            predicted = self.tracker.cost_points(
+                stamp, small_body_clearance=.18 if dense_enabled() else .35)
             forecast = PointCloud2()
             forecast.header.stamp = scan.header.stamp
             forecast.header.frame_id = grid.header.frame_id

@@ -205,7 +205,7 @@ class MotionTracker:
         return points
 
     def cost_points(self, stamp, robot_radius=.28, resolution=.05,
-                    planning_clearance=.35):
+                    planning_clearance=.35, small_body_clearance=.35):
         """Separate observed physical bodies from traversable future risk.
 
         Hard current bodies and soft future risk both protect the unchanged
@@ -220,12 +220,23 @@ class MotionTracker:
         # changing the robot radius, final guard or scored safety threshold.
         if not math.isfinite(planning_clearance) or planning_clearance < .35:
             raise ValueError('Moving-body planning clearance must protect guard')
+        if not math.isfinite(small_body_clearance) or small_body_clearance < .18:
+            raise ValueError('Small-body clearance must protect loaded geometry')
         points = []
         for track in self.snapshot(stamp):
             if not track['was_moving']:
                 continue
             age = max(0, stamp-track['stamp'])
-            body_radius = track['radius']+planning_clearance+track['uncertainty']
+            # Small observed cylinders need a different geometric reserve
+            # from the original large movers. With .18 + the .28 costmap
+            # robot radius, even before observation uncertainty, their
+            # planned surface reserve exceeds loaded .34 + scored .10.
+            # Keeping the large-mover .35 here traps a vehicle at the actor's
+            # independent .70 m physical-stop boundary (all rollouts start
+            # inside inflated occupancy). Final stopping guards are unchanged.
+            clearance = (small_body_clearance if track['radius'] <= .17
+                         else planning_clearance)
+            body_radius = track['radius']+clearance+track['uncertainty']
             if track['confident']:
                 speed = math.hypot(track['vx'],track['vy'])
                 steps = max(1,math.ceil(speed*self.horizon/resolution))
