@@ -85,3 +85,20 @@ def command_sweep(pose, command, horizon=.35):
         yaw += wz * dt
         poses.append((x, y, yaw))
     return poses
+
+
+def terminal_route(pose, dock):
+    """Prove rotation, lateral trim and the remaining dock stroke separately."""
+    x, y, yaw = pose
+    error = math.remainder(dock.yaw - yaw, 2 * math.pi)
+    points = [(x, y, yaw + error * i / max(1, math.ceil(abs(error) / .04)))
+              for i in range(max(1, math.ceil(abs(error) / .04)) + 1)]
+    across = -(dock.x - x) * math.sin(dock.yaw) + (dock.y - y) * math.cos(dock.yaw)
+    trim = (x - across * math.sin(dock.yaw), y + across * math.cos(dock.yaw))
+    for start, end in [((x, y), trim), (trim, (dock.x, dock.y)),
+                       ((x, y), (dock.x, dock.y))]:
+        count = max(1, math.ceil(math.hypot(end[0] - start[0], end[1] - start[1]) / .025))
+        points.extend((start[0] + (end[0] - start[0]) * i / count,
+                       start[1] + (end[1] - start[1]) * i / count, dock.yaw)
+                      for i in range(count + 1))
+    return points, trim

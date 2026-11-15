@@ -24,7 +24,7 @@ from tools_demo.mission_state_machine import MISSION_STATES
 from tools_demo.transit_anchor import resolve_transit_anchor
 from tools_demo.transport_scene import dense_enabled
 from tools_demo.terminal_motion import (
-    delivery_entry, terminal_command, ground_cubes_clear, command_sweep,
+    delivery_entry, terminal_command, ground_cubes_clear, command_sweep, terminal_route,
 )
 
 from ament_index_python.packages import get_package_share_directory
@@ -511,6 +511,11 @@ def mover_is_stalled(nav, topic: str) -> bool:
     return nav.get_clock().now().nanoseconds - last_move >= stall_ns
 
 
+def ground_cube_qos():
+    """Match the coordinator's 1Hz BEST_EFFORT ground-cube publisher."""
+    return QoSProfile(depth=10, reliability=ReliabilityPolicy.BEST_EFFORT)
+
+
 class TaskNavigator(Node):
     """Accept zone letters and execute their configured Nav2 goals."""
 
@@ -941,7 +946,7 @@ class TaskNavigator(Node):
         self.terminal_cubes_stamp = None
         self.terminal_block_log_ns = 0
         self.create_subscription(PointCloud2, '/competition/placed_cubes',
-                                 self._terminal_cubes_callback, 10)
+                                 self._terminal_cubes_callback, ground_cube_qos())
         if dense_enabled():
             self.dense_controller_subscription = self.create_subscription(
                 String, '/competition/dynamic_controller/state',
@@ -2962,7 +2967,8 @@ class TaskNavigator(Node):
              or has_corner_flow(getattr(self, "nav_batch_poses", [])))
                 and not TaskNavigator._central_anchor_arrived(self)):
             return
-        if not navigation_handoff_reached(
+        checked_delivery = TaskNavigator._delivery_capture_allowed(self)
+        if not checked_delivery and not navigation_handoff_reached(
             self.latest_x,
             self.latest_y,
             self.nav_goal_pose.x,
@@ -3000,7 +3006,7 @@ class TaskNavigator(Node):
         self.publish_state(
             "handoff",
             distance_remaining=round(distance, 3),
-            reason="odom_goal_radius",
+            reason="odom_goal_radius" if not checked_delivery else "checked_delivery_capture",
         )
         cancel_future = self.goal_handle.cancel_goal_async()
         cancel_future.add_done_callback(self._handoff_cancel_callback)
@@ -3531,6 +3537,37 @@ class TaskNavigator(Node):
         self._clear_goal()
         return False
 
+    def _delivery_capture_allowed(self) -> bool:
+        """Hand off a feasible terminal region, not an unreachable exact point."""
+        goal, dock = getattr(self, 'nav_goal_pose', None), getattr(self, 'dock_pose', None)
+        if (not getattr(self, 'dense_fast_transit', False)
+                or getattr(self, 'active_zone', None) not in VALID_ZONES
+                or goal is None or not goal.zone.endswith('_delivery_entry')
+                or dock is None or getattr(self, 'pending_poses', [])):
+            return False
+        pose = (self.latest_x, self.latest_y, self.latest_yaw)
+        if (any(v is None or not math.isfinite(v) for v in pose)
+                or math.hypot(pose[0] - goal.x, pose[1] - goal.y) > .45
+                or math.hypot(pose[0] - dock.x, pose[1] - dock.y) > 1.1):
+            return False
+        now = self.get_clock().now().nanoseconds
+        odom, cloud = (getattr(self, key, None) for key in
+                       ('latest_odom_received_ns', 'terminal_cubes_stamp'))
+        vx, vy = (getattr(self, key, None) for key in ('latest_vx', 'latest_vy'))
+        if (odom is None or cloud is None or vx is None or vy is None
+                or not 0 <= now - odom <= 250_000_000
+                or not 0 <= now - cloud <= 1_500_000_000
+                or not math.isfinite(vx + vy) or math.hypot(vx, vy) > .20):
+            return False
+        points, trim = terminal_route(pose, dock)
+        cubes = getattr(self, 'terminal_cubes', [])
+        return (all(ground_cubes_clear(p, cubes) for p in points)
+                and all(static_footprint_line_clear(
+                    getattr(self, 'static_map', None), start, end, radius=.38)
+                    for start, end in [(pose[:2], trim),
+                                       (trim, (dock.x, dock.y)),
+                                       (pose[:2], (dock.x, dock.y))]))
+
     def _delivery_terminal_step(self, now_ns) -> None:
         """Finish the dock without pursuit curls beside previous deliveries."""
         pose = (self.latest_x, self.latest_y, self.latest_yaw)
@@ -3538,7 +3575,7 @@ class TaskNavigator(Node):
         odom = getattr(self, 'latest_odom_received_ns', None)
         cloud = getattr(self, 'terminal_cubes_stamp', None)
         fresh = (odom is not None and 0 <= now_ns - odom <= 250_000_000
-                 and cloud is not None and 0 <= now_ns - cloud <= 1_000_000_000)
+                 and cloud is not None and 0 <= now_ns - cloud <= 1_500_000_000)
         values, phase = terminal_command(pose, self.dock_pose)
         points = command_sweep(pose, values, horizon=.45)
         cubes = getattr(self, 'terminal_cubes', [])

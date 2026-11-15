@@ -50,7 +50,8 @@ def test_every_delivery_slot_has_an_external_static_clear_entry(
 
 
 @pytest.mark.parametrize('start', [(2.45, -11.98, 1.07),
-                                 (2.511, -11.979, -1.796)])
+                                 (2.511, -11.979, -1.796),
+                                 (2.5257, -11.872, -1.426)])
 def test_fourth_c_slot_finishes_without_curving_into_prior_deliveries(official_map, start):
     cubes = [(3.1976, -12.260), (3.2701, -12.1533), (3.1875, -12.0467)]
     dock = ZonePose('C', 2.9, -11.940, 0.)
@@ -173,3 +174,88 @@ def test_external_entry_handoff_does_not_require_final_slot_precision():
              nav_handoff_distance=.20, pending_poses=[], route_profiles={})
     radius = TaskNavigator._route_handoff_distance(node)
     assert navigation_handoff_reached(2.511, -11.979, 2.45, -12.1, radius)
+
+
+def capture_node(grid):
+    return N(dense_fast_transit=True, active_zone='C',
+             nav_goal_pose=ZonePose('C_delivery_entry', 2.45, -12.1, 0.),
+             dock_pose=ZonePose('C', 2.9, -12.1, 0.), pending_poses=[],
+             latest_x=2.5257, latest_y=-11.872, latest_yaw=-1.426,
+             latest_vx=0., latest_vy=0., latest_odom_received_ns=2_000_000_000,
+             terminal_cubes_stamp=2_000_000_000, terminal_cubes=[], static_map=grid,
+             get_clock=lambda: N(now=lambda: N(nanoseconds=2_000_000_000)))
+
+
+def test_real_stopped_c_pose_is_a_safe_precision_capture_region(official_map):
+    node = capture_node(official_map)
+    assert TaskNavigator._delivery_capture_allowed(node)
+    node.terminal_cubes = [(3.1976, -12.26), (3.2701, -12.1533), (3.1875, -12.0467)]
+    assert TaskNavigator._delivery_capture_allowed(node)
+
+
+@pytest.mark.parametrize('failure', ['stale', 'cube', 'wall', 'fast', 'missing_map'])
+def test_capture_region_never_substitutes_for_sweep_or_freshness_proof(official_map, failure):
+    node = capture_node(official_map)
+    if failure == 'stale':
+        node.terminal_cubes_stamp = 0
+    elif failure == 'cube':
+        node.terminal_cubes = [(node.latest_x, node.latest_y)]
+    elif failure == 'wall':
+        node.dock_pose = ZonePose('C', 1.8, -12.1, 0.)
+    elif failure == 'fast':
+        node.latest_vx = .3
+    else:
+        node.static_map = None
+    assert not TaskNavigator._delivery_capture_allowed(node)
+
+
+def test_precision_capture_requests_cancel_instead_of_claiming_arrival(official_map):
+    node = capture_node(official_map)
+    node.goal_handle = Mock()
+    node.nav_handoff_requested = node.goal_timed_out = False
+    node.nav_batch_poses = []
+    node.nav_handoff_radius_since_ns = None
+    node.nav_handoff_max_speed = .45
+    node.nav_handoff_speed_grace_ns = 500_000_000
+    node._route_handoff_distance = lambda: .20
+    node.get_logger = lambda: Mock()
+    node.publish_state = Mock()
+    node._handoff_cancel_callback = Mock()
+    TaskNavigator._request_nav_handoff_if_reached(node)
+    assert node.nav_handoff_requested
+    node.goal_handle.cancel_goal_async.assert_called_once()
+    assert node.publish_state.call_args.kwargs['reason'] == 'checked_delivery_capture'
+
+
+def test_terminal_ground_cube_qos_matches_the_real_publisher():
+    from rclpy.qos import (QoSProfile, ReliabilityPolicy,
+                          qos_check_compatible, QoSCompatibility)
+    from tools_demo.task_navigator import ground_cube_qos
+    publisher = QoSProfile(depth=10, reliability=ReliabilityPolicy.BEST_EFFORT)
+    # Humble may warn about system-default liveliness, which is resolved
+    # only by the RMW. The reliability mismatch itself is a definite ERROR.
+    assert ground_cube_qos().reliability == ReliabilityPolicy.BEST_EFFORT
+    assert qos_check_compatible(publisher, ground_cube_qos())[0] != QoSCompatibility.ERROR
+    incompatible = QoSProfile(depth=10, reliability=ReliabilityPolicy.RELIABLE)
+    assert qos_check_compatible(publisher, incompatible)[0] == QoSCompatibility.ERROR
+
+
+def test_published_ground_cube_format_produces_fresh_terminal_geometry():
+    import struct
+    from sensor_msgs.msg import PointCloud2, PointField
+    message = PointCloud2()
+    message.header.frame_id = 'map'
+    message.header.stamp.sec = 2
+    message.height, message.width = 1, 1
+    message.point_step = message.row_step = 12
+    message.fields = [PointField(name=k, offset=i * 4,
+                                 datatype=PointField.FLOAT32, count=1)
+                      for i, k in enumerate(('x', 'y', 'z'))]
+    message.data = struct.pack('<fff', 3.2, -12.1, .035)
+    node = N()
+    TaskNavigator._terminal_cubes_callback(node, message)
+    assert node.terminal_cubes_stamp == 2_000_000_000
+    assert node.terminal_cubes[0] == pytest.approx((3.2, -12.1))
+    message.point_step = 4
+    TaskNavigator._terminal_cubes_callback(node, message)
+    assert node.terminal_cubes_stamp is None
