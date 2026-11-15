@@ -5,6 +5,17 @@
 
 using bot_navigation::timedSeparationRisk;
 
+TEST(MotionRisk, ContinuousTrackingRequiresAUsefulNearbyRemainingPath)
+{
+  EXPECT_TRUE(bot_navigation::continuousPathEligible(3., .1, false));
+  EXPECT_FALSE(bot_navigation::continuousPathEligible(.7, .1, true));
+  EXPECT_FALSE(bot_navigation::continuousPathEligible(3., .7, true));
+  EXPECT_FALSE(bot_navigation::continuousPathEligible(3., -.1, false));
+  EXPECT_FALSE(bot_navigation::continuousPathEligible(NAN, .1, false));
+  EXPECT_TRUE(bot_navigation::continuousPathEligible(1., .5, true));
+  EXPECT_FALSE(bot_navigation::continuousPathEligible(1., .5, false));
+}
+
 TEST(MotionRisk, OpenSpaceHandoverReservesTravelAndRejectsStaleGeometry)
 {
   EXPECT_TRUE(bot_navigation::openSpaceAllowed(2., .05, false));

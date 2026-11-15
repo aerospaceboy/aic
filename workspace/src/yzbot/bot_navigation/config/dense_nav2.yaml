@@ -164,6 +164,7 @@ controller_server:
       yaw_goal_tolerance: 6.28
     FollowPath:
       plugin: bot_navigation::AdaptiveDynamicController
+      continuous_transit: true
       nominal_plugin: nav2_rotation_shim_controller::RotationShimController
       Nominal:
         transform_tolerance: 1.0
@@ -296,6 +297,7 @@ controller_server:
           threshold_to_consider: 0.8
     CentralTransit:
       plugin: bot_navigation::AdaptiveDynamicController
+      continuous_transit: true
       nominal_plugin: nav2_rotation_shim_controller::RotationShimController
       Nominal:
         transform_tolerance: 1.0
@@ -428,6 +430,7 @@ controller_server:
           threshold_to_consider: 0.8
     SmoothTransit:
       plugin: bot_navigation::AdaptiveDynamicController
+      continuous_transit: true
       nominal_plugin: nav2_rotation_shim_controller::RotationShimController
       Nominal:
         transform_tolerance: 1.0
@@ -560,6 +563,7 @@ controller_server:
           threshold_to_consider: 0.8
     CornerFlow:
       plugin: bot_navigation::AdaptiveDynamicController
+      continuous_transit: true
       nominal_plugin: nav2_rotation_shim_controller::RotationShimController
       Nominal:
         transform_tolerance: 1.0
@@ -725,6 +729,7 @@ controller_server:
       use_interpolation: true
     CornerFlowA:
       plugin: bot_navigation::AdaptiveDynamicController
+      continuous_transit: true
       nominal_plugin: nav2_rotation_shim_controller::RotationShimController
       Nominal:
         transform_tolerance: 1.0

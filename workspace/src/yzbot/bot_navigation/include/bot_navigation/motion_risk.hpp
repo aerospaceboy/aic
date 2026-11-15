@@ -6,6 +6,12 @@
 
 namespace bot_navigation
 {
+inline bool continuousPathEligible(double remaining, double path_distance, bool active)
+{
+  return std::isfinite(remaining + path_distance) && path_distance >= 0. &&
+    remaining > (active ? .8 : 1.2) && path_distance < (active ? .60 : .40);
+}
+
 inline bool openSpaceAllowed(double clearance, double age, bool active)
 {
   // Distance is 1-Lipschitz. Account for all travel since the stamped pose,

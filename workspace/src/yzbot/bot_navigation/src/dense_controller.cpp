@@ -6,6 +6,7 @@
 #include <atomic>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -142,6 +143,14 @@ public:
     nav2_util::declare_parameter_if_not_declared(node_,name+".nominal_plugin",
       rclcpp::ParameterValue("nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"));
     auto nominal_plugin=node_->get_parameter(name+".nominal_plugin").as_string();
+    nav2_util::declare_parameter_if_not_declared(node_,name+".continuous_transit",
+      rclcpp::ParameterValue(false));
+    continuous_transit_=node_->get_parameter(name+".continuous_transit").as_bool();
+    if(const char * mode=std::getenv("YZBOT_CONTINUOUS_MPPI")) {
+      const std::string value(mode);
+      if(value!="0" && value!="1")throw std::invalid_argument("YZBOT_CONTINUOUS_MPPI must be 0 or 1");
+      continuous_transit_=value=="1";
+    }
     loader_=std::make_unique<pluginlib::ClassLoader<nav2_core::Controller>>("nav2_core","nav2_core::Controller");
     nominal_=loader_->createSharedInstance(nominal_plugin);
     dynamic_=loader_->createSharedInstance("nav2_mppi_controller::MPPIController");
@@ -150,7 +159,8 @@ public:
     nominal_max_=node_->get_parameter(name+".Nominal.desired_linear_vel").as_double();
     tracks_.configure(node_,costmap);
     status_=node_->create_publisher<std_msgs::msg::String>("/competition/dynamic_controller/state",10);
-    RCLCPP_INFO(node_->get_logger(),"%s adaptive controller: static follower + sensor-time MPPI",name.c_str());
+    RCLCPP_INFO(node_->get_logger(),"%s adaptive controller: static follower + sensor-time MPPI continuous=%s",
+      name.c_str(),continuous_transit_?"true":"false");
   }
   void cleanup()override{nominal_->cleanup();dynamic_->cleanup();}
   void activate()override{nominal_->activate();dynamic_->activate();status_->on_activate();}
@@ -218,7 +228,17 @@ public:
     }
     if(conflict)last_conflict_=now;
     const bool open_space=tracks_.openSpace(now,active_);
-    bool use_dynamic=open_space && (conflict || (active_ && now-last_conflict_<.3));
+    double remaining=0.;
+    for(size_t i=nearest+1;i<path.size();++i) {
+      remaining+=std::hypot(path[i].first-path[i-1].first,path[i].second-path[i-1].second);
+    }
+    // A feasible continuous path is a separate reason from a moving conflict.
+    // The same full-rollout static/temporal critics and final guards apply.
+    // Never disguise a nominal error or ordinary tracking as avoidance proof.
+    const bool continuous=continuous_transit_ && !nominal_error &&
+      continuousPathEligible(remaining,best,active_);
+    bool use_dynamic=open_space &&
+      (continuous || conflict || (active_ && now-last_conflict_<.3));
     if(!use_dynamic && nominal_error)std::rethrow_exception(nominal_error);
     if(use_dynamic && (!active_ || dynamic_plan_pending_)) {
       dynamic_->setPlan(remainingPath(path_,nearest));
@@ -234,11 +254,14 @@ public:
     capTranslation(command.twist,limit>0.?std::min(limit,nominal_max_):nominal_max_);
     if(use_dynamic!=active_ || now-last_status_>.19) {
       active_=use_dynamic;last_status_=now;
-      nlohmann::json j={{"stamp",now},{"controller",name_},{"mode",active_?"sensor_mppi":"nominal"},
+      nlohmann::json j={{"stamp",now},{"controller",name_},
+        {"mode",active_?(conflict?"sensor_mppi":"path_mppi"):"nominal"},
         {"track_ids",ids},{"source","laser_stamped_map_tf"},
         {"selected_command",{command.twist.linear.x,command.twist.linear.y,command.twist.angular.z}},
         {"frame_id",pose.header.frame_id}};
       j["open_space_gate"]=open_space;
+      j["continuous_transit"]=continuous_transit_;
+      j["remaining_path_m"]=remaining;
       const auto geometry=tracks_.staticGeometry(now);
       j["static_clearance_m"]=geometry.first;j["static_clearance_age"]=geometry.second;
       if(!fallback_reason.empty())j["dynamic_fallback"]=fallback_reason;
@@ -260,7 +283,7 @@ private:
   nav2_core::Controller::Ptr nominal_,dynamic_;
   SensorTracks tracks_;nav_msgs::msg::Path path_;
   rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::String>::SharedPtr status_;
-  bool active_{false},dynamic_plan_pending_{true};
+  bool active_{false},dynamic_plan_pending_{true},continuous_transit_{false};
   std::atomic<double> speed_limit_{0.};double nominal_max_{1.78};
   double last_conflict_{-100.},last_status_{-100.};
 };
