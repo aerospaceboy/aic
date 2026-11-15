@@ -194,10 +194,13 @@ public:
     const double preview_speed=std::max({.6,
       std::hypot(velocity.linear.x,velocity.linear.y),
       std::hypot(baseline.twist.linear.x,baseline.twist.linear.y)});
-    bool conflict=nominal_error!=nullptr;std::vector<int> ids;
+    // A static/RPP planning error is not evidence of a moving conflict.
+    // Require an actual forward path/forecast intersection to take control;
+    // otherwise propagate the nominal failure to the proven Nav2 recovery.
+    bool conflict=false;std::vector<int> ids;
     for(const auto & a:tracks) {
       if(std::hypot(a.x-pose.pose.position.x,a.y-pose.pose.position.y)>4.)continue;
-      bool intersects=nominal_error!=nullptr;
+      bool intersects=false;
       double travelled=0.;
       for(size_t i=nearest;i<path.size() && !intersects;++i) {
         if(i>nearest)travelled+=std::hypot(path[i].first-path[i-1].first,path[i].second-path[i-1].second);
