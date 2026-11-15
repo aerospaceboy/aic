@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source": "59 historical loaded-transport rounds; complete patrol swept against original static raster, actual SDF boxes, protected docks/cubes/zones and observed navigation goals",
-  "new_actor_count": 12,
+  "source": "59 historical loaded rounds plus current C transport route; whole patrols verified against static map, SDF boxes, protected docks/cubes/zones and observed navigation goals",
+  "new_actor_count": 13,
   "original_actor_count": 4,
   "actors": [
     {
@@ -339,6 +339,30 @@
         5.6888
       ],
       "region": "south_east"
+    },
+    {
+      "name": "transport_mover_13",
+      "start": [
+        6.3,
+        -12.85
+      ],
+      "end": [
+        7.1,
+        -12.85
+      ],
+      "radius": 0.14,
+      "height": 0.5,
+      "speed": 0.32,
+      "phase_fraction": 0.96556,
+      "clearance": {
+        "map_surface_margin": 1.2197,
+        "dock_surface_margin": 3.3417,
+        "cube_surface_margin": 4.5624,
+        "zone_surface_margin": 2.9523
+      },
+      "raw_static_center_clearance": 1.3597,
+      "region": "south_transport_connector",
+      "placement_evidence": "observed loaded BLUE_CUBE_5 to C route, outside docks and static collision envelopes"
     }
   ],
   "original_world_sha256": "b9586f54a42fa4cf21484f2dc9b7bdd46c118c4212201e4dba8a58530b80b908",

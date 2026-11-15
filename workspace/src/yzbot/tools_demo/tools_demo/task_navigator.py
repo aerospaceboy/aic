@@ -1932,9 +1932,8 @@ class TaskNavigator(Node):
             command_path.append(
                 [round(self.latest_x, 4), round(self.latest_y, 4)]
             )
-        proven = (getattr(self, "nav_batch_proven_count", 0)
-                  if (continuous_a_route(self.nav_batch_poses)
-                      or has_corner_flow(self.nav_batch_poses)) else 0)
+        proven = min(max(0, getattr(self, "nav_batch_proven_count", 0)),
+                     max(0, len(self.nav_batch_poses) - 1))
         # Active through-path precedes its pending suffix. Never draw a
         # return to already-proven anchors behind the moving base.
         for pose in list(self.nav_batch_poses[proven:]) + list(self.pending_poses):
@@ -2915,11 +2914,10 @@ class TaskNavigator(Node):
         self._request_nav_handoff_if_reached()
         # Telemetry's remaining-pose count is not a safety-anchor proof. Only
         # physically visiting each anchor in order can retire it on recovery.
-        # Scope this to adaptive central and south A routes; other batches retain
-        # their original strict recovery semantics.
+        # This proof also applies to ordinary batches: replaying an already
+        # visited C_return_waypoint after a late failure causes a long U-turn.
         poses = getattr(self, "nav_batch_poses", [])
-        if (continuous_a_route(poses) or has_corner_flow(poses) or any(
-                p.zone.startswith("CENTRAL_MOVER_GATE_") for p in poses)):
+        if poses:
             count = getattr(self, "nav_batch_proven_count", 0)
             while count < len(poses) - 1 and math.hypot(
                     self.latest_x - poses[count].x,
@@ -3965,11 +3963,10 @@ class TaskNavigator(Node):
         self.nav_batch_attempted = True
         if has_corner_flow(self.nav_batch_poses):
             self.corner_flow_failed = True
-        count = (getattr(self, "nav_batch_proven_count", 0)
-                 if (continuous_a_route(self.nav_batch_poses)
-                     or has_corner_flow(self.nav_batch_poses) or any(
-                     p.zone.startswith("CENTRAL_MOVER_GATE_")
-                     for p in self.nav_batch_poses)) else 0)
+        # Only ordered physical odometry arrivals can retire a prefix. Never
+        # trust Nav2's remaining-pose feedback or retire the final endpoint.
+        count = min(max(0, getattr(self, "nav_batch_proven_count", 0)),
+                    max(0, len(self.nav_batch_poses) - 1))
         self.pending_poses = list(self.nav_batch_poses[count:]) + list(
             self.pending_poses
         )
@@ -3977,10 +3974,11 @@ class TaskNavigator(Node):
         self.nav_goal_pose = None
         self.goal_handle = None
         self.nav_handoff_requested = False
-        self.stage_index = max(0, self.stage_index - 1)
+        self.stage_index = max(0, getattr(
+            self, "stage_total", len(self.pending_poses)) - len(self.pending_poses))
         self.get_logger().warn(
             f"nav_batch_fallback_serial reason={reason} "
-            f"remaining={len(self.pending_poses)}"
+            f"remaining={len(self.pending_poses)} proven={count}"
         )
         self.publish_state("sending", phase="batch_fallback_serial")
         self.start_pre_navigation_alignment()
@@ -5303,9 +5301,8 @@ class TaskNavigator(Node):
         # Keep the pending poses and dock staging so the same (or alternate)
         # route can be re-sent after escaping.
         if self.nav_batch_poses:
-            count = (getattr(self, "nav_batch_proven_count", 0)
-                     if (continuous_a_route(self.nav_batch_poses)
-                         or has_corner_flow(self.nav_batch_poses)) else 0)
+            count = min(max(0, getattr(self, "nav_batch_proven_count", 0)),
+                        max(0, len(self.nav_batch_poses) - 1))
             self.recovery_pending_poses = list(self.nav_batch_poses[count:]) + list(
                 self.pending_poses
             )

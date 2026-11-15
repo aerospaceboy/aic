@@ -6,6 +6,7 @@ from unittest.mock import Mock
 import pytest
 
 from tools_demo.task_navigator import TaskNavigator, ZonePose
+from nav_msgs.msg import Odometry
 
 
 class RouteHarness:
@@ -89,6 +90,58 @@ def test_feedback_cannot_discard_strict_path_recovery_anchors(remaining):
     assert harness.nav_batch_poses == original
     harness._fallback_batch_to_serial("injected_after_feedback")
     assert harness.sent_serial + harness.pending_poses == original
+
+
+def test_ordinary_batch_failure_does_not_return_to_physically_visited_anchor():
+    harness = RouteHarness()
+    original = list(harness.pending_poses)
+    harness._request_nav_handoff_if_reached = Mock()
+    harness._send_next_goal()
+    message = Odometry()
+    message.pose.pose.orientation.w = 1.
+    message.pose.pose.position.x, message.pose.pose.position.y = 1.05, 2.0
+    TaskNavigator.odom_callback(harness, message)
+    assert harness.nav_batch_proven_count == 1
+    message.pose.pose.position.x, message.pose.pose.position.y = 4.5, 5.2
+    TaskNavigator.odom_callback(harness, message)
+    harness._fallback_batch_to_serial('late_controller_failure')
+    assert harness.sent_serial + harness.pending_poses == original[1:]
+    assert harness.stage_index == 2
+
+
+def test_ordinary_batch_cannot_skip_unvisited_prefix_or_final_endpoint():
+    harness = RouteHarness()
+    original = list(harness.pending_poses)
+    harness._request_nav_handoff_if_reached = Mock()
+    harness._send_next_goal()
+    message = Odometry()
+    message.pose.pose.orientation.w = 1.
+    message.pose.pose.position.x, message.pose.pose.position.y = original[-1].x, original[-1].y
+    TaskNavigator.odom_callback(harness, message)
+    assert harness.nav_batch_proven_count == 0
+    for pose in original:
+        message.pose.pose.position.x, message.pose.pose.position.y = pose.x, pose.y
+        TaskNavigator.odom_callback(harness, message)
+    assert harness.nav_batch_proven_count == 2
+    harness._fallback_batch_to_serial('endpoint_not_confirmed')
+    assert harness.sent_serial + harness.pending_poses == original[-1:]
+
+
+def test_recorded_blue5_anchor_arrival_survives_late_batch_failure():
+    harness = RouteHarness()
+    harness.pending_poses = [ZonePose('C_return_waypoint',2.45,-11.,0.),
+                             ZonePose('BLUE_CUBE_5',10.9,-13.,0.)]
+    harness.stage_total = 2
+    harness._request_nav_handoff_if_reached = Mock()
+    harness._send_next_goal()
+    message = Odometry()
+    message.pose.pose.orientation.w = 1.
+    message.pose.pose.position.x, message.pose.pose.position.y = 2.50606,-11.01006
+    TaskNavigator.odom_callback(harness, message)
+    message.pose.pose.position.x, message.pose.pose.position.y = 8.10,-12.69
+    TaskNavigator.odom_callback(harness, message)
+    harness._fallback_batch_to_serial('recorded_failure_at_x8')
+    assert [p.zone for p in harness.sent_serial + harness.pending_poses] == ['BLUE_CUBE_5']
 
 
 def test_obstacle_reverse_resumes_original_route_serially():
