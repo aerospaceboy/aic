@@ -52,7 +52,9 @@ private:
     bool hold=false;
     if(robot_) {
       const auto p=robot_->WorldPose().Pos();
-      hold=std::hypot(candidate.X()-p.X(),candidate.Y()-p.Y())<.45;
+      // Physical last resort only. The observer reports every hold and the
+      // independent robot-response audit excludes these cooperative windows.
+      hold=std::hypot(candidate.X()-p.X(),candidate.Y()-p.Y())<.70;
     }
     for(const auto & cube:cubes_) {
       const auto p=cube->WorldPose().Pos();

@@ -85,3 +85,27 @@ def dense_velocity_scale(robot, command, actors, payload=False):
                 if dx*wx+dy*wy<0 and margin>.05:continue
                 scale=min(scale,max(0.,min(1.,(margin-.08)/max(.15,speed*.4))))
     return scale
+
+
+def dense_rotation_clear(robot, actors, payload=False):
+    """Do not spin a loaded arm beside a moving cylinder while translation stops."""
+    body = .34 if payload else .28
+    return all(math.hypot(robot[0]-a['x'], robot[1]-a['y'])
+               >= body+a.get('radius', .14)+.15 for a in actors)
+
+
+def dense_snapshot_valid(snapshot, names):
+    """A partial/duplicated/malformed simulator snapshot is never free space."""
+    try:
+        actors = snapshot['actors']
+        if (snapshot['observed_count'] != len(names)
+                or snapshot['expected_count'] != len(names)
+                or len(actors) != len(names)
+                or {a['model'] for a in actors} != set(names)
+                or not math.isfinite(snapshot['stamp_sec'])):
+            return False
+        return all(a.get('success') is True and 0 < a['radius'] < 1
+                   and all(math.isfinite(a[key]) for key in ('x', 'y', 'vx', 'vy', 'stamp_sec'))
+                   and math.hypot(a['vx'], a['vy']) <= .8 for a in actors)
+    except (KeyError, TypeError, ValueError):
+        return False

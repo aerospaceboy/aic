@@ -23,6 +23,7 @@ class DenseActors(Node):
         p=self.get_parameter('scene_file').value
         if not p:p=str(Path(get_package_share_directory('bot_navigation'))/'config/dense_transport_scene.json')
         self.scene=json.loads(Path(p).read_text());self.actors=self.scene['actors']
+        self.names={a['name'] for a in self.actors}
         self.actual={};self.previous={};self.velocity={};self.robot=None;self.model_stamp=None
         self.task=None;self.started=False;self.last=None
         self.elapsed={a['name']:0. for a in self.actors}
@@ -43,7 +44,10 @@ class DenseActors(Node):
     def models(self,msg):
         now=self.get_clock().now().nanoseconds/1e9
         self.model_stamp=now
+        for missing in self.names-set(msg.name):
+            self.actual.pop(missing,None);self.previous.pop(missing,None);self.velocity.pop(missing,None)
         for n,p in zip(msg.name,msg.pose):
+            if n not in self.names:continue
             xy=(p.position.x,p.position.y,p.position.z)
             old=self.previous.get(n)
             if old is None or now < old[0]:
