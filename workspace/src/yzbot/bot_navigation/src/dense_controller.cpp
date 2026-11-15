@@ -148,26 +148,43 @@ public:
       heading=tf2::getYaw(transform.transform.rotation);
     }
     const double cosine=std::cos(heading),sine=std::sin(heading);
+    std::vector<std::pair<double,double>> path;
+    size_t nearest=0;double best=1.e10;
+    for(const auto & p:path_.poses) {
+      const auto & q=p.pose.position;
+      path.emplace_back(tx+cosine*q.x-sine*q.y,ty+sine*q.x+cosine*q.y);
+      const double distance=std::hypot(path.back().first-pose.pose.position.x,
+        path.back().second-pose.pose.position.y);
+      if(distance<best){best=distance;nearest=path.size()-1;}
+    }
+    geometry_msgs::msg::TwistStamped baseline;
+    std::exception_ptr nominal_error;
+    try{baseline=nominal_->computeVelocityCommands(pose,velocity,checker);}
+    catch(...){nominal_error=std::current_exception();}
+    const double preview_speed=std::max(.6,std::hypot(baseline.twist.linear.x,baseline.twist.linear.y));
     bool conflict=false;std::vector<int> ids;
     for(const auto & a:tracks) {
       if(std::hypot(a.x-pose.pose.position.x,a.y-pose.pose.position.y)>4.)continue;
-      bool intersects=false;
-      for(double t=0;t<=2.;t+=.4) {
-        auto f=SensorTracks::at(a,std::max(0.,now-a.stamp)+t);
-        for(size_t i=0;i<path_.poses.size();i+=3) {
-          const auto & p=path_.poses[i].pose.position;
-          const double px=tx+cosine*p.x-sine*p.y,py=ty+sine*p.x+cosine*p.y;
-          if(std::hypot(px-pose.pose.position.x,py-pose.pose.position.y)>4.)continue;
-          if(std::hypot(f.x-px,f.y-py)<a.radius+.65){intersects=true;break;}
+      bool intersects=nominal_error!=nullptr;
+      double travelled=0.;
+      for(size_t i=nearest;i<path.size() && !intersects;++i) {
+        if(i>nearest)travelled+=std::hypot(path[i].first-path[i-1].first,path[i].second-path[i-1].second);
+        if(travelled>3.0)break;
+        const double arrival=travelled/preview_speed;
+        if(arrival>2.0)break;
+        for(double slack:{-.25,0.,.25}) {
+          const double elapsed=std::max(0.,now-a.stamp)+std::max(0.,arrival+slack);
+          auto f=a.confident?SensorTracks::at(a,elapsed):ForecastPoint{
+            elapsed,a.x+a.vx*elapsed,a.y+a.vy*elapsed,a.uncertainty};
+          if(std::hypot(f.x-path[i].first,f.y-path[i].second)<a.radius+.62){intersects=true;break;}
         }
-        if(intersects)break;
       }
       if(intersects){conflict=true;ids.push_back(a.id);}
     }
     if(conflict)last_conflict_=now;
-    const bool use_dynamic=conflict || (active_ && now-last_conflict_<.6);
-    auto command=use_dynamic?dynamic_->computeVelocityCommands(pose,velocity,checker):
-      nominal_->computeVelocityCommands(pose,velocity,checker);
+    const bool use_dynamic=conflict || (active_ && now-last_conflict_<.3);
+    if(!use_dynamic && nominal_error)std::rethrow_exception(nominal_error);
+    auto command=use_dynamic?dynamic_->computeVelocityCommands(pose,velocity,checker):baseline;
     if(use_dynamic!=active_ || now-last_status_>.19) {
       active_=use_dynamic;last_status_=now;
       nlohmann::json j={{"stamp",now},{"controller",name_},{"mode",active_?"sensor_mppi":"nominal"},
@@ -177,7 +194,7 @@ public:
       if(use_dynamic) {
         // Read-only comparison: never publish this command to the actuator.
         try {
-          auto baseline=nominal_->computeVelocityCommands(pose,velocity,checker);
+          if(nominal_error)std::rethrow_exception(nominal_error);
           j["nominal_command"]={baseline.twist.linear.x,baseline.twist.linear.y,baseline.twist.angular.z};
         }catch(const std::exception & error){j["nominal_rejected"]=error.what();}
       }

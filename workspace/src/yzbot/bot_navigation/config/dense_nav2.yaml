@@ -206,11 +206,11 @@ controller_server:
         iteration_count: 1
         vx_std: 0.35
         vy_std: 0.25
-        wz_std: 0.4
+        wz_std: 0.8
         vx_max: 1.78
         vx_min: -0.1
         vy_max: 0.4
-        wz_max: 1.8
+        wz_max: 2.4
         temperature: 0.2
         gamma: 0.015
         prune_distance: 3.5
@@ -241,13 +241,13 @@ controller_server:
           consider_footprint: false
           near_goal_distance: 0.6
         SensorTimeCritic:
-          enabled: true
+          enabled: false
           cost_weight: 12.0
           clearance: 0.1
           collision_cost: 1000000.0
         GoalCritic:
           enabled: true
-          cost_weight: 7.0
+          cost_weight: 12.0
           cost_power: 1
           threshold_to_consider: 1.8
         PathAlignCritic:
@@ -261,7 +261,7 @@ controller_server:
           use_path_orientations: false
         PathFollowCritic:
           enabled: true
-          cost_weight: 5.0
+          cost_weight: 8.0
           cost_power: 1
           offset_from_furthest: 8
           threshold_to_consider: 1.8
@@ -280,7 +280,7 @@ controller_server:
           threshold_to_consider: 0.5
         TwirlingCritic:
           enabled: true
-          cost_weight: 8.0
+          cost_weight: 0.5
           cost_power: 1
     CentralTransit:
       plugin: bot_navigation::AdaptiveDynamicController
@@ -327,11 +327,11 @@ controller_server:
         iteration_count: 1
         vx_std: 0.35
         vy_std: 0.25
-        wz_std: 0.4
+        wz_std: 0.8
         vx_max: 1.0
         vx_min: -0.1
         vy_max: 0.4
-        wz_max: 1.8
+        wz_max: 2.4
         temperature: 0.2
         gamma: 0.015
         prune_distance: 3.5
@@ -362,13 +362,13 @@ controller_server:
           consider_footprint: false
           near_goal_distance: 0.6
         SensorTimeCritic:
-          enabled: true
+          enabled: false
           cost_weight: 12.0
           clearance: 0.1
           collision_cost: 1000000.0
         GoalCritic:
           enabled: true
-          cost_weight: 7.0
+          cost_weight: 12.0
           cost_power: 1
           threshold_to_consider: 1.8
         PathAlignCritic:
@@ -382,7 +382,7 @@ controller_server:
           use_path_orientations: false
         PathFollowCritic:
           enabled: true
-          cost_weight: 5.0
+          cost_weight: 8.0
           cost_power: 1
           offset_from_furthest: 8
           threshold_to_consider: 1.8
@@ -401,7 +401,7 @@ controller_server:
           threshold_to_consider: 0.5
         TwirlingCritic:
           enabled: true
-          cost_weight: 8.0
+          cost_weight: 0.5
           cost_power: 1
     SmoothTransit:
       plugin: bot_navigation::AdaptiveDynamicController
@@ -448,11 +448,11 @@ controller_server:
         iteration_count: 1
         vx_std: 0.35
         vy_std: 0.25
-        wz_std: 0.4
+        wz_std: 0.8
         vx_max: 1.78
         vx_min: -0.1
         vy_max: 0.4
-        wz_max: 1.8
+        wz_max: 2.4
         temperature: 0.2
         gamma: 0.015
         prune_distance: 3.5
@@ -483,13 +483,13 @@ controller_server:
           consider_footprint: false
           near_goal_distance: 0.6
         SensorTimeCritic:
-          enabled: true
+          enabled: false
           cost_weight: 12.0
           clearance: 0.1
           collision_cost: 1000000.0
         GoalCritic:
           enabled: true
-          cost_weight: 7.0
+          cost_weight: 12.0
           cost_power: 1
           threshold_to_consider: 1.8
         PathAlignCritic:
@@ -503,7 +503,7 @@ controller_server:
           use_path_orientations: false
         PathFollowCritic:
           enabled: true
-          cost_weight: 5.0
+          cost_weight: 8.0
           cost_power: 1
           offset_from_furthest: 8
           threshold_to_consider: 1.8
@@ -522,7 +522,7 @@ controller_server:
           threshold_to_consider: 0.5
         TwirlingCritic:
           enabled: true
-          cost_weight: 8.0
+          cost_weight: 0.5
           cost_power: 1
     CornerFlow:
       plugin: bot_navigation::AdaptiveDynamicController
@@ -569,11 +569,11 @@ controller_server:
         iteration_count: 1
         vx_std: 0.35
         vy_std: 0.25
-        wz_std: 0.4
+        wz_std: 0.8
         vx_max: 1.78
         vx_min: -0.1
         vy_max: 0.4
-        wz_max: 1.8
+        wz_max: 2.4
         temperature: 0.2
         gamma: 0.015
         prune_distance: 3.5
@@ -604,13 +604,13 @@ controller_server:
           consider_footprint: false
           near_goal_distance: 0.6
         SensorTimeCritic:
-          enabled: true
+          enabled: false
           cost_weight: 12.0
           clearance: 0.1
           collision_cost: 1000000.0
         GoalCritic:
           enabled: true
-          cost_weight: 7.0
+          cost_weight: 12.0
           cost_power: 1
           threshold_to_consider: 1.8
         PathAlignCritic:
@@ -624,7 +624,7 @@ controller_server:
           use_path_orientations: false
         PathFollowCritic:
           enabled: true
-          cost_weight: 5.0
+          cost_weight: 8.0
           cost_power: 1
           offset_from_furthest: 8
           threshold_to_consider: 1.8
@@ -643,7 +643,7 @@ controller_server:
           threshold_to_consider: 0.5
         TwirlingCritic:
           enabled: true
-          cost_weight: 8.0
+          cost_weight: 0.5
           cost_power: 1
     CorridorApproach:
       transform_tolerance: 1.0

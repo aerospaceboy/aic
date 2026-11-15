@@ -28,43 +28,43 @@
     {
       "name": "transport_mover_02",
       "start": [
-        -2.82,
-        1.776
+        -3.4,
+        2.1
       ],
       "end": [
-        -1.653,
-        2.718
+        -3.4,
+        3.5
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.36,
       "phase_fraction": 0.76393,
       "clearance": {
-        "map_surface_margin": 0.6279,
-        "dock_surface_margin": 1.1779,
-        "cube_surface_margin": 1.8354,
-        "zone_surface_margin": 3.1387
+        "map_surface_margin": 0.9499,
+        "dock_surface_margin": 1.4879,
+        "cube_surface_margin": 2.7669,
+        "zone_surface_margin": 1.8824
       }
     },
     {
       "name": "transport_mover_03",
       "start": [
         -0.245,
-        -0.339
+        -1.139
       ],
       "end": [
         1.117,
-        0.29
+        -0.51
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.28,
       "phase_fraction": 0.1459,
       "clearance": {
-        "map_surface_margin": 0.6663,
-        "dock_surface_margin": 0.7491,
-        "cube_surface_margin": 1.1269,
-        "zone_surface_margin": 6.4709
+        "map_surface_margin": 0.867,
+        "dock_surface_margin": 1.4757,
+        "cube_surface_margin": 1.853,
+        "zone_surface_margin": 6.9992
       }
     },
     {
@@ -112,22 +112,22 @@
     {
       "name": "transport_mover_06",
       "start": [
-        -1.932,
-        -4.533
+        -1.7,
+        -3.5
       ],
       "end": [
-        -0.434,
-        -4.614
+        -0.5,
+        -3.5
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.28,
       "phase_fraction": 0.2918,
       "clearance": {
-        "map_surface_margin": 0.3219,
-        "dock_surface_margin": 1.2799,
-        "cube_surface_margin": 1.3284,
-        "zone_surface_margin": 8.2255
+        "map_surface_margin": 0.2504,
+        "dock_surface_margin": 2.36,
+        "cube_surface_margin": 2.3779,
+        "zone_surface_margin": 8.0441
       }
     },
     {
@@ -217,22 +217,22 @@
     {
       "name": "transport_mover_11",
       "start": [
-        0.214,
-        -7.192
+        -0.6,
+        -6.8
       ],
       "end": [
-        -1.286,
-        -7.183
+        0.6,
+        -6.8
       ],
       "radius": 0.14,
       "height": 0.5,
       "speed": 0.36,
       "phase_fraction": 0.20163,
       "clearance": {
-        "map_surface_margin": 0.595,
-        "dock_surface_margin": 1.0438,
-        "cube_surface_margin": 1.2413,
-        "zone_surface_margin": 5.6574
+        "map_surface_margin": 0.2071,
+        "dock_surface_margin": 0.8034,
+        "cube_surface_margin": 1.4725,
+        "zone_surface_margin": 5.8081
       }
     },
     {
