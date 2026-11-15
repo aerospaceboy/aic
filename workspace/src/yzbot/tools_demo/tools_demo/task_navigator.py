@@ -3005,11 +3005,14 @@ class TaskNavigator(Node):
         """Prove the short wait approach outside every original sweep."""
         if (goal.zone != "universal_east_wait"
                 or abs(goal.x - 9.825) > .005 or abs(goal.y - .525) > .005
-                or not 9.75 <= self.latest_x <= 12.85
+                or not 9.30 <= self.latest_x <= 12.85
                 or not .20 <= self.latest_y <= .60):
             return False
-        # Every point stays at least 1.25m east of the original x=8.5
-        # sweep; both central patrols and the x=5 sweep are further west.
+        # Every point stays at least .80m east of the full x=8.5 sweep:
+        # .28 body + .18 actor + .20 tracking + .10 clearance = .76m.
+        # This includes safe, small overshoots of the 9.825m anchor, so a
+        # checked reverse can repair them instead of holding irreversibly.
+        # Both central patrols and the x=5 sweep are further west.
         # Check a body+10cm tube independently of soft planning inflation.
         return static_footprint_line_clear(
             getattr(self, "static_map", None), (self.latest_x, self.latest_y),
@@ -3125,8 +3128,17 @@ class TaskNavigator(Node):
                 self._continue_staged_navigation()
             return
         command = Twist()
-        command.linear.x, command.angular.z = wait_anchor_velocity(
-            values[:3], (goal.x, goal.y))
+        if abs(dx) <= .35:
+            # Signed holonomic trim repairs a passed anchor without another
+            # turn. Keep the original 3cm/.04rad physical arrival proof.
+            trim = ZonePose('wait_trim', goal.x, goal.y, math.pi)
+            speeds, _ = terminal_command(values[:3], trim, .20,
+                                         heading_tolerance=.025,
+                                         arrival_tolerance=.015)
+            command.linear.x, command.linear.y, command.angular.z = speeds
+        else:
+            command.linear.x, command.angular.z = wait_anchor_velocity(
+                values[:3], (goal.x, goal.y))
         self._publish_direct_velocity(command)
 
     def _handoff_cancel_callback(self, future) -> None:
@@ -3490,11 +3502,20 @@ class TaskNavigator(Node):
             return True
         if math.hypot(last.x - dock.x, last.y - dock.y) > .001:
             return True
-        for distance in (.65, .55, .45, .75):
+        for distance in (.55, .45, .35, .65, .75):
             entry = delivery_entry(dock, distance)
-            if static_footprint_line_clear(
+            # The global map has .10m static padding and a .38m robot
+            # radius. A locally valid .38m tube alone cannot prove that
+            # Nav2 can reach the external goal without substituting a goal.
+            query = getattr(self, '_global_cost_at', None)
+            cost = query(entry.x, entry.y) if query is not None else 0
+            if (cost is not None and 0 <= cost < 99
+                    and static_footprint_line_clear(
+                        getattr(self, 'static_map', None),
+                        (entry.x, entry.y), (entry.x, entry.y), radius=.48)
+                    and static_footprint_line_clear(
                     getattr(self, 'static_map', None),
-                    (entry.x, entry.y), (dock.x, dock.y), radius=.38):
+                    (entry.x, entry.y), (dock.x, dock.y), radius=.38)):
                 self.pending_poses[-1] = entry
                 self.get_logger().info(
                     f'delivery_terminal_entry zone={self.active_zone} '
@@ -4440,7 +4461,8 @@ class TaskNavigator(Node):
         # Aim along the collision-checked path, not the direct bearing to a
         # distant target behind walls. Nav2's rotation shim owns path entry.
         zone = getattr(self, "active_zone", None)
-        path_alignment = (getattr(self, 'dense_fast_transit', False)
+        path_alignment = ((getattr(self, 'dense_fast_transit', False)
+                           and not first_pose.zone.startswith('universal_'))
                           or continuous_a_route(self.pending_poses)
                           or flow_prefix_size(self.pending_poses) > 0
                           or (zone in VALID_ZONES

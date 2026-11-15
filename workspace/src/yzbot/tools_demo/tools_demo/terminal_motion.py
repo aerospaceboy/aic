@@ -8,14 +8,15 @@ def delivery_entry(dock, backoff=.65):
     """Finish path tracking outside the pad before turning beside its cubes."""
     if not all(math.isfinite(v) for v in (dock.x, dock.y, dock.yaw, backoff)):
         raise ValueError('Nonfinite delivery entry')
-    if not .45 <= backoff <= .8:
+    if not .30 <= backoff <= .8:
         raise ValueError('Unbounded delivery entry')
     return ZonePose(dock.zone + '_delivery_entry',
                     dock.x - backoff * math.cos(dock.yaw),
                     dock.y - backoff * math.sin(dock.yaw), dock.yaw)
 
 
-def terminal_command(pose, dock, maximum_speed=.40):
+def terminal_command(pose, dock, maximum_speed=.40,
+                     heading_tolerance=.045, arrival_tolerance=.025):
     """Align outside, trim the slot line, then advance with constant heading.
 
     A holonomic base need not curve or reverse its heading to remove a
@@ -30,9 +31,9 @@ def terminal_command(pose, dock, maximum_speed=.40):
     along = dx * math.cos(dock.yaw) + dy * math.sin(dock.yaw)
     across = -dx * math.sin(dock.yaw) + dy * math.cos(dock.yaw)
     angular = max(-1.5, min(1.5, 3.5 * error))
-    if abs(error) > .045:
+    if abs(error) > heading_tolerance:
         return (0., 0., angular), 'heading'
-    if math.hypot(dx, dy) <= .025:
+    if math.hypot(dx, dy) <= arrival_tolerance:
         return (0., 0., 0.), 'arrived'
     # Trim lateral error while there is still room outside the occupied pad.
     # After entering, retain small lateral feedback without changing heading.

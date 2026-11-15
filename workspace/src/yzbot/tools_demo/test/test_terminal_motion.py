@@ -40,7 +40,9 @@ def test_every_delivery_slot_has_an_external_static_clear_entry(
     assert TaskNavigator._stage_delivery_terminal(node)
     entry = node.pending_poses[-1]
     assert entry.zone.endswith('_delivery_entry')
-    assert .449 < math.hypot(entry.x - dock.x, entry.y - dock.y) < .751
+    assert .299 < math.hypot(entry.x - dock.x, entry.y - dock.y) < .751
+    assert static_footprint_line_clear(
+        official_map, (entry.x, entry.y), (entry.x, entry.y), .48)
     assert static_footprint_line_clear(
         official_map, (entry.x, entry.y), (dock.x, dock.y), .38)
     assert TaskNavigator._stage_delivery_terminal(node)
@@ -86,7 +88,7 @@ def test_ground_cube_guard_checks_rotated_wheels_and_entire_command():
 @pytest.mark.parametrize('direction', [-1., 1.])
 def test_admission_keeps_original_direction_after_braking_across_actor_x(
         actor_x, direction):
-    topic = '/competition/obstacles/obstacle_2'
+    topic = '/competition/obstacles/obstacle_1' if actor_x == 8.5 else '/competition/obstacles/obstacle_2'
     now = 2_000_000_000
     node = N(
         dense_fast_transit=False, mover_hold_topic=topic,
@@ -134,3 +136,30 @@ def test_missing_fresh_terminal_evidence_holds_complete_zero(official_map, missi
     TaskNavigator._delivery_terminal_step(node, now)
     cmd = node._publish_direct_velocity.call_args.args[0]
     assert cmd.linear.x == cmd.linear.y == cmd.angular.z == 0.
+
+
+def test_wait_anchor_small_overshoot_has_a_safe_signed_return(official_map):
+    anchor = ZonePose('universal_east_wait', 9.825, .525, math.pi)
+    node = N(latest_x=9.74, latest_y=.50, static_map=official_map,
+             _costmap_segment_clear=lambda *a, **kw: True)
+    assert TaskNavigator._spawn_wait_path_clear(node, anchor)
+    speeds, _ = terminal_command((9.74, .50, math.pi), anchor, .20,
+                                 heading_tolerance=.025, arrival_tolerance=.015)
+    assert speeds[0] < 0.  # Reverse east while remaining west-facing.
+    for point in command_sweep((9.74, .50, math.pi), speeds, .45):
+        assert point[0] - 8.5 >= .76
+    node.latest_x = 9.29
+    assert not TaskNavigator._spawn_wait_path_clear(node, anchor)
+
+
+def test_local_clearance_alone_cannot_admit_globally_occupied_c_entry(official_map):
+    # The first failed repair selected x=2.35: locally free but too close
+    # to the west wall for the padded .38m global footprint.
+    dock = ZonePose('C', 2.9, -12.1, 0.)
+    node = N(dense_fast_transit=True, active_zone='C', dock_pose=dock,
+             pending_poses=[dock], static_map=official_map,
+             get_logger=lambda: Mock(), publish_error=Mock(),
+             publish_state=Mock(), _clear_goal=Mock(),
+             _global_cost_at=lambda x, y: 100 if x < 2.5 else 0)
+    assert TaskNavigator._stage_delivery_terminal(node)
+    assert node.pending_poses[-1].x >= 2.5
