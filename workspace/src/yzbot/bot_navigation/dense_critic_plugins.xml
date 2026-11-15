@@ -1,4 +1,7 @@
 <library path="dense_dynamic_controller">
+  <class type="mppi::critics::StaticClearanceCritic" base_class_type="mppi::critics::CriticFunction">
+    <description>Whole-rollout static envelope independent of RPP collision projection.</description>
+  </class>
   <class type="mppi::critics::SensorTimeCritic" base_class_type="mppi::critics::CriticFunction">
     <description>Matched-time sensor forecast clearance for MPPI trajectories.</description>
   </class>

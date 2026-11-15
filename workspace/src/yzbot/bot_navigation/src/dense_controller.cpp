@@ -16,11 +16,13 @@
 #include <nav2_core/controller.hpp>
 #include <nav2_mppi_controller/critic_function.hpp>
 #include <nav2_util/node_utils.hpp>
+#include <nav_msgs/msg/occupancy_grid.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <tf2/utils.h>
 #include "bot_navigation/remaining_path.hpp"
 #include "bot_navigation/controller_fallback.hpp"
 #include "bot_navigation/motion_risk.hpp"
+#include "bot_navigation/static_clearance.hpp"
 
 namespace bot_navigation
 {
@@ -258,6 +260,60 @@ private:
 
 namespace mppi::critics
 {
+class StaticClearanceCritic : public CriticFunction
+{
+public:
+  void initialize() override {
+    auto p=parameters_handler_->getParamGetter(name_);
+    p(clearance_,"clearance",.48);
+    if(clearance_<.44)throw std::invalid_argument("Static trajectory clearance below loaded envelope");
+    auto node=parent_.lock();
+    map_sub_=node->create_subscription<nav_msgs::msg::OccupancyGrid>(
+      "/map",rclcpp::QoS(1).transient_local().reliable(),
+      [this](const nav_msgs::msg::OccupancyGrid::SharedPtr m){
+        try {
+          auto grid=std::make_shared<bot_navigation::StaticClearanceGrid>();
+          grid->build(m->data,m->info.width,m->info.height,m->info.resolution,
+            m->info.origin.position.x,m->info.origin.position.y,
+            tf2::getYaw(m->info.origin.orientation),clearance_);
+          std::lock_guard<std::mutex> lock(map_mutex_);grid_=grid;frame_=m->header.frame_id;
+        }catch(const std::exception & e){
+          RCLCPP_ERROR(parent_.lock()->get_logger(),"Static trajectory map rejected: %s",e.what());
+        }
+      });
+  }
+  void score(CriticData & data) override {
+    if(!enabled_)return;
+    std::shared_ptr<const bot_navigation::StaticClearanceGrid> grid;std::string frame;
+    {std::lock_guard<std::mutex> lock(map_mutex_);grid=grid_;frame=frame_;}
+    double tx=0,ty=0,yaw=0;
+    try {
+      if(!grid)throw std::runtime_error("Static trajectory map not ready");
+      if(frame!=costmap_ros_->getGlobalFrameID()) {
+        const auto t=costmap_ros_->getTfBuffer()->lookupTransform(
+          frame,costmap_ros_->getGlobalFrameID(),tf2::TimePointZero);
+        tx=t.transform.translation.x;ty=t.transform.translation.y;yaw=tf2::getYaw(t.transform.rotation);
+      }
+    }catch(const std::exception &){data.fail_flag=true;return;}
+    const double c=std::cos(yaw),s=std::sin(yaw);
+    const auto rows=data.trajectories.x.shape(0),steps=data.trajectories.x.shape(1);
+    size_t valid=0;
+    for(size_t i=0;i<rows;++i) {
+      bool clear=true;
+      for(size_t k=0;k<steps && clear;++k) {
+        const double x=data.trajectories.x(i,k),y=data.trajectories.y(i,k);
+        clear=grid->clear(tx+c*x-s*y,ty+s*x+c*y);
+      }
+      if(clear)++valid;else data.costs(i)+=1.e7f;
+    }
+    if(!valid)data.fail_flag=true;
+  }
+private:
+  double clearance_{.48};std::mutex map_mutex_;std::string frame_;
+  std::shared_ptr<const bot_navigation::StaticClearanceGrid> grid_;
+  rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
+};
+
 class SensorTimeCritic : public CriticFunction
 {
 public:
@@ -317,3 +373,4 @@ private:
 }
 PLUGINLIB_EXPORT_CLASS(bot_navigation::AdaptiveDynamicController,nav2_core::Controller)
 PLUGINLIB_EXPORT_CLASS(mppi::critics::SensorTimeCritic,mppi::critics::CriticFunction)
+PLUGINLIB_EXPORT_CLASS(mppi::critics::StaticClearanceCritic,mppi::critics::CriticFunction)

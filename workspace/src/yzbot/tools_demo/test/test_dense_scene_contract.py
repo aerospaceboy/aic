@@ -108,6 +108,8 @@ def test_time_indexed_predictions_replace_only_future_spatial_union():
     assert sensor['small_body_clearance'] + local['robot_radius'] >= .46 - 1.e-9
     for name in ('FollowPath', 'CentralTransit', 'SmoothTransit', 'CornerFlow', 'CornerFlowA'):
         model = config['controller_server']['ros__parameters'][name]['Dynamic']
+        assert model['StaticClearanceCritic']['enabled']
+        assert model['StaticClearanceCritic']['clearance'] >= .48
         assert model['SensorTimeCritic']['enabled']
         assert model['GoalAngleCritic']['enabled'] == (name == 'FollowPath')
         # The largest bounded future penalty must not dominate a hard

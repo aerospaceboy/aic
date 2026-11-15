@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source": "two recorded baseline transport routes; complete patrol swept against static raster, SDF boxes, all docks/cubes/zones",
+  "source": "59 historical loaded-transport rounds; complete patrol swept against original static raster, actual SDF boxes, protected docks/cubes/zones and observed navigation goals",
   "new_actor_count": 12,
   "original_actor_count": 4,
   "actors": [

@@ -223,6 +223,7 @@ controller_server:
         critics:
         - ConstraintCritic
         - CostCritic
+        - StaticClearanceCritic
         - SensorTimeCritic
         - GoalCritic
         - PathAlignCritic
@@ -243,6 +244,9 @@ controller_server:
           collision_cost: 10000000.0
           consider_footprint: false
           near_goal_distance: 0.6
+        StaticClearanceCritic:
+          enabled: true
+          clearance: 0.48
         SensorTimeCritic:
           enabled: true
           cost_weight: 12.0
@@ -351,6 +355,7 @@ controller_server:
         critics:
         - ConstraintCritic
         - CostCritic
+        - StaticClearanceCritic
         - SensorTimeCritic
         - GoalCritic
         - PathAlignCritic
@@ -371,6 +376,9 @@ controller_server:
           collision_cost: 10000000.0
           consider_footprint: false
           near_goal_distance: 0.6
+        StaticClearanceCritic:
+          enabled: true
+          clearance: 0.48
         SensorTimeCritic:
           enabled: true
           cost_weight: 12.0
@@ -479,6 +487,7 @@ controller_server:
         critics:
         - ConstraintCritic
         - CostCritic
+        - StaticClearanceCritic
         - SensorTimeCritic
         - GoalCritic
         - PathAlignCritic
@@ -499,6 +508,9 @@ controller_server:
           collision_cost: 10000000.0
           consider_footprint: false
           near_goal_distance: 0.6
+        StaticClearanceCritic:
+          enabled: true
+          clearance: 0.48
         SensorTimeCritic:
           enabled: true
           cost_weight: 12.0
@@ -607,6 +619,7 @@ controller_server:
         critics:
         - ConstraintCritic
         - CostCritic
+        - StaticClearanceCritic
         - SensorTimeCritic
         - GoalCritic
         - PathAlignCritic
@@ -627,6 +640,9 @@ controller_server:
           collision_cost: 10000000.0
           consider_footprint: false
           near_goal_distance: 0.6
+        StaticClearanceCritic:
+          enabled: true
+          clearance: 0.48
         SensorTimeCritic:
           enabled: true
           cost_weight: 12.0
@@ -768,6 +784,7 @@ controller_server:
         critics:
         - ConstraintCritic
         - CostCritic
+        - StaticClearanceCritic
         - SensorTimeCritic
         - GoalCritic
         - PathAlignCritic
@@ -788,6 +805,9 @@ controller_server:
           collision_cost: 10000000.0
           consider_footprint: false
           near_goal_distance: 0.6
+        StaticClearanceCritic:
+          enabled: true
+          clearance: 0.48
         SensorTimeCritic:
           enabled: true
           cost_weight: 12.0
