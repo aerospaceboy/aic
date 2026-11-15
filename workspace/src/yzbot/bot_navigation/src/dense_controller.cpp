@@ -17,6 +17,7 @@
 #include <nav2_util/node_utils.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <tf2/utils.h>
+#include "bot_navigation/remaining_path.hpp"
 
 namespace bot_navigation
 {
@@ -131,7 +132,7 @@ public:
   void activate()override{nominal_->activate();dynamic_->activate();status_->on_activate();}
   void deactivate()override{nominal_->deactivate();dynamic_->deactivate();status_->on_deactivate();}
   void setPlan(const nav_msgs::msg::Path & path)override {
-    path_=path;nominal_->setPlan(path);dynamic_->setPlan(path);
+    path_=path;nominal_->setPlan(path);dynamic_plan_pending_=true;
   }
   void setSpeedLimit(const double & speed,const bool & percentage)override {
     nominal_->setSpeedLimit(speed,percentage);dynamic_->setSpeedLimit(speed,percentage);
@@ -184,6 +185,10 @@ public:
     if(conflict)last_conflict_=now;
     const bool use_dynamic=conflict || (active_ && now-last_conflict_<.3);
     if(!use_dynamic && nominal_error)std::rethrow_exception(nominal_error);
+    if(use_dynamic && (!active_ || dynamic_plan_pending_)) {
+      dynamic_->setPlan(remainingPath(path_,nearest));
+      dynamic_plan_pending_=false;
+    }
     auto command=use_dynamic?dynamic_->computeVelocityCommands(pose,velocity,checker):baseline;
     if(use_dynamic!=active_ || now-last_status_>.19) {
       active_=use_dynamic;last_status_=now;
@@ -209,7 +214,8 @@ private:
   nav2_core::Controller::Ptr nominal_,dynamic_;
   SensorTracks tracks_;nav_msgs::msg::Path path_;
   rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::String>::SharedPtr status_;
-  bool active_{false};double last_conflict_{-100.},last_status_{-100.};
+  bool active_{false},dynamic_plan_pending_{true};
+  double last_conflict_{-100.},last_status_{-100.};
 };
 } // namespace bot_navigation
 

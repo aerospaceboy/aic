@@ -214,6 +214,7 @@ controller_server:
         temperature: 0.2
         gamma: 0.015
         prune_distance: 3.5
+        max_robot_pose_search_dist: 100.0
         transform_tolerance: 1.0
         visualize: false
         retry_attempt_limit: 1
@@ -335,6 +336,7 @@ controller_server:
         temperature: 0.2
         gamma: 0.015
         prune_distance: 3.5
+        max_robot_pose_search_dist: 100.0
         transform_tolerance: 1.0
         visualize: false
         retry_attempt_limit: 1
@@ -456,6 +458,7 @@ controller_server:
         temperature: 0.2
         gamma: 0.015
         prune_distance: 3.5
+        max_robot_pose_search_dist: 100.0
         transform_tolerance: 1.0
         visualize: false
         retry_attempt_limit: 1
@@ -577,6 +580,7 @@ controller_server:
         temperature: 0.2
         gamma: 0.015
         prune_distance: 3.5
+        max_robot_pose_search_dist: 100.0
         transform_tolerance: 1.0
         visualize: false
         retry_attempt_limit: 1
