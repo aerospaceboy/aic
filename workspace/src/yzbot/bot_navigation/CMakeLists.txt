@@ -66,19 +66,21 @@ if(BUILD_TESTING)
   ament_add_gtest(test_remaining_path test/test_remaining_path.cpp)
   target_include_directories(test_remaining_path PRIVATE include)
   ament_target_dependencies(test_remaining_path nav_msgs)
+  ament_add_gtest(test_motion_risk test/test_motion_risk.cpp)
+  target_include_directories(test_motion_risk PRIVATE include)
   ament_add_gtest(test_prediction_layer test/test_prediction_layer.cpp)
   target_include_directories(test_prediction_layer PRIVATE include)
   target_link_libraries(test_prediction_layer dynamic_prediction_layer)
   ament_target_dependencies(test_prediction_layer nav2_costmap_2d rclcpp sensor_msgs)
   # Never inject test forecasts into the real running robot's ROS graph.
   set_tests_properties(test_prediction_layer PROPERTIES ENVIRONMENT
-    "ROS_DOMAIN_ID=179;RMW_IMPLEMENTATION=rmw_cyclonedds_cpp;ROS_LOCALHOST_ONLY=1")
+    "ROS_DOMAIN_ID=179;RMW_IMPLEMENTATION=rmw_cyclonedds_cpp;ROS_LOCALHOST_ONLY=1;CYCLONEDDS_URI=")
   ament_add_gtest(test_prediction_path_clear test/test_prediction_path_clear.cpp)
   target_include_directories(test_prediction_path_clear PRIVATE include)
   target_link_libraries(test_prediction_path_clear dynamic_prediction_path_clear)
   ament_target_dependencies(test_prediction_path_clear nav2_behavior_tree nav_msgs rclcpp sensor_msgs tf2_ros)
   set_tests_properties(test_prediction_path_clear PROPERTIES ENVIRONMENT
-    "ROS_DOMAIN_ID=179;RMW_IMPLEMENTATION=rmw_cyclonedds_cpp;ROS_LOCALHOST_ONLY=1")
+    "ROS_DOMAIN_ID=179;RMW_IMPLEMENTATION=rmw_cyclonedds_cpp;ROS_LOCALHOST_ONLY=1;CYCLONEDDS_URI=")
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
   # uncomment the line when a copyright and license is not present in all source files

@@ -279,6 +279,11 @@ def generate_launch_description():
         parameters=[{"use_sim_time": LaunchConfiguration("use_sim_time")}],
         condition=IfCondition(LaunchConfiguration("moving_obstacle")),
         output="screen",
+    ), Node(
+        package="tools_demo", executable="dense_static_margin",
+        name="competition_dense_static_margin",
+        parameters=[{"use_sim_time": LaunchConfiguration("use_sim_time")}],
+        output="screen",
     )] if dense else []
     avoidance_monitor = Node(
         package="tools_demo",

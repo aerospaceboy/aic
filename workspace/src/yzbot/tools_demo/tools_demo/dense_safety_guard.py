@@ -41,7 +41,10 @@ class DenseSafetyGuard(Node):
         except ValueError:return
         self.payload=d.get('state') in ('navigating_departure','navigating_destination','placing')
 
-    def velocity(self,m):self.command=m;self.command_time=time.monotonic()
+    def velocity(self,m):
+        values=(m.linear.x,m.linear.y,m.linear.z,m.angular.x,m.angular.y,m.angular.z)
+        self.command=m if all(math.isfinite(v) for v in values) else Twist()
+        self.command_time=time.monotonic()
 
     def tick(self):
         now=time.monotonic();command=self.command

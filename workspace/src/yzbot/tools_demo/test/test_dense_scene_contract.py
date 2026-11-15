@@ -46,7 +46,7 @@ def test_stage_models_keep_full_lateral_authority_without_reset_speed_increase()
     for name, speed in [('CornerFlowA', .75), ('CornerFlow', 1.2),
                         ('SmoothTransit', 1.5), ('CentralTransit', 1.)]:
         assert controller[name]['Dynamic']['vx_max'] == speed
-        assert controller[name]['Dynamic']['vy_max'] == .4
+        assert controller[name]['Dynamic']['vy_max'] == .6
     for name in ('navigate_through_corner_a_dense.xml', 'navigate_corner_a_dense_to_pose.xml'):
         tree = ET.parse(ROOT / 'tools_demo/config' / name)
         for follower in tree.iter('FollowPath'):
@@ -82,3 +82,25 @@ def test_dense_route_guidance_retains_static_and_cargo_with_live_local_protectio
     assert local_map['obstacle_layer']['enabled']
     assert 'scan' in local_map['obstacle_layer']['observation_sources']
     assert local_map['prediction_layer']['enabled']
+
+
+def test_time_indexed_predictions_replace_only_future_spatial_union():
+    base = ROOT / 'bot_navigation/config'
+    config = yaml.safe_load((base / 'dense_nav2.yaml').read_text())
+    local = config['local_costmap']['local_costmap']['ros__parameters']
+    assert local['prediction_layer']['timed_future_cost']
+    # MPPI may not cut into the global planner's static inflation shell.
+    assert local['static_layer']['map_topic'] == '/competition/dense_static_map'
+    assert local['robot_radius'] + .20 >= config['global_costmap']['global_costmap']['ros__parameters']['robot_radius']
+    sensor = yaml.safe_load((base / 'dense_scene_overrides.yaml').read_text())['competition_dynamic_obstacles']['ros__parameters']
+    assert sensor['prediction_robot_radius'] == local['robot_radius']
+    assert sensor['small_body_clearance'] + local['robot_radius'] >= .46 - 1.e-9
+    for name in ('FollowPath', 'CentralTransit', 'SmoothTransit', 'CornerFlow', 'CornerFlowA'):
+        model = config['controller_server']['ros__parameters'][name]['Dynamic']
+        assert model['SensorTimeCritic']['enabled']
+        assert model['GoalAngleCritic']['enabled']
+        # The largest bounded future penalty must not dominate a hard
+        # current/static collision penalty, which native CostCritic normalizes.
+        future_bound = (2*model['SensorTimeCritic']['collision_cost'] + 20)*model['model_dt']*model['time_steps']
+        hard = model['CostCritic']['collision_cost']*model['CostCritic']['cost_weight']/254/model['time_steps']
+        assert hard > 2*future_bound

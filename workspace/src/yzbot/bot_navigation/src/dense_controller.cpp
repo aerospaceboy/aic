@@ -20,6 +20,7 @@
 #include <tf2/utils.h>
 #include "bot_navigation/remaining_path.hpp"
 #include "bot_navigation/controller_fallback.hpp"
+#include "bot_navigation/motion_risk.hpp"
 
 namespace bot_navigation
 {
@@ -59,8 +60,9 @@ public:
             a.x=tx+c*x-s*y;a.y=ty+s*x+c*y;a.vx=c*vx-s*vy;a.vy=s*vx+c*vy;
             a.radius=v.value("radius",.18);a.uncertainty=v.value("uncertainty",.05);
             a.confident=v.value("confident",false);a.moving=v.value("was_moving",false);
-            if(!std::isfinite(a.x+a.y+a.vx+a.vy+a.stamp+a.radius) ||
-              a.radius<=0 || a.radius>.4 || std::hypot(a.vx,a.vy)>.8)continue;
+            if(!std::isfinite(a.x+a.y+a.vx+a.vy+a.stamp+a.radius+a.uncertainty) ||
+              a.radius<=0 || a.radius>.4 || a.uncertainty<0 || a.uncertainty>.5 ||
+              std::hypot(a.vx,a.vy)>.8)continue;
             if(v.contains("forecast"))for(const auto & f:v["forecast"]) {
               double fx=f[1],fy=f[2];
               a.forecast.push_back({f[0],tx+c*fx-s*fy,ty+s*fx+c*fy,f[3]});
@@ -173,7 +175,7 @@ public:
     const double preview_speed=std::max({.6,
       std::hypot(velocity.linear.x,velocity.linear.y),
       std::hypot(baseline.twist.linear.x,baseline.twist.linear.y)});
-    bool conflict=false;std::vector<int> ids;
+    bool conflict=nominal_error!=nullptr;std::vector<int> ids;
     for(const auto & a:tracks) {
       if(std::hypot(a.x-pose.pose.position.x,a.y-pose.pose.position.y)>4.)continue;
       bool intersects=nominal_error!=nullptr;
@@ -205,7 +207,8 @@ public:
       baseline,nominal_error,use_dynamic,fallback_reason):baseline;
     // Humble MPPI resets its constraints to base values after idle/failure.
     // Never let that reset silently lift a navigation stage's speed limit.
-    capTranslation(command.twist,speed_limit_.load());
+    const auto limit=speed_limit_.load();
+    capTranslation(command.twist,limit>0.?std::min(limit,nominal_max_):nominal_max_);
     if(use_dynamic!=active_ || now-last_status_>.19) {
       active_=use_dynamic;last_status_=now;
       nlohmann::json j={{"stamp",now},{"controller",name_},{"mode",active_?"sensor_mppi":"nominal"},
@@ -246,42 +249,54 @@ public:
     auto node=parent_.lock();tracks_.configure(node,costmap_ros_);
     auto p=parameters_handler_->getParamGetter(name_);
     p(weight_,"cost_weight",12.0);p(margin_,"clearance",.10);
-    p(collision_cost_,"collision_cost",1000000.0);
+    p(collision_cost_,"collision_cost",200.0);
   }
   void score(CriticData & data) override {
     if(!enabled_)return;
     const double now=parent_.lock()->now().seconds();auto tracks=tracks_.snapshot(now);
     const double body=tracks_.loaded()?.34:.28;
     const auto rows=data.trajectories.x.shape(0),steps=data.trajectories.x.shape(1);
-    std::vector<unsigned char> collision(rows,0);
+    std::vector<float> risk(rows*steps,0.f);
+    size_t fresh=0;
     for(const auto & a:tracks) {
       if(std::hypot(a.x-data.state.pose.pose.position.x,a.y-data.state.pose.pose.position.y)>6.)continue;
       const double age=std::max(0.,now-a.stamp);
+      if(age>.4)continue;
+      ++fresh;
       for(size_t k=0;k<steps;++k) {
-        const double t=(k+1)*data.model_dt;auto p=bot_navigation::SensorTracks::at(a,age+t);
-        const double r=body+a.radius+margin_+p.error;
+        const double t=(k+1)*data.model_dt;
+        const double elapsed=age+t;
+        auto p=a.confident?bot_navigation::SensorTracks::at(a,elapsed):bot_navigation::ForecastPoint{
+          elapsed,a.x+a.vx*elapsed,a.y+a.vy*elapsed,a.uncertainty+.10*elapsed};
+        const double r=body+a.radius+margin_+std::min(.20,p.error);
         for(size_t i=0;i<rows;++i) {
           double dx=data.trajectories.x(i,k)-p.x,dy=data.trajectories.y(i,k)-p.y;
           const double d=std::hypot(dx,dy)-r;
-          // Uncertain tracks retain a hard short reaction horizon. The
-          // expanding reachable set after that is a risk cost, otherwise a
-          // briefly occluded distant mover makes *every* 1.8 s rollout fail.
-          // Raw current occupancy and the downstream stopping guard remain
-          // hard throughout; this is not a long-horizon safety certificate.
-          if(d<0 && (a.confident || t<=.4))collision[i]=1;
-          else if(d<.35)data.costs(i)+=weight_*(.35-d)*data.model_dt;
+          double cost=bot_navigation::timedSeparationRisk(d,weight_,collision_cost_);
+          if(!a.confident) {
+            // Keep a pause hypothesis rather than treating one noisy velocity
+            // estimate as certain. Its bounded soft cost cannot block escape.
+            const double paused=std::hypot(data.trajectories.x(i,k)-a.x,
+              data.trajectories.y(i,k)-a.y)-r;
+            cost=std::max(cost,.35*bot_navigation::timedSeparationRisk(
+              paused,weight_,collision_cost_));
+          }
+          // Spatially duplicated laser tracks must not multiply one hazard.
+          risk[i*steps+k]=std::max(risk[i*steps+k],static_cast<float>(cost));
         }
       }
     }
-    bool all=rows>0;
-    for(size_t i=0;i<rows;++i){if(collision[i])data.costs(i)+=collision_cost_;else all=false;}
-    if(all)RCLCPP_WARN_THROTTLE(parent_.lock()->get_logger(),*parent_.lock()->get_clock(),1000,
-      "sensor_time_all_rollouts_blocked tracks=%zu",tracks.size());
-    data.fail_flag=data.fail_flag || all;
+    for(size_t i=0;i<rows;++i)for(size_t k=0;k<steps;++k)
+      data.costs(i)+=risk[i*steps+k]*data.model_dt;
+    if(fresh)RCLCPP_INFO_THROTTLE(parent_.lock()->get_logger(),*parent_.lock()->get_clock(),5000,
+      "sensor_time_cost_scored fresh=%zu loaded=%d rollouts=%zu horizon=%.2f",
+      fresh,tracks_.loaded(),rows,steps*data.model_dt);
+    // Intentionally leave fail_flag unchanged: the raw/current-body CostCritic
+    // and the independent stopping guard decide hard collision feasibility.
   }
 private:
   bot_navigation::SensorTracks tracks_;
-  double weight_{12.},margin_{.1},collision_cost_{1.e6};
+  double weight_{12.},margin_{.1},collision_cost_{200.};
 };
 }
 PLUGINLIB_EXPORT_CLASS(bot_navigation::AdaptiveDynamicController,nav2_core::Controller)

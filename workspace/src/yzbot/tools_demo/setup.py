@@ -44,6 +44,7 @@ setup(
             "moving_obstacle = tools_demo.moving_obstacle:main",
             "dense_actors = tools_demo.dense_actors:main",
             "dense_safety_guard = tools_demo.dense_safety_guard:main",
+            "dense_static_margin = tools_demo.dense_static_margin:main",
             "dynamic_obstacles = tools_demo.dynamic_obstacle_node:main",
             "payload_scan_mask = tools_demo.payload_scan_mask:main",
             "sweep_band_keepout = tools_demo.sweep_band_keepout:main",

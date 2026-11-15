@@ -12,11 +12,14 @@
 class PredictionTest : public ::testing::Test
 {
 protected:
+  virtual bool timedFutureCost() const {return false;}
   static void SetUpTestSuite() {rclcpp::init(0, nullptr);}
   static void TearDownTestSuite() {rclcpp::shutdown();}
   void SetUp() override
   {
-    lifecycle = std::make_shared<nav2_util::LifecycleNode>("prediction_unit", "");
+    lifecycle = std::make_shared<nav2_util::LifecycleNode>("prediction_unit", "",
+      rclcpp::NodeOptions().parameter_overrides({
+        rclcpp::Parameter("prediction.timed_future_cost", timedFutureCost())}));
     sender = std::make_shared<rclcpp::Node>("prediction_sender");
     buffer = std::make_shared<tf2_ros::Buffer>(lifecycle->get_clock());
     parent = std::make_unique<nav2_costmap_2d::LayeredCostmap>("map", false, false);
@@ -80,6 +83,22 @@ protected:
   std::unique_ptr<bot_navigation::PredictionLayer> layer;
   double min_x, min_y, max_x, max_y;
 };
+
+class TimedPredictionTest : public PredictionTest
+{
+protected:
+  bool timedFutureCost() const override {return true;}
+};
+
+TEST_F(TimedPredictionTest, TimedCriticReplacesFutureUnionButKeepsHardCurrentBodies)
+{
+  send(.55, .55, false, "map", 200);
+  bounds();
+  EXPECT_EQ(layer->getCost(5, 5), nav2_costmap_2d::NO_INFORMATION);
+  send(.55, .55, false, "map", 254);
+  bounds();
+  EXPECT_EQ(layer->getCost(5, 5), nav2_costmap_2d::LETHAL_OBSTACLE);
+}
 
 TEST_F(PredictionTest, ReplacingSnapshotRetiresOldCellAndNeverErasesWall)
 {

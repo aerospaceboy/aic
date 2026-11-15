@@ -18,7 +18,6 @@ from tf2_ros import Buffer, TransformException, TransformListener
 from tools_demo.dynamic_obstacle_filter import static_return, transform_point
 from tools_demo.dynamic_prediction import MotionTracker, scan_detections
 from tools_demo.transport_motion import sensor_forecast
-from tools_demo.transport_scene import dense_enabled
 
 
 class DynamicObstacleNode(Node):
@@ -29,6 +28,10 @@ class DynamicObstacleNode(Node):
         self.declare_parameter('static_match_tolerance', 0.18)
         self.declare_parameter('maximum_range', 4.0)
         self.declare_parameter('publish_rate_hz', 5.0)
+        self.declare_parameter('prediction_robot_radius', .28)
+        self.declare_parameter('small_body_clearance', .35)
+        self.prediction_robot_radius=float(self.get_parameter('prediction_robot_radius').value)
+        self.small_body_clearance=float(self.get_parameter('small_body_clearance').value)
         # The competition launch feeds the payload-masked scan so the carried
         # cube cannot mark the global dynamic layer on the robot's own trail.
         self.declare_parameter('scan_topic', '/scan_payload_masked')
@@ -148,7 +151,8 @@ class DynamicObstacleNode(Node):
                       if not (x0 <= d.x <= x1 and y0 <= d.y <= y1)]
         if self.tracker.update(stamp, detections):
             predicted = self.tracker.cost_points(
-                stamp, small_body_clearance=.18 if dense_enabled() else .35)
+                stamp, robot_radius=getattr(self,'prediction_robot_radius',.28),
+                small_body_clearance=getattr(self,'small_body_clearance',.35))
             forecast = PointCloud2()
             forecast.header.stamp = scan.header.stamp
             forecast.header.frame_id = grid.header.frame_id

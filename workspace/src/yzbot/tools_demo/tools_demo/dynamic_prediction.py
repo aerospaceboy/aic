@@ -220,7 +220,8 @@ class MotionTracker:
         # changing the robot radius, final guard or scored safety threshold.
         if not math.isfinite(planning_clearance) or planning_clearance < .35:
             raise ValueError('Moving-body planning clearance must protect guard')
-        if not math.isfinite(small_body_clearance) or small_body_clearance < .18:
+        if (not math.isfinite(small_body_clearance) or small_body_clearance < 0
+                or small_body_clearance + robot_radius < .46 - 1.e-9):
             raise ValueError('Small-body clearance must protect loaded geometry')
         points = []
         for track in self.snapshot(stamp):
@@ -228,9 +229,9 @@ class MotionTracker:
                 continue
             age = max(0, stamp-track['stamp'])
             # Small observed cylinders need a different geometric reserve
-            # from the original large movers. With .18 + the .28 costmap
-            # robot radius, even before observation uncertainty, their
-            # planned surface reserve exceeds loaded .34 + scored .10.
+            # from the original large movers. Combined with the costmap
+            # robot radius, the reserve is at least .46 m before uncertainty:
+            # this exceeds loaded .34 + scored .10.
             # Keeping the large-mover .35 here traps a vehicle at the actor's
             # independent .70 m physical-stop boundary (all rollouts start
             # inside inflated occupancy). Final stopping guards are unchanged.

@@ -27,6 +27,17 @@ def test_absent_upstream_command_never_leaves_an_old_actuator_command_alive():
     assert sent == [Twist()]
 
 
+def test_nonfinite_optimizer_output_is_replaced_by_complete_zero():
+    for value in (float('nan'), float('inf')):
+        command = Twist()
+        command.linear.x = 1.
+        command.linear.y = value
+        command.angular.z = 1.2
+        guard = SimpleNamespace(command=None, command_time=None)
+        DenseSafetyGuard.velocity(guard, command)
+        assert guard.command == Twist()
+
+
 def test_load_sensitive_rotation_reserve_blocks_spin_but_allows_open_space():
     actor = dict(x=.6, y=0., radius=.14)
     assert dense_rotation_clear((0., 0., 0.), [actor], False)

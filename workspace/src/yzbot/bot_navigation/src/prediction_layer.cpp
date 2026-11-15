@@ -20,10 +20,12 @@ void PredictionLayer::onInitialize()
   declareParameter("timeout", rclcpp::ParameterValue(0.5));
   declareParameter("source_frame", rclcpp::ParameterValue("map"));
   declareParameter("robot_egress_radius", rclcpp::ParameterValue(0.33));
+  declareParameter("timed_future_cost", rclcpp::ParameterValue(false));
   node->get_parameter(name_ + ".enabled", enabled_);
   node->get_parameter(name_ + ".timeout", timeout_);
   node->get_parameter(name_ + ".source_frame", source_frame_);
   node->get_parameter(name_ + ".robot_egress_radius", robot_egress_radius_);
+  node->get_parameter(name_ + ".timed_future_cost", timed_future_cost_);
   if (source_frame_.empty()) {throw std::runtime_error("Prediction source frame is empty");}
   if (timeout_ <= 0.0 || timeout_ > 1.0) {
     throw std::runtime_error("Prediction timeout must be in (0, 1] seconds");
@@ -77,6 +79,10 @@ void PredictionLayer::receive(sensor_msgs::msg::PointCloud2::ConstSharedPtr mess
       for (; x != x.end(); ++x, ++y, ++z, ++cost) {
         if (!std::isfinite(*x) || !std::isfinite(*y) || !std::isfinite(*z)) {continue;}
         if (*cost != 200.0f && *cost != 254.0f) {return;}
+        // The time-indexed MPPI critic evaluates these future hypotheses at
+        // each rollout's arrival time. Do not also paint their all-times union
+        // as a permanent spatial penalty. Hard CURRENT bodies stay intact.
+        if (timed_future_cost_ && *cost == 200.0f) {continue;}
         if (needs_transform) {
           geometry_msgs::msg::PointStamped input, output;
           input.point.x = *x; input.point.y = *y; input.point.z = *z;

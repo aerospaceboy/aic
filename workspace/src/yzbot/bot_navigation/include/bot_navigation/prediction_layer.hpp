@@ -32,6 +32,7 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr subscription_;
   double timeout_{0.5};
   double robot_egress_radius_{0.33};
+  bool timed_future_cost_{false};
   std::string source_frame_{"map"};
 };
 }  // namespace bot_navigation

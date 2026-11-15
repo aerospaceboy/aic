@@ -25,20 +25,23 @@ def test_moving_body_plan_stays_outside_unchanged_final_guard():
 
 
 @pytest.mark.parametrize('radius', [.10, .14, .17])
-def test_small_cylinder_buffer_protects_load_without_deadlocking_actor_stop(radius):
+@pytest.mark.parametrize('robot_radius', [.28, .38])
+def test_small_cylinder_buffer_protects_load_without_deadlocking_actor_stop(radius, robot_radius):
     tracker = MotionTracker()
     for i in range(7):
         tracker.update(i*.2, [Detection(i*.2*.24, -5, radius)])
-    hard = [p for p in tracker.cost_points(1.2, small_body_clearance=.18)
+    reserve = .46 - robot_radius
+    hard = [p for p in tracker.cost_points(1.2, robot_radius=robot_radius,
+                                         small_body_clearance=reserve)
             if p[3] == 254]
-    extent = max(math.hypot(p[0]-.288, p[1]+5) for p in hard) + .28
+    extent = max(math.hypot(p[0]-.288, p[1]+5) for p in hard) + robot_radius
     # Rasterized hard body + robot inflation still reserve loaded radius and
     # .10 m physical separation. At the last-resort actor stop boundary the
     # robot starts OUTSIDE this inflated body and can plan an escape.
     assert extent >= radius + .34 + .10
     assert extent < .70
     with pytest.raises(ValueError):
-        tracker.cost_points(1.2, small_body_clearance=.17)
+        tracker.cost_points(1.2, robot_radius=robot_radius, small_body_clearance=reserve-.01)
 
 
 def test_large_movers_keep_their_original_guard_reserve_in_dense_scene():
