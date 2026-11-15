@@ -23,3 +23,18 @@ def test_dense_straight_speed_preserves_every_other_stage_limit(enabled):
                         ('bay_pocket_north_exit',.6),('BLUE_CUBE_5_ENTRY',0.)]:
         TaskNavigator._publish_stage_speed_limit(node,ZonePose(stage,0.,0.,0.))
         assert published[-1].speed_limit == speed
+
+
+@pytest.mark.parametrize('zone', ['A', 'B', 'C'])
+def test_external_delivery_goal_does_not_limit_the_whole_transit_to_dock_speed(zone):
+    published = []
+    node = SimpleNamespace(dense_fast_transit=True,
+        stage_speed_limit_publisher=SimpleNamespace(publish=published.append),
+        get_logger=lambda: Mock())
+    TaskNavigator._publish_stage_speed_limit(node, ZonePose('FLOW_A_turn', 0., 0., 0.))
+    assert published[-1].speed_limit == .75
+    # The final action can begin 15m away. Release the previous stage cap;
+    # RPP's configured near-goal scaling and the precision owner slow the end.
+    TaskNavigator._publish_stage_speed_limit(
+        node, ZonePose(zone + '_delivery_entry', 15., 0., 0.))
+    assert published[-1].speed_limit == 0.

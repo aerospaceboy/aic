@@ -3868,8 +3868,6 @@ class TaskNavigator(Node):
             0.75 if corner else approach_limits.get(stage, 0.0))
         if stage is not None and stage.startswith('FLOW_'):
             message.speed_limit = .75 if stage.startswith('FLOW_A_') else 1.2
-        if stage is not None and stage.endswith('_delivery_entry'):
-            message.speed_limit = .65
         publisher.publish(message)
         self.get_logger().info(
             f"nav_stage_speed_limit limit={message.speed_limit:.2f} "
