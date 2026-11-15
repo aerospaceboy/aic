@@ -6,6 +6,13 @@
 
 namespace bot_navigation
 {
+inline bool openSpaceAllowed(double clearance, double age, bool active)
+{
+  // Distance is 1-Lipschitz. Account for all travel since the stamped pose,
+  // rather than treating a fresh status envelope as a fresh odometry sample.
+  return std::isfinite(clearance+age) && age>=-.05 && age<.35 &&
+    clearance-1.78*std::max(0.,age)>(active?.80:1.0);
+}
 // Finite prediction cost. Current occupancy and final collision guards remain
 // hard; uncertain long-range forecasts must not invalidate every escape.
 inline double timedSeparationRisk(double separation, double proximity_weight,

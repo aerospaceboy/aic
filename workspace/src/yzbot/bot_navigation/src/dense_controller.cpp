@@ -80,6 +80,15 @@ public:
           loaded_=(s=="navigating_departure" || s=="navigating_destination" || s=="placing");
         }catch(const std::exception &){}
       });
+    region_=node->create_subscription<std_msgs::msg::String>(
+      "/competition/static_clearance",rclcpp::QoS(2),
+      [this](const std_msgs::msg::String::SharedPtr m){
+        try{auto j=nlohmann::json::parse(m->data);
+          std::lock_guard<std::mutex> lock(mutex_);
+          clearance_=j.value("available",false)?j.at("clearance_m").get<double>():0.;
+          clearance_stamp_=j.at("stamp_sec");
+        }catch(const std::exception &){}
+      });
   }
   std::vector<SensorTrack> snapshot(double now) {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -90,6 +99,10 @@ public:
     return result;
   }
   bool loaded(){std::lock_guard<std::mutex> lock(mutex_);return loaded_;}
+  bool openSpace(double now,bool active) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return openSpaceAllowed(clearance_,now-clearance_stamp_,active);
+  }
   static ForecastPoint at(const SensorTrack & a,double elapsed) {
     if(a.confident && !a.forecast.empty()) {
       for(size_t i=1;i<a.forecast.size();++i)if(a.forecast[i].t>=elapsed) {
@@ -104,9 +117,10 @@ public:
 private:
   rclcpp_lifecycle::LifecycleNode::SharedPtr node_;
   std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap_;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_,mission_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_,mission_,region_;
   std::mutex mutex_;std::vector<SensorTrack> tracks_;bool loaded_{false};
   std::chrono::steady_clock::time_point received_{};
+  double clearance_{0.},clearance_stamp_{-100.};
 };
 
 // Keeps the validated static path follower outside dynamic conflict zones.
@@ -195,7 +209,8 @@ public:
       if(intersects){conflict=true;ids.push_back(a.id);}
     }
     if(conflict)last_conflict_=now;
-    bool use_dynamic=conflict || (active_ && now-last_conflict_<.3);
+    const bool open_space=tracks_.openSpace(now,active_);
+    bool use_dynamic=open_space && (conflict || (active_ && now-last_conflict_<.3));
     if(!use_dynamic && nominal_error)std::rethrow_exception(nominal_error);
     if(use_dynamic && (!active_ || dynamic_plan_pending_)) {
       dynamic_->setPlan(remainingPath(path_,nearest));
@@ -215,6 +230,7 @@ public:
         {"track_ids",ids},{"source","laser_stamped_map_tf"},
         {"selected_command",{command.twist.linear.x,command.twist.linear.y,command.twist.angular.z}},
         {"frame_id",pose.header.frame_id}};
+      j["open_space_gate"]=open_space;
       if(!fallback_reason.empty())j["dynamic_fallback"]=fallback_reason;
       if(use_dynamic) {
         // Read-only comparison: never publish this command to the actuator.

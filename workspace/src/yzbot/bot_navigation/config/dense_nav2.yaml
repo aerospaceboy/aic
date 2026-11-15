@@ -916,12 +916,13 @@ global_costmap:
       - inflation_layer
       prediction_layer:
         plugin: bot_navigation::PredictionLayer
-        enabled: false
+        enabled: true
         timeout: 0.5
         robot_egress_radius: 0.33
+        timed_future_cost: true
       dynamic_layer:
         plugin: nav2_costmap_2d::ObstacleLayer
-        enabled: false
+        enabled: true
         observation_sources: scan_clear dynamic_points
         scan_clear:
           topic: /scan_payload_masked
@@ -973,6 +974,7 @@ global_costmap:
         plugin: nav2_costmap_2d::StaticLayer
         map_subscribe_transient_local: true
         footprint_clearing_enabled: true
+        map_topic: /competition/dense_global_static_map
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
         cost_scaling_factor: 10.0

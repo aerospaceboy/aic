@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import math
 import xml.etree.ElementTree as ET
 import yaml
 import xacro
@@ -70,13 +71,15 @@ def test_dense_route_guidance_retains_static_and_cargo_with_live_local_protectio
     config = yaml.safe_load((ROOT / 'bot_navigation/config/dense_nav2.yaml').read_text())
     global_map = config['global_costmap']['global_costmap']['ros__parameters']
     local_map = config['local_costmap']['local_costmap']['ros__parameters']
-    # Periodic movers must not repeatedly reverse the chosen homotopy. Static
-    # geometry, placed deliveries and the original unsafe stripe remain hard.
+    # Narrow sections use the original follower with current-body global
+    # routing. Long-horizon moving risk is evaluated by the timed controller
+    # only in open space, rather than painting an all-times global union.
     assert global_map['obstacle_layer']['enabled']
     assert 'placed_cubes' in global_map['obstacle_layer']['observation_sources']
     assert global_map['sweep_band_layer']['enabled']
-    assert not global_map['dynamic_layer']['enabled']
-    assert not global_map['prediction_layer']['enabled']
+    assert global_map['dynamic_layer']['enabled']
+    assert global_map['prediction_layer']['enabled']
+    assert global_map['prediction_layer']['timed_future_cost']
     # Only global guidance is persistent: current local laser occupancy and
     # current/forecast sensor tracks continue to constrain executable motion.
     assert local_map['obstacle_layer']['enabled']
@@ -91,7 +94,9 @@ def test_time_indexed_predictions_replace_only_future_spatial_union():
     assert local['prediction_layer']['timed_future_cost']
     # MPPI may not cut into the global planner's static inflation shell.
     assert local['static_layer']['map_topic'] == '/competition/dense_static_map'
-    assert local['robot_radius'] + .20 >= config['global_costmap']['global_costmap']['ros__parameters']['robot_radius']
+    global_map = config['global_costmap']['global_costmap']['ros__parameters']
+    assert global_map['static_layer']['map_topic'] == '/competition/dense_global_static_map'
+    assert math.isclose(local['robot_radius'] + .20, global_map['robot_radius'] + .10)
     sensor = yaml.safe_load((base / 'dense_scene_overrides.yaml').read_text())['competition_dynamic_obstacles']['ros__parameters']
     assert sensor['prediction_robot_radius'] == local['robot_radius']
     assert sensor['small_body_clearance'] + local['robot_radius'] >= .46 - 1.e-9
