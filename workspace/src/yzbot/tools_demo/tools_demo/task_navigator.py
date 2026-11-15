@@ -1629,7 +1629,11 @@ class TaskNavigator(Node):
         if goal is not None and goal.zone == "universal_east_wait":
             return min(self.nav_handoff_distance, 0.03)
         if goal is not None and goal.zone.endswith('_delivery_entry'):
-            return min(self.nav_handoff_distance, .08)
+            # This is a coarse external entry, not the final slot or a
+            # topological safety gate. The checked precision owner handles
+            # its remaining residual; requiring 8cm here stranded RPP 13cm
+            # away from a perfectly usable C entry.
+            return self.nav_handoff_distance
         if (goal is not None and goal.zone.startswith("universal_")
                 and self.pending_poses):
             return min(self.nav_handoff_distance, 0.08)

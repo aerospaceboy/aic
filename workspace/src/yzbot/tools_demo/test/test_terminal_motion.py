@@ -49,11 +49,12 @@ def test_every_delivery_slot_has_an_external_static_clear_entry(
     assert node.pending_poses[-1] == entry
 
 
-def test_fourth_c_slot_finishes_without_curving_into_prior_deliveries(official_map):
+@pytest.mark.parametrize('start', [(2.45, -11.98, 1.07),
+                                 (2.511, -11.979, -1.796)])
+def test_fourth_c_slot_finishes_without_curving_into_prior_deliveries(official_map, start):
     cubes = [(3.1976, -12.260), (3.2701, -12.1533), (3.1875, -12.0467)]
     dock = ZonePose('C', 2.9, -11.940, 0.)
-    entry = delivery_entry(dock, .45)
-    pose = (entry.x, entry.y - .04, 1.07)
+    pose = start
     for _ in range(180):
         values, phase = terminal_command(pose, dock)
         sweep = command_sweep(pose, values, .45)
@@ -163,3 +164,12 @@ def test_local_clearance_alone_cannot_admit_globally_occupied_c_entry(official_m
              _global_cost_at=lambda x, y: 100 if x < 2.5 else 0)
     assert TaskNavigator._stage_delivery_terminal(node)
     assert node.pending_poses[-1].x >= 2.5
+
+
+def test_external_entry_handoff_does_not_require_final_slot_precision():
+    from tools_demo.navigation_math import navigation_handoff_reached
+    node = N(active_route_zone='C', active_return_zone=None,
+             nav_goal_pose=ZonePose('C_delivery_entry', 2.45, -12.1, 0.),
+             nav_handoff_distance=.20, pending_poses=[], route_profiles={})
+    radius = TaskNavigator._route_handoff_distance(node)
+    assert navigation_handoff_reached(2.511, -11.979, 2.45, -12.1, radius)
