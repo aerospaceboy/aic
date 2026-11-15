@@ -105,6 +105,9 @@ public:
     std::lock_guard<std::mutex> lock(mutex_);
     return openSpaceAllowed(clearance_,now-clearance_stamp_,active);
   }
+  std::pair<double,double> staticGeometry(double now) {
+    std::lock_guard<std::mutex> lock(mutex_);return {clearance_,now-clearance_stamp_};
+  }
   static ForecastPoint at(const SensorTrack & a,double elapsed) {
     if(a.confident && !a.forecast.empty()) {
       for(size_t i=1;i<a.forecast.size();++i)if(a.forecast[i].t>=elapsed) {
@@ -233,6 +236,8 @@ public:
         {"selected_command",{command.twist.linear.x,command.twist.linear.y,command.twist.angular.z}},
         {"frame_id",pose.header.frame_id}};
       j["open_space_gate"]=open_space;
+      const auto geometry=tracks_.staticGeometry(now);
+      j["static_clearance_m"]=geometry.first;j["static_clearance_age"]=geometry.second;
       if(!fallback_reason.empty())j["dynamic_fallback"]=fallback_reason;
       if(use_dynamic) {
         // Read-only comparison: never publish this command to the actuator.

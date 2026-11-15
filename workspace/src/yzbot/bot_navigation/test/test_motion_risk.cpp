@@ -10,9 +10,12 @@ TEST(MotionRisk, OpenSpaceHandoverReservesTravelAndRejectsStaleGeometry)
   EXPECT_TRUE(bot_navigation::openSpaceAllowed(2., .05, false));
   EXPECT_FALSE(bot_navigation::openSpaceAllowed(1.05, .2, false));
   EXPECT_FALSE(bot_navigation::openSpaceAllowed(2., .5, true));
-  EXPECT_FALSE(bot_navigation::openSpaceAllowed(.79, 0., true));
+  EXPECT_FALSE(bot_navigation::openSpaceAllowed(.59, 0., true));
   EXPECT_TRUE(bot_navigation::openSpaceAllowed(.9, 0., true));
-  EXPECT_FALSE(bot_navigation::openSpaceAllowed(.9, 0., false));
+  EXPECT_FALSE(bot_navigation::openSpaceAllowed(.65, 0., false));
+  EXPECT_TRUE(bot_navigation::openSpaceAllowed(.65, 0., true));
+  EXPECT_TRUE(bot_navigation::openSpaceAllowed(.75, 0., false));
+  EXPECT_FALSE(bot_navigation::openSpaceAllowed(.75, .05, false));
 }
 
 TEST(MotionRisk, SameCrossingPointHasDifferentRiskAtDifferentArrivalTimes)

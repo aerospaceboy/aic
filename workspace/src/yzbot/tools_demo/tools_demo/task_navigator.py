@@ -931,6 +931,11 @@ class TaskNavigator(Node):
             Bool, "/competition/navigation/direct_control",
             QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self._direct_control = False
+        self.dense_controller_state = {}
+        if dense_enabled():
+            self.dense_controller_subscription = self.create_subscription(
+                String, '/competition/dynamic_controller/state',
+                self._dense_controller_callback, 10)
         self.alignment_velocity_publisher = self.create_publisher(
             Twist,
             "/competition/cmd_vel_direct",
@@ -5841,6 +5846,32 @@ class TaskNavigator(Node):
                 nearest = (topic, ox, oy)
         return nearest
 
+    def _dense_controller_callback(self, message: String) -> None:
+        try:
+            state = json.loads(message.data)
+            self.dense_controller_state = state if isinstance(state, dict) else {}
+        except (ValueError, TypeError):
+            self.dense_controller_state = {}
+
+    def _dense_mppi_progress_owns_transit(self) -> bool:
+        """Keep a fresh, moving feasible MPPI action out of legacy retreat."""
+        state = getattr(self, 'dense_controller_state', {})
+        if (state.get('source') != 'laser_stamped_map_tf'
+                or state.get('mode') != 'sensor_mppi'
+                or not state.get('open_space_gate')
+                or state.get('dynamic_fallback')):
+            return False
+        try:
+            now = self.get_clock().now().nanoseconds * 1.e-9
+            age = now - float(state['stamp'])
+            vx, vy, wz = map(float, state['selected_command'])
+            speed = math.hypot(float(self.latest_vx), float(self.latest_vy))
+            return (all(math.isfinite(v) for v in (age, vx, vy, wz, speed))
+                    and -.05 <= age < .30 and speed > .08
+                    and math.hypot(vx, vy) >= .15)
+        except (KeyError, ValueError, TypeError):
+            return False
+
     def _obstacle_reverse_triggered(self) -> Optional[str]:
         """Return the blocking obstacle topic when stopped on its track."""
         if self.obstacle_reverse_disabled:
@@ -5859,9 +5890,11 @@ class TaskNavigator(Node):
             if ahead is not None and ahead[0] in (
                 "/competition/obstacles/crossing_cart_1",
                 "/competition/obstacles/crossing_cart_2",
-            ) and self._central_cart_can_block_active_segment() \
-                    and self._central_retreat_clear(.50):
-                return ahead[0]
+            ) and self._central_cart_can_block_active_segment():
+                if TaskNavigator._dense_mppi_progress_owns_transit(self):
+                    return None
+                if self._central_retreat_clear(.50):
+                    return ahead[0]
         if speed > 0.08:
             return None
         ahead = self._obstacle_ahead(self.obstacle_block_distance)
