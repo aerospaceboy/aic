@@ -275,11 +275,11 @@ controller_server:
           threshold_to_consider: 1.8
         PathAngleCritic:
           enabled: true
-          cost_weight: 1.5
+          cost_weight: 6.0
           cost_power: 1
           offset_from_furthest: 4
           threshold_to_consider: 0.5
-          max_angle_to_furthest: 1.0
+          max_angle_to_furthest: 0.35
           forward_preference: true
         PreferForwardCritic:
           enabled: true
@@ -288,7 +288,7 @@ controller_server:
           threshold_to_consider: 0.5
         TwirlingCritic:
           enabled: true
-          cost_weight: 0.5
+          cost_weight: 0.1
           cost_power: 1
         GoalAngleCritic:
           enabled: false
@@ -408,11 +408,11 @@ controller_server:
           threshold_to_consider: 1.8
         PathAngleCritic:
           enabled: true
-          cost_weight: 1.5
+          cost_weight: 6.0
           cost_power: 1
           offset_from_furthest: 4
           threshold_to_consider: 0.5
-          max_angle_to_furthest: 1.0
+          max_angle_to_furthest: 0.35
           forward_preference: true
         PreferForwardCritic:
           enabled: true
@@ -421,7 +421,7 @@ controller_server:
           threshold_to_consider: 0.5
         TwirlingCritic:
           enabled: true
-          cost_weight: 0.5
+          cost_weight: 0.1
           cost_power: 1
         GoalAngleCritic:
           enabled: false
@@ -541,11 +541,11 @@ controller_server:
           threshold_to_consider: 1.8
         PathAngleCritic:
           enabled: true
-          cost_weight: 1.5
+          cost_weight: 6.0
           cost_power: 1
           offset_from_furthest: 4
           threshold_to_consider: 0.5
-          max_angle_to_furthest: 1.0
+          max_angle_to_furthest: 0.35
           forward_preference: true
         PreferForwardCritic:
           enabled: true
@@ -554,7 +554,7 @@ controller_server:
           threshold_to_consider: 0.5
         TwirlingCritic:
           enabled: true
-          cost_weight: 0.5
+          cost_weight: 0.1
           cost_power: 1
         GoalAngleCritic:
           enabled: false
@@ -674,11 +674,11 @@ controller_server:
           threshold_to_consider: 1.8
         PathAngleCritic:
           enabled: true
-          cost_weight: 1.5
+          cost_weight: 6.0
           cost_power: 1
           offset_from_furthest: 4
           threshold_to_consider: 0.5
-          max_angle_to_furthest: 1.0
+          max_angle_to_furthest: 0.35
           forward_preference: true
         PreferForwardCritic:
           enabled: true
@@ -687,7 +687,7 @@ controller_server:
           threshold_to_consider: 0.5
         TwirlingCritic:
           enabled: true
-          cost_weight: 0.5
+          cost_weight: 0.1
           cost_power: 1
         GoalAngleCritic:
           enabled: false
@@ -840,11 +840,11 @@ controller_server:
           threshold_to_consider: 1.8
         PathAngleCritic:
           enabled: true
-          cost_weight: 1.5
+          cost_weight: 6.0
           cost_power: 1
           offset_from_furthest: 4
           threshold_to_consider: 0.5
-          max_angle_to_furthest: 1.0
+          max_angle_to_furthest: 0.35
           forward_preference: true
         PreferForwardCritic:
           enabled: true
@@ -853,7 +853,7 @@ controller_server:
           threshold_to_consider: 0.5
         TwirlingCritic:
           enabled: true
-          cost_weight: 0.5
+          cost_weight: 0.1
           cost_power: 1
         GoalAngleCritic:
           enabled: false
