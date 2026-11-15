@@ -511,6 +511,7 @@ class TaskNavigator(Node):
 
     def __init__(self) -> None:
         super().__init__("competition_task_navigator")
+        self.dense_fast_transit = dense_enabled()
         self.declare_parameter("action_name", "/navigate_to_pose")
         self.declare_parameter("use_legacy_layout_routes", True)
         self.declare_parameter("cube_approach_allowlist", [""])
@@ -3673,6 +3674,13 @@ class TaskNavigator(Node):
                                 "north_pickup_tray_east_clear": 1.5,
                                 "north_delivery_tray_west_clear": 1.5,
                                 "north_delivery_tray_east_clear": 1.5})
+        if getattr(self, 'dense_fast_transit', False):
+            # Experimental straight transit stays below the ordinary 1.78
+            # m/s cap. Preserve every corner, central gate and docking limit.
+            for straight in ('A_WALL_SOUTH_CLEAR', 'A_WALL_WEST_CLEAR',
+                             'north_pickup_tray_west_clear', 'north_pickup_tray_east_clear',
+                             'north_delivery_tray_west_clear', 'north_delivery_tray_east_clear'):
+                approach_limits[straight] = 1.65
         if stage is not None and stage.startswith("WALL57_POCKET_"):
             approach_limits[stage] = 1.60
         # Bay-pocket exit anchors turn within 1.0 m of the wall; 0.6 m/s

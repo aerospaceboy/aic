@@ -994,7 +994,7 @@ global_costmap:
         plugin: nav2_costmap_2d::StaticLayer
         map_subscribe_transient_local: true
         footprint_clearing_enabled: true
-        map_topic: /map
+        map_topic: /competition/dense_global_static_map
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
         cost_scaling_factor: 10.0

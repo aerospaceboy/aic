@@ -100,10 +100,10 @@ def test_time_indexed_predictions_replace_only_future_spatial_union():
     # a second hard padding shell. MPPI is separately gated to open space.
     assert local['static_layer']['map_topic'] == '/map'
     global_map = config['global_costmap']['global_costmap']['ros__parameters']
-    assert global_map['static_layer']['map_topic'] == '/map'
-    # The extra MPPI static shell is enforced by its trajectory critic; RPP
-    # and global guidance retain the validated original wall geometry.
-    assert global_map['robot_radius'] >= .38
+    assert global_map['static_layer']['map_topic'] == '/competition/dense_global_static_map'
+    # Keep global guidance outside MPPI's static trajectory envelope, while
+    # RPP's local collision projection retains original physical walls.
+    assert global_map['robot_radius'] + .10 >= .48 - 1.e-9
     assert local['robot_radius'] >= .28
     sensor = yaml.safe_load((base / 'dense_scene_overrides.yaml').read_text())['competition_dynamic_obstacles']['ros__parameters']
     assert sensor['prediction_robot_radius'] == local['robot_radius']
