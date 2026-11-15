@@ -3,6 +3,7 @@
 import json
 import math
 import os
+import struct
 import time
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -22,6 +23,9 @@ from tools_demo.corridor_admission import spawn_corridor_admission, wait_anchor_
 from tools_demo.mission_state_machine import MISSION_STATES
 from tools_demo.transit_anchor import resolve_transit_anchor
 from tools_demo.transport_scene import dense_enabled
+from tools_demo.terminal_motion import (
+    delivery_entry, terminal_command, ground_cubes_clear, command_sweep,
+)
 
 from ament_index_python.packages import get_package_share_directory
 from action_msgs.msg import GoalStatus
@@ -42,6 +46,7 @@ from rclpy.qos import HistoryPolicy
 from rclpy.qos import QoSProfile
 from rclpy.qos import ReliabilityPolicy
 from rclpy.time import Time
+from sensor_msgs.msg import PointCloud2
 from std_msgs.msg import Bool
 from std_msgs.msg import String
 from nav_msgs.msg import OccupancyGrid
@@ -932,6 +937,11 @@ class TaskNavigator(Node):
             QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self._direct_control = False
         self.dense_controller_state = {}
+        self.terminal_cubes = []
+        self.terminal_cubes_stamp = None
+        self.terminal_block_log_ns = 0
+        self.create_subscription(PointCloud2, '/competition/placed_cubes',
+                                 self._terminal_cubes_callback, 10)
         if dense_enabled():
             self.dense_controller_subscription = self.create_subscription(
                 String, '/competition/dynamic_controller/state',
@@ -1618,6 +1628,8 @@ class TaskNavigator(Node):
         goal = getattr(self, "nav_goal_pose", None)
         if goal is not None and goal.zone == "universal_east_wait":
             return min(self.nav_handoff_distance, 0.03)
+        if goal is not None and goal.zone.endswith('_delivery_entry'):
+            return min(self.nav_handoff_distance, .08)
         if (goal is not None and goal.zone.startswith("universal_")
                 and self.pending_poses):
             return min(self.nav_handoff_distance, 0.08)
@@ -3437,6 +3449,96 @@ class TaskNavigator(Node):
             self.pending_poses = poses
             self.get_logger().info(f"corner_flow_prepared stages={len(poses)}")
 
+    def _terminal_cubes_callback(self, message) -> None:
+        """Use the same validated ground-cube source as the Nav2 costmaps."""
+        try:
+            fields = {field.name: field for field in message.fields}
+            if (message.header.frame_id != 'map' or message.height != 1
+                    or not 0 <= message.width <= 5
+                    or any(fields[k].datatype != 7 or fields[k].count != 1
+                           or fields[k].offset < 0
+                           or fields[k].offset + 4 > message.point_step
+                           for k in ('x', 'y'))
+                    or message.row_step < message.width * message.point_step
+                    or len(message.data) < message.row_step):
+                raise ValueError('Invalid ground-cube cloud')
+            endian = '>' if message.is_bigendian else '<'
+            points = []
+            for i in range(message.width):
+                values = tuple(struct.unpack_from(
+                    endian + 'f', message.data,
+                    i * message.point_step + fields[k].offset)[0] for k in ('x', 'y'))
+                if not all(math.isfinite(v) for v in values):
+                    raise ValueError('Nonfinite ground cube')
+                points.append(values)
+            self.terminal_cubes = points
+            stamp = message.header.stamp
+            self.terminal_cubes_stamp = stamp.sec * 1_000_000_000 + stamp.nanosec
+        except (ValueError, KeyError, struct.error):
+            self.terminal_cubes_stamp = None
+
+    def _stage_delivery_terminal(self) -> bool:
+        """Apply one external, slot-aligned entry to every delivery route."""
+        dock = getattr(self, 'dock_pose', None)
+        pending = getattr(self, 'pending_poses', [])
+        if (not getattr(self, 'dense_fast_transit', False)
+                or getattr(self, 'active_zone', None) not in VALID_ZONES
+                or dock is None or not pending):
+            return True
+        last = pending[-1]
+        if last.zone.endswith('_delivery_entry'):
+            return True
+        if math.hypot(last.x - dock.x, last.y - dock.y) > .001:
+            return True
+        for distance in (.65, .55, .45, .75):
+            entry = delivery_entry(dock, distance)
+            if static_footprint_line_clear(
+                    getattr(self, 'static_map', None),
+                    (entry.x, entry.y), (dock.x, dock.y), radius=.38):
+                self.pending_poses[-1] = entry
+                self.get_logger().info(
+                    f'delivery_terminal_entry zone={self.active_zone} '
+                    f'entry=({entry.x:.3f},{entry.y:.3f}) '
+                    f'dock=({dock.x:.3f},{dock.y:.3f})')
+                return True
+        self.publish_error('Delivery terminal static tube is not clear')
+        self.publish_state('failed', reason='delivery_terminal_static_blocked')
+        self._clear_goal()
+        return False
+
+    def _delivery_terminal_step(self, now_ns) -> None:
+        """Finish the dock without pursuit curls beside previous deliveries."""
+        pose = (self.latest_x, self.latest_y, self.latest_yaw)
+        command = Twist()
+        odom = getattr(self, 'latest_odom_received_ns', None)
+        cloud = getattr(self, 'terminal_cubes_stamp', None)
+        fresh = (odom is not None and 0 <= now_ns - odom <= 250_000_000
+                 and cloud is not None and 0 <= now_ns - cloud <= 1_000_000_000)
+        values, phase = terminal_command(pose, self.dock_pose)
+        points = command_sweep(pose, values, horizon=.45)
+        cubes = getattr(self, 'terminal_cubes', [])
+        safe = (fresh and all(ground_cubes_clear(p, cubes) for p in points)
+                and static_footprint_line_clear(
+                    getattr(self, 'static_map', None), pose[:2], points[-1][:2],
+                    radius=.38))
+        if not safe:
+            self._publish_direct_velocity(command)
+            if now_ns - getattr(self, 'terminal_block_log_ns', 0) >= 1_000_000_000:
+                self.terminal_block_log_ns = now_ns
+                self.get_logger().warn(
+                    f'delivery_terminal_hold zone={self.active_zone} '
+                    f'fresh={fresh} phase={phase}')
+            return
+        if phase == 'arrived':
+            self.stop_alignment()
+            self.publish_state('succeeded',
+                               status_code=int(GoalStatus.STATUS_SUCCEEDED),
+                               phase='delivery_terminal_complete')
+            self._clear_goal()
+            return
+        command.linear.x, command.linear.y, command.angular.z = values
+        self._publish_direct_velocity(command)
+
     def _send_next_goal(self) -> None:
         """Send the next pose in a staged navigation command."""
         if TaskNavigator._prune_blue3_encounter_loop(self):
@@ -3451,6 +3553,8 @@ class TaskNavigator(Node):
                 reason="action_server_unavailable",
             )
             self._clear_goal()
+            return
+        if not TaskNavigator._stage_delivery_terminal(self):
             return
         TaskNavigator._prepare_corner_flow(self)
         count = flow_prefix_size(self.pending_poses)
@@ -3702,12 +3806,16 @@ class TaskNavigator(Node):
             0.75 if corner else approach_limits.get(stage, 0.0))
         if stage is not None and stage.startswith('FLOW_'):
             message.speed_limit = .75 if stage.startswith('FLOW_A_') else 1.2
+        if stage is not None and stage.endswith('_delivery_entry'):
+            message.speed_limit = .65
         publisher.publish(message)
         self.get_logger().info(
             f"nav_stage_speed_limit limit={message.speed_limit:.2f} "
             f"stage={pose.zone if pose is not None else 'released'}")
 
     def _dense_transit_anchor(self, pose, following=None, previous=None):
+        if pose.zone.endswith('_delivery_entry'):
+            return pose  # Precision entry belongs to the checked dock tube.
         if (not dense_enabled() or getattr(self, 'static_map', None) is None
                 or getattr(self, 'global_costmap', None) is None):
             return pose
@@ -4332,7 +4440,8 @@ class TaskNavigator(Node):
         # Aim along the collision-checked path, not the direct bearing to a
         # distant target behind walls. Nav2's rotation shim owns path entry.
         zone = getattr(self, "active_zone", None)
-        path_alignment = (continuous_a_route(self.pending_poses)
+        path_alignment = (getattr(self, 'dense_fast_transit', False)
+                          or continuous_a_route(self.pending_poses)
                           or flow_prefix_size(self.pending_poses) > 0
                           or (zone in VALID_ZONES
                               and len(self.pending_poses) == 1
@@ -4638,6 +4747,10 @@ class TaskNavigator(Node):
                     command.angular.z,
                 )
             self._publish_direct_velocity(command)
+            return
+        if (getattr(self, 'dense_fast_transit', False)
+                and self.active_zone in VALID_ZONES and self.dock_pose is not None):
+            TaskNavigator._delivery_terminal_step(self, now_ns)
             return
         if self.dock_pose is not None:
             if self.alignment_deadline_ns is None:
@@ -5998,6 +6111,27 @@ class TaskNavigator(Node):
             speed = math.hypot(self.latest_vx, self.latest_vy)
         return dx, dy, forward, lateral, cos_yaw, sin_yaw, speed
 
+    def _corridor_direct_lane_clear(self, topic) -> bool:
+        """Do not replace an obstacle-aware route with a wall-crossing line.
+
+        This applies to both original movers in either travel direction.
+        Passing the mover's X coordinate is not sufficient proof that its
+        east/west crossing profile fits the robot's current corridor.
+        """
+        if not getattr(self, 'dense_fast_transit', False):
+            return True
+        x, y, yaw = self.latest_x, self.latest_y, self.latest_yaw
+        if any(v is None or not math.isfinite(v) for v in (x, y, yaw)):
+            return False
+        ox, _ = self.obstacle_positions[topic]
+        direction = (getattr(self, 'mover_hold_direction', None)
+                     if getattr(self, 'mover_hold_topic', None) == topic else None)
+        if direction not in (-1., 1.):
+            direction = 1. if ox > x else -1.
+        end = (ox + direction * .70, y)
+        return static_footprint_line_clear(
+            getattr(self, 'static_map', None), (x, y), end, radius=.38)
+
     def _mover_yield_topic(self) -> Optional[str]:
         """
         Admit every corridor crossing independently of response scoring.
@@ -6039,7 +6173,8 @@ class TaskNavigator(Node):
             trigger = max(MOVER_HOLD_MIN_TRIGGER,
                           stop_distance + self.mover_hold_standoff)
             if (forward <= trigger
-                    and abs(lateral) <= self.mover_hold_entry_lateral):
+                    and abs(lateral) <= self.mover_hold_entry_lateral
+                    and TaskNavigator._corridor_direct_lane_clear(self, topic)):
                 # Even an immediately clear window must use the same straight
                 # crossing profile that the admission predictor assumes.
                 return topic
@@ -6102,6 +6237,8 @@ class TaskNavigator(Node):
         reverse machinery that deeper blockages still need.
         """
         self.mover_hold_topic = topic
+        ox, _ = self.obstacle_positions[topic]
+        self.mover_hold_direction = 1. if ox > self.latest_x else -1.
         self.mover_hold_blocked = False
         self._publish_obstacle_velocity(0.0)
         self.mover_hold_started_ns = (
@@ -6407,7 +6544,10 @@ class TaskNavigator(Node):
         aligned = False
         if topic is not None and getattr(self, "latest_yaw", None) is not None:
             ox, _ = self.obstacle_positions[topic]
-            target_yaw = 0.0 if ox > self.latest_x else math.pi
+            direction = getattr(self, 'mover_hold_direction', None)
+            if direction not in (-1., 1.):
+                direction = 1. if ox > self.latest_x else -1.
+            target_yaw = 0.0 if direction > 0 else math.pi
             error = math.atan2(math.sin(target_yaw - self.latest_yaw),
                                math.cos(target_yaw - self.latest_yaw))
             aligned = abs(error) <= 0.04
@@ -6424,15 +6564,17 @@ class TaskNavigator(Node):
         held_long_enough = held_long_enough or (
             settled is not None and now_ns - settled >= 500_000_000)
         if (topic is not None and held_long_enough and aligned
+                and TaskNavigator._corridor_direct_lane_clear(self, topic)
                 and self._mover_hold_clear(topic)):
             self.mover_involved_ns = self.get_clock().now().nanoseconds
             self.get_logger().warn(f"mover_crossing_hold end topic={topic}")
             self.mover_admitted.add(topic)
             ox, _ = self.obstacle_positions[topic]
-            self.mover_crossing_yaw = (
-                0.0 if ox > self.latest_x else math.pi)
-            self.mover_crossing_exit_x = ox + (
-                0.70 if ox > self.latest_x else -0.70)
+            direction = getattr(self, 'mover_hold_direction', None)
+            if direction not in (-1., 1.):
+                direction = 1. if ox > self.latest_x else -1.
+            self.mover_crossing_yaw = 0.0 if direction > 0 else math.pi
+            self.mover_crossing_exit_x = ox + .70 * direction
             goal = self.nav_goal_pose
             # Carry the admitted straight lane to its existing clear anchor,
             # instead of stopping 0.5 m short and asking Nav2 to turn/restart
