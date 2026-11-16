@@ -11,7 +11,11 @@ def test_guard_refuses_stale_and_missing_installed_program(tmp_path):
     repo, workspace = tmp_path/'repo', tmp_path/'workspace'
     pairs = [('mybot/pick_place_moveit.py','mybot/lib/mybot/pick_place_moveit'),
              ('mybot_description/worlds/offic_room.world',
-              'mybot_description/share/mybot_description/worlds/offic_room.world')]
+              'mybot_description/share/mybot_description/worlds/offic_room.world'),
+             ('tools_demo/config/navigate_corner_to_pose.xml',
+              'tools_demo/share/tools_demo/config/navigate_corner_to_pose.xml'),
+             ('bot_navigation/config/fusion_nav2.yaml',
+              'bot_navigation/share/bot_navigation/config/fusion_nav2.yaml')]
     # Test-owned fixtures, not real project edits.
     for source,installed in pairs:
         src,dst=repo/source,workspace/'install'/installed
@@ -25,6 +29,11 @@ def test_guard_refuses_stale_and_missing_installed_program(tmp_path):
     for source,installed in pairs:
         (workspace/'install'/installed).write_text((repo/source).read_text())
     assert subprocess.run(command,capture_output=True).returncode == 0
+    for source, installed in pairs:
+        destination = workspace/'install'/installed
+        destination.write_text('stale')
+        assert subprocess.run(command,capture_output=True).returncode == 2
+        destination.write_text((repo/source).read_text())
     (workspace/'install'/pairs[0][1]).unlink()
     assert subprocess.run(command,capture_output=True).returncode == 2
 
