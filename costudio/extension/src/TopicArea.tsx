@@ -550,9 +550,8 @@ function TopicArea({
             style={{
               fontSize: 13,
               fontWeight: 700,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              overflowWrap: "anywhere",
+              whiteSpace: "pre-wrap",
             }}
             title={state?.question}
           >

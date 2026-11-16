@@ -27,6 +27,7 @@ from tf2_ros import TransformException
 from tf2_ros import TransformListener
 
 from tools_demo.dashboard_state import DashboardState
+from tools_demo.question_metadata import supplied_question_seed
 
 
 def load_world_layout() -> dict:
@@ -190,12 +191,14 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
         self.dashboard_state.update_text("question", question)
         if self.problem_publisher is not None:
             problem_message = String()
+            seed, _ = supplied_question_seed(payload)
             problem_message.data = json.dumps(
                 {
                     "question": question,
                     "mapping_rules": mapping_rules,
                     "task_id": str(payload.get("task_id", "")).strip()
                     or None,
+                    "question_seed": seed,
                 },
                 ensure_ascii=False,
                 separators=(",", ":"),

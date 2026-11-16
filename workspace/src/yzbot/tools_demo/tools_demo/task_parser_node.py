@@ -407,11 +407,15 @@ class TaskParserNode(Node):
             f"order={order_message.data}"
         )
 
-    def begin_parse(self, question, mapping_rules="", task_id=None):
+    def begin_parse(self, question, mapping_rules="", task_id=None, *, question_seed=None):
         """Associate display evidence with this exact submitted request."""
+        from tools_demo.question_metadata import supplied_question_seed
+        seed, seed_source = supplied_question_seed({
+            "question": question, "question_seed": question_seed})
         self.display_request = {
             "request_id": task_id or uuid.uuid4().hex,
             "question": question, "mapping_rules": mapping_rules,
+            "question_seed": seed, "question_seed_source": seed_source,
         }
         self.publish_parse_result("parsing")
 
@@ -690,7 +694,8 @@ class TaskParserNode(Node):
             self.problem_submissions = submissions
         if dedupe == self.last_problem:
             return
-        self.begin_parse(question, mapping_rules, task_id)
+        self.begin_parse(question, mapping_rules, task_id, question_seed=payload.get(
+            "question_seed", payload.get("seed")))
         self.get_logger().info(
             f"problem received: {question} | rules: {mapping_rules}"
         )

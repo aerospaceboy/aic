@@ -230,6 +230,18 @@ def test_panel_retains_only_the_current_supplied_question_seed():
     assert payload["question_seed_source"] == "not_supplied"
 
 
+def test_parser_keeps_seed_through_parsing_failure_and_next_request():
+    harness = ParserHarness()
+    harness.problem_callback(String(data=json.dumps({
+        "question": QUESTION, "mapping_rules": RULES,
+        "task_id": "seeded", "seed": "00123"})))
+    assert harness.parse_result_publisher.last_json()["question_seed"] == "00123"
+    harness.request_llm_problem.side_effect = LlmClientError("offline", kind="connection")
+    harness.submit("next-unseeded")
+    assert harness.parse_result_publisher.last_json()["state"] == "failed"
+    assert harness.parse_result_publisher.last_json()["question_seed"] == ""
+
+
 def test_panel_payload_clears_stale_instruction_after_a_failure():
     harness = StatusHarness()
     harness.apply(_evidence("published", PLAN.to_dict()))
