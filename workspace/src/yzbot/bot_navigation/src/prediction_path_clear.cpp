@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "bot_navigation/prediction_path_clear.hpp"
 #include "bot_navigation/path_validity_grace.hpp"
+#include "bot_navigation/stable_path_refresh.hpp"
 #include <cmath>
 #include <algorithm>
 #include <limits>
@@ -133,4 +134,5 @@ BT_REGISTER_NODES(factory)
 {
   factory.registerNodeType<bot_navigation::PredictionPathClear>("PredictionPathClear");
   factory.registerNodeType<bot_navigation::PathValidityGrace>("PathValidityGrace");
+  factory.registerNodeType<bot_navigation::StablePathRefresh>("StablePathRefresh");
 }
