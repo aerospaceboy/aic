@@ -4660,6 +4660,23 @@ class TaskNavigator(Node):
             self.alignment_deadline_ns is not None
             and now_ns >= self.alignment_deadline_ns
         ):
+            if getattr(self, 'recovery_target', None) is not None:
+                # A blocked escape is not an arrived escape. Recover the
+                # original route before waiting/replanning; never leave its
+                # private target latched over later commands.
+                self.stop_alignment()
+                self._restore_bounded_recovery_route()
+                if self.pending_poses:
+                    self.nav_goal_pose = self.pending_poses.pop(0)
+                    self.nav_batch_poses = []
+                    if self._try_dynamic_recovery_wait():
+                        return
+                    if self._try_bounded_recovery():
+                        return
+                self.publish_error('Recovery escape did not reach its checked endpoint')
+                self.publish_state('failed', reason='recovery_escape_timeout')
+                self._clear_goal()
+                return
             if self.pre_navigation_alignment:
                 # Pre-alignment only improves DWB startup; it is not an
                 # arrival safety check. If the direct velocity path is
@@ -5693,8 +5710,8 @@ class TaskNavigator(Node):
                 return False
         return True
 
-    def _finish_bounded_recovery(self) -> None:
-        """Clear costmaps and replan the original goal after escaping."""
+    def _restore_bounded_recovery_route(self) -> None:
+        """Restore the saved route without claiming an escape was reached."""
         self.recovery_target = None
         self.pending_poses = list(self.recovery_pending_poses)
         self.recovery_pending_poses = []
@@ -5707,6 +5724,10 @@ class TaskNavigator(Node):
         self.recovery_dock_pose = None
         self.recovery_next_dock_pose = None
         self.recovery_final_yaw = None
+
+    def _finish_bounded_recovery(self) -> None:
+        """Clear costmaps and replan the original goal after escaping."""
+        self._restore_bounded_recovery_route()
         self._clear_costmaps()
         self.get_logger().info(
             "Recovery escape reached; clearing costmaps and replanning"
@@ -5733,6 +5754,11 @@ class TaskNavigator(Node):
         """Release only the previous canceled leg's hold for a fresh command."""
         self.recovery_attempts = 0
         self.recovery_progress_anchor = None
+        self.recovery_target = None
+        self.recovery_pending_poses = []
+        self.recovery_dock_pose = None
+        self.recovery_next_dock_pose = None
+        self.recovery_final_yaw = None
         self.dynamic_recovery_wait = None
         self.dynamic_recovery_waits = 0
         self.dynamic_recovery_deadline_ns = None
@@ -5905,6 +5931,11 @@ class TaskNavigator(Node):
         self.dynamic_recovery_wait = None
         self.recovery_attempts = 0
         self.recovery_progress_anchor = None
+        self.recovery_target = None
+        self.recovery_pending_poses = []
+        self.recovery_dock_pose = None
+        self.recovery_next_dock_pose = None
+        self.recovery_final_yaw = None
         self.spawn_wait_capture_goal = None
         self.spawn_wait_capture_active = False
         self.spawn_wait_capture_disabled = False

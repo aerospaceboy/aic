@@ -32,10 +32,44 @@ def harness():
 
 def test_new_command_gets_its_own_recovery_budget():
     n=harness()
+    n.recovery_target=ZonePose('stale_escape',1.,0.,0.)
+    n.recovery_pending_poses=[n.nav_goal_pose]
     TaskNavigator._reset_mover_control_for_command(n)
     assert n.recovery_attempts == 0
     assert n.dynamic_recovery_waits == 0
     assert n.dynamic_recovery_deadline_ns is None
+    assert n.recovery_target is None
+    assert n.recovery_pending_poses == []
+
+
+def test_terminal_cleanup_cannot_leave_an_escape_latched_over_the_next_leg():
+    n=harness()
+    n.recovery_target=ZonePose('old',1.,0.,0.)
+    n.recovery_pending_poses=[n.nav_goal_pose]
+    TaskNavigator._clear_goal(n)
+    assert n.recovery_target is None
+    assert n.recovery_pending_poses == []
+    assert n.alignment_target_yaw is None
+
+
+def test_blocked_escape_timeout_restores_original_route_before_dynamic_wait():
+    n=harness();original=n.nav_goal_pose
+    n.recovery_target=ZonePose('escape',1.,0.,0.)
+    n.recovery_pending_poses=[original,ZonePose('next',5.,0.,0.)]
+    n.recovery_dock_pose=ZonePose('dock',6.,0.,0.)
+    n.recovery_next_dock_pose=None;n.recovery_final_yaw=1.
+    n.alignment_target_yaw=0.;n.alignment_deadline_ns=n.now_ns
+    n.stop_alignment=Mock();n._try_bounded_recovery=Mock()
+    n._restore_bounded_recovery_route=TaskNavigator._restore_bounded_recovery_route.__get__(n)
+    TaskNavigator.alignment_callback(n)
+    n.stop_alignment.assert_called_once()
+    assert n.recovery_target is None
+    assert n.nav_goal_pose == original
+    assert n.pending_poses == [ZonePose('next',5.,0.,0.)]
+    assert n.dock_pose == ZonePose('dock',6.,0.,0.)
+    assert n.dynamic_recovery_wait is not None
+    n._try_bounded_recovery.assert_not_called()
+    n._clear_goal.assert_not_called()
 
 
 def test_observed_actor_motion_replans_the_retained_goal():
