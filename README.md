@@ -81,7 +81,7 @@ bash scripts/06_generate_question.sh             # 正式出题工具
 bash scripts/06_generate_question.sh --practice  # 练习
 ```
 
-复制题目正文，并在比赛面板填写对应映射规则后提交。三个规则示例位于 `examples/规则1.txt`、`规则2.txt`、`规则3.txt`。比赛实际题目与规则以裁判要求为准。
+完整复制正式出题输出，保留“题目种子：...”与题目正文，并在比赛面板填写对应映射规则后提交。若通过 JSON 接口提交，可另附真实 `seed` 或 `question_seed` 字段；缺失时界面明确提示，不自行补造。三个规则示例位于 `examples/规则1.txt`、`规则2.txt`、`规则3.txt`。比赛实际题目与规则以裁判要求为准。
 
 ## 检查与测试
 

@@ -242,6 +242,11 @@ def test_parser_keeps_seed_through_parsing_failure_and_next_request():
     assert harness.parse_result_publisher.last_json()["question_seed"] == ""
 
 
+def test_supplied_seed_label_is_not_counted_as_goods():
+    plan = problem_to_plan("题目种子：999999\n" + QUESTION, RULES)
+    assert plan.counts == PLAN.counts
+
+
 def test_panel_payload_clears_stale_instruction_after_a_failure():
     harness = StatusHarness()
     harness.apply(_evidence("published", PLAN.to_dict()))
