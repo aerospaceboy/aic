@@ -1,4 +1,5 @@
-# Provincial RPP plus preserved-curvature safety, bounded path search and live obstacle layers.
+# RPP geometry with heading hysteresis and curvature-preserving actuator timing.
+# Footprints, collision horizons, bounded path search and live obstacle layers stay intact.
 # Experimental timed MPPI remains disabled until it passes closed-loop qualification.
 amcl:
   ros__parameters:
@@ -169,10 +170,10 @@ controller_server:
       plugin: bot_navigation::AdaptiveDynamicController
       continuous_transit: false
       enable_dynamic_avoidance: false
-      nominal_plugin: nav2_rotation_shim_controller::RotationShimController
+      nominal_plugin: bot_navigation::CoherentPursuitController
       Nominal:
         transform_tolerance: 1.0
-        plugin: nav2_rotation_shim_controller::RotationShimController
+        plugin: bot_navigation::CoherentPursuitController
         primary_controller: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
         angular_dist_threshold: 0.45
         angular_disengage_threshold: 0.2
@@ -229,7 +230,7 @@ controller_server:
         max_allowed_time_to_collision_up_to_carrot: 0.65
         max_robot_pose_search_dist: 1.5
         use_interpolation: true
-        plugin: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
+        plugin: bot_navigation::CoherentPursuitController
       Dynamic:
         plugin: nav2_mppi_controller::MPPIController
         motion_model: DiffDrive
@@ -334,10 +335,10 @@ controller_server:
       plugin: bot_navigation::AdaptiveDynamicController
       continuous_transit: false
       enable_dynamic_avoidance: false
-      nominal_plugin: nav2_rotation_shim_controller::RotationShimController
+      nominal_plugin: bot_navigation::CoherentPursuitController
       Nominal:
         transform_tolerance: 1.0
-        plugin: nav2_rotation_shim_controller::RotationShimController
+        plugin: bot_navigation::CoherentPursuitController
         primary_controller: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
         angular_dist_threshold: 0.45
         angular_disengage_threshold: 0.2
@@ -394,7 +395,7 @@ controller_server:
         max_allowed_time_to_collision_up_to_carrot: 0.65
         max_robot_pose_search_dist: 1.5
         use_interpolation: true
-        plugin: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
+        plugin: bot_navigation::CoherentPursuitController
       Dynamic:
         plugin: nav2_mppi_controller::MPPIController
         motion_model: DiffDrive
@@ -499,10 +500,10 @@ controller_server:
       plugin: bot_navigation::AdaptiveDynamicController
       continuous_transit: false
       enable_dynamic_avoidance: false
-      nominal_plugin: nav2_rotation_shim_controller::RotationShimController
+      nominal_plugin: bot_navigation::CoherentPursuitController
       Nominal:
         transform_tolerance: 1.0
-        plugin: nav2_rotation_shim_controller::RotationShimController
+        plugin: bot_navigation::CoherentPursuitController
         primary_controller: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
         angular_dist_threshold: 1.0
         angular_disengage_threshold: 0.2
@@ -559,7 +560,7 @@ controller_server:
         max_allowed_time_to_collision_up_to_carrot: 0.65
         max_robot_pose_search_dist: 1.5
         use_interpolation: true
-        plugin: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
+        plugin: bot_navigation::CoherentPursuitController
       Dynamic:
         plugin: nav2_mppi_controller::MPPIController
         motion_model: DiffDrive
@@ -664,10 +665,10 @@ controller_server:
       plugin: bot_navigation::AdaptiveDynamicController
       continuous_transit: false
       enable_dynamic_avoidance: false
-      nominal_plugin: nav2_rotation_shim_controller::RotationShimController
+      nominal_plugin: bot_navigation::CoherentPursuitController
       Nominal:
         transform_tolerance: 1.0
-        plugin: nav2_rotation_shim_controller::RotationShimController
+        plugin: bot_navigation::CoherentPursuitController
         primary_controller: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
         angular_dist_threshold: 1.0
         angular_disengage_threshold: 0.2
@@ -724,7 +725,7 @@ controller_server:
         max_allowed_time_to_collision_up_to_carrot: 0.65
         max_robot_pose_search_dist: 1.5
         use_interpolation: true
-        plugin: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
+        plugin: bot_navigation::CoherentPursuitController
       Dynamic:
         plugin: nav2_mppi_controller::MPPIController
         motion_model: DiffDrive
@@ -826,7 +827,7 @@ controller_server:
       dynamic_reentry_delay: 0.75
     CorridorApproach:
       transform_tolerance: 1.0
-      plugin: nav2_rotation_shim_controller::RotationShimController
+      plugin: bot_navigation::CoherentPursuitController
       primary_controller: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
       angular_dist_threshold: 0.45
       angular_disengage_threshold: 0.2
@@ -862,10 +863,10 @@ controller_server:
       plugin: bot_navigation::AdaptiveDynamicController
       continuous_transit: false
       enable_dynamic_avoidance: false
-      nominal_plugin: nav2_rotation_shim_controller::RotationShimController
+      nominal_plugin: bot_navigation::CoherentPursuitController
       Nominal:
         transform_tolerance: 1.0
-        plugin: nav2_rotation_shim_controller::RotationShimController
+        plugin: bot_navigation::CoherentPursuitController
         primary_controller: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
         angular_dist_threshold: 1.0
         angular_disengage_threshold: 0.2
@@ -922,7 +923,7 @@ controller_server:
         max_allowed_time_to_collision_up_to_carrot: 0.65
         max_robot_pose_search_dist: 1.5
         use_interpolation: true
-        plugin: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
+        plugin: bot_navigation::CoherentPursuitController
       Dynamic:
         plugin: nav2_mppi_controller::MPPIController
         motion_model: DiffDrive

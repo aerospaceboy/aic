@@ -1612,7 +1612,9 @@ def test_valid_path_keeps_rotation_shim_alignment_stable():
     )
     assert "RegulatedPurePursuitController" in parameters
     assert "<exec_depend>nav2_rotation_shim_controller</exec_depend>" in package
-    assert "<exec_depend>nav2_regulated_pure_pursuit_controller</exec_depend>" in package
+    # The local controller derives from RPP, so it now needs both the build and
+    # runtime dependency rather than the previous runtime-only declaration.
+    assert "<depend>nav2_regulated_pure_pursuit_controller</depend>" in package
 
 
 def test_rpp_slows_and_checks_forward_before_tight_corners():

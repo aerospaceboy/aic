@@ -1,5 +1,8 @@
 <library path="dense_dynamic_controller">
   <class type="bot_navigation::AdaptiveDynamicController" base_class_type="nav2_core::Controller">
-    <description>Static follower with early sensor-driven Omni MPPI conflict handling.</description>
+    <description>Static follower with optional sensor-driven differential-drive MPPI conflict handling.</description>
+  </class>
+  <class type="bot_navigation::CoherentPursuitController" base_class_type="nav2_core::Controller">
+    <description>Collision-checked regulated pursuit with heading hysteresis and curvature-preserving yaw-acceleration scaling.</description>
   </class>
 </library>

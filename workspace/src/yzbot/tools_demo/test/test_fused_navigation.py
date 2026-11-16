@@ -55,14 +55,17 @@ def test_collision_monitor_preserves_original_zones_and_adds_stopping_preview():
     assert preview['action_type']=='approach' and preview['enabled']
 
 
-def test_nominal_bounds_search_to_avoid_pruning_across_a_nearby_wall():
+def test_coherent_pursuit_preserves_geometry_and_bounded_path_search():
     old = BASE['controller_server']['ros__parameters']
     new = FUSED['controller_server']['ros__parameters']
     for name in old['controller_plugins']:
         actual = new[name].get('Nominal', new[name])
-        allowed = {'max_robot_pose_search_dist'} if 'Nominal' in new[name] else set()
+        assert actual['plugin'] == 'bot_navigation::CoherentPursuitController'
+        allowed = {'plugin'}
+        if 'Nominal' in new[name]:
+            allowed.add('max_robot_pose_search_dist')
         assert {k: v for k, v in actual.items() if k not in allowed} == {
             k: v for k, v in old[name].items() if k not in allowed}
-        if allowed:
+        if 'Nominal' in new[name]:
             assert actual['max_robot_pose_search_dist'] == 1.5
             assert actual['use_collision_detection']
