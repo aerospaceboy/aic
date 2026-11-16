@@ -1,4 +1,4 @@
-# YZBot 省赛项目
+# YZBot 移动抓取项目
 
 基于 ROS 2 Humble、Gazebo Classic、Nav2、MoveIt 2 和 RGB-D 的移动抓取系统。系统将题目与映射规则解析为任务，识别红蓝物块，完成导航、抓取、运输和 A/B/C 区域投放，并在 CoStudio 与网页面板显示实时状态。
 
@@ -6,7 +6,7 @@
 
 - Ubuntu 22.04，x86_64，ROS 2 Humble，Gazebo Classic 11。
 - 图形桌面用于 Gazebo、RViz 和 CoStudio；首次安装依赖及云模型调用需要联网。
-- 默认模型为 `qwen3.8-max`，thinking 关闭。API Key 保存在当前用户的 `~/.config/yzbot/llm.env`，不能放进源码或提交包。
+- 当前模型为 `qwen3.8-flash`，thinking 关闭，实际调用以每题解析证据为准；原 Max 配置保留在用户私有配置中。API Key 保存在当前用户的 `~/.config/yzbot/llm.env`，不能放进源码或提交包。
 - 本项目是源码工程，不是可引导的系统镜像。应复制到 Linux 持久化文件系统，不能直接在 NTFS/exFAT 中构建符号链接工作区。
 
 ## 目录
@@ -71,6 +71,8 @@ YZBOT_GAZEBO_GUI_RENDER_RATE=30 bash 启动本版本.sh
 ```
 
 CoStudio 使用 **coScene WebSocket** 连接 `ws://127.0.0.1:21274`，导入 `costudio/YZBot比赛布局.json`。网页面板为 `http://127.0.0.1:8080/`。
+
+该布局为项目自定义扩展，国赛须核对主办方指定的官方布局后再使用；完整字段清单和待确认事项见 `workspace/src/yzbot/docs/submission_checklist.md`。研发闭环使用 `bash scripts/09_start_validation.sh`，该入口保留 Gazebo/RViz 等验证环境并省去 CoStudio 客户端自动打开。
 
 ## 出题与提交
 

@@ -1,4 +1,4 @@
-# Provincial path following with nonholonomic, conflict-only timed avoidance.
+# Provincial path following; nonholonomic timed avoidance remains experimental.
 # Original map, footprint, safety zones and final docking guards are retained.
 amcl:
   ros__parameters:
@@ -167,6 +167,7 @@ controller_server:
     FollowPath:
       plugin: bot_navigation::AdaptiveDynamicController
       continuous_transit: false
+      enable_dynamic_avoidance: false
       nominal_plugin: nav2_rotation_shim_controller::RotationShimController
       Nominal:
         transform_tolerance: 1.0
@@ -303,6 +304,7 @@ controller_server:
     CentralTransit:
       plugin: bot_navigation::AdaptiveDynamicController
       continuous_transit: false
+      enable_dynamic_avoidance: false
       nominal_plugin: nav2_rotation_shim_controller::RotationShimController
       Nominal:
         transform_tolerance: 1.0
@@ -439,6 +441,7 @@ controller_server:
     SmoothTransit:
       plugin: bot_navigation::AdaptiveDynamicController
       continuous_transit: false
+      enable_dynamic_avoidance: false
       nominal_plugin: nav2_rotation_shim_controller::RotationShimController
       Nominal:
         transform_tolerance: 1.0
@@ -575,6 +578,7 @@ controller_server:
     CornerFlow:
       plugin: bot_navigation::AdaptiveDynamicController
       continuous_transit: false
+      enable_dynamic_avoidance: false
       nominal_plugin: nav2_rotation_shim_controller::RotationShimController
       Nominal:
         transform_tolerance: 1.0
@@ -744,6 +748,7 @@ controller_server:
     CornerFlowA:
       plugin: bot_navigation::AdaptiveDynamicController
       continuous_transit: false
+      enable_dynamic_avoidance: false
       nominal_plugin: nav2_rotation_shim_controller::RotationShimController
       Nominal:
         transform_tolerance: 1.0
@@ -901,7 +906,7 @@ local_costmap:
         enabled: true
         timeout: 0.5
         robot_egress_radius: 0.33
-        timed_future_cost: true
+        timed_future_cost: false
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
         cost_scaling_factor: 10.0
@@ -960,7 +965,7 @@ global_costmap:
         enabled: true
         timeout: 0.5
         robot_egress_radius: 0.33
-        timed_future_cost: true
+        timed_future_cost: false
       dynamic_layer:
         plugin: nav2_costmap_2d::ObstacleLayer
         enabled: true

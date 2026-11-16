@@ -14,6 +14,7 @@ def test_dynamic_candidates_obey_same_nonholonomic_model_as_execution(name):
     controllers = FUSED['controller_server']['ros__parameters']
     controller = controllers[name]
     assert not controller['continuous_transit']
+    assert not controller['enable_dynamic_avoidance']
     assert controller['require_nonholonomic']
     assert controller['Dynamic']['motion_model'] == 'DiffDrive'
     assert controller['Dynamic']['vy_max'] == 0.
@@ -31,9 +32,9 @@ def test_fusion_retains_original_map_radius_and_live_collision_sources(group):
     for name in ['robot_radius', 'plugins', 'obstacle_layer', 'static_layer', 'inflation_layer']:
         assert new[name] == old[name]
     assert new['prediction_layer']['enabled']
-    # Future positions are scored at arrival time by the dynamic critic;
-    # their all-times union must not block the ordinary spatial follower.
-    assert new['prediction_layer']['timed_future_cost']
+    # The selected release follower is RPP. Its conservative future spatial
+    # costs must remain visible while experimental timed MPPI is disabled.
+    assert not new['prediction_layer']['timed_future_cost']
 
 
 def test_collision_monitor_limits_are_unchanged_and_precision_adjustments_remain_bounded():

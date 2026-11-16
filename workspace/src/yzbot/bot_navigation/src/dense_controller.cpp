@@ -146,6 +146,9 @@ public:
     nav2_util::declare_parameter_if_not_declared(node_,name+".continuous_transit",
       rclcpp::ParameterValue(false));
     continuous_transit_=node_->get_parameter(name+".continuous_transit").as_bool();
+    nav2_util::declare_parameter_if_not_declared(node_,name+".enable_dynamic_avoidance",
+      rclcpp::ParameterValue(true));
+    dynamic_enabled_=node_->get_parameter(name+".enable_dynamic_avoidance").as_bool();
     nav2_util::declare_parameter_if_not_declared(node_,name+".require_nonholonomic",
       rclcpp::ParameterValue(false));
     nav2_util::declare_parameter_if_not_declared(node_,name+".dynamic_release_delay",
@@ -170,8 +173,8 @@ public:
     nominal_max_=node_->get_parameter(name+".Nominal.desired_linear_vel").as_double();
     tracks_.configure(node_,costmap);
     status_=node_->create_publisher<std_msgs::msg::String>("/competition/dynamic_controller/state",10);
-    RCLCPP_INFO(node_->get_logger(),"%s adaptive controller: static follower + sensor-time MPPI continuous=%s",
-      name.c_str(),continuous_transit_?"true":"false");
+    RCLCPP_INFO(node_->get_logger(),"%s adaptive controller: static follower + sensor-time MPPI enabled=%s continuous=%s",
+      name.c_str(),dynamic_enabled_?"true":"false",continuous_transit_?"true":"false");
   }
   void cleanup()override{nominal_->cleanup();dynamic_->cleanup();}
   void activate()override{nominal_->activate();dynamic_->activate();status_->on_activate();}
@@ -189,7 +192,8 @@ public:
     const geometry_msgs::msg::PoseStamped & pose,const geometry_msgs::msg::Twist & velocity,
     nav2_core::GoalChecker * checker)override
   {
-    const double now=node_->now().seconds();auto tracks=tracks_.snapshot(now);
+    const double now=node_->now().seconds();
+    auto tracks=dynamic_enabled_?tracks_.snapshot(now):std::vector<SensorTrack>{};
     double tx=0,ty=0,heading=0;
     if(path_.header.frame_id!=pose.header.frame_id) {
       const auto transform=tf_->lookupTransform(pose.header.frame_id,path_.header.frame_id,tf2::TimePointZero);
@@ -258,7 +262,7 @@ public:
     // Never disguise a nominal error or ordinary tracking as avoidance proof.
     const bool continuous=continuous_transit_ && !nominal_error &&
       continuousPathEligible(remaining,best,active_);
-    bool use_dynamic=ownership_.choose(now,open_space,continuous || conflict,
+    bool use_dynamic=ownership_.choose(now,dynamic_enabled_ && open_space,continuous || conflict,
       release_delay_,reentry_delay_);
     if(!use_dynamic) {
       current_nominal();
@@ -300,6 +304,7 @@ public:
         {"frame_id",pose.header.frame_id}};
       j["open_space_gate"]=open_space;
       j["continuous_transit"]=continuous_transit_;
+      j["dynamic_enabled"]=dynamic_enabled_;
       j["nonholonomic"]=nonholonomic_;
       j["remaining_path_m"]=remaining;
       const auto geometry=tracks_.staticGeometry(now);
@@ -325,6 +330,7 @@ private:
   rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::String>::SharedPtr status_;
   bool active_{false},dynamic_plan_pending_{true},continuous_transit_{false};
   bool nonholonomic_{false},nominal_refresh_pending_{false};
+  bool dynamic_enabled_{true};
   ConflictOwnership ownership_;
   double release_delay_{.5},reentry_delay_{.75};
   std::atomic<double> speed_limit_{0.};double nominal_max_{1.78};
