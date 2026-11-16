@@ -76,7 +76,7 @@ def test_transit_replaces_stop_inside_lane_band():
     out = SafetyLimiter._swept_band_transit(harness, _twist(1.65, -0.55))
     assert out is not None
     assert out.linear.x == pytest.approx(0.80)
-    assert out.angular.z == pytest.approx(-0.55)
+    assert out.angular.z / out.linear.x == pytest.approx(-0.55 / 1.65)
     # The commit clock starts on the first transit sample.
     assert harness.swept_band_since_ns == now
 

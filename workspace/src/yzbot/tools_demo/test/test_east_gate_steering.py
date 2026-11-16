@@ -1,4 +1,4 @@
-"""Safe phase waiting must retain upstream collision-safe steering."""
+"""A denied moving arc must not become an unplanned in-place pivot."""
 
 from types import MethodType
 from unittest.mock import Mock
@@ -23,8 +23,8 @@ def make_command_harness():
 
 
 @pytest.mark.parametrize("angular", [-1.833, 1.533])
-def test_phase_wait_preserves_collision_safe_rotation(angular):
-    """Replay the observed gate input without admitting translation."""
+def test_phase_wait_stops_the_entire_moving_arc(angular):
+    """Replay the observed mixed command without changing its geometry."""
     harness = make_command_harness()
     command = Twist()
     command.linear.x = 0.774
@@ -34,8 +34,31 @@ def test_phase_wait_preserves_collision_safe_rotation(angular):
     output = harness.publisher.publish.call_args.args[0]
     assert output.linear.x == 0.0
     assert output.linear.y == 0.0
-    assert output.angular.z == angular
+    assert output.angular.z == 0.
     assert command.linear.x == 0.774
+
+
+def test_phase_wait_retains_an_explicit_stationary_alignment():
+    harness = make_command_harness()
+    harness.east_gate_blocked = lambda sign: True
+    command = Twist()
+    command.angular.z = .5
+    SafetyLimiter.cmd_vel_callback(harness, command)
+    assert harness.publisher.publish.call_args.args[0].angular.z == .5
+
+
+def test_obstacle_slowdown_preserves_the_requested_turn_radius():
+    harness = make_command_harness()
+    harness.east_gate_blocked = lambda sign: False
+    harness.west_lane_blocked = lambda sign: False
+    harness.scale_for_obstacles = lambda sign: .3
+    command = Twist()
+    command.linear.x, command.angular.z = 1.2, .6
+    SafetyLimiter.cmd_vel_callback(harness, command)
+    output = harness.publisher.publish.call_args.args[0]
+    assert output.linear.x == pytest.approx(.36)
+    assert output.angular.z == pytest.approx(.18)
+    assert output.angular.z / output.linear.x == pytest.approx(.5)
 
 
 def test_phase_wait_does_not_invent_rotation_after_monitor_stop():

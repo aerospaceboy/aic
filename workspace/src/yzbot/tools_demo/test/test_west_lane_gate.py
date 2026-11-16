@@ -135,4 +135,4 @@ def test_callback_holds_the_westbound_command_at_the_gate():
     SafetyLimiter.cmd_vel_callback(harness, message)
     assert len(published) == 1
     assert published[0].linear.x == 0.0
-    assert published[0].angular.z == pytest.approx(0.30)
+    assert published[0].angular.z == 0.

@@ -91,6 +91,9 @@ def main():
         'navigation_math.py': package / 'tools_demo/navigation_math.py',
         'transport_routes.py': package / 'tools_demo/transport_routes.py',
         'task_navigator.py': package / 'tools_demo/task_navigator.py',
+        'safety_limiter.py': package / 'tools_demo/safety_limiter.py',
+        'dense_safety_guard.py': package / 'tools_demo/dense_safety_guard.py',
+        'transport_motion.py': package / 'tools_demo/transport_motion.py',
         'competition_zones.yaml': package.parent / 'bot_navigation' / 'config'
         / 'competition_zones.yaml',
         'originbot_nav2.yaml': package.parent / 'bot_navigation' / 'param'

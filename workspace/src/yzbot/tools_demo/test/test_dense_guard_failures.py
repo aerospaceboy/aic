@@ -1,6 +1,7 @@
 import copy
 import time
 from types import SimpleNamespace
+import pytest
 from geometry_msgs.msg import Twist
 from tools_demo.dense_safety_guard import DenseSafetyGuard
 from tools_demo.transport_motion import dense_rotation_clear, dense_snapshot_valid
@@ -25,6 +26,24 @@ def test_absent_upstream_command_never_leaves_an_old_actuator_command_alive():
                             publisher=SimpleNamespace(publish=sent.append))
     DenseSafetyGuard.tick(guard)
     assert sent == [Twist()]
+
+
+@pytest.mark.parametrize('scale', [0., .3, 1.])
+def test_dense_slowdown_time_scales_the_entire_moving_arc(monkeypatch, scale):
+    monkeypatch.setattr('tools_demo.dense_safety_guard.dense_velocity_scale',
+                        lambda *args: scale)
+    now = time.monotonic()
+    sent = []
+    command = Twist()
+    command.linear.x, command.angular.z = 1.2, .6
+    guard = SimpleNamespace(
+        command=command, command_time=now, robot=(0., 0., 0.), odom_time=now,
+        actors=[], payload=False, received=now, stamp=1., last_diag=now,
+        get_clock=lambda: SimpleNamespace(now=lambda: SimpleNamespace(nanoseconds=1_000_000_000)),
+        publisher=SimpleNamespace(publish=sent.append))
+    DenseSafetyGuard.tick(guard)
+    assert sent[0].linear.x == pytest.approx(1.2 * scale)
+    assert sent[0].angular.z == pytest.approx(.6 * scale)
 
 
 def test_nonfinite_optimizer_output_is_replaced_by_complete_zero():

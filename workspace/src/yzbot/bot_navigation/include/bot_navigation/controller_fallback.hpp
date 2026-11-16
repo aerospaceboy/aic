@@ -15,6 +15,7 @@ inline void capTranslation(geometry_msgs::msg::Twist & command, double limit)
   if (limit > 0. && speed > limit) {
     command.linear.x *= limit / speed;
     command.linear.y *= limit / speed;
+    command.angular.z *= limit / speed;
   }
 }
 // Fall back only to a command successfully computed from CURRENT observations.

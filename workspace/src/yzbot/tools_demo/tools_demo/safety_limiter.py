@@ -485,7 +485,8 @@ class SafetyLimiter(Node):
         limit = self.swept_band_speed
         transit.linear.x = max(-limit, min(limit, message.linear.x))
         transit.linear.y = 0.0
-        transit.angular.z = message.angular.z
+        transit.angular.z = message.angular.z * min(
+            1., limit / abs(message.linear.x))
         return transit
 
     def cmd_vel_callback(self, message: Twist) -> None:
@@ -505,9 +506,11 @@ class SafetyLimiter(Node):
             gate_message = "west mover gate waiting clear of swept lane"
         if gate_message is not None:
             safe = Twist()
-            # Wait clear of the sweep while retaining steering already
-            # checked upstream; do not delay heading until release.
-            safe.angular.z = message.angular.z
+            # Denied translation must not turn a planned arc into a pivot.
+            # Explicit in-place alignment is still checked by the upstream
+            # collision monitor and may retain its rotation command.
+            if math.hypot(message.linear.x, message.linear.y) <= 1e-5:
+                safe.angular.z = message.angular.z
             self.publisher.publish(safe)
             # Retain the exact observation used to reject admission, so a
             # real phase wait can be distinguished from stale/unknown data.
@@ -534,9 +537,10 @@ class SafetyLimiter(Node):
             safe = Twist()
             safe.linear.x = message.linear.x * scale
             safe.linear.y = message.linear.y * scale
-            # Nav2 keeps steering authority while this final guard limits
-            # translation; the laser monitor still protects rotation.
-            safe.angular.z = message.angular.z
+            # Uniform time scaling preserves the path's curvature. Explicit
+            # stationary turns remain under the laser rotation monitor.
+            safe.angular.z = message.angular.z * (
+                scale if math.hypot(message.linear.x, message.linear.y) > 1e-5 else 1.)
             if scale <= 0.01:
                 self.get_logger().info(
                     "safety stop: fresh obstacle in travel direction",

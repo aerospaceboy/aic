@@ -65,15 +65,23 @@ TEST(ControllerFallback, ValidOptimizerDoesNotUseNominal)
   EXPECT_TRUE(failure.empty());
 }
 
-TEST(ControllerFallback, StageCapSurvivesOptimizerResetAndPreservesSteering)
+TEST(ControllerFallback, StageCapSurvivesOptimizerResetAndPreservesCurvature)
 {
   geometry_msgs::msg::Twist command;
   command.linear.x = 1.78; command.linear.y = .4; command.angular.z = 1.2;
   bot_navigation::capTranslation(command, .75);
   EXPECT_NEAR(std::hypot(command.linear.x, command.linear.y), .75, 1.e-9);
   EXPECT_NEAR(command.linear.y / command.linear.x, .4 / 1.78, 1.e-9);
-  EXPECT_DOUBLE_EQ(command.angular.z, 1.2);
+  EXPECT_NEAR(command.angular.z / command.linear.x, 1.2 / 1.78, 1.e-9);
   const auto before = command;
   bot_navigation::capTranslation(command, 0.);
   EXPECT_EQ(command, before);
+}
+
+TEST(ControllerFallback, TranslationCapDoesNotSuppressIntentionalInPlaceTurn)
+{
+  geometry_msgs::msg::Twist command;
+  command.angular.z=1.2;
+  bot_navigation::capTranslation(command,.75);
+  EXPECT_DOUBLE_EQ(command.angular.z,1.2);
 }

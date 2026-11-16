@@ -57,7 +57,10 @@ class DenseSafetyGuard(Node):
         scale=0. if not fresh else dense_velocity_scale(self.robot,
           (command.linear.x,command.linear.y,command.angular.z),self.actors,self.payload)
         output=Twist();output.linear.x=command.linear.x*scale;output.linear.y=command.linear.y*scale
-        output.angular.z=(command.angular.z if fresh and
+        # A moving arc must keep its curvature when slowed. Keeping yaw at
+        # full speed turns a safe path into a pivot beside the actor/wall.
+        yaw_scale=scale if math.hypot(command.linear.x,command.linear.y)>1e-5 else 1.
+        output.angular.z=(command.angular.z*yaw_scale if fresh and
             dense_rotation_clear(self.robot,self.actors,self.payload) else 0.)
         self.publisher.publish(output)
         if now-self.last_diag>1.:
