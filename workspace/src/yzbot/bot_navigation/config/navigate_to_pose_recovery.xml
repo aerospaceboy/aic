@@ -2,7 +2,9 @@
   Frozen static-navigation behavior: check physical path validity at 1 Hz.
   Moving-obstacle stages select their own predictive behavior separately.
   Compute an initial path for every action; never reuse the prior goal path.
-  Keep the upstream rotation/controller and bounded recovery policy unchanged.
+  Debounce transient invalidity before changing the global route. RPP footprint
+  checks and the final collision monitor remain immediate and independent.
+  Persistent invalidity still replans; bounded recovery is unchanged.
 
   The Nav2 default uses RecoveryNode number_of_retries=6; each recovery
   cycle (clear costmaps + spin + wait + replan) used to take 10-17 s. More
@@ -20,7 +22,9 @@
           <Fallback>
             <ReactiveSequence>
               <Inverter><GlobalUpdatedGoal/></Inverter>
-              <IsPathValid path="{path}"/>
+              <PathValidityGrace path="{path}" duration="0.8">
+                <IsPathValid path="{path}"/>
+              </PathValidityGrace>
             </ReactiveSequence>
             <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
           </Fallback>

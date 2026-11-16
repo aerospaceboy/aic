@@ -12,7 +12,9 @@
             <Fallback>
               <!-- Keep a valid path through broad turns; only changed
                    occupancy requires replanning the unvisited suffix. -->
-              <IsPathValid path="{path}"/>
+              <PathValidityGrace path="{path}" duration="0.8">
+                <IsPathValid path="{path}"/>
+              </PathValidityGrace>
               <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="CornerExact"/>
             </Fallback>
         </RateController>

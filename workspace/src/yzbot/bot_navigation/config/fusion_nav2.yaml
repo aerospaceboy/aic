@@ -230,7 +230,7 @@ controller_server:
         max_allowed_time_to_collision_up_to_carrot: 0.65
         max_robot_pose_search_dist: 1.5
         use_interpolation: true
-        plugin: bot_navigation::CoherentPursuitController
+        plugin: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
       Dynamic:
         plugin: nav2_mppi_controller::MPPIController
         motion_model: DiffDrive
@@ -395,7 +395,7 @@ controller_server:
         max_allowed_time_to_collision_up_to_carrot: 0.65
         max_robot_pose_search_dist: 1.5
         use_interpolation: true
-        plugin: bot_navigation::CoherentPursuitController
+        plugin: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
       Dynamic:
         plugin: nav2_mppi_controller::MPPIController
         motion_model: DiffDrive
@@ -560,7 +560,7 @@ controller_server:
         max_allowed_time_to_collision_up_to_carrot: 0.65
         max_robot_pose_search_dist: 1.5
         use_interpolation: true
-        plugin: bot_navigation::CoherentPursuitController
+        plugin: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
       Dynamic:
         plugin: nav2_mppi_controller::MPPIController
         motion_model: DiffDrive
@@ -725,7 +725,7 @@ controller_server:
         max_allowed_time_to_collision_up_to_carrot: 0.65
         max_robot_pose_search_dist: 1.5
         use_interpolation: true
-        plugin: bot_navigation::CoherentPursuitController
+        plugin: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
       Dynamic:
         plugin: nav2_mppi_controller::MPPIController
         motion_model: DiffDrive
@@ -923,7 +923,7 @@ controller_server:
         max_allowed_time_to_collision_up_to_carrot: 0.65
         max_robot_pose_search_dist: 1.5
         use_interpolation: true
-        plugin: bot_navigation::CoherentPursuitController
+        plugin: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
       Dynamic:
         plugin: nav2_mppi_controller::MPPIController
         motion_model: DiffDrive

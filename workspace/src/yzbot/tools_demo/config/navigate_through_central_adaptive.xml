@@ -18,7 +18,9 @@
                    the base oscillate for 18 s. Retain a valid path until
                    physical/hard inflated occupancy changes; each new plan
                    still uses the live directional prediction cost layer. -->
-              <IsPathValid path="{path}"/>
+              <PathValidityGrace path="{path}" duration="0.8">
+                <IsPathValid path="{path}"/>
+              </PathValidityGrace>
               <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="CentralExact"/>
             </Fallback>
         </RateController>

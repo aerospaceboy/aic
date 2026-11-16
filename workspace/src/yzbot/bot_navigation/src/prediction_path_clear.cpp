@@ -1,6 +1,7 @@
 // Copyright 2026 YZBot contributors
 // SPDX-License-Identifier: Apache-2.0
 #include "bot_navigation/prediction_path_clear.hpp"
+#include "bot_navigation/path_validity_grace.hpp"
 #include <cmath>
 #include <algorithm>
 #include <limits>
@@ -131,4 +132,5 @@ BT::NodeStatus PredictionPathClear::tick()
 BT_REGISTER_NODES(factory)
 {
   factory.registerNodeType<bot_navigation::PredictionPathClear>("PredictionPathClear");
+  factory.registerNodeType<bot_navigation::PathValidityGrace>("PathValidityGrace");
 }

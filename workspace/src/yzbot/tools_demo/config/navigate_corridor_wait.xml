@@ -9,7 +9,9 @@
           <Fallback>
             <ReactiveSequence>
               <Inverter><GlobalUpdatedGoal/></Inverter>
-              <IsPathValid path="{path}"/>
+              <PathValidityGrace path="{path}" duration="0.8">
+                <IsPathValid path="{path}"/>
+              </PathValidityGrace>
             </ReactiveSequence>
             <ComputePathToPose goal="{goal}" path="{path}" planner_id="CorridorWaitExact"/>
           </Fallback>
