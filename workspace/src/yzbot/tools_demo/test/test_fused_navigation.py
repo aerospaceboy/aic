@@ -29,10 +29,12 @@ def test_dynamic_candidates_obey_same_nonholonomic_model_as_execution(name):
 def test_fusion_retains_original_map_radius_and_live_collision_sources(group):
     old = BASE[group][group]['ros__parameters']
     new = FUSED[group][group]['ros__parameters']
-    for name in ['plugins', 'obstacle_layer', 'static_layer', 'inflation_layer']:
+    for name in ['robot_radius', 'obstacle_layer', 'static_layer', 'inflation_layer']:
         assert new[name] == old[name]
-    assert new['robot_radius'] >= old['robot_radius']
-    assert new['robot_radius'] == FUSED['global_costmap']['global_costmap']['ros__parameters']['robot_radius']
+    assert set(new['plugins']) == set(old['plugins'])
+    # StaticLayer overwrites existing cells when use_maximum is false.
+    # Sensed obstacles must be applied after the static map in both maps.
+    assert new['plugins'].index('static_layer') < new['plugins'].index('obstacle_layer')
     assert new['prediction_layer']['enabled']
     # The selected release follower is RPP. Its conservative future spatial
     # costs must remain visible while experimental timed MPPI is disabled.
@@ -44,15 +46,14 @@ def test_collision_monitor_limits_are_unchanged_and_precision_adjustments_remain
     assert FUSED['velocity_smoother'] == BASE['velocity_smoother']
 
 
-def test_nominal_changes_only_tighten_corner_preview_and_keep_safety_checks():
+def test_nominal_bounds_search_to_avoid_pruning_across_a_nearby_wall():
     old = BASE['controller_server']['ros__parameters']
     new = FUSED['controller_server']['ros__parameters']
     for name in old['controller_plugins']:
         actual = new[name].get('Nominal', new[name])
-        allowed = {'min_lookahead_dist', 'max_lookahead_dist', 'lookahead_dist',
-                   'use_rotate_to_heading'} if 'Nominal' in new[name] else set()
+        allowed = {'max_robot_pose_search_dist'} if 'Nominal' in new[name] else set()
         assert {k: v for k, v in actual.items() if k not in allowed} == {
             k: v for k, v in old[name].items() if k not in allowed}
         if allowed:
-            assert actual['max_lookahead_dist'] <= .6
+            assert actual['max_robot_pose_search_dist'] == 1.5
             assert actual['use_collision_detection']
