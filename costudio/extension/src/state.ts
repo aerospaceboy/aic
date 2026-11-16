@@ -35,6 +35,7 @@ export interface GraspRuleStepState {
 export interface CompetitionState {
   mode: DataMode;
   question: string;
+  questionSeed: string;
   redCount: number;
   blueCount: number;
   redDestination: "A" | "B" | "C" | "";
@@ -74,6 +75,7 @@ export interface CompetitionState {
 
 export const DEFAULT_DEMO_STATE: CompetitionState = {
   mode: "DEMO",
+  questionSeed: "",
   taskId: "demo-round",
   question: "x代表红色，y代表蓝色；数量大于等于3的去B区，其他颜色去C区",
   redCount: 3,
@@ -221,7 +223,7 @@ function graspOrder(value: unknown, fallback: GraspRuleStepState[]): GraspRuleSt
 export function parseCompetitionState(message: unknown, fallback: CompetitionState): CompetitionState {
   // Live telemetry must never inherit plausible competition demo answers.
   fallback = {
-    ...fallback, mode: "LIVE", question: "", redCount: 0, blueCount: 0,
+    ...fallback, mode: "LIVE", question: "", questionSeed: "", redCount: 0, blueCount: 0,
     redDestination: "", blueDestination: "", taskObjects: [], taskRules: [],
     plannedGraspOrder: [], actualGraspOrder: [], currentGraspStep: 0,
     currentRule: undefined, graspRuleCompliance: "等待验证",
@@ -274,6 +276,7 @@ export function parseCompetitionState(message: unknown, fallback: CompetitionSta
   return {
     mode: fallback.mode,
     question: stringValue(raw["question"], fallback.question),
+    questionSeed: stringValue(raw["question_seed"], ""),
     redCount: red,
     blueCount: blue,
     redDestination: redDestination === "A" || redDestination === "B" || redDestination === "C" ? redDestination : fallback.redDestination,

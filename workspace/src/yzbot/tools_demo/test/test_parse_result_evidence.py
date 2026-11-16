@@ -217,6 +217,19 @@ def test_panel_payload_carries_the_published_instruction():
     assert payload["parse_result"]["state"] == "published"
 
 
+def test_panel_retains_only_the_current_supplied_question_seed():
+    harness = StatusHarness()
+    LegacyCoStudioStatus.problem_callback(harness, String(data=json.dumps({
+        "task_id": "evidence-1", "question": QUESTION, "seed": "00123"})))
+    payload = harness.apply(_evidence("published", PLAN.to_dict()))
+    assert payload["question_seed"] == "00123"
+    assert payload["question_seed_source"] == "supplied_metadata"
+    next_request = {**_evidence("failed", None), "request_id": "evidence-2"}
+    payload = harness.apply(next_request)
+    assert payload["question_seed"] == ""
+    assert payload["question_seed_source"] == "not_supplied"
+
+
 def test_panel_payload_clears_stale_instruction_after_a_failure():
     harness = StatusHarness()
     harness.apply(_evidence("published", PLAN.to_dict()))

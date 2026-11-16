@@ -9,6 +9,11 @@ const code = ts.transpileModule(fs.readFileSync(require.resolve("../src/state.ts
 }).outputText;
 vm.runInNewContext(code, {exports: exportsObject});
 const {parseCompetitionState, DEFAULT_DEMO_STATE} = exportsObject;
+test("supplied seed is displayed and never inherited by the next live question", () => {
+  const first = parseCompetitionState({question_seed: "00123"}, DEFAULT_DEMO_STATE);
+  assert.equal(first.questionSeed, "00123");
+  assert.equal(parseCompetitionState({question: "next"}, first).questionSeed, "");
+});
 test("current task uses actual executing color's target, not the first plan color", () => {
   const state = parseCompetitionState({data: JSON.stringify({
     current_action: "navigating_destination", current_state: "navigating_destination",

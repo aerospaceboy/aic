@@ -560,6 +560,9 @@ function TopicArea({
               ? "等待 ROS2 数据..."
               : `比赛题目：${state.question || "等待大模型解析"}`}
           </div>
+          <div style={{ color: state?.questionSeed ? "#333333" : "#9A3412" }}>
+            {`题目种子：${state?.questionSeed || "未提供（请核对正式出题程序输出）"}`}
+          </div>
           <div style={{ background: modelVerified ? "#DCFCE7" : "#FFF1E6", padding: 8, borderRadius: 4, color: modelVerified ? "#166534" : "#9A3412", fontWeight: 700 }}>
             {parseLabel}
             <div style={{ fontSize: 11, fontWeight: 400 }}>

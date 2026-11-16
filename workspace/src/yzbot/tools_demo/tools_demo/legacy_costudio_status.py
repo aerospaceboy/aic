@@ -13,6 +13,8 @@ from rclpy.qos import QoSProfile
 from rclpy.qos import ReliabilityPolicy
 from std_msgs.msg import String
 
+from tools_demo.question_metadata import supplied_question_seed
+
 
 def retained_qos() -> QoSProfile:
     return QoSProfile(
@@ -37,6 +39,7 @@ class LegacyCoStudioStatus(Node):
         super().__init__("legacy_costudio_status")
         self.question = ""
         self.mapping_rules = ""
+        self.problem_snapshot: Dict[str, Any] = {}
         self.plan: Dict[str, Any] = {}
         self.mission: Dict[str, Any] = {}
         self.navigation: Dict[str, Any] = {}
@@ -100,9 +103,11 @@ class LegacyCoStudioStatus(Node):
 
     def question_callback(self, message: String) -> None:
         self.question = message.data.strip()
+        self.problem_snapshot = {}
 
     def problem_callback(self, message: String) -> None:
         payload = decode(message.data)
+        self.problem_snapshot = payload
         self.question = str(payload.get("question", self.question)).strip()
         self.mapping_rules = str(
             payload.get("mapping_rules", self.mapping_rules)
@@ -154,6 +159,9 @@ class LegacyCoStudioStatus(Node):
 
     def publish_status(self) -> None:
         evidence = self.parse_result
+        seed, seed_source = supplied_question_seed(
+            evidence or {"question": self.question},
+            getattr(self, "problem_snapshot", {}))
         current_plan = evidence.get("plan") or {} if evidence else {}
         items = current_plan.get("items")
         items = items if isinstance(items, list) else []
@@ -230,6 +238,8 @@ class LegacyCoStudioStatus(Node):
             "grasp_rule_compliance": compliance,
             "enforce_color_order": self.mission.get("enforce_color_order", True),
             "question": self.question,
+            "question_seed": seed,
+            "question_seed_source": seed_source,
             "resources": resources,
             "target_zones": targets,
             "objects": objects,
