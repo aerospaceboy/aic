@@ -78,6 +78,21 @@ def stopping_sweep(robot, command):
     return horizon, result
 
 
+def actor_reachable_distance(point, actor, seconds):
+    """Closest reachable actor point, including sample age and rail reversal."""
+    age=max(0.,actor.get('source_age',0.))
+    if 'patrol_start' in actor and 'patrol_end' in actor:
+        a,b=actor['patrol_start'],actor['patrol_end']
+        length=math.dist(a,b);ux,uy=(b[0]-a[0])/length,(b[1]-a[1])/length
+        s=max(0.,min(length,(actor['x']-a[0])*ux+(actor['y']-a[1])*uy))
+        reach=actor['speed_bound']*(seconds+age)
+        lo,hi=max(0.,s-reach),min(length,s+reach)
+        q=max(lo,min(hi,(point[0]-a[0])*ux+(point[1]-a[1])*uy))
+        return math.hypot(point[0]-a[0]-q*ux,point[1]-a[1]-q*uy)
+    return math.hypot(actor['x']+actor.get('vx',0.)*(seconds+age)-point[0],
+                      actor['y']+actor.get('vy',0.)*(seconds+age)-point[1])
+
+
 def dense_velocity_scale(robot, command, actors, payload=False):
     """Independent finite-horizon collision backstop, not the local planner.
 
@@ -100,14 +115,16 @@ def dense_velocity_scale(robot, command, actors, payload=False):
         avx,avy=a.get('vx',0.),a.get('vy',0.)
         required=body+a.get('radius',.14)+.10
         for t, bx, by, turn_bound in samples:
-            clearance=math.hypot(dx+avx*t-bx,dy+avy*t-by)-required-turn_bound
+            clearance=actor_reachable_distance((x+bx,y+by),a,t)-required-turn_bound
             # Sampling error bound, including moving bodies between samples.
             allowance=(speed+math.hypot(avx,avy))*horizon/24
             if clearance<allowance:
-                distance=math.hypot(dx,dy)
+                distance=actor_reachable_distance((x,y),a,0.)
                 margin=distance-required
                 # A command moving away is a valid escape, not a forced hold.
-                if dx*wx+dy*wy<0 and margin>.05 and abs(w)<.2:continue
+                away_rate=-(dx*wx+dy*wy)/max(1e-6,math.hypot(dx,dy))
+                actor_bound=a.get('speed_bound',math.hypot(avx,avy))
+                if away_rate>actor_bound and margin>.05 and abs(w)<.2:continue
                 scale=min(scale,max(0.,min(1.,(margin-.08)/max(.15,speed*.4))))
     return scale
 
@@ -115,7 +132,7 @@ def dense_velocity_scale(robot, command, actors, payload=False):
 def dense_rotation_clear(robot, actors, payload=False):
     """Do not spin a loaded arm beside a moving cylinder while translation stops."""
     body = .34 if payload else .28
-    return all(math.hypot(robot[0]-a['x'], robot[1]-a['y'])
+    return all(actor_reachable_distance(robot[:2],a,0.)
                >= body+a.get('radius', .14)+.15 for a in actors)
 
 

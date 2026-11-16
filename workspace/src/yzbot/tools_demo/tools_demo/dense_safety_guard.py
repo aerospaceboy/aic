@@ -3,6 +3,7 @@ import json,math,time
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
+from gazebo_msgs.msg import ModelStates
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist
 from tools_demo.transport_motion import dense_velocity_scale, dense_rotation_clear, dense_snapshot_valid
@@ -15,18 +16,29 @@ class DenseSafetyGuard(Node):
         self.robot=None;self.actors=[];self.stamp=None;self.payload=False
         self.command=None;self.command_time=None;self.received=None;self.last_diag=0.
         self.names={a['name'] for a in load_dense_scene()['actors']}
+        self.patrols={a['name']:a for a in load_dense_scene()['actors']}
         self.publisher=self.create_publisher(Twist,'/cmd_vel_safe',10)
         self.status=self.create_publisher(String,'/competition/dense_safety/state',10)
         self.create_subscription(Odometry,'/odom',self.odom,20)
+        self.create_subscription(ModelStates,'/gazebo/model_states',self.models,1)
         self.create_subscription(String,'/competition/dense_obstacles/state',self.obstacles,10)
         self.create_subscription(String,'/competition/mission/state',self.mission,10)
         self.create_subscription(Twist,'/cmd_vel_dense_input',self.velocity,10)
         self.create_timer(.05,self.tick)
 
     def odom(self,m):
-        p=m.pose.pose;q=p.orientation
+        # Encoder odometry can drift after contact. Actor coordinates in this
+        # existing simulator safety channel are WORLD coordinates, so the base
+        # must come from the same frame, not untransformed /odom.
+        self.measured_velocity=m.twist.twist
+
+    def models(self,m):
+        if 'six_arm' not in m.name:
+            self.robot=None
+            return
+        p=m.pose[m.name.index('six_arm')];q=p.orientation
         self.robot=(p.position.x,p.position.y,math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z)))
-        self.odom_time=time.monotonic()
+        self.world_pose_time=time.monotonic()
 
     def obstacles(self,m):
         try:d=json.loads(m.data)
@@ -34,7 +46,12 @@ class DenseSafetyGuard(Node):
         if not dense_snapshot_valid(d,self.names):
             self.received=None
             return
-        self.actors=d['actors'];self.stamp=d['stamp_sec'];self.received=time.monotonic()
+        self.actors=[]
+        for a in d['actors']:
+            rail=self.patrols[a['model']]
+            self.actors.append(dict(a,patrol_start=rail['start'],patrol_end=rail['end'],
+                                   speed_bound=rail['speed']))
+        self.stamp=d['stamp_sec'];self.received=time.monotonic()
 
     def mission(self,m):
         try:d=json.loads(m.data)
@@ -52,20 +69,27 @@ class DenseSafetyGuard(Node):
             self.publisher.publish(Twist())
             return
         stamp=self.get_clock().now().nanoseconds/1e9
-        fresh=(self.robot is not None and now-getattr(self,'odom_time',0)<.5 and self.received is not None
+        fresh=(self.robot is not None and now-getattr(self,'world_pose_time',0)<.5 and self.received is not None
                and now-self.received<.5 and self.stamp is not None and 0<=stamp-self.stamp<.5)
+        actors=[dict(a,source_age=max(0.,stamp-a.get('stamp_sec',stamp))) for a in self.actors]
+        fresh=fresh and all(0<=stamp-a.get('stamp_sec',stamp)<.5 for a in self.actors)
         scale=0. if not fresh else dense_velocity_scale(self.robot,
-          (command.linear.x,command.linear.y,command.angular.z),self.actors,self.payload)
+          (command.linear.x,command.linear.y,command.angular.z),actors,self.payload)
+        turning_clear=fresh and dense_rotation_clear(self.robot,actors,self.payload)
+        # Suppressing yaw alone changes a validated arc into a straight line.
+        # A denied turn must stop the WHOLE moving arc. Straight retreat stays
+        # available under its independent swept stopping check.
+        if not turning_clear and abs(command.angular.z)>1e-5:
+            scale=0.
         output=Twist();output.linear.x=command.linear.x*scale;output.linear.y=command.linear.y*scale
         # A moving arc must keep its curvature when slowed. Keeping yaw at
         # full speed turns a safe path into a pivot beside the actor/wall.
         yaw_scale=scale if math.hypot(command.linear.x,command.linear.y)>1e-5 else 1.
-        output.angular.z=(command.angular.z*yaw_scale if fresh and
-            dense_rotation_clear(self.robot,self.actors,self.payload) else 0.)
+        output.angular.z=command.angular.z*yaw_scale if turning_clear else 0.
         self.publisher.publish(output)
         if now-self.last_diag>1.:
             self.last_diag=now
-            self.status.publish(String(data=json.dumps(dict(stamp=stamp,fresh=fresh,scale=scale,actors=len(self.actors)))))
+            self.status.publish(String(data=json.dumps(dict(stamp=stamp,fresh=fresh,scale=scale,actors=len(self.actors),robot_frame='world',turning_clear=turning_clear))))
 
 
 def main(args=None):

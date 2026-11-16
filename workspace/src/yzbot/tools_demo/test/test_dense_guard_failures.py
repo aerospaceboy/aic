@@ -2,7 +2,8 @@ import copy
 import time
 from types import SimpleNamespace
 import pytest
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, Pose
+from gazebo_msgs.msg import ModelStates
 from tools_demo.dense_safety_guard import DenseSafetyGuard
 from tools_demo.transport_motion import dense_rotation_clear, dense_snapshot_valid
 
@@ -37,7 +38,7 @@ def test_dense_slowdown_time_scales_the_entire_moving_arc(monkeypatch, scale):
     command = Twist()
     command.linear.x, command.angular.z = 1.2, .6
     guard = SimpleNamespace(
-        command=command, command_time=now, robot=(0., 0., 0.), odom_time=now,
+        command=command, command_time=now, robot=(0., 0., 0.), world_pose_time=now,
         actors=[], payload=False, received=now, stamp=1., last_diag=now,
         get_clock=lambda: SimpleNamespace(now=lambda: SimpleNamespace(nanoseconds=1_000_000_000)),
         publisher=SimpleNamespace(publish=sent.append))
@@ -62,6 +63,32 @@ def test_load_sensitive_rotation_reserve_blocks_spin_but_allows_open_space():
     assert dense_rotation_clear((0., 0., 0.), [actor], False)
     assert not dense_rotation_clear((0., 0., 0.), [actor], True)
     assert dense_rotation_clear((0., 0., 0.), [dict(actor, x=1.)], True)
+
+
+def test_blocked_turn_cannot_turn_a_moving_arc_into_forward_only_motion(monkeypatch):
+    monkeypatch.setattr('tools_demo.dense_safety_guard.dense_velocity_scale',lambda *args:1.)
+    now=time.monotonic();sent=[];cmd=Twist();cmd.linear.x=.4;cmd.angular.z=.6
+    n=SimpleNamespace(command=cmd,command_time=now,robot=(0.,0.,0.),world_pose_time=now,
+        actors=[dict(x=.6,y=0.,radius=.14)],payload=True,received=now,stamp=1.,last_diag=now,
+        get_clock=lambda:SimpleNamespace(now=lambda:SimpleNamespace(nanoseconds=1_000_000_000)),
+        publisher=SimpleNamespace(publish=sent.append))
+    DenseSafetyGuard.tick(n)
+    assert sent[-1]==Twist()
+    cmd.angular.z=0.;cmd.linear.x=-.3
+    DenseSafetyGuard.tick(n)
+    assert sent[-1].linear.x==-.3  # A checked straight escape remains possible.
+
+
+def test_world_model_pose_cannot_be_overwritten_by_drifting_encoder_odometry():
+    from nav_msgs.msg import Odometry
+    n=SimpleNamespace(robot=None)
+    m=ModelStates();m.name=['six_arm'];p=Pose();p.position.x=9.142;p.position.y=-13.680;p.orientation.w=1.;m.pose=[p]
+    DenseSafetyGuard.models(n,m)
+    odom=Odometry();odom.pose.pose.position.x=9.075;odom.pose.pose.position.y=-13.806
+    DenseSafetyGuard.odom(n,odom)
+    assert n.robot[:2]==(9.142,-13.680)
+    DenseSafetyGuard.models(n,ModelStates())
+    assert n.robot is None
 
 
 def snapshot():

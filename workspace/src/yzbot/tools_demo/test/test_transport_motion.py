@@ -3,6 +3,7 @@ import math
 import numpy as np
 import pytest
 from tools_demo.transport_motion import patrol_position,sensor_forecast,dense_velocity_scale
+from tools_demo.transport_motion import actor_reachable_distance
 
 
 def test_patrol_has_bounded_speed_and_does_not_jump_at_reversal():
@@ -33,6 +34,18 @@ def test_observed_horizontal_reversals_are_not_hardcoded_to_world_y():
 def test_crossing_actor_is_not_ignored_by_final_guard():
     a=[dict(x=.9,y=-.3,vx=0.,vy=.4,radius=.14)]
     assert dense_velocity_scale((0,0,0),(1.,0,0),a)<1.
+
+
+def test_rail_reversal_and_delayed_samples_are_in_the_collision_bound():
+    a=dict(x=.8,y=0.,vx=.28,vy=0.,radius=.14,patrol_start=(0.,0.),
+           patrol_end=(2.,0.),speed_bound=.28,source_age=.2)
+    # Even if the latest velocity points away, a reversal can approach us.
+    assert actor_reachable_distance((0.,0.),a,.5)==pytest.approx(.8-.28*.7)
+    assert dense_velocity_scale((0.,0.,0.),(1.,0.,0.),[a],True)<1.
+    # Full rail bounds, rather than an isotropic expanding disk, preserve a
+    # clear parallel lane at high speed.
+    parallel=dict(a,x=1.,y=1.3,patrol_start=(0.,1.3),patrol_end=(2.,1.3))
+    assert dense_velocity_scale((0.,0.,0.),(1.7,0.,0.),[parallel],True)==1.
 
 
 def test_nearby_parallel_but_clear_motion_does_not_cause_distance_only_slowing():

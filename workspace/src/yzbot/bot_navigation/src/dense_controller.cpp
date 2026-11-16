@@ -170,15 +170,25 @@ public:
     dynamic_=loader_->createSharedInstance("nav2_mppi_controller::MPPIController");
     nominal_->configure(parent,name+".Nominal",tf,costmap);
     dynamic_->configure(parent,name+".Dynamic",tf,costmap);
+    nav2_util::declare_parameter_if_not_declared(node_,name+".enable_collision_preview",
+      rclcpp::ParameterValue(false));
+    if(node_->get_parameter(name+".enable_collision_preview").as_bool()) {
+      tight_=loader_->createSharedInstance(
+        "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController");
+      tight_->configure(parent,name+".TightPreview",tf,costmap);
+      tight_max_=node_->get_parameter(name+".TightPreview.desired_linear_vel").as_double();
+      if(!std::isfinite(tight_max_) || tight_max_<=0. || tight_max_>.65)
+        throw std::invalid_argument("Invalid collision preview speed");
+    }
     nominal_max_=node_->get_parameter(name+".Nominal.desired_linear_vel").as_double();
     tracks_.configure(node_,costmap);
     status_=node_->create_publisher<std_msgs::msg::String>("/competition/dynamic_controller/state",10);
     RCLCPP_INFO(node_->get_logger(),"%s adaptive controller: static follower + sensor-time MPPI enabled=%s continuous=%s",
       name.c_str(),dynamic_enabled_?"true":"false",continuous_transit_?"true":"false");
   }
-  void cleanup()override{nominal_->cleanup();dynamic_->cleanup();}
-  void activate()override{nominal_->activate();dynamic_->activate();status_->on_activate();}
-  void deactivate()override{nominal_->deactivate();dynamic_->deactivate();status_->on_deactivate();}
+  void cleanup()override{nominal_->cleanup();dynamic_->cleanup();if(tight_)tight_->cleanup();}
+  void activate()override{nominal_->activate();dynamic_->activate();if(tight_)tight_->activate();status_->on_activate();}
+  void deactivate()override{nominal_->deactivate();dynamic_->deactivate();if(tight_)tight_->deactivate();status_->on_deactivate();}
   void setPlan(const nav_msgs::msg::Path & path)override {
     path_=path;dynamic_plan_pending_=true;
     if(active_)nominal_refresh_pending_=true;
@@ -186,6 +196,8 @@ public:
   }
   void setSpeedLimit(const double & speed,const bool & percentage)override {
     nominal_->setSpeedLimit(speed,percentage);dynamic_->setSpeedLimit(speed,percentage);
+    if(tight_)tight_->setSpeedLimit(percentage?std::min(speed,100.):
+      (speed>0.?std::min(speed,tight_max_):speed),percentage);
     speed_limit_.store(percentage?nominal_max_*speed/100.:speed);
   }
   geometry_msgs::msg::TwistStamped computeVelocityCommands(
@@ -213,6 +225,7 @@ public:
     geometry_msgs::msg::TwistStamped baseline;
     std::exception_ptr nominal_error;
     bool nominal_ready=false;
+    bool preview_used=false;std::string preview_reason;
     const auto current_nominal=[&]() {
       if(nominal_ready)return;
       nominal_ready=true;
@@ -223,7 +236,13 @@ public:
           nominal_->setPlan(remainingPath(path_,nearest));
           nominal_refresh_pending_=false;
         }
-        baseline=nominal_->computeVelocityCommands(pose,velocity,checker);
+        baseline=collisionPreview<geometry_msgs::msg::TwistStamped>(
+          [&](){return nominal_->computeVelocityCommands(pose,velocity,checker);},
+          [&](){
+            tight_->setPlan(remainingPath(path_,nearest));
+            return tight_->computeVelocityCommands(pose,velocity,checker);
+          },bool(tight_),std::hypot(velocity.linear.x,velocity.linear.y),
+          tight_max_,preview_used,preview_reason);
       }catch(...){nominal_error=std::current_exception();}
     };
     if(!active_)current_nominal();
@@ -294,6 +313,7 @@ public:
     // Humble MPPI resets its constraints to base values after idle/failure.
     // Never let that reset silently lift a navigation stage's speed limit.
     const auto limit=speed_limit_.load();
+    if(preview_used && !use_dynamic)capTranslation(command.twist,tight_max_);
     capTranslation(command.twist,limit>0.?std::min(limit,nominal_max_):nominal_max_);
     if(use_dynamic!=active_ || now-last_status_>.19) {
       active_=use_dynamic;last_status_=now;
@@ -306,6 +326,8 @@ public:
       j["continuous_transit"]=continuous_transit_;
       j["dynamic_enabled"]=dynamic_enabled_;
       j["nonholonomic"]=nonholonomic_;
+      j["collision_preview"]=preview_used;
+      if(preview_used)j["preview_reason"]=preview_reason;
       j["remaining_path_m"]=remaining;
       const auto geometry=tracks_.staticGeometry(now);
       j["static_clearance_m"]=geometry.first;j["static_clearance_age"]=geometry.second;
@@ -325,7 +347,8 @@ private:
   rclcpp_lifecycle::LifecycleNode::SharedPtr node_;std::string name_;
   std::unique_ptr<pluginlib::ClassLoader<nav2_core::Controller>> loader_;
   std::shared_ptr<tf2_ros::Buffer> tf_;
-  nav2_core::Controller::Ptr nominal_,dynamic_;
+  nav2_core::Controller::Ptr nominal_,dynamic_,tight_;
+  double tight_max_{.6};
   SensorTracks tracks_;nav_msgs::msg::Path path_;
   rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::String>::SharedPtr status_;
   bool active_{false},dynamic_plan_pending_{true},continuous_transit_{false};

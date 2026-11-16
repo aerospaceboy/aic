@@ -5,6 +5,7 @@
 #include <string>
 #include <cmath>
 #include <algorithm>
+#include <cctype>
 #include <geometry_msgs/msg/twist.hpp>
 
 namespace bot_navigation
@@ -16,6 +17,27 @@ inline void capTranslation(geometry_msgs::msg::Twist & command, double limit)
     command.linear.x *= limit / speed;
     command.linear.y *= limit / speed;
     command.angular.z *= limit / speed;
+  }
+}
+
+// A long pursuit preview can cut a mapped corner although a shorter arc is
+// feasible. Use a SECOND collision-checked computation only after braking;
+// TF, stale-path and other errors must retain the ordinary recovery path.
+template<class Command, class Primary, class Tight>
+Command collisionPreview(Primary primary,Tight tight,bool enabled,
+  double measured_speed,double maximum,bool & used,std::string & reason)
+{
+  used=false;
+  try {return primary();}
+  catch(const std::exception & error) {
+    std::string text=error.what();
+    std::transform(text.begin(),text.end(),text.begin(),
+      [](unsigned char c){return std::tolower(c);});
+    if(!enabled || !std::isfinite(measured_speed) || measured_speed>maximum+.05 ||
+      text.find("collision")==std::string::npos)throw;
+    Command command=tight();  // Its own unchanged collision checker must pass.
+    used=true;reason=error.what();
+    return command;
   }
 }
 // Fall back only to a command successfully computed from CURRENT observations.

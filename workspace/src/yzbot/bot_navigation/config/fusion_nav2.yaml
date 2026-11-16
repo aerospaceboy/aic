@@ -165,6 +165,7 @@ controller_server:
       xy_goal_tolerance: 0.003
       yaw_goal_tolerance: 6.28
     FollowPath:
+      enable_collision_preview: true
       plugin: bot_navigation::AdaptiveDynamicController
       continuous_transit: false
       enable_dynamic_avoidance: false
@@ -202,6 +203,33 @@ controller_server:
         max_allowed_time_to_collision_up_to_carrot: 0.65
         max_robot_pose_search_dist: 1.5
         use_interpolation: true
+      TightPreview:
+        transform_tolerance: 1.0
+        desired_linear_vel: 0.6
+        lookahead_dist: 0.4
+        min_lookahead_dist: 0.3
+        max_lookahead_dist: 0.6
+        lookahead_time: 0.4
+        use_velocity_scaled_lookahead_dist: true
+        min_approach_linear_velocity: 0.1
+        approach_velocity_scaling_dist: 0.8
+        use_regulated_linear_velocity_scaling: true
+        regulated_linear_scaling_min_radius: 0.9
+        regulated_linear_scaling_min_speed: 0.25
+        use_cost_regulated_linear_velocity_scaling: true
+        cost_scaling_dist: 0.45
+        cost_scaling_gain: 1.0
+        inflation_cost_scaling_factor: 10.0
+        use_rotate_to_heading: false
+        rotate_to_heading_angular_vel: 1.4
+        rotate_to_heading_min_angle: 0.45
+        max_angular_accel: 5.0
+        allow_reversing: false
+        use_collision_detection: true
+        max_allowed_time_to_collision_up_to_carrot: 0.65
+        max_robot_pose_search_dist: 1.5
+        use_interpolation: true
+        plugin: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
       Dynamic:
         plugin: nav2_mppi_controller::MPPIController
         motion_model: DiffDrive
@@ -302,6 +330,7 @@ controller_server:
       dynamic_release_delay: 0.5
       dynamic_reentry_delay: 0.75
     CentralTransit:
+      enable_collision_preview: true
       plugin: bot_navigation::AdaptiveDynamicController
       continuous_transit: false
       enable_dynamic_avoidance: false
@@ -339,6 +368,33 @@ controller_server:
         max_allowed_time_to_collision_up_to_carrot: 0.65
         max_robot_pose_search_dist: 1.5
         use_interpolation: true
+      TightPreview:
+        transform_tolerance: 1.0
+        desired_linear_vel: 0.6
+        lookahead_dist: 0.4
+        min_lookahead_dist: 0.3
+        max_lookahead_dist: 0.6
+        lookahead_time: 0.4
+        use_velocity_scaled_lookahead_dist: true
+        min_approach_linear_velocity: 0.1
+        approach_velocity_scaling_dist: 0.8
+        use_regulated_linear_velocity_scaling: true
+        regulated_linear_scaling_min_radius: 0.9
+        regulated_linear_scaling_min_speed: 0.25
+        use_cost_regulated_linear_velocity_scaling: true
+        cost_scaling_dist: 0.45
+        cost_scaling_gain: 1.0
+        inflation_cost_scaling_factor: 10.0
+        use_rotate_to_heading: false
+        rotate_to_heading_angular_vel: 1.4
+        rotate_to_heading_min_angle: 0.45
+        max_angular_accel: 5.0
+        allow_reversing: false
+        use_collision_detection: true
+        max_allowed_time_to_collision_up_to_carrot: 0.65
+        max_robot_pose_search_dist: 1.5
+        use_interpolation: true
+        plugin: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
       Dynamic:
         plugin: nav2_mppi_controller::MPPIController
         motion_model: DiffDrive
@@ -439,6 +495,7 @@ controller_server:
       dynamic_release_delay: 0.5
       dynamic_reentry_delay: 0.75
     SmoothTransit:
+      enable_collision_preview: false
       plugin: bot_navigation::AdaptiveDynamicController
       continuous_transit: false
       enable_dynamic_avoidance: false
@@ -476,6 +533,33 @@ controller_server:
         max_allowed_time_to_collision_up_to_carrot: 0.65
         max_robot_pose_search_dist: 1.5
         use_interpolation: true
+      TightPreview:
+        transform_tolerance: 1.0
+        desired_linear_vel: 0.6
+        lookahead_dist: 0.4
+        min_lookahead_dist: 0.3
+        max_lookahead_dist: 0.6
+        lookahead_time: 0.4
+        use_velocity_scaled_lookahead_dist: true
+        min_approach_linear_velocity: 0.1
+        approach_velocity_scaling_dist: 0.8
+        use_regulated_linear_velocity_scaling: true
+        regulated_linear_scaling_min_radius: 0.9
+        regulated_linear_scaling_min_speed: 0.25
+        use_cost_regulated_linear_velocity_scaling: true
+        cost_scaling_dist: 0.45
+        cost_scaling_gain: 1.0
+        inflation_cost_scaling_factor: 10.0
+        use_rotate_to_heading: false
+        rotate_to_heading_angular_vel: 1.4
+        rotate_to_heading_min_angle: 0.45
+        max_angular_accel: 5.0
+        allow_reversing: false
+        use_collision_detection: true
+        max_allowed_time_to_collision_up_to_carrot: 0.65
+        max_robot_pose_search_dist: 1.5
+        use_interpolation: true
+        plugin: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
       Dynamic:
         plugin: nav2_mppi_controller::MPPIController
         motion_model: DiffDrive
@@ -576,6 +660,7 @@ controller_server:
       dynamic_release_delay: 0.5
       dynamic_reentry_delay: 0.75
     CornerFlow:
+      enable_collision_preview: true
       plugin: bot_navigation::AdaptiveDynamicController
       continuous_transit: false
       enable_dynamic_avoidance: false
@@ -613,6 +698,33 @@ controller_server:
         max_allowed_time_to_collision_up_to_carrot: 0.65
         max_robot_pose_search_dist: 1.5
         use_interpolation: true
+      TightPreview:
+        transform_tolerance: 1.0
+        desired_linear_vel: 0.6
+        lookahead_dist: 0.4
+        min_lookahead_dist: 0.3
+        max_lookahead_dist: 0.6
+        lookahead_time: 0.4
+        use_velocity_scaled_lookahead_dist: true
+        min_approach_linear_velocity: 0.1
+        approach_velocity_scaling_dist: 0.35
+        use_regulated_linear_velocity_scaling: true
+        regulated_linear_scaling_min_radius: 1.2
+        regulated_linear_scaling_min_speed: 0.25
+        use_cost_regulated_linear_velocity_scaling: true
+        cost_scaling_dist: 0.45
+        cost_scaling_gain: 1.0
+        inflation_cost_scaling_factor: 10.0
+        use_rotate_to_heading: false
+        rotate_to_heading_angular_vel: 1.4
+        rotate_to_heading_min_angle: 0.45
+        max_angular_accel: 5.0
+        allow_reversing: false
+        use_collision_detection: true
+        max_allowed_time_to_collision_up_to_carrot: 0.65
+        max_robot_pose_search_dist: 1.5
+        use_interpolation: true
+        plugin: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
       Dynamic:
         plugin: nav2_mppi_controller::MPPIController
         motion_model: DiffDrive
@@ -746,6 +858,7 @@ controller_server:
       max_robot_pose_search_dist: 10.0
       use_interpolation: true
     CornerFlowA:
+      enable_collision_preview: false
       plugin: bot_navigation::AdaptiveDynamicController
       continuous_transit: false
       enable_dynamic_avoidance: false
@@ -783,6 +896,33 @@ controller_server:
         max_allowed_time_to_collision_up_to_carrot: 0.65
         max_robot_pose_search_dist: 1.5
         use_interpolation: true
+      TightPreview:
+        transform_tolerance: 1.0
+        desired_linear_vel: 0.6
+        lookahead_dist: 0.4
+        min_lookahead_dist: 0.3
+        max_lookahead_dist: 0.6
+        lookahead_time: 0.4
+        use_velocity_scaled_lookahead_dist: true
+        min_approach_linear_velocity: 0.1
+        approach_velocity_scaling_dist: 0.35
+        use_regulated_linear_velocity_scaling: true
+        regulated_linear_scaling_min_radius: 1.2
+        regulated_linear_scaling_min_speed: 0.25
+        use_cost_regulated_linear_velocity_scaling: true
+        cost_scaling_dist: 0.45
+        cost_scaling_gain: 1.0
+        inflation_cost_scaling_factor: 10.0
+        use_rotate_to_heading: false
+        rotate_to_heading_angular_vel: 1.4
+        rotate_to_heading_min_angle: 0.45
+        max_angular_accel: 5.0
+        allow_reversing: false
+        use_collision_detection: true
+        max_allowed_time_to_collision_up_to_carrot: 0.65
+        max_robot_pose_search_dist: 1.5
+        use_interpolation: true
+        plugin: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
       Dynamic:
         plugin: nav2_mppi_controller::MPPIController
         motion_model: DiffDrive

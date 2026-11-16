@@ -85,3 +85,40 @@ TEST(ControllerFallback, TranslationCapDoesNotSuppressIntentionalInPlaceTurn)
   bot_navigation::capTranslation(command,.75);
   EXPECT_DOUBLE_EQ(command.angular.z,1.2);
 }
+
+TEST(CollisionPreview, HealthyPrimaryNeverCallsSecondary)
+{
+  bool used=false;std::string reason;int calls=0;
+  EXPECT_EQ(bot_navigation::collisionPreview<int>([]{return 7;},[&]{++calls;return 8;},
+    true,1.7,.6,used,reason),7);
+  EXPECT_EQ(calls,0);EXPECT_FALSE(used);
+}
+TEST(CollisionPreview, ABrakedCollisionCanUseAFreshValidatedShortArc)
+{
+  bool used=false;std::string reason;
+  auto primary=[]()->int{throw std::runtime_error("Collision ahead");};
+  EXPECT_EQ(bot_navigation::collisionPreview<int>(primary,[]{return 8;},
+    true,.3,.6,used,reason),8);
+  EXPECT_TRUE(used);EXPECT_EQ(reason,"Collision ahead");
+}
+TEST(CollisionPreview, SpeedAndErrorClassificationNeverBypassPrimaryFailure)
+{
+  for(const auto & error:{"TF unavailable","empty path","Collision ahead"}) {
+    for(double speed:{.1,1.7}) {
+    bool used=false;std::string reason;int calls=0;
+    auto primary=[&]()->int{throw std::runtime_error(error);};
+    if(speed<.65 && std::string(error)=="Collision ahead")continue;
+    EXPECT_THROW(bot_navigation::collisionPreview<int>(primary,[&]{++calls;return 8;},
+      true,speed,.6,used,reason),std::runtime_error);
+    EXPECT_EQ(calls,0);EXPECT_FALSE(used);
+    }
+  }
+}
+TEST(CollisionPreview, TwoUnsafeArcsStillPropagateCollision)
+{
+  bool used=false;std::string reason;
+  auto unsafe=[]()->int{throw std::runtime_error("Collision ahead");};
+  EXPECT_THROW(bot_navigation::collisionPreview<int>(unsafe,unsafe,
+    true,.1,.6,used,reason),std::runtime_error);
+  EXPECT_FALSE(used);
+}
