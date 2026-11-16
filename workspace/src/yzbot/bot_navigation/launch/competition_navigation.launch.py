@@ -63,8 +63,8 @@ def generate_launch_description():
     )
     params_argument = DeclareLaunchArgument(
         "params_file",
-        default_value=(f"{navigation_share}/config/dense_nav2.yaml" if dense
-                       else f"{navigation_share}/param/originbot_nav2.yaml"),
+        # Restore provincial-baseline navigation independently of actor density.
+        default_value=f"{navigation_share}/param/originbot_nav2.yaml",
     )
     zones_argument = DeclareLaunchArgument(
         "zones_file",
