@@ -3734,22 +3734,33 @@ class TaskNavigator(Node):
                                  ) -> tuple:
         """Whether a recovery pose keeps the rotated chassis inside free cells.
 
-        Samples the circumscribed chassis circle plus its diagonals on the
-        global costmap. Returns ``(ok, minimum_margin_m)``; without a costmap
-        the historical permissive behaviour is preserved and reported.
+        Check raw occupied cells against the circumscribed chassis disk.
+        Occupancy 99 is Nav2's already inflated INSCRIBED cost; adding the
+        chassis radius to that ring again rejects physically clear escapes.
+        Raw occupied/keepout cells (100), unknown and out-of-map remain hard.
         """
         if self.global_costmap is None:
             return True, float("nan")
         radius = (self.RECOVERY_CHASSIS_HALF_DIAGONAL
                   + self.RECOVERY_POSE_MARGIN)
-        rings = (0.0, 0.12, radius)
-        angles = range(0, 360, 30)
-        for ring in rings:
-            for angle_deg in angles:
-                angle = math.radians(angle_deg)
-                px = x_value + ring * math.cos(angle)
-                py = y_value + ring * math.sin(angle)
-                if not self._costmap_cell_free(px, py):
+        info = self.global_costmap.info
+        resolution = info.resolution
+        if not math.isfinite(resolution) or resolution <= 0.:
+            return False, 0.0
+        ox, oy = info.origin.position.x, info.origin.position.y
+        # Enumerate every intersecting cell, rather than sparse rings that
+        # can miss small delivered cubes between angular samples.
+        for ix in range(math.floor((x_value-radius-ox)/resolution),
+                        math.floor((x_value+radius-ox)/resolution)+1):
+            for iy in range(math.floor((y_value-radius-oy)/resolution),
+                            math.floor((y_value+radius-oy)/resolution)+1):
+                px, py = ox+(ix+.5)*resolution, oy+(iy+.5)*resolution
+                dx = max(abs(px-x_value)-resolution/2, 0.)
+                dy = max(abs(py-y_value)-resolution/2, 0.)
+                if math.hypot(dx, dy) > radius:
+                    continue
+                cost = self._global_cost_at(px, py)
+                if cost is None or cost < 0 or cost >= 100:
                     return False, 0.0
         return True, radius
 

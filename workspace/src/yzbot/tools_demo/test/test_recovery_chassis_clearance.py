@@ -99,3 +99,27 @@ def test_inflation_escape_cannot_bypass_the_chassis_gate():
     assert len(visited) == 2
     assert (escape.x, escape.y) == visited[1]
     assert (escape.x, escape.y) != visited[0]
+
+
+def test_inflated_robot_radius_is_not_added_to_the_chassis_a_second_time():
+    costmap = costmap_with_box(1.07, 2.07, -8.23, -7.23)
+    # Nav2 OccupancyGrid: 100 is occupied, 99 is the robot's inscribed ring.
+    for iy in range(costmap.info.height):
+        for ix in range(costmap.info.width):
+            x, y = -5+(ix+.5)*.05, -10+(iy+.5)*.05
+            i = iy*costmap.info.width+ix
+            if costmap.data[i]:
+                costmap.data[i] = 100
+            elif math.hypot(max(1.07-x, x-2.07, 0.),
+                            max(-8.23-y, y+7.23, 0.)) < .38:
+                costmap.data[i] = 99
+    node = node_with(costmap)
+    # Real chassis+margin stays west of the physical box, despite inflation.
+    assert check(node, .70, -7.50)[0]
+    # The original corner penetration must still fail.
+    assert not check(node, .87, -7.50)[0]
+
+
+def test_a_tiny_occupied_cell_between_the_old_ring_samples_is_rejected():
+    costmap = costmap_with_box(.09, .14, -7.36, -7.31)
+    assert not check(node_with(costmap), 0., -7.5)[0]
