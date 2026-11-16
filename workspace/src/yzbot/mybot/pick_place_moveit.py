@@ -1431,12 +1431,39 @@ class MoveItPickPlace(Node):
             if (not all(math.isfinite(v) for v in orientation)
                     or quaternion_norm(orientation) < 1e-6):
                 return False
-            if not self.cartesian_move(
+            lifted_ok = self.cartesian_move(
                 (tool.position.x, tool.position.y, PICK_PLANE_ALIGN_HEIGHT + .14),
                 "pick_plane_recovery_lift", orientation=orientation,
                 avoid_collisions=True,
-            ):
-                return False
+            )
+            if not lifted_ok:
+                # At a long reach, an orientation-preserving vertical lift
+                # to .39 m can leave the workspace (red_4: fraction=.787).
+                # Partial paths are never executed. First clear the original
+                # alignment floor, retract radially in that same plane, then
+                # finish lifting. Keep every segment collision checked.
+                tool = self.pick_tool_pose()
+                if tool is None or not all(math.isfinite(v) for v in (
+                        tool.position.x, tool.position.y, tool.position.z,
+                        tool.orientation.x, tool.orientation.y,
+                        tool.orientation.z, tool.orientation.w)):
+                    return False
+                q = tool.orientation
+                orientation = (q.x, q.y, q.z, q.w)
+                if quaternion_norm(orientation) < 1e-6:
+                    return False
+                radius = math.hypot(tool.position.x, tool.position.y)
+                scale = min(1.0, .28 / radius) if radius > 1e-6 else 1.0
+                x, y = tool.position.x * scale, tool.position.y * scale
+                clearance = max(tool.position.z, PICK_PLANE_ALIGN_HEIGHT + .02)
+                if not self.cartesian_move(
+                    (x, y, max(clearance, PICK_PLANE_ALIGN_HEIGHT + .14)),
+                    "pick_plane_recovery_retract_lift",
+                    via=((tool.position.x, tool.position.y, clearance),
+                         (x, y, clearance)),
+                    orientation=orientation, avoid_collisions=True,
+                ):
+                    return False
             lifted = self.pick_tool_pose()
             if (lifted is None or not math.isfinite(lifted.position.z)
                     or lifted.position.z < PICK_PLANE_ALIGN_HEIGHT):

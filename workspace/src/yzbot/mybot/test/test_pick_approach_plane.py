@@ -148,6 +148,40 @@ def test_lift_reporting_success_below_the_floor_cannot_start_joint_recovery():
     arm.move_to_joint_target.assert_not_called()
 
 
+def test_long_reach_recovery_retracts_above_floor_after_unreachable_lift():
+    arm, _, _ = arm_for_red3()
+    arm.tool_pose = MODULE.pose_from_values((.377, -.02, .087), (0., 1., 0., 0.))
+
+    def lift(xyz, label, **kwargs):
+        if label == 'pick_plane_recovery_lift':
+            return False
+        arm.tool_pose.position.z = xyz[2]
+        return True
+
+    arm.cartesian_move.side_effect = lift
+    assert MODULE.MoveItPickPlace.recover_pick_plane_start(arm, arm.tool_pose, 0.)
+    fallback = arm.cartesian_move.call_args_list[1]
+    assert fallback.args[1] == 'pick_plane_recovery_retract_lift'
+    via = fallback.kwargs['via']
+    assert via[0][:2] == (.377, -.02)
+    assert via[0][2] > MODULE.PICK_PLANE_ALIGN_HEIGHT
+    assert math.hypot(*via[1][:2]) == pytest.approx(.28)
+    assert via[1][1] / via[1][0] == pytest.approx(-.02 / .377)
+    assert via[1][2] == via[0][2]
+    assert fallback.kwargs['orientation'] == (0., 1., 0., 0.)
+    assert fallback.kwargs['avoid_collisions'] is True
+
+
+def test_failed_retracted_lift_still_blocks_joint_reset():
+    arm, _, _ = arm_for_red3()
+    arm.tool_pose.position.z = .087
+    arm.cartesian_move.return_value = False
+    arm.cartesian_move.side_effect = None
+    assert not MODULE.MoveItPickPlace.recover_pick_plane_start(arm, arm.tool_pose, 0.)
+    assert arm.cartesian_move.call_count == 2
+    arm.move_to_joint_target.assert_not_called()
+
+
 @pytest.mark.parametrize('scanned', [True, False])
 def test_scan_uses_the_forward_grasp_branch_before_recognition(scanned):
     arm = SimpleNamespace(

@@ -58,6 +58,7 @@ from tools_demo.mission_state_machine import select_reachable_target
 from tools_demo.pick_order_policy import ordered_task_key
 from tools_demo.pick_order_policy import validate_pick_entries
 from tools_demo.unordered_schedule import optimize_schedule
+from tools_demo.static_route_cost import load_static_route_cost
 from tools_demo.transport_schedule import (
     TransportTimeEstimator, centered_slot_offset, load_timing_profile, route_estimate,
     current_task_response_proof,
@@ -576,6 +577,7 @@ class MissionCoordinator(Node):
         self.declare_parameter("transport_replan_minimum_gain_sec", 8.0)
         self.declare_parameter("transport_uncertainty_weight", 0.15)
         self.declare_parameter("transport_timing_profile_file", "")
+        self.declare_parameter("transport_static_map_file", "")
         self.declare_parameter(
             "perception_topic",
             "/competition/perception/targets",
@@ -2278,6 +2280,16 @@ class MissionCoordinator(Node):
                 except (OSError, ValueError) as exception:
                     self.get_logger().warn(
                         f"transport_timing_profile_rejected: {exception}")
+            route_distance = None
+            map_name = str(self.get_parameter("transport_static_map_file").value or "")
+            if map_name:
+                map_path = Path(map_name)
+                if not map_path.is_absolute():
+                    map_path = share / "maps" / map_name
+                try:
+                    route_distance = load_static_route_cost(self, map_path).distance
+                except (OSError, ValueError, KeyError, yaml.YAMLError) as exception:
+                    self.get_logger().warn(f"transport_static_cost_unavailable: {exception}")
             estimator = TransportTimeEstimator(
                 self.zone_nav_poses,
                 strategies,
@@ -2291,7 +2303,8 @@ class MissionCoordinator(Node):
                     self._cube_failures),
                 responses_complete=self._transport_responses_complete,
                 navigation_parameters=nav,
-                timing_samples=timing_samples)
+                timing_samples=timing_samples,
+                route_distance=route_distance)
             # Retain an encounter route until two real current-task responses
             # are verified. Any two known movers satisfy the same acceptance
             # contract; planned crossings alone never provide that proof.
@@ -2348,6 +2361,7 @@ class MissionCoordinator(Node):
                 f"incumbent_sec={incumbent:.2f} required={required} "
                 f"responses_complete={self._transport_responses_complete} "
                 f"timing_samples={len(timing_samples)} "
+                f"distance_model={'static_map' if route_distance else 'straight'} "
                 f"entries={entries} requirements={[(j.color, j.target_zone) for j in jobs]}")
             lookup = {f"{n}:{s}": c for items in options.values()
                       for n, s, c in items}

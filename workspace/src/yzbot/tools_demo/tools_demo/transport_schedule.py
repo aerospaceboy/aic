@@ -89,6 +89,7 @@ class TransportTimeEstimator:
     responses_complete: bool = False
     navigation_parameters: dict = field(default_factory=dict)
     timing_samples: list = field(default_factory=list)
+    route_distance: object = None
 
     def __post_init__(self):
         for value in (self.empty_speed, self.loaded_speed, self.turn_speed,
@@ -106,13 +107,18 @@ class TransportTimeEstimator:
                     'Transport penalties must be finite and nonnegative')
 
     def transit_seconds(self, start, poses, loaded=False):
-        """Account for distance, heading changes and stage overhead."""
+        """Account for static detours, heading changes and stage overhead."""
         speed = self.loaded_speed if loaded else self.empty_speed
         x, y, yaw = start
         result = 0.0
         previous_flow = None
         for pose in poses:
             distance = math.hypot(pose.x - x, pose.y - y)
+            if self.route_distance is not None:
+                estimate = self.route_distance((x, y), (pose.x, pose.y))
+                if not math.isfinite(estimate) or estimate < 0:
+                    return math.inf
+                distance = max(distance, estimate)
             heading = math.atan2(pose.y - y,
                                  pose.x - x) if distance > 1e-6 else yaw
             family = (pose.zone.split('_')[1]
