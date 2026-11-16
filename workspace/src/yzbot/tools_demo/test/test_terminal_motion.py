@@ -78,6 +78,34 @@ def test_heading_and_lateral_trim_do_not_advance_toward_occupied_pad():
     assert command[0] == 0. and command[1] > 0.
 
 
+@pytest.mark.parametrize('zone', ['A', 'B', 'C'])
+@pytest.mark.parametrize('arrived', [False, True])
+def test_delivery_recovery_uses_escape_motion_and_restores_route(zone, arrived, monkeypatch):
+    """An A/B/C mission must not turn its temporary escape into a delivery."""
+    terminal = Mock()
+    monkeypatch.setattr(TaskNavigator, '_delivery_terminal_step', terminal)
+    escape = ZonePose('RECOVERY_TRAIL', 0., 0., 0.)
+    node = N(dense_fast_transit=True, active_zone=zone,
+             dock_pose=escape, recovery_target=escape,
+             latest_x=0. if arrived else .3, latest_y=0., latest_yaw=0.,
+             alignment_target_yaw=0., alignment_deadline_ns=10_000_000_000,
+             pre_navigation_alignment=False, zone_egress_target=None,
+             pickup_final_approach=False, departure_routes={},
+             dock_arrival_tolerance=.1, dock_max_speed=.25,
+             dock_deceleration=3.5, alignment_max_angular_speed=2.,
+             get_clock=lambda: N(now=lambda: N(nanoseconds=1_000_000_000)),
+             _publish_direct_velocity=Mock(), stop_alignment=Mock(),
+             _finish_bounded_recovery=Mock())
+    TaskNavigator.alignment_callback(node)
+    terminal.assert_not_called()
+    if arrived:
+        node._finish_bounded_recovery.assert_called_once()
+    else:
+        command = node._publish_direct_velocity.call_args.args[0]
+        assert command.linear.x < 0. and command.linear.y == 0.
+        node._finish_bounded_recovery.assert_not_called()
+
+
 def test_ground_cube_guard_checks_rotated_wheels_and_entire_command():
     assert ground_cubes_clear((0., 0., 0.), [(.30, 0.)])
     assert not ground_cubes_clear((0., 0., math.pi / 4), [(.30, 0.)])

@@ -81,3 +81,21 @@ def test_box_outside_chassis_ring_does_not_reject_pose():
     # 0.30 m from the box edge in +x: ring radius 0.266 stays outside it.
     ok, _ = check(node, 0.80, -6.80)
     assert ok is True
+
+
+def test_inflation_escape_cannot_bypass_the_chassis_gate():
+    """The second-tier cheaper-cell search needs the same body proof."""
+    visited = []
+    def gate(x, y):
+        visited.append((x, y))
+        return len(visited) > 1, .27
+    node = SimpleNamespace(
+        latest_x=0., latest_y=0., latest_yaw=0.,
+        _global_cost_at=lambda x, y: 80 if x == y == 0. else 10,
+        _costmap_segment_clear=lambda *args, **kwargs: True,
+        _recovery_pose_clearance=gate,
+        get_logger=lambda: SimpleNamespace(info=lambda message: None))
+    escape = TaskNavigator._inflation_escape_candidate(node, .5)
+    assert len(visited) == 2
+    assert (escape.x, escape.y) == visited[1]
+    assert (escape.x, escape.y) != visited[0]

@@ -4810,7 +4810,11 @@ class TaskNavigator(Node):
             self._publish_direct_velocity(command)
             return
         if (getattr(self, 'dense_fast_transit', False)
-                and self.active_zone in VALID_ZONES and self.dock_pose is not None):
+                and self.active_zone in VALID_ZONES and self.dock_pose is not None
+                and getattr(self, 'recovery_target', None) is None):
+            # The mission still names A/B/C during a bounded escape. Its
+            # temporary dock is a recovery waypoint, not a delivery pad;
+            # the recovery completion below must restore and replan the leg.
             TaskNavigator._delivery_terminal_step(self, now_ns)
             return
         if self.dock_pose is not None:
@@ -5266,6 +5270,10 @@ class TaskNavigator(Node):
                 if candidate_cost is None or candidate_cost >= 100:
                     continue
                 if candidate_cost >= start_cost:
+                    continue
+                clearance_gate = getattr(self, "_recovery_pose_clearance", None)
+                if clearance_gate is not None and not clearance_gate(
+                        candidate.x, candidate.y)[0]:
                     continue
                 if not self._costmap_segment_clear(
                     self.latest_x,
