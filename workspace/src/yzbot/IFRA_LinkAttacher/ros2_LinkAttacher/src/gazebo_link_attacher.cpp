@@ -39,6 +39,8 @@
 #include <gazebo_ros/node.hpp>
 #include <memory>
 #include <mutex>
+#include <gazebo/common/Events.hh>
+#include "ros2_linkattacher/world_operations.hpp"
 
 #include "gazebo_ros/conversions/builtin_interfaces.hpp"
 #include "gazebo_ros/conversions/geometry_msgs.hpp"
@@ -66,6 +68,12 @@ public:
   void Detach(
     linkattacher_msgs::srv::DetachLink::Request::SharedPtr _req,
     linkattacher_msgs::srv::DetachLink::Response::SharedPtr _res);
+  void AttachInWorld(linkattacher_msgs::srv::AttachLink::Request::SharedPtr,
+                     linkattacher_msgs::srv::AttachLink::Response::SharedPtr);
+  void DetachInWorld(linkattacher_msgs::srv::DetachLink::Request::SharedPtr,
+                     linkattacher_msgs::srv::DetachLink::Response::SharedPtr);
+  ros2_linkattacher::WorldOperations operations_;
+  gazebo::event::ConnectionPtr update_connection_;
 
   // World pointer from Gazebo.
   gazebo::physics::WorldPtr world_;
@@ -92,6 +100,7 @@ GazeboLinkAttacher::GazeboLinkAttacher()
 
 GazeboLinkAttacher::~GazeboLinkAttacher()
 {
+  impl_->update_connection_.reset();
 }
 
 void GazeboLinkAttacher::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf)
@@ -102,6 +111,8 @@ void GazeboLinkAttacher::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr 
 
   // ROS2 NODE:
   impl_->ros_node_ = gazebo_ros::Node::Get(_sdf);
+  impl_->update_connection_=gazebo::event::Events::ConnectWorldUpdateBegin(
+    [this](const gazebo::common::UpdateInfo &){impl_->operations_.drain();});
 
   // ROS2 SERVICE SERVERS:
   impl_->attach_link_service_ =
@@ -118,6 +129,30 @@ void GazeboLinkAttacher::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr 
 }
 
 void GazeboLinkAttacherPrivate::Attach(
+  linkattacher_msgs::srv::AttachLink::Request::SharedPtr req,
+  linkattacher_msgs::srv::AttachLink::Response::SharedPtr res)
+{
+  try {
+    *res=operations_.invoke<linkattacher_msgs::srv::AttachLink::Response>([this,req](){
+      auto result=std::make_shared<linkattacher_msgs::srv::AttachLink::Response>();
+      AttachInWorld(req,result);return *result;
+    },std::chrono::milliseconds(2000));
+  }catch(const std::exception & error){res->success=false;res->message=error.what();}
+}
+
+void GazeboLinkAttacherPrivate::Detach(
+  linkattacher_msgs::srv::DetachLink::Request::SharedPtr req,
+  linkattacher_msgs::srv::DetachLink::Response::SharedPtr res)
+{
+  try {
+    *res=operations_.invoke<linkattacher_msgs::srv::DetachLink::Response>([this,req](){
+      auto result=std::make_shared<linkattacher_msgs::srv::DetachLink::Response>();
+      DetachInWorld(req,result);return *result;
+    },std::chrono::milliseconds(2000));
+  }catch(const std::exception & error){res->success=false;res->message=error.what();}
+}
+
+void GazeboLinkAttacherPrivate::AttachInWorld(
   linkattacher_msgs::srv::AttachLink::Request::SharedPtr _req,
   linkattacher_msgs::srv::AttachLink::Response::SharedPtr _res)
 {
@@ -202,7 +237,6 @@ void GazeboLinkAttacherPrivate::Attach(
   // operations corrupts the dynamic joint lifecycle in Gazebo Classic.
   joint->SetProvideFeedback(true);
   joint->Init();
-  model1->Update();
 
   JointSTRUCT joint_record;
   joint_record.joint_name = joint_name;
@@ -226,7 +260,7 @@ void GazeboLinkAttacherPrivate::Attach(
     _req->link2_name + "}.";
 }
 
-void GazeboLinkAttacherPrivate::Detach(
+void GazeboLinkAttacherPrivate::DetachInWorld(
   linkattacher_msgs::srv::DetachLink::Request::SharedPtr _req,
   linkattacher_msgs::srv::DetachLink::Response::SharedPtr _res)
 {

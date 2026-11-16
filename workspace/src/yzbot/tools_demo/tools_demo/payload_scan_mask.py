@@ -1,33 +1,84 @@
-"""Mask the carried payload's own lidar returns while the arm holds a cube.
+"""Filter lidar self returns using fresh TF and URDF collision primitives.
 
-The carried cube rides ahead of the chassis with part of the payload assembly
-inside the lidar plane at a range just past ``range_min`` (0.38 m), so every
-scan consumer marked the robot's own payload as an obstacle: the local costmap
-made RPP report "collision ahead" during the whole delivery leg, the global
-dynamic layer accumulated a lethal trail behind the robot, and NavFn then
-refused the next plan with "Starting point in lethal space". Height filtering
-cannot separate the payload because a 2D lidar places every return at the
-sensor's own height, and raising ``range_min`` would blind the robot to real
-obstacles during close encounters.
-
-This node republishes the scan with returns inside the payload box removed
-while the mission is in a cube-holding state, and passes every other return
-through unchanged. All real obstacle sources stay live: the static map, the
-placed-cubes layer, the moving-obstacle truth used by the safety limiter, and
-lidar returns outside the payload box. The masked box is unobserved, not free
-space: NaN beams cannot clear obstacles behind the payload. State is latched
-until the next coordinator event; only before the first event is scan raw.
+Only actual arm/finger volumes and the measured rigid attachment transform
+are masked as unobserved (NaN). Close external walls remain visible. Missing
+transforms preserve raw returns; no rectangular blind-zone fallback is used.
 """
 
 import json
 import math
+import copy
+import numpy as np
 from typing import Optional
 
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from sensor_msgs.msg import LaserScan
+from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import String
+from rclpy.time import Time
+from tf2_ros import Buffer, TransformListener, TransformException
+
+
+# Collision primitives from arm.xacro, in the corresponding link frame.
+SELF_SHAPES = (
+    ('link1', 'cylinder', (0.03, 0.10, 0.0)),
+    ('link2', 'cylinder', (0.03, 0.14, 0.07)),
+    ('link3', 'cylinder', (0.03, 0.22, 0.11)),
+    ('link4', 'cylinder', (0.025, 0.06, 0.03)),
+    ('link5', 'cylinder', (0.03, 0.06, 0.03)),
+    ('link6', 'cylinder', (0.05, 0.02, 0.01)),
+    ('gripper_finger_link1', 'box', (.04, .005, .01)),
+    ('gripper_finger_link2', 'box', (.04, .005, .01)),
+    ('camera_rgbd_link', 'box', (.035, .15, .045)),
+)
+
+
+def geometric_masked_scan(scan, transforms, payload=None):
+    """Remove only returns inside actual link geometry, preserving close walls.
+
+    Transforms map the scan frame into each URDF link frame. Missing links
+    remain unfiltered; no broad blind rectangle is used as a fallback.
+    """
+    result=copy.deepcopy(scan)
+    ranges=np.asarray(scan.ranges,dtype=float)
+    angles=scan.angle_min+np.arange(len(ranges))*scan.angle_increment
+    finite=np.isfinite(ranges)
+    points=np.zeros((len(ranges),3))
+    points[:,0]=np.where(finite,ranges,0.)*np.cos(angles)
+    points[:,1]=np.where(finite,ranges,0.)*np.sin(angles)
+    removed=np.zeros(len(ranges),dtype=bool)
+    for link,kind,shape in SELF_SHAPES:
+        transform=transforms.get(link)
+        if transform is None:continue
+        t,q=transform
+        x,y,z,w=q
+        if (not all(math.isfinite(v) for v in (*t,*q))
+                or abs(sum(v*v for v in q)-1.)>.01):continue
+        rotation=np.array([[1-2*(y*y+z*z),2*(x*y-z*w),2*(x*z+y*w)],
+            [2*(x*y+z*w),1-2*(x*x+z*z),2*(y*z-x*w)],
+            [2*(x*z-y*w),2*(y*z+x*w),1-2*(x*x+y*y)]])
+        local=points@rotation.T+np.asarray(t)
+        pad=.025  # Gazebo lidar has 0.01 m Gaussian range noise.
+        if kind=='cylinder':
+            radius,length,center_z=shape
+            inside=(np.hypot(local[:,0],local[:,1])<=radius+pad)&(np.abs(local[:,2]-center_z)<=length/2+pad)
+        else:
+            inside=np.all(np.abs(local)<=np.asarray(shape)+pad,axis=1)
+        if payload is not None and link=='link6':
+            center,quaternion=payload
+            a,b,c,d=quaternion
+            if all(math.isfinite(v) for v in (*center,*quaternion)) and abs(sum(v*v for v in quaternion)-1.)<.01:
+                rotation=np.array([[1-2*(b*b+c*c),2*(a*b-c*d),2*(a*c+b*d)],
+                    [2*(a*b+c*d),1-2*(a*a+c*c),2*(b*c-a*d)],
+                    [2*(a*c-b*d),2*(b*c+a*d),1-2*(a*a+b*b)]])
+                cube=(local-np.asarray(center))@rotation
+                inside |= np.all(np.abs(cube)<=.015+pad,axis=1)
+        removed |= finite&inside
+    result.ranges=[float('nan') if masked else value
+                   for value,masked in zip(scan.ranges,removed)]
+    return result
 
 
 def in_payload_box(
@@ -129,6 +180,12 @@ class PayloadScanMask(Node):
         )
 
         self.mission_state: Optional[str] = None
+        self.tf=Buffer()
+        self.tf_listener=TransformListener(self.tf,self)
+        self.payload_geometry=None
+        self.create_subscription(PoseStamped,'/competition/payload/relative_pose',
+                                 self.payload_callback,
+                                 QoSProfile(depth=1,durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.masked_returns = 0
         self.published_scans = 0
 
@@ -175,12 +232,34 @@ class PayloadScanMask(Node):
             return
         self.mission_state = state
 
+    def payload_callback(self,message):
+        if message.header.frame_id!='link6':
+            self.payload_geometry=None
+            return
+        p=message.pose.position;q=message.pose.orientation
+        self.payload_geometry=((p.x,p.y,p.z),(q.x,q.y,q.z,q.w))
+
     def scan_callback(self, scan: LaserScan) -> None:
-        """Republish the scan, masking the payload box only while holding."""
+        """Republish the scan, filtering physical self geometry while holding."""
         if should_mask(self.mission_state, self.holding_states):
-            output = masked_scan(
-                scan, self.forward_min, self.forward_max, self.lateral_half
-            )
+            transforms={}
+            for link,_,_ in SELF_SHAPES:
+                try:
+                    transform=self.tf.lookup_transform(link,scan.header.frame_id,
+                                                       Time.from_msg(scan.header.stamp))
+                    t=transform.transform.translation;q=transform.transform.rotation
+                    transforms[link]=((t.x,t.y,t.z),(q.x,q.y,q.z,q.w))
+                except TransformException:
+                    try:
+                        transform=self.tf.lookup_transform(link,scan.header.frame_id,Time())
+                        age=(Time.from_msg(scan.header.stamp).nanoseconds-
+                             Time.from_msg(transform.header.stamp).nanoseconds)/1e9
+                        if not -.02<=age<=.10:continue
+                        t=transform.transform.translation;q=transform.transform.rotation
+                        transforms[link]=((t.x,t.y,t.z),(q.x,q.y,q.z,q.w))
+                    except TransformException:
+                        continue
+            output=geometric_masked_scan(scan,transforms,self.payload_geometry)
         else:
             output = scan
         self.publisher.publish(output)

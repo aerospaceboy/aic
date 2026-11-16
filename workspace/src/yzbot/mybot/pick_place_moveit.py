@@ -33,6 +33,7 @@ from moveit_msgs.srv import (
 )
 from rclpy.action import ActionClient
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, DurabilityPolicy
 from sensor_msgs.msg import JointState
 from shape_msgs.msg import SolidPrimitive
 from std_msgs.msg import Bool, String
@@ -863,6 +864,9 @@ class MoveItPickPlace(Node):
             "/competition/gripper/state",
             10,
         )
+        self.payload_geometry_publisher=self.create_publisher(
+            PoseStamped,'/competition/payload/relative_pose',
+            QoSProfile(depth=1,durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.base_velocity_publisher = self.create_publisher(
             Twist,
             "/cmd_vel",
@@ -939,6 +943,8 @@ class MoveItPickPlace(Node):
         message = String()
         message.data = state
         self.gripper_state_publisher.publish(message)
+        if state.startswith('released:') and hasattr(self,'payload_geometry_publisher'):
+            self.payload_geometry_publisher.publish(PoseStamped())
         self.get_logger().info(f"gripper={state}")
 
     def set_base_hold(self, enabled: bool) -> None:
@@ -2172,6 +2178,13 @@ class MoveItPickPlace(Node):
         pose = self.get_entity_pose(self.cube_name, "six_arm::link6")
         if pose is None:
             return None
+        if self.attached and hasattr(self,'payload_geometry_publisher'):
+            # The attachment transform is already read by grasp validation.
+            # Publish only this rigid self geometry; no external obstacle
+            # truth or pickup target is substituted into navigation.
+            message=PoseStamped();message.header.frame_id='link6'
+            message.header.stamp=self.get_clock().now().to_msg();message.pose=pose
+            self.payload_geometry_publisher.publish(message)
         return (pose.position.x, pose.position.y, pose.position.z)
 
     def validate_grasp_window(

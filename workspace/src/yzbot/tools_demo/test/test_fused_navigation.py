@@ -41,9 +41,18 @@ def test_fusion_retains_original_map_radius_and_live_collision_sources(group):
     assert not new['prediction_layer']['timed_future_cost']
 
 
-def test_collision_monitor_limits_are_unchanged_and_precision_adjustments_remain_bounded():
-    assert FUSED['collision_monitor'] == BASE['collision_monitor']
+def test_collision_monitor_preserves_original_zones_and_adds_stopping_preview():
+    new=dict(FUSED['collision_monitor']['ros__parameters'])
+    preview=new.pop('FootprintApproach')
+    new['polygons']=[p for p in new['polygons'] if p!='FootprintApproach']
+    assert new == BASE['collision_monitor']['ros__parameters']
     assert FUSED['velocity_smoother'] == BASE['velocity_smoother']
+    cruise=max(FUSED['controller_server']['ros__parameters'][name]['Nominal']['desired_linear_vel']
+               for name in ('FollowPath','CentralTransit','SmoothTransit','CornerFlow','CornerFlowA'))
+    deceleration=abs(FUSED['velocity_smoother']['ros__parameters']['max_decel'][0])
+    assert preview['time_before_collision']>=cruise/deceleration+.15
+    assert preview['footprint_topic']=='/local_costmap/published_footprint'
+    assert preview['action_type']=='approach' and preview['enabled']
 
 
 def test_nominal_bounds_search_to_avoid_pruning_across_a_nearby_wall():

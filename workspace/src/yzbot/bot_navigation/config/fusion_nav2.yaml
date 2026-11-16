@@ -1332,6 +1332,16 @@ collision_monitor:
     polygons:
     - BodyStop
     - NearSlow
+    - FootprintApproach
+    FootprintApproach:
+      type: polygon
+      action_type: approach
+      footprint_topic: /local_costmap/published_footprint
+      time_before_collision: 0.6
+      simulation_time_step: 0.05
+      max_points: 2
+      visualize: false
+      enabled: true
     BodyStop:
       type: circle
       radius: 0.26
