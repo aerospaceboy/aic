@@ -476,6 +476,18 @@ class MissionStateMachine:
         )
         return self._navigate_zone_exit()
 
+    def placement_released_unconfirmed(self) -> MissionAction:
+        """A released cube cannot be placed again; verify its real position.
+
+        No completed/skipped counter changes here. Only verification may
+        confirm the delivery, including when the worker's settle timer expired.
+        """
+        if self.state != "placing":
+            raise MissionValueError("Released placement is invalid outside placing")
+        self.state = "verifying"
+        self.detail = "verifying_released_delivery"
+        return MissionAction("verify", job=self._require_job())
+
     def cancel(self) -> MissionAction:
         """
         Cancel safely, releasing a cube only when the arm is mid-motion.

@@ -696,7 +696,7 @@ class MissionCoordinator(Node):
         self.declare_parameter("zone_b_nav", [11.299999999999999, -5.0, 0.0])
         self.declare_parameter("zone_c_nav", [2.9, -12.1, 0.0])
         self.declare_parameter("zone_half_extent", [0.485, 0.235])
-        self.declare_parameter("delivery_surface_z", 0.020)
+        self.declare_parameter("delivery_surface_z", 0.000)
         self.declare_parameter("delivery_cube_half_height", 0.015)
         self.declare_parameter("delivery_height_tolerance", 0.10)
         self.declare_parameter("delivery_precision_tolerance", 0.06)
@@ -1524,6 +1524,13 @@ class MissionCoordinator(Node):
             # invalidates this cache and forces a fresh RGB-D scan.
             self.inventory_scan_complete = True
         self._note_place_outcome(result, operation, success)
+        if (operation == "place" and not success
+                and result.get("cube_attached") is False
+                and result.get("failure_reason") == "physical_landing_unproved"):
+            self.get_logger().warn(
+                "released_placement_unconfirmed: verifying actual landing; no place retry")
+            self.handle_action(self.machine.placement_released_unconfirmed())
+            return
         if operation == "pick" and not success:
             # A disturbed or stale slot must be observed again before a
             # retry or any later cached pick.

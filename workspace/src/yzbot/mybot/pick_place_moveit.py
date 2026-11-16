@@ -2161,7 +2161,10 @@ class MoveItPickPlace(Node):
             previous=point
             time.sleep(.08)
         self.place_failure_reason="physical_landing_unproved"
-        self.get_logger().error("physical_landing_unproved: retaining actual cube pose")
+        self.get_logger().error(
+            f"physical_landing_unproved cube={self.cube_name} "
+            f"actual={previous} expected={self.release_world_pose} "
+            f"slot_error={error:.5f} height_error={height:.5f}")
         return False
 
     def relative_cube_position(self) -> Optional[Tuple[float, float, float]]:

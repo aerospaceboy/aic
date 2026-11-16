@@ -209,7 +209,7 @@ def test_delivery_geometry_matches_the_opposing_tables():
     assert "zone_b_center: [11.7, -5.0]" in config
     assert "zone_c_center: [3.3, -12.1]" in config
     assert "zone_half_extent: [0.485, 0.235]" in config
-    assert "delivery_surface_z: 0.020" in config
+    assert "delivery_surface_z: 0.000" in config
     assert "delivery_cube_half_height: 0.015" in config
     assert "delivery_height_tolerance: 0.10" in config
     assert "abs(position.z - expected_z)" in source
