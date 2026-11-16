@@ -8,17 +8,6 @@ BASE = yaml.safe_load((ROOT / 'bot_navigation/param/originbot_nav2.yaml').read_t
 FUSED = yaml.safe_load((ROOT / 'bot_navigation/config/fusion_nav2.yaml').read_text())
 
 
-def test_global_live_snapshot_keeps_sensor_geometry_and_physical_current_occupancy():
-    old = BASE['global_costmap']['global_costmap']['ros__parameters']['dynamic_layer']['dynamic_points']
-    new = FUSED['global_costmap']['global_costmap']['ros__parameters']['dynamic_layer']
-    assert new['plugin'] == 'bot_navigation::PredictionLayer' and new['raw_snapshot']
-    assert new['topic'] == old['topic']
-    for name in ['min_obstacle_height', 'max_obstacle_height']:
-        assert new[name] == old[name]
-    assert 0 < new['timeout'] <= 1.
-    assert new['robot_egress_radius'] == 0.
-
-
 @pytest.mark.parametrize('name', [
     'FollowPath', 'CentralTransit', 'SmoothTransit', 'CornerFlow', 'CornerFlowA'])
 def test_dynamic_candidates_obey_same_nonholonomic_model_as_execution(name):
@@ -75,15 +64,8 @@ def test_coherent_pursuit_preserves_geometry_and_bounded_path_search():
         allowed = {'plugin'}
         if 'Nominal' in new[name]:
             allowed.add('max_robot_pose_search_dist')
-            allowed.update({'rotate_to_heading_angular_vel', 'heading_recovery_leave'})
         assert {k: v for k, v in actual.items() if k not in allowed} == {
             k: v for k, v in old[name].items() if k not in allowed}
         if 'Nominal' in new[name]:
             assert actual['max_robot_pose_search_dist'] == 1.5
             assert actual['use_collision_detection']
-            # Faster recovery must still be stoppable within its exit window
-            # using the actual downstream angular acceleration/deceleration.
-            smoother = FUSED['velocity_smoother']['ros__parameters']
-            braking = min(smoother['max_accel'][2], abs(smoother['max_decel'][2]))
-            assert actual['rotate_to_heading_angular_vel'] ** 2 / (2 * braking) <= actual['heading_recovery_leave']
-    assert 0 < new['failure_tolerance'] < new['progress_checker']['movement_time_allowance']

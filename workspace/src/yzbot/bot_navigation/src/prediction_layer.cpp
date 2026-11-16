@@ -21,56 +21,40 @@ void PredictionLayer::onInitialize()
   declareParameter("source_frame", rclcpp::ParameterValue("map"));
   declareParameter("robot_egress_radius", rclcpp::ParameterValue(0.33));
   declareParameter("timed_future_cost", rclcpp::ParameterValue(false));
-  declareParameter("raw_snapshot", rclcpp::ParameterValue(false));
-  declareParameter("topic", rclcpp::ParameterValue("/competition/dynamic_predictions"));
-  declareParameter("min_obstacle_height", rclcpp::ParameterValue(0.2));
-  declareParameter("max_obstacle_height", rclcpp::ParameterValue(2.0));
   node->get_parameter(name_ + ".enabled", enabled_);
   node->get_parameter(name_ + ".timeout", timeout_);
   node->get_parameter(name_ + ".source_frame", source_frame_);
   node->get_parameter(name_ + ".robot_egress_radius", robot_egress_radius_);
   node->get_parameter(name_ + ".timed_future_cost", timed_future_cost_);
-  node->get_parameter(name_ + ".raw_snapshot", raw_snapshot_);
-  node->get_parameter(name_ + ".topic", topic_);
-  node->get_parameter(name_ + ".min_obstacle_height", min_height_);
-  node->get_parameter(name_ + ".max_obstacle_height", max_height_);
-  if ((!raw_snapshot_ && source_frame_.empty()) || topic_.empty()) {
-    throw std::runtime_error("Snapshot source frame/topic is empty");
-  }
-  if (!std::isfinite(min_height_+max_height_) || min_height_>max_height_)
-    throw std::runtime_error("Snapshot obstacle heights invalid");
-  if (!std::isfinite(timeout_) || timeout_ <= 0.0 || timeout_ > 1.0) {
+  if (source_frame_.empty()) {throw std::runtime_error("Prediction source frame is empty");}
+  if (timeout_ <= 0.0 || timeout_ > 1.0) {
     throw std::runtime_error("Prediction timeout must be in (0, 1] seconds");
   }
-  if (!std::isfinite(robot_egress_radius_) ||
-    robot_egress_radius_ < (raw_snapshot_ ? 0.0 : 0.28) || robot_egress_radius_ > 0.50) {
-    throw std::runtime_error("Snapshot robot egress radius invalid");
+  if (robot_egress_radius_ < 0.28 || robot_egress_radius_ > 0.50) {
+    throw std::runtime_error("Prediction robot egress radius must be in [0.28, 0.50]");
   }
   default_value_ = nav2_costmap_2d::NO_INFORMATION;
   matchSize();
   current_ = true;
   subscription_ = node->create_subscription<sensor_msgs::msg::PointCloud2>(
-    topic_, rclcpp::QoS(1),
+    "/competition/dynamic_predictions", rclcpp::QoS(1),
     std::bind(&PredictionLayer::receive, this, std::placeholders::_1));
 }
 
 void PredictionLayer::receive(sensor_msgs::msg::PointCloud2::ConstSharedPtr message)
 {
-  // Costed forecasts use authoritative map coordinates; raw snapshots retain
-  // the stamped sensor frame. Never guess TF or accept a malformed snapshot.
-  const size_t fields = raw_snapshot_ ? 3 : 4;
-  const size_t step = fields * 4;
-  if (message->header.frame_id.empty() ||
-    (!raw_snapshot_ && message->header.frame_id != source_frame_) ||
-    message->is_bigendian || message->height != 1 || message->point_step != step ||
-    message->data.size() != static_cast<size_t>(message->width) * step ||
-    message->row_step != message->width * step || message->fields.size() != fields ||
+  // Forecasts already use the authoritative map TF. Never guess another frame
+  // or accept malformed/oversized data as a valid replacing snapshot.
+  if (message->header.frame_id != source_frame_ ||
+    message->is_bigendian || message->height != 1 || message->point_step != 16 ||
+    message->data.size() != static_cast<size_t>(message->width) * 16 ||
+    message->row_step != message->width * 16 || message->fields.size() != 4 ||
     message->width > 20000)
   {
     return;
   }
   const char * names[] = {"x", "y", "z", "cost"};
-  for (size_t i = 0; i < fields; ++i) {
+  for (size_t i = 0; i < 4; ++i) {
     const auto & field = message->fields[i];
     if (field.name != names[i] || field.offset != i * 4 || field.count != 1 ||
       field.datatype != sensor_msgs::msg::PointField::FLOAT32) {return;}
@@ -79,34 +63,21 @@ void PredictionLayer::receive(sensor_msgs::msg::PointCloud2::ConstSharedPtr mess
   const double age = (clock_->now() - stamp).seconds();
   if (age < -0.05 || age > timeout_) {return;}
   geometry_msgs::msg::TransformStamped transform;
-  const auto & source = message->header.frame_id;
-  const bool needs_transform = source != layered_costmap_->getGlobalFrameID();
+  const bool needs_transform = source_frame_ != layered_costmap_->getGlobalFrameID();
   if (needs_transform) {
     if (!tf_) {return;}
     try {
       transform = tf_->lookupTransform(
-        layered_costmap_->getGlobalFrameID(), source, stamp, rclcpp::Duration(0, 0));
+        layered_costmap_->getGlobalFrameID(), source_frame_, stamp, rclcpp::Duration(0, 0));
     } catch (const tf2::TransformException &) {return;}
   }
   std::vector<Point> points;
   try {
-    if (message->width > 0 && raw_snapshot_) {
-      // /dynamic_obstacles is a COMPLETE sensor-frame snapshot of current
-      // unmatched laser returns. Its old samples are not permanent walls.
-      sensor_msgs::PointCloud2ConstIterator<float> x(*message,"x"),y(*message,"y"),z(*message,"z");
-      for (; x!=x.end(); ++x,++y,++z) {
-        if (!std::isfinite(*x) || !std::isfinite(*y) || !std::isfinite(*z)) {return;}
-        geometry_msgs::msg::PointStamped input, output;
-        input.point.x=*x; input.point.y=*y; input.point.z=*z;
-        if (needs_transform) {tf2::doTransform(input,output,transform);} else {output=input;}
-        if (output.point.z>=min_height_ && output.point.z<=max_height_)
-          points.push_back({output.point.x,output.point.y,nav2_costmap_2d::LETHAL_OBSTACLE});
-      }
-    } else if (message->width > 0) {
+    if (message->width > 0) {
       sensor_msgs::PointCloud2ConstIterator<float> x(*message, "x"), y(*message, "y"),
         z(*message, "z"), cost(*message, "cost");
       for (; x != x.end(); ++x, ++y, ++z, ++cost) {
-        if (!std::isfinite(*x) || !std::isfinite(*y) || !std::isfinite(*z)) {return;}
+        if (!std::isfinite(*x) || !std::isfinite(*y) || !std::isfinite(*z)) {continue;}
         if (*cost != 200.0f && *cost != 254.0f) {return;}
         // The time-indexed MPPI critic evaluates these future hypotheses at
         // each rollout's arrival time. Do not also paint their all-times union
@@ -151,7 +122,7 @@ void PredictionLayer::updateBounds(
     // NavFn cannot plan any egress from INSCRIBED/LETHAL space. Raw lidar,
     // the collision monitor and the actor proximity guard remain unchanged.
     // Clear only hard current-body samples; soft future risk remains visible.
-    if (!raw_snapshot_ && point.cost == nav2_costmap_2d::LETHAL_OBSTACLE &&
+    if (point.cost == nav2_costmap_2d::LETHAL_OBSTACLE &&
       std::hypot(point.x - robot_x, point.y - robot_y) <= robot_egress_radius_)
     {
       touch(point.x, point.y, min_x, min_y, max_x, max_y);

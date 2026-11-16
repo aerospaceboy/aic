@@ -12,8 +12,7 @@
 
 namespace bot_navigation
 {
-// Replacing, expiring forecasts or current raw snapshots. Only owns its own
-// transient samples and never clears a different layer's static/raw occupancy.
+// Replacing, expiring forecasts. This layer can never clear static/raw layers.
 class PredictionLayer : public nav2_costmap_2d::CostmapLayer
 {
 public:
@@ -34,9 +33,6 @@ private:
   double timeout_{0.5};
   double robot_egress_radius_{0.33};
   bool timed_future_cost_{false};
-  bool raw_snapshot_{false};
-  double min_height_{0.2}, max_height_{2.0};
-  std::string topic_{"/competition/dynamic_predictions"};
   std::string source_frame_{"map"};
 };
 }  // namespace bot_navigation

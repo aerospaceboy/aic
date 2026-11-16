@@ -131,8 +131,7 @@ controller_server:
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.001
     min_theta_velocity_threshold: 0.001
-    # Keep zero commands while slow crossing actors clear; progress remains bounded to 12 s.
-    failure_tolerance: 4.0
+    failure_tolerance: 2.0
     progress_checker_plugins:
     - progress_checker
     goal_checker_plugins:
@@ -197,8 +196,7 @@ controller_server:
         cost_scaling_gain: 1.0
         inflation_cost_scaling_factor: 10.0
         use_rotate_to_heading: false
-        rotate_to_heading_angular_vel: 1.8
-        heading_recovery_leave: 0.45
+        rotate_to_heading_angular_vel: 1.4
         rotate_to_heading_min_angle: 0.45
         max_angular_accel: 5.0
         allow_reversing: false
@@ -363,8 +361,7 @@ controller_server:
         cost_scaling_gain: 1.0
         inflation_cost_scaling_factor: 10.0
         use_rotate_to_heading: false
-        rotate_to_heading_angular_vel: 1.8
-        heading_recovery_leave: 0.45
+        rotate_to_heading_angular_vel: 1.4
         rotate_to_heading_min_angle: 0.45
         max_angular_accel: 5.0
         allow_reversing: false
@@ -529,8 +526,7 @@ controller_server:
         cost_scaling_gain: 1.0
         inflation_cost_scaling_factor: 10.0
         use_rotate_to_heading: false
-        rotate_to_heading_angular_vel: 1.8
-        heading_recovery_leave: 0.45
+        rotate_to_heading_angular_vel: 1.4
         rotate_to_heading_min_angle: 0.45
         max_angular_accel: 5.0
         allow_reversing: false
@@ -695,8 +691,7 @@ controller_server:
         cost_scaling_gain: 1.0
         inflation_cost_scaling_factor: 10.0
         use_rotate_to_heading: false
-        rotate_to_heading_angular_vel: 1.8
-        heading_recovery_leave: 0.45
+        rotate_to_heading_angular_vel: 1.4
         rotate_to_heading_min_angle: 0.45
         max_angular_accel: 5.0
         allow_reversing: false
@@ -894,8 +889,7 @@ controller_server:
         cost_scaling_gain: 1.0
         inflation_cost_scaling_factor: 10.0
         use_rotate_to_heading: false
-        rotate_to_heading_angular_vel: 1.8
-        heading_recovery_leave: 0.45
+        rotate_to_heading_angular_vel: 1.4
         rotate_to_heading_min_angle: 0.45
         max_angular_accel: 5.0
         allow_reversing: false
@@ -1116,16 +1110,28 @@ global_costmap:
         robot_egress_radius: 0.45
         timed_future_cost: false
       dynamic_layer:
-        # Replace complete live snapshots; persistent marks leave moving-body trails.
-        plugin: bot_navigation::PredictionLayer
+        plugin: nav2_costmap_2d::ObstacleLayer
         enabled: true
-        raw_snapshot: true
-        topic: /competition/dynamic_obstacles
-        source_frame: ''
-        timeout: 0.5
-        robot_egress_radius: 0.0
-        min_obstacle_height: 0.2
-        max_obstacle_height: 2.0
+        observation_sources: scan_clear dynamic_points
+        scan_clear:
+          topic: /scan_payload_masked
+          data_type: LaserScan
+          marking: false
+          clearing: true
+          inf_is_valid: true
+          min_obstacle_height: 0.2
+          max_obstacle_height: 2.0
+          raytrace_max_range: 4.5
+          raytrace_min_range: 0.0
+        dynamic_points:
+          topic: /competition/dynamic_obstacles
+          data_type: PointCloud2
+          marking: true
+          clearing: false
+          min_obstacle_height: 0.2
+          max_obstacle_height: 2.0
+          obstacle_max_range: 4.0
+          obstacle_min_range: 0.0
       sweep_band_layer:
         plugin: nav2_costmap_2d::ObstacleLayer
         enabled: true
