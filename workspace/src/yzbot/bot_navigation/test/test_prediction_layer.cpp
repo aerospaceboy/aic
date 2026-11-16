@@ -14,6 +14,8 @@ class PredictionTest : public ::testing::Test
 protected:
   virtual bool timedFutureCost() const {return false;}
   virtual double egressRadius() const {return .33;}
+  virtual bool rawSnapshot() const {return false;}
+  virtual std::string topic() const {return "/competition/dynamic_predictions";}
   static void SetUpTestSuite() {rclcpp::init(0, nullptr);}
   static void TearDownTestSuite() {rclcpp::shutdown();}
   void SetUp() override
@@ -21,7 +23,9 @@ protected:
     lifecycle = std::make_shared<nav2_util::LifecycleNode>("prediction_unit", "",
       rclcpp::NodeOptions().parameter_overrides({
         rclcpp::Parameter("prediction.timed_future_cost", timedFutureCost()),
-        rclcpp::Parameter("prediction.robot_egress_radius", egressRadius())}));
+        rclcpp::Parameter("prediction.robot_egress_radius", egressRadius()),
+        rclcpp::Parameter("prediction.raw_snapshot", rawSnapshot()),
+        rclcpp::Parameter("prediction.topic", topic())}));
     sender = std::make_shared<rclcpp::Node>("prediction_sender");
     buffer = std::make_shared<tf2_ros::Buffer>(lifecycle->get_clock());
     parent = std::make_unique<nav2_costmap_2d::LayeredCostmap>("map", false, false);
@@ -30,7 +34,7 @@ protected:
     group = lifecycle->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     layer->initialize(parent.get(), "prediction", buffer.get(), lifecycle, group);
     publisher = sender->create_publisher<sensor_msgs::msg::PointCloud2>(
-      "/competition/dynamic_predictions", rclcpp::QoS(1));
+      topic(), rclcpp::QoS(1));
     executor.add_node(lifecycle->get_node_base_interface());
     executor.add_node(sender);
     const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
@@ -220,4 +224,55 @@ TEST_F(PredictionTest, LocalPredictionRequiresStampedTFAndFollowsRollingOrigin)
   send(0, 0, true);
   bounds();
   EXPECT_EQ(layer->getCost(2, 8), nav2_costmap_2d::NO_INFORMATION);
+}
+
+class RawSnapshotTest : public PredictionTest
+{
+protected:
+  bool rawSnapshot() const override {return true;}
+  double egressRadius() const override {return 0.;}
+  std::string topic() const override {return "/prediction_raw_native";}
+  void raw(double x,double y,bool empty=false,const char * frame="map",double height=.25) {
+    sensor_msgs::msg::PointCloud2 cloud;cloud.header.frame_id=frame;
+    cloud.header.stamp=lifecycle->now();cloud.height=1;
+    sensor_msgs::PointCloud2Modifier m(cloud);
+    m.setPointCloud2Fields(3,"x",1,sensor_msgs::msg::PointField::FLOAT32,
+      "y",1,sensor_msgs::msg::PointField::FLOAT32,"z",1,sensor_msgs::msg::PointField::FLOAT32);
+    m.resize(empty?0:1);
+    if(!empty) {
+      sensor_msgs::PointCloud2Iterator<float> a(cloud,"x"),b(cloud,"y"),c(cloud,"z");
+      *a=x;*b=y;*c=height;
+    }
+    publisher->publish(cloud);
+    for(int i=0;i<5;++i) {executor.spin_some();std::this_thread::sleep_for(std::chrono::milliseconds(10));}
+  }
+};
+TEST_F(RawSnapshotTest, MovingReturnsRetireTheirOwnTrailWithoutClearingOtherLayers) {
+  auto master=parent->getCostmap();master->setCost(10,10,nav2_costmap_2d::LETHAL_OBSTACLE);
+  raw(.55,.55);bounds();merge();EXPECT_EQ(master->getCost(5,5),254);
+  raw(.75,.55);bounds();
+  EXPECT_EQ(layer->getCost(5,5),nav2_costmap_2d::NO_INFORMATION);
+  master->setCost(5,5,nav2_costmap_2d::FREE_SPACE);merge();
+  EXPECT_EQ(master->getCost(5,5),nav2_costmap_2d::FREE_SPACE);
+  EXPECT_EQ(master->getCost(7,5),254);EXPECT_EQ(master->getCost(10,10),254);
+  raw(0,0,true);bounds();EXPECT_EQ(layer->getCost(7,5),nav2_costmap_2d::NO_INFORMATION);
+}
+TEST_F(RawSnapshotTest, SensorFrameRequiresStampedTransformAndKeepsPhysicalCurrentCells) {
+  raw(.55,.55,false,"laser");bounds();EXPECT_EQ(layer->getCost(5,5),255);
+  geometry_msgs::msg::TransformStamped t;t.header.frame_id="map";t.child_frame_id="laser";
+  t.header.stamp=lifecycle->now();t.transform.translation.x=.2;t.transform.translation.y=.3;
+  t.transform.rotation.w=1.;ASSERT_TRUE(buffer->setTransform(t,"native",true));
+  raw(.55,.55,false,"laser");bounds();EXPECT_EQ(layer->getCost(7,8),254);
+  raw(.05,.05);bounds();EXPECT_EQ(layer->getCost(0,0),254);
+}
+TEST_F(RawSnapshotTest, MalformedOrNonfiniteSnapshotCannotEraseValidCurrentBody) {
+  raw(.55,.55);bounds();ASSERT_EQ(layer->getCost(5,5),254);
+  send(.75,.55);bounds();EXPECT_EQ(layer->getCost(5,5),254);
+  raw(std::numeric_limits<double>::quiet_NaN(),.55);bounds();EXPECT_EQ(layer->getCost(5,5),254);
+}
+TEST_F(RawSnapshotTest, HeightFilterAndExpiryRemainBounded) {
+  raw(.55,.55,false,"map",.1);bounds();EXPECT_EQ(layer->getCost(5,5),255);
+  raw(.55,.55);bounds();ASSERT_EQ(layer->getCost(5,5),254);
+  std::this_thread::sleep_for(std::chrono::milliseconds(550));bounds();
+  EXPECT_EQ(layer->getCost(5,5),255);
 }

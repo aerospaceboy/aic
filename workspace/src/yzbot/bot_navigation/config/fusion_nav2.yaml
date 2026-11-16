@@ -1116,28 +1116,16 @@ global_costmap:
         robot_egress_radius: 0.45
         timed_future_cost: false
       dynamic_layer:
-        plugin: nav2_costmap_2d::ObstacleLayer
+        # Replace complete live snapshots; persistent marks leave moving-body trails.
+        plugin: bot_navigation::PredictionLayer
         enabled: true
-        observation_sources: scan_clear dynamic_points
-        scan_clear:
-          topic: /scan_payload_masked
-          data_type: LaserScan
-          marking: false
-          clearing: true
-          inf_is_valid: true
-          min_obstacle_height: 0.2
-          max_obstacle_height: 2.0
-          raytrace_max_range: 4.5
-          raytrace_min_range: 0.0
-        dynamic_points:
-          topic: /competition/dynamic_obstacles
-          data_type: PointCloud2
-          marking: true
-          clearing: false
-          min_obstacle_height: 0.2
-          max_obstacle_height: 2.0
-          obstacle_max_range: 4.0
-          obstacle_min_range: 0.0
+        raw_snapshot: true
+        topic: /competition/dynamic_obstacles
+        source_frame: ''
+        timeout: 0.5
+        robot_egress_radius: 0.0
+        min_obstacle_height: 0.2
+        max_obstacle_height: 2.0
       sweep_band_layer:
         plugin: nav2_costmap_2d::ObstacleLayer
         enabled: true

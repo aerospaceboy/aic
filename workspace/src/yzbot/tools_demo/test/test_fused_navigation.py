@@ -8,6 +8,17 @@ BASE = yaml.safe_load((ROOT / 'bot_navigation/param/originbot_nav2.yaml').read_t
 FUSED = yaml.safe_load((ROOT / 'bot_navigation/config/fusion_nav2.yaml').read_text())
 
 
+def test_global_live_snapshot_keeps_sensor_geometry_and_physical_current_occupancy():
+    old = BASE['global_costmap']['global_costmap']['ros__parameters']['dynamic_layer']['dynamic_points']
+    new = FUSED['global_costmap']['global_costmap']['ros__parameters']['dynamic_layer']
+    assert new['plugin'] == 'bot_navigation::PredictionLayer' and new['raw_snapshot']
+    assert new['topic'] == old['topic']
+    for name in ['min_obstacle_height', 'max_obstacle_height']:
+        assert new[name] == old[name]
+    assert 0 < new['timeout'] <= 1.
+    assert new['robot_egress_radius'] == 0.
+
+
 @pytest.mark.parametrize('name', [
     'FollowPath', 'CentralTransit', 'SmoothTransit', 'CornerFlow', 'CornerFlowA'])
 def test_dynamic_candidates_obey_same_nonholonomic_model_as_execution(name):
