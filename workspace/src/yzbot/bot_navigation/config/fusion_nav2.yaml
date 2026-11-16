@@ -1,4 +1,4 @@
-# RPP geometry with heading hysteresis and curvature-preserving actuator timing.
+# RPP geometry with persistent heading-recovery hysteresis.
 # Footprints, collision horizons, bounded path search and live obstacle layers stay intact.
 # Experimental timed MPPI remains disabled until it passes closed-loop qualification.
 amcl:

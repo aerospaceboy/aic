@@ -37,7 +37,10 @@ public:
     nav2_util::declare_parameter_if_not_declared(node, name+".tracking_angular_accel",
       rclcpp::ParameterValue(4.0));
     nav2_util::declare_parameter_if_not_declared(node, name+".curvature_accel_gate",
-      rclcpp::ParameterValue(true));
+      // Explicit research option: measured-rate time scaling was too
+      // conservative in real multi-corner routes. The standard smoother
+      // remains responsible for bounded actuator acceleration by default.
+      rclcpp::ParameterValue(false));
     heading_ = HeadingRecovery(node->get_parameter(name+".heading_recovery_enter").as_double(),
       node->get_parameter(name+".heading_recovery_leave").as_double());
     angular_accel_ = node->get_parameter(name+".tracking_angular_accel").as_double();
@@ -127,7 +130,7 @@ public:
   }
 private:
   HeadingRecovery heading_;
-  double angular_accel_{4.},last_status_{-100.};bool acceleration_gate_{true},last_align_{false};
+  double angular_accel_{4.},last_status_{-100.};bool acceleration_gate_{false},last_align_{false};
   std::string name_;
   rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::String>::SharedPtr status_;
 };
