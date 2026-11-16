@@ -34,10 +34,10 @@ def test_proximity_guard_stops_before_actor_can_press_into_robot():
     assert (admitted, paused) == (False, True)
 
 
-def test_proximity_guard_holds_phase_until_robot_clears_hysteresis():
+def test_proximity_guard_allows_separation_inside_hysteresis():
     assert admit_proximity_guarded_step(
         (0.0, 0.80), (0.0, 0.90), (0.0, 0.0), 0.75, 0.95, True,
-    ) == (False, True)
+    ) == (True, True)
     assert admit_proximity_guarded_step(
         (0.0, 0.80), (0.0, 0.90), (0.0, -0.20), 0.75, 0.95, True,
     ) == (True, False)
@@ -56,18 +56,18 @@ def test_proximity_guard_rejects_inverted_hysteresis():
         )
 
 
-def test_frozen_actor_escapes_only_after_the_timeout():
+def test_actor_can_separate_immediately_without_timeout_or_robot_motion():
     """A frozen actor must never deadlock on a base that cannot clear.
 
     Evidence 20261013T211009: the base sat at the central gate for ~50 s while
-    the frozen mover held its position, then the leg failed. After the timeout
-    the actor may step only AWAY from the robot, which never presses in.
+    the frozen mover held its position, then the leg failed. A separating
+    step is safe immediately; a timeout must not recreate that deadlock.
     """
     args = ((0.0, 0.80), (0.0, 0.90), (0.0, 0.0), 0.75, 0.95, True)
 
-    # Before the timeout: still frozen, even when the step moves away.
+    # Separating motion does not need to wait for a timeout.
     assert admit_proximity_guarded_step(
-        *args, paused_sec=4.9, freeze_timeout_sec=5.0) == (False, True)
+        *args, paused_sec=4.9, freeze_timeout_sec=5.0) == (True, True)
 
     # After the timeout: moving away is admitted.
     assert admit_proximity_guarded_step(
@@ -78,6 +78,6 @@ def test_frozen_actor_escapes_only_after_the_timeout():
         (0.0, 0.80), (0.0, 0.70), (0.0, 0.0), 0.75, 0.95, True,
         paused_sec=5.1, freeze_timeout_sec=5.0) == (False, True)
 
-    # A disabled timeout keeps the historical freeze behaviour.
+    # The obsolete timeout cannot reintroduce the deadlock.
     assert admit_proximity_guarded_step(
-        *args, paused_sec=99.0, freeze_timeout_sec=0.0) == (False, True)
+        *args, paused_sec=99.0, freeze_timeout_sec=0.0) == (True, True)

@@ -13,7 +13,9 @@ competition_mission_coordinator:
     # controlled GUI comparison. Keep smaller gains as diagnostics only.
     transport_replan_minimum_gain_sec: 8.0
     transport_uncertainty_weight: 0.15
-    transport_timing_profile_file: transport_timing_profile.json
+    # The archived profile predates the dense scene and is rejected by the
+    # geometry fingerprint. Use geometric priors until this scene is measured.
+    transport_timing_profile_file: ''
     plan_topic: /competition/task/plan
     perception_topic: /competition/perception/targets
     navigation_goal_topic: /competition/navigation/goal

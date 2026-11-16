@@ -17,10 +17,10 @@ def admit_proximity_guarded_step(
 ):
     """Admit one patrol step without letting an actor press into the robot.
 
-    The guard freezes patrol phase; it never teleports or catches up.  A
-    release hysteresis prevents a mover from chattering at the boundary while
-    the robot is still passing it.  A zero stop distance preserves the exact
-    historical motion of actors for which the guard is disabled.
+    Closing steps stop at the physical margin. Separating steps are always
+    allowed, including during a guard episode; a stopped robot must not be
+    required to release the actor. Timeout arguments remain accepted for
+    configuration compatibility. Zero stop distance preserves original motion.
     """
     if stop_distance <= 0.0 or robot is None or current is None:
         return True, False
@@ -29,18 +29,12 @@ def admit_proximity_guarded_step(
     current_distance = math.dist(current, robot)
     candidate_distance = math.dist(candidate, robot)
     if paused and current_distance < release_distance:
-        # A frozen actor must not deadlock the corridor forever: the base can
-        # be unable to open the hysteresis distance (observed 20261013T211009,
-        # 50 s at the central gate). After the timeout the actor may only step
-        # AWAY from the robot, which can never press into it.
-        if (
-            freeze_timeout_sec > 0.0
-            and paused_sec >= freeze_timeout_sec
-            and candidate_distance > current_distance
-        ):
+        if candidate_distance > current_distance + 1e-8:
             return True, True
         return False, True
     if candidate_distance < stop_distance:
+        if candidate_distance > current_distance + 1e-8:
+            return True, True
         return False, True
     return True, False
 

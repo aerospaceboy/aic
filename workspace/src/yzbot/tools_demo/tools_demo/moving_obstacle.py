@@ -404,6 +404,7 @@ class MovingObstacle(Node):
         self.motion_elapsed_sec = 0.0
         self.motion_phase_offset_sec = self.mission_phase_offset_sec
         self.motion_started = False
+        self.motion_direction = 1
         self.last_motion_position = None
         self.proximity_guard_paused = False
         self.proximity_guard_paused_since = None
@@ -424,7 +425,7 @@ class MovingObstacle(Node):
         # this Python timer; using it directly would teleport the model.
         candidate_elapsed = self.motion_elapsed_sec
         if self.motion_started:
-            candidate_elapsed += self.update_period_sec
+            candidate_elapsed += self.update_period_sec * getattr(self, 'motion_direction', 1)
         patrol = getattr(self,"patrol",None)
         if patrol is not None:
             candidate = patrol.position(
@@ -459,6 +460,26 @@ class MovingObstacle(Node):
             paused_sec=paused_sec,
             freeze_timeout_sec=self.robot_clearance_freeze_timeout_sec,
         )
+        if not admitted and self.motion_started:
+            # Follow the same audited rail away from a blocking robot. Do not
+            # freeze until the robot releases a proximity hysteresis.
+            reverse_elapsed = self.motion_elapsed_sec - self.update_period_sec * getattr(
+                self, 'motion_direction', 1)
+            if patrol is not None:
+                reverse = patrol.position(reverse_elapsed + self.motion_phase_offset_sec)
+            else:
+                wave = triangle_wave(reverse_elapsed + self.motion_phase_offset_sec,
+                                     self.period_sec)
+                reverse = (self.center_x + self.amplitude_x * wave,
+                           self.center_y + self.amplitude_y * wave)
+            reverse_admitted, _ = admit_proximity_guarded_step(
+                self.last_motion_position, reverse, robot,
+                self.robot_clearance_stop_distance,
+                self.robot_clearance_release_distance, True)
+            if reverse_admitted:
+                self.motion_direction = -getattr(self, 'motion_direction', 1)
+                candidate_elapsed, candidate = reverse_elapsed, reverse
+                admitted, paused = True, True
         if paused:
             if self.proximity_guard_paused_since is None:
                 self.proximity_guard_paused_since = time.monotonic()

@@ -14,6 +14,7 @@
 #include <gazebo_ros/node.hpp>
 #include <std_msgs/msg/bool.hpp>
 #include <std_msgs/msg/string.hpp>
+#include "bot_navigation/patrol_step.hpp"
 
 namespace bot_navigation
 {
@@ -27,6 +28,7 @@ public:
     speed_=sdf->Get<double>("speed");phase_=sdf->Get<double>("phase_fraction");
     length_=(b_-a_).Length();height_=sdf->Get<double>("height");radius_=sdf->Get<double>("radius");
     if(length_<.1 || speed_<=0 || speed_>.65)throw std::runtime_error("invalid dense patrol");
+    progress_=2*length_*phase_;
     start_=node_->create_subscription<std_msgs::msg::Bool>(
       "/competition/dense_motion_started",rclcpp::QoS(1).transient_local(),
       [this](const std_msgs::msg::Bool::SharedPtr m){active_.store(m->data);});
@@ -34,10 +36,6 @@ public:
     connection_=gazebo::event::Events::ConnectWorldUpdateBegin(std::bind(&DensePatrol::update,this));
   }
 private:
-  ignition::math::Vector2d point(double elapsed)const {
-    double distance=std::fmod(elapsed*speed_+2*length_*phase_,2*length_);
-    return a_+(b_-a_)*(std::min(distance,2*length_-distance)/length_);
-  }
   void update() {
     const double now=world_->SimTime().Double();
     if(last_<0){last_=now;return;}
@@ -48,27 +46,36 @@ private:
       auto model=world_->ModelByName(std::string(color)+"_cube_"+std::to_string(i));
       if(model)cubes_.push_back(model);
     }
-    const auto candidate=point(elapsed_+(active_.load()?dt:0.));
-    bool hold=false;
+    std::vector<PatrolBlocker> blockers;
     if(robot_) {
       const auto p=robot_->WorldPose().Pos();
-      // Physical last resort only. The observer reports every hold and the
-      // independent robot-response audit excludes these cooperative windows.
-      hold=std::hypot(candidate.X()-p.X(),candidate.Y()-p.Y())<.70;
+      blockers.push_back({{p.X(),p.Y()},.34+radius_+.10});
     }
     for(const auto & cube:cubes_) {
       const auto p=cube->WorldPose().Pos();
-      if(p.Z()>.04 && std::hypot(candidate.X()-p.X(),candidate.Y()-p.Y())<radius_+.10)hold=true;
+      if(p.Z()>.01)blockers.push_back({{p.X(),p.Y()},radius_+.10});
     }
+    const PatrolPoint a{a_.X(),a_.Y()},b{b_.X(),b_.Y()};
+    const auto step=active_.load() ? guardedPatrolStep(a,b,progress_,direction_,
+      speed_*dt,blockers):PatrolStep{progress_,direction_,false,false};
+    const bool hold=step.blocked;
     if(hold && !paused_)++holds_;
+    if(step.reversed)++reversals_;
     paused_=hold;
-    if(active_.load() && !hold)elapsed_+=dt;
-    const auto p=point(elapsed_);
-    model_->SetWorldPose(ignition::math::Pose3d(p.X(),p.Y(),height_/2,0,0,0));
+    progress_=step.phase;direction_=step.direction;
+    const auto p=patrolPoint(a,b,progress_);
+    if(step.reversed || hold)guard_active_=true;
+    bool clear=true;
+    for(const auto & blocker:blockers)if(std::hypot(p.x-blocker.point.x,
+      p.y-blocker.point.y)<blocker.clearance+.12)clear=false;
+    if(clear)guard_active_=false;
+    model_->SetWorldPose(ignition::math::Pose3d(p.x,p.y,height_/2,0,0,0));
     if(now-last_status_>.5) {
       last_status_=now;std::ostringstream s;
       s<<"{\"model\":\""<<model_->GetName()<<"\",\"stamp_sec\":"<<now
-       <<",\"holds\":"<<holds_<<",\"active\":"<<(hold?"true":"false")<<"}";
+       <<",\"holds\":"<<holds_<<",\"active\":"<<(guard_active_?"true":"false")
+       <<",\"reversals\":"<<reversals_<<",\"motion_state\":\""
+       <<(hold?"physically_blocked":guard_active_?"collision_backoff":"patrol")<<"\"}";
       std_msgs::msg::String message;message.data=s.str();guard_->publish(message);
     }
   }
@@ -78,8 +85,9 @@ private:
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr start_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr guard_;
   ignition::math::Vector2d a_,b_;
-  std::atomic<bool> active_{false};bool paused_{false};unsigned holds_{0};
-  double elapsed_{0},last_{-1},last_status_{0},length_,speed_,phase_,height_,radius_;
+  std::atomic<bool> active_{false};bool paused_{false},guard_active_{false};
+  unsigned holds_{0},reversals_{0};int direction_{1};
+  double progress_{0},last_{-1},last_status_{0},length_,speed_,phase_,height_,radius_;
 };
 GZ_REGISTER_MODEL_PLUGIN(DensePatrol)
 }

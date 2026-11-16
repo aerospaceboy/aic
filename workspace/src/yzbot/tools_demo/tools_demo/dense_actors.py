@@ -1,7 +1,8 @@
 """One lightweight simulator driver for audited distributed transport actors.
 
-Motion is task-clock driven, independent of the robot's chosen plan. Proximity
-freezes are physical backstops and are reported, never scored as robot actions.
+Motion follows the audited patrol rails. A collision backstop reverses along
+the rail instead of proximity freezing; interventions are reported and never
+scored as robot avoidance actions.
 """
 import json,math,time
 from pathlib import Path
@@ -74,6 +75,8 @@ class DenseActors(Node):
         except ValueError:return
         if d.get('model') in self.holds:
             self.holds[d['model']]=d['holds'];self.paused[d['model']]=d['active']
+            if not hasattr(self,'guard_details'):self.guard_details={}
+            self.guard_details[d['model']]=d
 
     def sdf(self,a):
         x,y=patrol_position(a,0.);r=a['radius'];h=a['height']
@@ -115,6 +118,9 @@ class DenseActors(Node):
             x,y,z=self.actual[n];vx,vy=self.velocity.get(n,(0.,0.))
             state=dict(model=n,x=x,y=y,vx=vx,vy=vy,radius=a['radius'],stamp_sec=self.model_stamp,success=True,
                        physical_guard_holds=self.holds[n],physical_guard_active=self.paused[n])
+            details=getattr(self,'guard_details',{}).get(n,{})
+            state.update(physical_guard_reversals=details.get('reversals',0),
+                         motion_state=details.get('motion_state','patrol'))
             states.append(state)
             if now-self.last_publish>=.19:self.individual[n].publish(String(data=json.dumps(state)))
         if now-self.last_publish>=.19:

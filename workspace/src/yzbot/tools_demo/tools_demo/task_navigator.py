@@ -963,6 +963,11 @@ class TaskNavigator(Node):
         )
         self.obstacle_positions: Dict[str, tuple] = {}
         self.obstacle_source_stamps: Dict[str, float] = {}
+        self.dense_recovery_movers = {}
+        self.dynamic_recovery_wait = None
+        self.dynamic_recovery_waits = 0
+        self.create_subscription(String, '/competition/dense_obstacles/state',
+                                 self._dense_recovery_callback, 10)
         # Rolling history and fitted world velocity for the local planner.
         self.dynamic_obstacle_history: Dict[str, list] = {}
         self.dynamic_obstacle_velocity: Dict[str, tuple] = {}
@@ -3943,6 +3948,8 @@ class TaskNavigator(Node):
                 f"robot=({self.latest_x:.2f},{self.latest_y:.2f}) "
                 f"goal=({pose.x:.2f},{pose.y:.2f})"
             )
+            if getattr(self, '_try_dynamic_recovery_wait', lambda: False)():
+                return
             self.publish_error("Navigation start cell is lethal")
             self.publish_state("failed", reason="lethal_start_blocked")
             self._clear_goal()
@@ -4339,6 +4346,8 @@ class TaskNavigator(Node):
             # clear it (2rB_3bC, 2026-10-06) only ran after Nav2 aborted.
             if self._try_bounded_recovery():
                 return
+            if getattr(self, '_try_dynamic_recovery_wait', lambda: False)():
+                return
         try:
             status = future.result().status
         except Exception as exception:  # noqa: B902
@@ -4365,6 +4374,10 @@ class TaskNavigator(Node):
             and self.pending_poses
             and not self.goal_timed_out
         ):
+            # A proved stage arrival ends the old recovery episode. The old
+            # counter survived every pickup/delivery for the node's lifetime.
+            self.recovery_attempts = 0
+            self.recovery_progress_anchor = None
             self.goal_handle = None
             self.publish_state(
                 "active",
@@ -4406,6 +4419,8 @@ class TaskNavigator(Node):
                 return
             if self._try_bounded_recovery():
                 return
+            if getattr(self, '_try_dynamic_recovery_wait', lambda: False)():
+                return
             self.publish_error(
                 f"Navigation to zone {self.active_zone} ended as {state}"
             )
@@ -4415,6 +4430,11 @@ class TaskNavigator(Node):
     def cancel_callback(self, message: Bool) -> None:
         """Cancel the active goal when a true message is received."""
         if not message.data:
+            return
+        if getattr(self, 'dynamic_recovery_wait', None) is not None:
+            self._publish_direct_velocity(Twist())
+            self.publish_state('canceled')
+            self._clear_goal()
             return
         if getattr(self, "spawn_wait_capture_active", False):
             self._publish_obstacle_velocity(0.)
@@ -5374,6 +5394,113 @@ class TaskNavigator(Node):
         self._publish_obstacle_velocity(0.0)
         return True
 
+    def _dense_recovery_callback(self, message: String) -> None:
+        """Observe every added actor for recovery, without changing gate control."""
+        try:
+            payload = json.loads(message.data)
+            actors = payload.get('actors', [])
+            observed = {}
+            for actor in actors:
+                x, y, stamp = (float(actor[key]) for key in ('x', 'y', 'stamp_sec'))
+                if (actor.get('success') is True and
+                        all(math.isfinite(v) for v in (x, y, stamp))):
+                    observed[str(actor['model'])] = ((x, y), stamp)
+            self.dense_recovery_movers = observed
+        except (ValueError, TypeError, KeyError, AttributeError):
+            self.dense_recovery_movers = {}
+
+    def _recovery_mover_observations(self, now_ns):
+        observed = dict(getattr(self, 'dense_recovery_movers', {}))
+        stamps = getattr(self, 'obstacle_source_stamps', {})
+        for name, position in getattr(self, 'obstacle_positions', {}).items():
+            if name in stamps:
+                observed[name] = (position, stamps[name])
+        return {name: point for name, (point, stamp) in observed.items()
+                if 0 <= now_ns*1e-9-stamp <= .75}
+
+    def _nearby_recovery_movers(self, now_ns):
+        if self.latest_x is None or self.latest_y is None:
+            return {}
+        return {name: point for name, point in self._recovery_mover_observations(now_ns).items()
+                if math.dist((self.latest_x, self.latest_y), point) <= 2.0}
+
+    def _try_dynamic_recovery_wait(self) -> bool:
+        """Preserve the route during a dynamic blockage instead of abandoning it.
+
+        A new episode requires real actor displacement, a non-lethal start,
+        and physical separation. At most three waits share one 40 s deadline
+        per command; neither map clearing nor spinning replenishes a budget.
+        """
+        if self.nav_goal_pose is None or getattr(self, 'goal_timed_out', False):
+            return False
+        now = self.get_clock().now().nanoseconds
+        movers = self._nearby_recovery_movers(now)
+        if not movers or getattr(self, 'dynamic_recovery_waits', 0) >= 3:
+            return False
+        deadline = getattr(self, 'dynamic_recovery_deadline_ns', None)
+        if deadline is None:
+            deadline = now + 40_000_000_000
+            self.dynamic_recovery_deadline_ns = deadline
+        if now >= deadline:
+            return False
+        self.dynamic_recovery_waits = getattr(self, 'dynamic_recovery_waits', 0) + 1
+        self.dynamic_recovery_wait = dict(
+            started=now, deadline=min(deadline, now+12_000_000_000),
+            actors=movers, last_status=now, cleared=False)
+        self.nav_request_id = getattr(self, 'nav_request_id', 0) + 1
+        self.goal_handle = None
+        self.progress_recovery_pending = False
+        self._publish_direct_velocity(Twist())
+        self.get_logger().warn(
+            f'dynamic_recovery_wait begin episode={self.dynamic_recovery_waits}/3 '
+            f'actors={sorted(movers)} route_preserved=true')
+        self.publish_state('recovering', phase='dynamic_clearance_wait')
+        return True
+
+    def _dynamic_recovery_wait_tick(self) -> None:
+        wait = self.dynamic_recovery_wait
+        now = self.get_clock().now().nanoseconds
+        self._publish_direct_velocity(Twist())
+        movers = self._nearby_recovery_movers(now)
+        observed = self._recovery_mover_observations(now)
+        changed = any(name in observed and math.dist(point, observed[name]) >= .25
+                      for name, point in wait['actors'].items())
+        if changed and not wait['cleared']:
+            self._clear_costmaps()
+            wait['cleared'] = True
+            wait['clear_ns'] = now
+        ready = (changed and wait['cleared']
+                 and now-wait['clear_ns'] >= 500_000_000
+                 and self._lethal_start_cost() is None
+                 and all(name in observed for name in wait['actors'])
+                 and all(math.dist((self.latest_x, self.latest_y), p) >= .80
+                         for p in movers.values()))
+        if ready:
+            self.dynamic_recovery_wait = None
+            self.recovery_attempts = 0
+            self.recovery_progress_anchor = None
+            self.nav_retries = 0
+            self._release_direct_control()
+            self.get_logger().info('dynamic_recovery_wait end: fresh_actor_motion; replanning')
+            self.goal_start_ns = now
+            self.goal_timed_out = False
+            if self.nav_batch_poses:
+                self._fallback_batch_to_serial('dynamic_obstacle_cleared')
+            else:
+                self.publish_state('sending', phase='dynamic_obstacle_replan')
+                self._send_pose(self.nav_goal_pose)
+            return
+        if now >= wait['deadline']:
+            self.get_logger().error('dynamic_recovery_wait exhausted: no proved clear window')
+            self.publish_error('Dynamic recovery: no safe window before bounded timeout')
+            self.publish_state('failed', reason='dynamic_recovery_no_safe_window')
+            self._clear_goal()
+            return
+        if now-wait['last_status'] >= 1_000_000_000:
+            wait['last_status'] = now
+            self.publish_state('recovering', phase='dynamic_clearance_wait',
+                               elapsed_sec=round((now-wait['started'])*1e-9, 1))
+
     def _try_bounded_recovery(self) -> bool:
         """Back out through known-clear space and replan, or return False."""
         if (
@@ -5497,6 +5624,11 @@ class TaskNavigator(Node):
             )
             return False
         self.recovery_attempts += 1
+        if getattr(self, 'nav_goal_pose', None) is not None:
+            self.recovery_progress_anchor = (
+                self.nav_goal_pose,
+                math.hypot(self.nav_goal_pose.x-self.latest_x,
+                           self.nav_goal_pose.y-self.latest_y))
         self.nav_request_id = getattr(self, "nav_request_id", 0) + 1
         self.goal_handle = None
         self.progress_recovery_pending = False
@@ -5599,6 +5731,11 @@ class TaskNavigator(Node):
 
     def _reset_mover_control_for_command(self) -> None:
         """Release only the previous canceled leg's hold for a fresh command."""
+        self.recovery_attempts = 0
+        self.recovery_progress_anchor = None
+        self.dynamic_recovery_wait = None
+        self.dynamic_recovery_waits = 0
+        self.dynamic_recovery_deadline_ns = None
         self.mover_yield_retries_used = 0
         self.obstacle_wait_requires_clear_cell = False
         self.mover_last_seen_positions = {}
@@ -5650,6 +5787,8 @@ class TaskNavigator(Node):
             # Retry a deferred command (e.g. waiting for the Nav2 action
             # server to become discoverable) on the periodic timer.
             self._retry_pending_command()
+        if getattr(self, 'dynamic_recovery_wait', None) is not None:
+            return  # The 20 Hz obstacle timer owns this explicit wait state.
         if self.obstacle_reverse_active:
             # Waiting and controlled crossing have their own bounded clocks.
             # They are not a stalled Nav2 execution.
@@ -5734,6 +5873,14 @@ class TaskNavigator(Node):
                 and self.latest_x is not None
                 and self.latest_y is not None
             ):
+                anchor = getattr(self, 'recovery_progress_anchor', None)
+                goal = getattr(self, 'nav_goal_pose', None)
+                if (anchor is not None and goal == anchor[0]
+                        and math.hypot(goal.x-self.latest_x, goal.y-self.latest_y)
+                        <= anchor[1]-.50):
+                    self.recovery_attempts = 0
+                    self.recovery_progress_anchor = None
+                    self.get_logger().info('recovery_episode_cleared: goal_progress>=0.50m')
                 self.progress_anchor_x = self.latest_x
                 self.progress_anchor_y = self.latest_y
                 self.progress_anchor_yaw = self.latest_yaw
@@ -5755,6 +5902,9 @@ class TaskNavigator(Node):
     def _clear_goal(self) -> None:
         """Clear route state, including any pending blue3 handoff."""
         self.blue3_shortcut_goal = None
+        self.dynamic_recovery_wait = None
+        self.recovery_attempts = 0
+        self.recovery_progress_anchor = None
         self.spawn_wait_capture_goal = None
         self.spawn_wait_capture_active = False
         self.spawn_wait_capture_disabled = False
@@ -6534,6 +6684,9 @@ class TaskNavigator(Node):
 
     def _obstacle_reverse_tick(self) -> None:
         """Advance the small obstacle-avoidance reverse state machine."""
+        if getattr(self, 'dynamic_recovery_wait', None) is not None:
+            self._dynamic_recovery_wait_tick()
+            return
         planner_step = getattr(self, "_dynamic_planner_step", None)
         if planner_step is not None and planner_step():
             return
