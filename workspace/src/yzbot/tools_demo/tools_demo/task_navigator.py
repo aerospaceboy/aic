@@ -3,6 +3,7 @@
 import json
 import math
 import os
+import struct
 import time
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -12,9 +13,19 @@ from tools_demo.c_clearance_route import c_clearance_waypoints
 from tools_demo.b_delivery_route import b_central_north_waypoints
 from tools_demo.b_delivery_route import b_northeast_waypoints
 from tools_demo.b_delivery_route import b_south_waypoints
+from tools_demo.dynamic_local_supervisor import (
+    DynamicLocalSupervisor,
+    RobotState as DynamicRobotState,
+    SupervisorConfig,
+)
 from tools_demo.dynamic_retreat import distance_to_patrol, retreat_admitted
 from tools_demo.corridor_admission import spawn_corridor_admission, wait_anchor_velocity
 from tools_demo.mission_state_machine import MISSION_STATES
+from tools_demo.transit_anchor import resolve_transit_anchor
+from tools_demo.transport_scene import dense_enabled
+from tools_demo.terminal_motion import (
+    delivery_entry, terminal_command, ground_cubes_clear, command_sweep, terminal_route,
+)
 
 from ament_index_python.packages import get_package_share_directory
 from action_msgs.msg import GoalStatus
@@ -35,6 +46,7 @@ from rclpy.qos import HistoryPolicy
 from rclpy.qos import QoSProfile
 from rclpy.qos import ReliabilityPolicy
 from rclpy.time import Time
+from sensor_msgs.msg import PointCloud2
 from std_msgs.msg import Bool
 from std_msgs.msg import String
 from nav_msgs.msg import OccupancyGrid
@@ -499,11 +511,17 @@ def mover_is_stalled(nav, topic: str) -> bool:
     return nav.get_clock().now().nanoseconds - last_move >= stall_ns
 
 
+def ground_cube_qos():
+    """Match the coordinator's 1Hz BEST_EFFORT ground-cube publisher."""
+    return QoSProfile(depth=10, reliability=ReliabilityPolicy.BEST_EFFORT)
+
+
 class TaskNavigator(Node):
     """Accept zone letters and execute their configured Nav2 goals."""
 
     def __init__(self) -> None:
         super().__init__("competition_task_navigator")
+        self.dense_fast_transit = dense_enabled()
         self.declare_parameter("action_name", "/navigate_to_pose")
         self.declare_parameter("use_legacy_layout_routes", True)
         self.declare_parameter("cube_approach_allowlist", [""])
@@ -523,6 +541,16 @@ class TaskNavigator(Node):
         self.declare_parameter("reverse_recovery_speed", 0.25)
         self.declare_parameter("reverse_recovery_max_distance", 1.5)
         self.declare_parameter("max_recovery_attempts", 2)
+        # Dynamic-avoidance innovation: off | observe | active.
+        # observe records what the planner would decide without touching the
+        # base; active takes the direct channel inside a conflict corridor and
+        # hands it back when the corridor clears.
+        self.declare_parameter("dynamic_planner_mode", "off")
+        self.declare_parameter("dynamic_planner_replan_sec", 0.20)
+        self.declare_parameter("dynamic_planner_prefix_sec", 0.30)
+        self.declare_parameter("dynamic_planner_horizon_sec", 4.0)
+        self.declare_parameter("dynamic_planner_activation_ahead_m", 7.0)
+        self.declare_parameter("dynamic_planner_activation_lateral_m", 1.6)
         self.declare_parameter("obstacle_block_distance", 0.60)
         self.declare_parameter("obstacle_reverse_distance", 0.15)
         # obstacle_1 (spawn board) reverse is wall-limited; obstacle_2
@@ -913,6 +941,16 @@ class TaskNavigator(Node):
             Bool, "/competition/navigation/direct_control",
             QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self._direct_control = False
+        self.dense_controller_state = {}
+        self.terminal_cubes = []
+        self.terminal_cubes_stamp = None
+        self.terminal_block_log_ns = 0
+        self.create_subscription(PointCloud2, '/competition/placed_cubes',
+                                 self._terminal_cubes_callback, ground_cube_qos())
+        if dense_enabled():
+            self.dense_controller_subscription = self.create_subscription(
+                String, '/competition/dynamic_controller/state',
+                self._dense_controller_callback, 10)
         self.alignment_velocity_publisher = self.create_publisher(
             Twist,
             "/competition/cmd_vel_direct",
@@ -925,6 +963,45 @@ class TaskNavigator(Node):
         )
         self.obstacle_positions: Dict[str, tuple] = {}
         self.obstacle_source_stamps: Dict[str, float] = {}
+        # Rolling history and fitted world velocity for the local planner.
+        self.dynamic_obstacle_history: Dict[str, list] = {}
+        self.dynamic_obstacle_velocity: Dict[str, tuple] = {}
+        self.dynamic_supervisor = None
+        self.dynamic_supervisor_error = None
+        self.dynamic_supervisor_last_log_ns = 0
+        mode_override = os.environ.get("YZBOT_DYNAMIC_PLANNER_MODE")
+        if mode_override is not None:
+            mode_value = mode_override.strip().lower()
+            if mode_value in ("off", "false", "0", "disabled", "none"):
+                mode_value = "disabled"
+        else:
+            mode_value = str(self.get_parameter(
+                "dynamic_planner_mode").value)
+        try:
+            supervisor_config = SupervisorConfig(
+                mode=mode_value,
+                replan_sec=float(self.get_parameter(
+                    "dynamic_planner_replan_sec").value),
+                prefix_sec=float(self.get_parameter(
+                    "dynamic_planner_prefix_sec").value),
+                horizon_sec=float(self.get_parameter(
+                    "dynamic_planner_horizon_sec").value),
+                activation_ahead_m=float(self.get_parameter(
+                    "dynamic_planner_activation_ahead_m").value),
+                activation_lateral_m=float(self.get_parameter(
+                    "dynamic_planner_activation_lateral_m").value),
+            )
+            self.dynamic_supervisor = DynamicLocalSupervisor(supervisor_config)
+        except Exception as error:      # never let the innovation stop the run
+            self.dynamic_supervisor_error = repr(error)
+            self.get_logger().warn(
+                f"dynamic_planner_disabled:{self.dynamic_supervisor_error}")
+        self.obstacle_radius_map = {}
+        for name in ("competition_moving_obstacle_1",
+                     "competition_moving_obstacle_2"):
+            self.obstacle_radius_map[name] = 0.18
+        for name in ("crossing_cart_1", "crossing_cart_2"):
+            self.obstacle_radius_map[name] = 0.14
         self.central_patrols = [list(self.get_parameter(name).value)
                                 for name in ('central_patrol_1', 'central_patrol_2')]
         self.obstacle_boxes: Dict[str, tuple] = {}
@@ -1556,6 +1633,12 @@ class TaskNavigator(Node):
         goal = getattr(self, "nav_goal_pose", None)
         if goal is not None and goal.zone == "universal_east_wait":
             return min(self.nav_handoff_distance, 0.03)
+        if goal is not None and goal.zone.endswith('_delivery_entry'):
+            # This is a coarse external entry, not the final slot or a
+            # topological safety gate. The checked precision owner handles
+            # its remaining residual; requiring 8cm here stranded RPP 13cm
+            # away from a perfectly usable C entry.
+            return self.nav_handoff_distance
         if (goal is not None and goal.zone.startswith("universal_")
                 and self.pending_poses):
             return min(self.nav_handoff_distance, 0.08)
@@ -1876,9 +1959,8 @@ class TaskNavigator(Node):
             command_path.append(
                 [round(self.latest_x, 4), round(self.latest_y, 4)]
             )
-        proven = (getattr(self, "nav_batch_proven_count", 0)
-                  if (continuous_a_route(self.nav_batch_poses)
-                      or has_corner_flow(self.nav_batch_poses)) else 0)
+        proven = min(max(0, getattr(self, "nav_batch_proven_count", 0)),
+                     max(0, len(self.nav_batch_poses) - 1))
         # Active through-path precedes its pending suffix. Never draw a
         # return to already-proven anchors behind the moving base.
         for pose in list(self.nav_batch_poses[proven:]) + list(self.pending_poses):
@@ -2859,11 +2941,10 @@ class TaskNavigator(Node):
         self._request_nav_handoff_if_reached()
         # Telemetry's remaining-pose count is not a safety-anchor proof. Only
         # physically visiting each anchor in order can retire it on recovery.
-        # Scope this to adaptive central and south A routes; other batches retain
-        # their original strict recovery semantics.
+        # This proof also applies to ordinary batches: replaying an already
+        # visited C_return_waypoint after a late failure causes a long U-turn.
         poses = getattr(self, "nav_batch_poses", [])
-        if (continuous_a_route(poses) or has_corner_flow(poses) or any(
-                p.zone.startswith("CENTRAL_MOVER_GATE_") for p in poses)):
+        if poses:
             count = getattr(self, "nav_batch_proven_count", 0)
             while count < len(poses) - 1 and math.hypot(
                     self.latest_x - poses[count].x,
@@ -2886,7 +2967,8 @@ class TaskNavigator(Node):
              or has_corner_flow(getattr(self, "nav_batch_poses", [])))
                 and not TaskNavigator._central_anchor_arrived(self)):
             return
-        if not navigation_handoff_reached(
+        checked_delivery = TaskNavigator._delivery_capture_allowed(self)
+        if not checked_delivery and not navigation_handoff_reached(
             self.latest_x,
             self.latest_y,
             self.nav_goal_pose.x,
@@ -2924,7 +3006,7 @@ class TaskNavigator(Node):
         self.publish_state(
             "handoff",
             distance_remaining=round(distance, 3),
-            reason="odom_goal_radius",
+            reason="odom_goal_radius" if not checked_delivery else "checked_delivery_capture",
         )
         cancel_future = self.goal_handle.cancel_goal_async()
         cancel_future.add_done_callback(self._handoff_cancel_callback)
@@ -2933,11 +3015,14 @@ class TaskNavigator(Node):
         """Prove the short wait approach outside every original sweep."""
         if (goal.zone != "universal_east_wait"
                 or abs(goal.x - 9.825) > .005 or abs(goal.y - .525) > .005
-                or not 9.75 <= self.latest_x <= 12.85
+                or not 9.30 <= self.latest_x <= 12.85
                 or not .20 <= self.latest_y <= .60):
             return False
-        # Every point stays at least 1.25m east of the original x=8.5
-        # sweep; both central patrols and the x=5 sweep are further west.
+        # Every point stays at least .80m east of the full x=8.5 sweep:
+        # .28 body + .18 actor + .20 tracking + .10 clearance = .76m.
+        # This includes safe, small overshoots of the 9.825m anchor, so a
+        # checked reverse can repair them instead of holding irreversibly.
+        # Both central patrols and the x=5 sweep are further west.
         # Check a body+10cm tube independently of soft planning inflation.
         return static_footprint_line_clear(
             getattr(self, "static_map", None), (self.latest_x, self.latest_y),
@@ -3053,8 +3138,17 @@ class TaskNavigator(Node):
                 self._continue_staged_navigation()
             return
         command = Twist()
-        command.linear.x, command.angular.z = wait_anchor_velocity(
-            values[:3], (goal.x, goal.y))
+        if abs(dx) <= .35:
+            # Signed holonomic trim repairs a passed anchor without another
+            # turn. Keep the original 3cm/.04rad physical arrival proof.
+            trim = ZonePose('wait_trim', goal.x, goal.y, math.pi)
+            speeds, _ = terminal_command(values[:3], trim, .20,
+                                         heading_tolerance=.025,
+                                         arrival_tolerance=.015)
+            command.linear.x, command.linear.y, command.angular.z = speeds
+        else:
+            command.linear.x, command.angular.z = wait_anchor_velocity(
+                values[:3], (goal.x, goal.y))
         self._publish_direct_velocity(command)
 
     def _handoff_cancel_callback(self, future) -> None:
@@ -3377,6 +3471,136 @@ class TaskNavigator(Node):
             self.pending_poses = poses
             self.get_logger().info(f"corner_flow_prepared stages={len(poses)}")
 
+    def _terminal_cubes_callback(self, message) -> None:
+        """Use the same validated ground-cube source as the Nav2 costmaps."""
+        try:
+            fields = {field.name: field for field in message.fields}
+            if (message.header.frame_id != 'map' or message.height != 1
+                    or not 0 <= message.width <= 5
+                    or any(fields[k].datatype != 7 or fields[k].count != 1
+                           or fields[k].offset < 0
+                           or fields[k].offset + 4 > message.point_step
+                           for k in ('x', 'y'))
+                    or message.row_step < message.width * message.point_step
+                    or len(message.data) < message.row_step):
+                raise ValueError('Invalid ground-cube cloud')
+            endian = '>' if message.is_bigendian else '<'
+            points = []
+            for i in range(message.width):
+                values = tuple(struct.unpack_from(
+                    endian + 'f', message.data,
+                    i * message.point_step + fields[k].offset)[0] for k in ('x', 'y'))
+                if not all(math.isfinite(v) for v in values):
+                    raise ValueError('Nonfinite ground cube')
+                points.append(values)
+            self.terminal_cubes = points
+            stamp = message.header.stamp
+            self.terminal_cubes_stamp = stamp.sec * 1_000_000_000 + stamp.nanosec
+        except (ValueError, KeyError, struct.error):
+            self.terminal_cubes_stamp = None
+
+    def _stage_delivery_terminal(self) -> bool:
+        """Apply one external, slot-aligned entry to every delivery route."""
+        dock = getattr(self, 'dock_pose', None)
+        pending = getattr(self, 'pending_poses', [])
+        if (not getattr(self, 'dense_fast_transit', False)
+                or getattr(self, 'active_zone', None) not in VALID_ZONES
+                or dock is None or not pending):
+            return True
+        last = pending[-1]
+        if last.zone.endswith('_delivery_entry'):
+            return True
+        if math.hypot(last.x - dock.x, last.y - dock.y) > .001:
+            return True
+        for distance in (.55, .45, .35, .65, .75):
+            entry = delivery_entry(dock, distance)
+            # The global map has .10m static padding and a .38m robot
+            # radius. A locally valid .38m tube alone cannot prove that
+            # Nav2 can reach the external goal without substituting a goal.
+            query = getattr(self, '_global_cost_at', None)
+            cost = query(entry.x, entry.y) if query is not None else 0
+            if (cost is not None and 0 <= cost < 99
+                    and static_footprint_line_clear(
+                        getattr(self, 'static_map', None),
+                        (entry.x, entry.y), (entry.x, entry.y), radius=.48)
+                    and static_footprint_line_clear(
+                    getattr(self, 'static_map', None),
+                    (entry.x, entry.y), (dock.x, dock.y), radius=.38)):
+                self.pending_poses[-1] = entry
+                self.get_logger().info(
+                    f'delivery_terminal_entry zone={self.active_zone} '
+                    f'entry=({entry.x:.3f},{entry.y:.3f}) '
+                    f'dock=({dock.x:.3f},{dock.y:.3f})')
+                return True
+        self.publish_error('Delivery terminal static tube is not clear')
+        self.publish_state('failed', reason='delivery_terminal_static_blocked')
+        self._clear_goal()
+        return False
+
+    def _delivery_capture_allowed(self) -> bool:
+        """Hand off a feasible terminal region, not an unreachable exact point."""
+        goal, dock = getattr(self, 'nav_goal_pose', None), getattr(self, 'dock_pose', None)
+        if (not getattr(self, 'dense_fast_transit', False)
+                or getattr(self, 'active_zone', None) not in VALID_ZONES
+                or goal is None or not goal.zone.endswith('_delivery_entry')
+                or dock is None or getattr(self, 'pending_poses', [])):
+            return False
+        pose = (self.latest_x, self.latest_y, self.latest_yaw)
+        if (any(v is None or not math.isfinite(v) for v in pose)
+                or math.hypot(pose[0] - goal.x, pose[1] - goal.y) > .45
+                or math.hypot(pose[0] - dock.x, pose[1] - dock.y) > 1.1):
+            return False
+        now = self.get_clock().now().nanoseconds
+        odom, cloud = (getattr(self, key, None) for key in
+                       ('latest_odom_received_ns', 'terminal_cubes_stamp'))
+        vx, vy = (getattr(self, key, None) for key in ('latest_vx', 'latest_vy'))
+        if (odom is None or cloud is None or vx is None or vy is None
+                or not 0 <= now - odom <= 250_000_000
+                or not 0 <= now - cloud <= 1_500_000_000
+                or not math.isfinite(vx + vy) or math.hypot(vx, vy) > .20):
+            return False
+        points, trim = terminal_route(pose, dock)
+        cubes = getattr(self, 'terminal_cubes', [])
+        return (all(ground_cubes_clear(p, cubes) for p in points)
+                and all(static_footprint_line_clear(
+                    getattr(self, 'static_map', None), start, end, radius=.38)
+                    for start, end in [(pose[:2], trim),
+                                       (trim, (dock.x, dock.y)),
+                                       (pose[:2], (dock.x, dock.y))]))
+
+    def _delivery_terminal_step(self, now_ns) -> None:
+        """Finish the dock without pursuit curls beside previous deliveries."""
+        pose = (self.latest_x, self.latest_y, self.latest_yaw)
+        command = Twist()
+        odom = getattr(self, 'latest_odom_received_ns', None)
+        cloud = getattr(self, 'terminal_cubes_stamp', None)
+        fresh = (odom is not None and 0 <= now_ns - odom <= 250_000_000
+                 and cloud is not None and 0 <= now_ns - cloud <= 1_500_000_000)
+        values, phase = terminal_command(pose, self.dock_pose)
+        points = command_sweep(pose, values, horizon=.45)
+        cubes = getattr(self, 'terminal_cubes', [])
+        safe = (fresh and all(ground_cubes_clear(p, cubes) for p in points)
+                and static_footprint_line_clear(
+                    getattr(self, 'static_map', None), pose[:2], points[-1][:2],
+                    radius=.38))
+        if not safe:
+            self._publish_direct_velocity(command)
+            if now_ns - getattr(self, 'terminal_block_log_ns', 0) >= 1_000_000_000:
+                self.terminal_block_log_ns = now_ns
+                self.get_logger().warn(
+                    f'delivery_terminal_hold zone={self.active_zone} '
+                    f'fresh={fresh} phase={phase}')
+            return
+        if phase == 'arrived':
+            self.stop_alignment()
+            self.publish_state('succeeded',
+                               status_code=int(GoalStatus.STATUS_SUCCEEDED),
+                               phase='delivery_terminal_complete')
+            self._clear_goal()
+            return
+        command.linear.x, command.linear.y, command.angular.z = values
+        self._publish_direct_velocity(command)
+
     def _send_next_goal(self) -> None:
         """Send the next pose in a staged navigation command."""
         if TaskNavigator._prune_blue3_encounter_loop(self):
@@ -3391,6 +3615,8 @@ class TaskNavigator(Node):
                 reason="action_server_unavailable",
             )
             self._clear_goal()
+            return
+        if not TaskNavigator._stage_delivery_terminal(self):
             return
         TaskNavigator._prepare_corner_flow(self)
         count = flow_prefix_size(self.pending_poses)
@@ -3496,6 +3722,37 @@ class TaskNavigator(Node):
         cost = self._global_cost_at(x_value, y_value)
         return cost is not None and 0 <= cost < 50
 
+    # Recovery moves are the last resort before a leg fails, so the escape
+    # pose must fit the *rotated chassis* with a margin, not just one centre
+    # cell. A review reproduction of 4bC_1rB found the chassis corner 8 mm
+    # inside a 1.0 m world box while the centre cell was free; a single-cell
+    # check cannot see that.
+    RECOVERY_CHASSIS_HALF_DIAGONAL = 0.226
+    RECOVERY_POSE_MARGIN = 0.04
+
+    def _recovery_pose_clearance(self, x_value: float, y_value: float
+                                 ) -> tuple:
+        """Whether a recovery pose keeps the rotated chassis inside free cells.
+
+        Samples the circumscribed chassis circle plus its diagonals on the
+        global costmap. Returns ``(ok, minimum_margin_m)``; without a costmap
+        the historical permissive behaviour is preserved and reported.
+        """
+        if self.global_costmap is None:
+            return True, float("nan")
+        radius = (self.RECOVERY_CHASSIS_HALF_DIAGONAL
+                  + self.RECOVERY_POSE_MARGIN)
+        rings = (0.0, 0.12, radius)
+        angles = range(0, 360, 30)
+        for ring in rings:
+            for angle_deg in angles:
+                angle = math.radians(angle_deg)
+                px = x_value + ring * math.cos(angle)
+                py = y_value + ring * math.sin(angle)
+                if not self._costmap_cell_free(px, py):
+                    return False, 0.0
+        return True, radius
+
     def _global_cost_at(self, x_value: float, y_value: float) -> Optional[int]:
         """Return the occupancy-grid cost at one map position."""
         costmap = self.global_costmap
@@ -3575,8 +3832,8 @@ class TaskNavigator(Node):
         # it was the slowest straight on the route while remaining a straight
         # line with no turn in it (20261014 request), so it takes 1.05: still
         # below the 1.2 south straight and well above the 0.6 corner reserve.
-        approach_limits = {"A_WALL_SOUTH_CLEAR": 1.2,
-                           "A_WALL_WEST_CLEAR": 1.20,
+        approach_limits = {"A_WALL_SOUTH_CLEAR": 1.5,
+                           "A_WALL_WEST_CLEAR": 1.50,
                            "central_patrol_north_flank": 1.0,
                            "central_patrol_south_flank": 1.0,
                            "CENTRAL_MOVER_GATE_WEST": 1.0,
@@ -3584,10 +3841,17 @@ class TaskNavigator(Node):
                            "central_red2_north_entry": 1.0}
         approach_limits.update({"A_WALL_CENTRAL_CLEAR": 1.0,
                                 "A_WALL_RED2_NORTH_CLEAR": 1.0,
-                                "north_pickup_tray_west_clear": 1.2,
-                                "north_pickup_tray_east_clear": 1.2,
-                                "north_delivery_tray_west_clear": 1.2,
-                                "north_delivery_tray_east_clear": 1.2})
+                                "north_pickup_tray_west_clear": 1.5,
+                                "north_pickup_tray_east_clear": 1.5,
+                                "north_delivery_tray_west_clear": 1.5,
+                                "north_delivery_tray_east_clear": 1.5})
+        if getattr(self, 'dense_fast_transit', False):
+            # Experimental straight transit stays below the ordinary 1.78
+            # m/s cap. Preserve every corner, central gate and docking limit.
+            for straight in ('A_WALL_SOUTH_CLEAR', 'A_WALL_WEST_CLEAR',
+                             'north_pickup_tray_west_clear', 'north_pickup_tray_east_clear',
+                             'north_delivery_tray_west_clear', 'north_delivery_tray_east_clear'):
+                approach_limits[straight] = 1.50
         if stage is not None and stage.startswith("WALL57_POCKET_"):
             approach_limits[stage] = 1.60
         # Bay-pocket exit anchors turn within 1.0 m of the wall; 0.6 m/s
@@ -3609,8 +3873,31 @@ class TaskNavigator(Node):
             f"nav_stage_speed_limit limit={message.speed_limit:.2f} "
             f"stage={pose.zone if pose is not None else 'released'}")
 
+    def _dense_transit_anchor(self, pose, following=None, previous=None):
+        if pose.zone.endswith('_delivery_entry'):
+            return pose  # Precision entry belongs to the checked dock tube.
+        if (not dense_enabled() or getattr(self, 'static_map', None) is None
+                or getattr(self, 'global_costmap', None) is None):
+            return pose
+        if previous is None:
+            x, y = getattr(self, 'latest_x', None), getattr(self, 'latest_y', None)
+            previous = None if x is None or y is None else (x, y)
+        target = resolve_transit_anchor(
+            pose, previous, following, self._global_cost_at,
+            lambda a, b: static_footprint_line_clear(
+                getattr(self, 'static_map', None), a, b, radius=.40))
+        if target != pose:
+            self.get_logger().info(
+                f'dense_virtual_anchor_relocated stage={pose.zone} '
+                f'old=({pose.x:.3f},{pose.y:.3f}) new=({target.x:.3f},{target.y:.3f})')
+        return target
+
     def _send_pose(self, pose: ZonePose) -> None:
         """Send one Nav2 goal for the current zone/stage pose."""
+        pending = getattr(self, 'pending_poses', [])
+        following = (pending[0].x, pending[0].y) if pending else None
+        pose = TaskNavigator._dense_transit_anchor(self, pose, following)
+        self.nav_goal_pose = pose
         if not self._wait_for_action_server():
             self.publish_error("Navigation action server is unavailable")
             self.publish_state(
@@ -3685,6 +3972,8 @@ class TaskNavigator(Node):
                 "navigate_clearance_to_pose.xml"))
         if pose.zone.startswith('FLOW_'):
             goal.behavior_tree = str(Path(self.through_behavior_tree).with_name(
+                "navigate_corner_a_dense_to_pose.xml"
+                if dense_enabled() and pose.zone.startswith('FLOW_A_') else
                 "navigate_corner_to_pose.xml"))
         self.nav_request_id = getattr(self, "nav_request_id", 0) + 1
         request_id = self.nav_request_id
@@ -3700,10 +3989,22 @@ class TaskNavigator(Node):
         """Send existing route stages as one continuous Nav2 action."""
         if not poses:
             return
+        original_poses = poses
+        if dense_enabled():
+            adapted = []
+            for index, pose in enumerate(poses):
+                next_pose = (poses[index+1] if index+1 < len(poses) else
+                             self.pending_poses[0] if self.pending_poses else None)
+                following = (next_pose.x, next_pose.y) if next_pose else None
+                previous = (adapted[-1].x, adapted[-1].y) if adapted else None
+                adapted.append(TaskNavigator._dense_transit_anchor(self, pose, following, previous))
+            poses = adapted
+            self.nav_batch_poses = poses
+            self.nav_goal_pose = poses[-1]
         self.nav_batch_proven_count = 0
         if getattr(self, "stage_speed_limit_publisher", None) is not None:
             self._publish_stage_speed_limit(
-                poses[0] if (continuous_a_route(poses) or has_corner_flow(poses) or any(
+                poses[0] if (continuous_a_route(original_poses) or has_corner_flow(poses) or any(
                     p.zone.startswith("CENTRAL_MOVER_GATE_")
                     for p in poses)) else None)
         # Batching is optional: do not block the executor for the regular
@@ -3737,11 +4038,13 @@ class TaskNavigator(Node):
             poses,
             self.get_clock().now().to_msg(),
             (str(Path(self.through_behavior_tree).with_name(
-                "navigate_through_corner.xml"))
+                "navigate_through_corner_a_dense.xml"
+                if dense_enabled() and any(p.zone.startswith('FLOW_A_') for p in poses)
+                else "navigate_through_corner.xml"))
              if has_corner_flow(poses) else
              str(Path(self.through_behavior_tree).with_name(
                 "navigate_through_south_a.xml"))
-             if continuous_a_route(poses) else
+             if continuous_a_route(original_poses) else
              str(Path(self.through_behavior_tree).with_name(
                  "navigate_through_central_adaptive.xml"))
              if any(p.zone.startswith("CENTRAL_MOVER_GATE_") for p in poses)
@@ -3841,11 +4144,10 @@ class TaskNavigator(Node):
         self.nav_batch_attempted = True
         if has_corner_flow(self.nav_batch_poses):
             self.corner_flow_failed = True
-        count = (getattr(self, "nav_batch_proven_count", 0)
-                 if (continuous_a_route(self.nav_batch_poses)
-                     or has_corner_flow(self.nav_batch_poses) or any(
-                     p.zone.startswith("CENTRAL_MOVER_GATE_")
-                     for p in self.nav_batch_poses)) else 0)
+        # Only ordered physical odometry arrivals can retire a prefix. Never
+        # trust Nav2's remaining-pose feedback or retire the final endpoint.
+        count = min(max(0, getattr(self, "nav_batch_proven_count", 0)),
+                    max(0, len(self.nav_batch_poses) - 1))
         self.pending_poses = list(self.nav_batch_poses[count:]) + list(
             self.pending_poses
         )
@@ -3853,10 +4155,11 @@ class TaskNavigator(Node):
         self.nav_goal_pose = None
         self.goal_handle = None
         self.nav_handoff_requested = False
-        self.stage_index = max(0, self.stage_index - 1)
+        self.stage_index = max(0, getattr(
+            self, "stage_total", len(self.pending_poses)) - len(self.pending_poses))
         self.get_logger().warn(
             f"nav_batch_fallback_serial reason={reason} "
-            f"remaining={len(self.pending_poses)}"
+            f"remaining={len(self.pending_poses)} proven={count}"
         )
         self.publish_state("sending", phase="batch_fallback_serial")
         self.start_pre_navigation_alignment()
@@ -4197,7 +4500,9 @@ class TaskNavigator(Node):
         # Aim along the collision-checked path, not the direct bearing to a
         # distant target behind walls. Nav2's rotation shim owns path entry.
         zone = getattr(self, "active_zone", None)
-        path_alignment = (continuous_a_route(self.pending_poses)
+        path_alignment = ((getattr(self, 'dense_fast_transit', False)
+                           and not first_pose.zone.startswith('universal_'))
+                          or continuous_a_route(self.pending_poses)
                           or flow_prefix_size(self.pending_poses) > 0
                           or (zone in VALID_ZONES
                               and len(self.pending_poses) == 1
@@ -4503,6 +4808,10 @@ class TaskNavigator(Node):
                     command.angular.z,
                 )
             self._publish_direct_velocity(command)
+            return
+        if (getattr(self, 'dense_fast_transit', False)
+                and self.active_zone in VALID_ZONES and self.dock_pose is not None):
+            TaskNavigator._delivery_terminal_step(self, now_ns)
             return
         if self.dock_pose is not None:
             if self.alignment_deadline_ns is None:
@@ -5105,6 +5414,16 @@ class TaskNavigator(Node):
                     )
                     if not self._costmap_cell_free(candidate.x, candidate.y):
                         continue
+                    clearance_gate = getattr(
+                        self, "_recovery_pose_clearance", None)
+                    if clearance_gate is not None and not clearance_gate(
+                            candidate.x, candidate.y)[0]:
+                        self.get_logger().warn(
+                            "recovery_candidate_chassis_reject "
+                            f"pose=({candidate.x:.2f},{candidate.y:.2f}) "
+                            f"offset_deg={offset_deg:.0f}"
+                        )
+                        continue
                     if not self._costmap_segment_clear(
                         self.latest_x,
                         self.latest_y,
@@ -5169,9 +5488,8 @@ class TaskNavigator(Node):
         # Keep the pending poses and dock staging so the same (or alternate)
         # route can be re-sent after escaping.
         if self.nav_batch_poses:
-            count = (getattr(self, "nav_batch_proven_count", 0)
-                     if (continuous_a_route(self.nav_batch_poses)
-                         or has_corner_flow(self.nav_batch_poses)) else 0)
+            count = min(max(0, getattr(self, "nav_batch_proven_count", 0)),
+                        max(0, len(self.nav_batch_poses) - 1))
             self.recovery_pending_poses = list(self.nav_batch_poses[count:]) + list(
                 self.pending_poses
             )
@@ -5606,6 +5924,17 @@ class TaskNavigator(Node):
         stamp = payload.get("stamp_sec")
         if isinstance(stamp, (int, float)) and math.isfinite(stamp):
             self.obstacle_source_stamps[topic] = float(stamp)
+            history = self.dynamic_obstacle_history.setdefault(topic, [])
+            history.append((float(stamp), position[0], position[1]))
+            del history[:-120]
+            if len(history) >= 2:
+                first, last = history[-2], history[-1]
+                span = last[0] - first[0]
+                if span > 1e-3:
+                    self.dynamic_obstacle_velocity[topic] = (
+                        (last[1] - first[1]) / span,
+                        (last[2] - first[2]) / span,
+                    )
         self._update_mover_track(topic, float(y_value))
         if payload.get("response_observed") is True:
             self.mover_response_seen.add(topic)
@@ -5691,6 +6020,32 @@ class TaskNavigator(Node):
                 nearest = (topic, ox, oy)
         return nearest
 
+    def _dense_controller_callback(self, message: String) -> None:
+        try:
+            state = json.loads(message.data)
+            self.dense_controller_state = state if isinstance(state, dict) else {}
+        except (ValueError, TypeError):
+            self.dense_controller_state = {}
+
+    def _dense_mppi_progress_owns_transit(self) -> bool:
+        """Keep a fresh, moving feasible MPPI action out of legacy retreat."""
+        state = getattr(self, 'dense_controller_state', {})
+        if (state.get('source') != 'laser_stamped_map_tf'
+                or state.get('mode') != 'sensor_mppi'
+                or not state.get('open_space_gate')
+                or state.get('dynamic_fallback')):
+            return False
+        try:
+            now = self.get_clock().now().nanoseconds * 1.e-9
+            age = now - float(state['stamp'])
+            vx, vy, wz = map(float, state['selected_command'])
+            speed = math.hypot(float(self.latest_vx), float(self.latest_vy))
+            return (all(math.isfinite(v) for v in (age, vx, vy, wz, speed))
+                    and -.05 <= age < .30 and speed > .08
+                    and math.hypot(vx, vy) >= .15)
+        except (KeyError, ValueError, TypeError):
+            return False
+
     def _obstacle_reverse_triggered(self) -> Optional[str]:
         """Return the blocking obstacle topic when stopped on its track."""
         if self.obstacle_reverse_disabled:
@@ -5709,9 +6064,11 @@ class TaskNavigator(Node):
             if ahead is not None and ahead[0] in (
                 "/competition/obstacles/crossing_cart_1",
                 "/competition/obstacles/crossing_cart_2",
-            ) and self._central_cart_can_block_active_segment() \
-                    and self._central_retreat_clear(.50):
-                return ahead[0]
+            ) and self._central_cart_can_block_active_segment():
+                if TaskNavigator._dense_mppi_progress_owns_transit(self):
+                    return None
+                if self._central_retreat_clear(.50):
+                    return ahead[0]
         if speed > 0.08:
             return None
         ahead = self._obstacle_ahead(self.obstacle_block_distance)
@@ -5815,6 +6172,27 @@ class TaskNavigator(Node):
             speed = math.hypot(self.latest_vx, self.latest_vy)
         return dx, dy, forward, lateral, cos_yaw, sin_yaw, speed
 
+    def _corridor_direct_lane_clear(self, topic) -> bool:
+        """Do not replace an obstacle-aware route with a wall-crossing line.
+
+        This applies to both original movers in either travel direction.
+        Passing the mover's X coordinate is not sufficient proof that its
+        east/west crossing profile fits the robot's current corridor.
+        """
+        if not getattr(self, 'dense_fast_transit', False):
+            return True
+        x, y, yaw = self.latest_x, self.latest_y, self.latest_yaw
+        if any(v is None or not math.isfinite(v) for v in (x, y, yaw)):
+            return False
+        ox, _ = self.obstacle_positions[topic]
+        direction = (getattr(self, 'mover_hold_direction', None)
+                     if getattr(self, 'mover_hold_topic', None) == topic else None)
+        if direction not in (-1., 1.):
+            direction = 1. if ox > x else -1.
+        end = (ox + direction * .70, y)
+        return static_footprint_line_clear(
+            getattr(self, 'static_map', None), (x, y), end, radius=.38)
+
     def _mover_yield_topic(self) -> Optional[str]:
         """
         Admit every corridor crossing independently of response scoring.
@@ -5856,7 +6234,8 @@ class TaskNavigator(Node):
             trigger = max(MOVER_HOLD_MIN_TRIGGER,
                           stop_distance + self.mover_hold_standoff)
             if (forward <= trigger
-                    and abs(lateral) <= self.mover_hold_entry_lateral):
+                    and abs(lateral) <= self.mover_hold_entry_lateral
+                    and TaskNavigator._corridor_direct_lane_clear(self, topic)):
                 # Even an immediately clear window must use the same straight
                 # crossing profile that the admission predictor assumes.
                 return topic
@@ -5919,6 +6298,8 @@ class TaskNavigator(Node):
         reverse machinery that deeper blockages still need.
         """
         self.mover_hold_topic = topic
+        ox, _ = self.obstacle_positions[topic]
+        self.mover_hold_direction = 1. if ox > self.latest_x else -1.
         self.mover_hold_blocked = False
         self._publish_obstacle_velocity(0.0)
         self.mover_hold_started_ns = (
@@ -5939,8 +6320,204 @@ class TaskNavigator(Node):
         if self.goal_handle is not None:
             self.goal_handle.cancel_goal_async()
 
+    def _dynamic_planner_obstacles(self) -> Dict[str, dict]:
+        """Assemble the planner's obstacle snapshot from live truth topics."""
+        obstacles = {}
+        for index, (topic, position) in enumerate(
+                sorted(self.obstacle_positions.items()), start=1):
+            model = str(getattr(self, "obstacle_topics", {}).get(topic, ""))
+            vx_world, vy_world = self.dynamic_obstacle_velocity.get(
+                topic, (0.0, 0.0))
+            record = {
+                "track_id": index,
+                "x": position[0],
+                "y": position[1],
+                "stamp_sec": self.obstacle_source_stamps.get(topic, 0.0),
+                "vx": vx_world,
+                "vy": vy_world,
+                "radius": 0.18,
+                "history": list(self.dynamic_obstacle_history.get(topic, ())),
+            }
+            for radius_name, radius in self.obstacle_radius_map.items():
+                if radius_name in topic:
+                    record["radius"] = radius
+            obstacles[topic] = record
+        return obstacles
+
+    # The global costmap reports ordinary inflation in 1..252 and lethal /
+    # inscribed obstacles at 253-254. The innovation planner only needs a
+    # "no hard obstacle" predicate: using the strict free threshold (<50)
+    # rejected every real corridor because the robot-footprint inflation
+    # ring sits at 50-90 there (verified by dynamic_static_probe logs).
+    DYNAMIC_HARD_COST_LIMIT = 200
+
+    def _dynamic_cell_free(self, x_value: float, y_value: float) -> bool:
+        cost = self._global_cost_at(x_value, y_value)
+        return cost is not None and 0 <= cost < self.DYNAMIC_HARD_COST_LIMIT
+
+    def _dynamic_corridor_room(self, robot):
+        """Measure verified lateral free room at several forward distances.
+
+        The planner's default corridor envelope is deliberately narrow; with
+        the live global costmap we can measure how much free lateral space
+        actually exists ahead, which is what makes a legal side passage
+        possible instead of a false "no room" rejection.
+        """
+        cos_yaw = math.cos(robot.yaw)
+        sin_yaw = math.sin(robot.yaw)
+        left = right = 1.6
+        for forward in (1.0, 2.0, 3.0):
+            base_x = robot.x + forward * cos_yaw
+            base_y = robot.y + forward * sin_yaw
+            for direction, attribute in ((1.0, 'left'), (-1.0, 'right')):
+                free = 0.0
+                step = 0.05
+                while free + step <= 1.2:
+                    probe_x = (base_x - direction * (free + step) * sin_yaw)
+                    probe_y = (base_y + direction * (free + step) * cos_yaw)
+                    if not self._dynamic_cell_free(probe_x, probe_y):
+                        break
+                    free += step
+                if attribute == 'left':
+                    left = min(left, free)
+                else:
+                    right = min(right, free)
+        return left, right
+
+    def _dynamic_static_check(self, robot):
+        """Return a local-frame static-free predicate bound to the costmap.
+
+        The supervisor plans in the robot-local frame; this closure maps the
+        sampled local point back to the world frame and queries the global
+        costmap, so a side passage cannot be selected through a wall.
+        """
+        cos_yaw = math.cos(robot.yaw)
+        sin_yaw = math.sin(robot.yaw)
+        origin_x = robot.x
+        origin_y = robot.y
+
+        now_ns = self.get_clock().now().nanoseconds
+
+        def check(x_local: float, y_local: float, radius: float) -> float:
+            world_x = origin_x + x_local * cos_yaw - y_local * sin_yaw
+            world_y = origin_y + x_local * sin_yaw + y_local * cos_yaw
+            ring = max(0.10, radius)
+            for angle_index in range(8):
+                angle = angle_index * math.pi / 4.0
+                px = world_x + ring * math.cos(angle)
+                py = world_y + ring * math.sin(angle)
+                if not self._dynamic_cell_free(px, py):
+                    if now_ns - getattr(self, "_dynamic_probe_log_ns", 0) \
+                            >= 1_000_000_000:
+                        self._dynamic_probe_log_ns = now_ns
+                        self.get_logger().info(
+                            "dynamic_static_probe "
+                            f"local=({x_local:.2f},{y_local:.2f}) "
+                            f"world=({world_x:.2f},{world_y:.2f}) "
+                            f"angle={(angle_index * 45)} "
+                            f"cost={self._global_cost_at(px, py)} "
+                            f"ring={ring:.2f}")
+                    return 0.0
+            return 0.10
+
+        return check
+
+    def _dynamic_planner_step(self) -> bool:
+        """Run one dynamic-planner cycle; True when it owns the base command.
+
+        The direct channel lease is the same one the mover/recovery machinery
+        uses, and the collision monitor / safety limiter remain downstream, so
+        this adds a planner but never bypasses the safety chain. Any exception
+        disables the innovation for the rest of the run and releases control.
+        """
+        supervisor = getattr(self, "dynamic_supervisor", None)
+        if supervisor is None:
+            return False
+        if (self.latest_x is None or self.latest_y is None
+                or self.latest_yaw is None):
+            return False
+        goal = getattr(self, "nav_goal_pose", None)
+        if goal is None:
+            if getattr(self, "dynamic_owner", False):
+                self._release_direct_control()
+                self.dynamic_owner = False
+            return False
+        try:
+            stamp = self.get_clock().now().nanoseconds / 1e9
+            # /odom twist is in the base frame; the supervisor expects a
+            # world-frame velocity for its obstacle/prediction math.
+            base_vx = float(getattr(self, "latest_vx", 0.0) or 0.0)
+            base_vy = float(getattr(self, "latest_vy", 0.0) or 0.0)
+            world_vx = (base_vx * math.cos(self.latest_yaw)
+                        - base_vy * math.sin(self.latest_yaw))
+            world_vy = (base_vx * math.sin(self.latest_yaw)
+                        + base_vy * math.cos(self.latest_yaw))
+            robot = DynamicRobotState(
+                x=self.latest_x, y=self.latest_y, yaw=self.latest_yaw,
+                vx=world_vx, vy=world_vy, stamp=stamp,
+            )
+            goal_dx = goal.x - self.latest_x
+            goal_dy = goal.y - self.latest_y
+            goal_local = (
+                goal_dx * math.cos(self.latest_yaw)
+                + goal_dy * math.sin(self.latest_yaw),
+                -goal_dx * math.sin(self.latest_yaw)
+                + goal_dy * math.cos(self.latest_yaw),
+            )
+            # A delivery command carries the fixed world slot; pickup legs do
+            # not. Until the mission publishes an explicit payload signal this
+            # is the documented conservative proxy for the loaded envelope.
+            payload = getattr(self, "delivery_slot_world", None) is not None
+            room_stamp = getattr(self, "_dynamic_room_stamp", 0.0)
+            if stamp - room_stamp >= 0.5:
+                self._dynamic_room = self._dynamic_corridor_room(robot)
+                self._dynamic_room_stamp = stamp
+            # Take control only where the existing mover chain would itself
+            # stop/hold: an ordinary transit keeps Nav2 in charge.
+            takeover_allowed = (
+                getattr(self, "mover_hold_topic", None) is not None
+                or self._mover_yield_topic() is not None)
+            output = supervisor.step(
+                stamp, robot, payload,
+                self._dynamic_planner_obstacles(), goal_local,
+                static_check=self._dynamic_static_check(robot),
+                takeover_allowed=takeover_allowed,
+                corridor_bounds=getattr(self, "_dynamic_room", None))
+            now_ns = self.get_clock().now().nanoseconds
+            if output.release_lease and getattr(self, "dynamic_owner", False):
+                self._release_direct_control()
+                self.dynamic_owner = False
+            if output.command is not None and output.state != 'idle':
+                command = Twist()
+                command.linear.x = max(-1.2, min(1.2, output.command[0]))
+                command.linear.y = max(-1.2, min(1.2, output.command[1]))
+                self._publish_direct_velocity(command)
+                self.dynamic_owner = True
+            if output.decision and now_ns - self.dynamic_supervisor_last_log_ns \
+                    >= 300_000_000:
+                self.dynamic_supervisor_last_log_ns = now_ns
+                self.get_logger().info(
+                    "dynamic_planner_decision "
+                    + json.dumps(output.decision, sort_keys=True)
+                )
+            return bool(output.state in ('active', 'fallback')
+                        and output.acquire_lease
+                        and getattr(self, "dynamic_owner", False))
+        except Exception as error:
+            self.dynamic_supervisor_error = repr(error)
+            self.dynamic_supervisor = None
+            self.get_logger().error(
+                f"dynamic_planner_disabled_by_error:{error}")
+            if getattr(self, "dynamic_owner", False):
+                self._release_direct_control()
+                self.dynamic_owner = False
+            return False
+
     def _obstacle_reverse_tick(self) -> None:
         """Advance the small obstacle-avoidance reverse state machine."""
+        planner_step = getattr(self, "_dynamic_planner_step", None)
+        if planner_step is not None and planner_step():
+            return
         if getattr(self, "recovery_target", None) is not None:
             # A checked escape already owns cmd_vel. A simultaneous retreat
             # corrupted its route in manual-20261015T104805.
@@ -6028,7 +6605,10 @@ class TaskNavigator(Node):
         aligned = False
         if topic is not None and getattr(self, "latest_yaw", None) is not None:
             ox, _ = self.obstacle_positions[topic]
-            target_yaw = 0.0 if ox > self.latest_x else math.pi
+            direction = getattr(self, 'mover_hold_direction', None)
+            if direction not in (-1., 1.):
+                direction = 1. if ox > self.latest_x else -1.
+            target_yaw = 0.0 if direction > 0 else math.pi
             error = math.atan2(math.sin(target_yaw - self.latest_yaw),
                                math.cos(target_yaw - self.latest_yaw))
             aligned = abs(error) <= 0.04
@@ -6045,15 +6625,17 @@ class TaskNavigator(Node):
         held_long_enough = held_long_enough or (
             settled is not None and now_ns - settled >= 500_000_000)
         if (topic is not None and held_long_enough and aligned
+                and TaskNavigator._corridor_direct_lane_clear(self, topic)
                 and self._mover_hold_clear(topic)):
             self.mover_involved_ns = self.get_clock().now().nanoseconds
             self.get_logger().warn(f"mover_crossing_hold end topic={topic}")
             self.mover_admitted.add(topic)
             ox, _ = self.obstacle_positions[topic]
-            self.mover_crossing_yaw = (
-                0.0 if ox > self.latest_x else math.pi)
-            self.mover_crossing_exit_x = ox + (
-                0.70 if ox > self.latest_x else -0.70)
+            direction = getattr(self, 'mover_hold_direction', None)
+            if direction not in (-1., 1.):
+                direction = 1. if ox > self.latest_x else -1.
+            self.mover_crossing_yaw = 0.0 if direction > 0 else math.pi
+            self.mover_crossing_exit_x = ox + .70 * direction
             goal = self.nav_goal_pose
             # Carry the admitted straight lane to its existing clear anchor,
             # instead of stopping 0.5 m short and asking Nav2 to turn/restart

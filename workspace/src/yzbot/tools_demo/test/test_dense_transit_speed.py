@@ -16,7 +16,7 @@ def test_dense_straight_speed_preserves_every_other_stage_limit(enabled):
               'north_delivery_tray_west_clear', 'north_delivery_tray_east_clear')
     for stage in straight:
         TaskNavigator._publish_stage_speed_limit(node,ZonePose(stage,0.,0.,0.))
-        assert published[-1].speed_limit == (1.65 if enabled else 1.5)
+        assert published[-1].speed_limit == 1.5
         assert published[-1].speed_limit < 1.78
     for stage,speed in [('A_WALL_NORTH_CLEAR',.75),('FLOW_A_turn',.75),
                         ('FLOW_E_turn',1.2),('CENTRAL_MOVER_GATE_WEST',1.),

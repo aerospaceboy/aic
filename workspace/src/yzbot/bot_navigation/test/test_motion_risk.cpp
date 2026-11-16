@@ -5,6 +5,40 @@
 
 using bot_navigation::timedSeparationRisk;
 
+TEST(MotionRisk, OrdinaryTransitNeverRequestsDynamicOwnership)
+{
+  bot_navigation::ConflictOwnership owner;
+  for(double t=0.;t<3.;t+=.05)EXPECT_FALSE(owner.choose(t,true,false,.5,.75));
+}
+
+TEST(MotionRisk, BriefForecastDropoutDoesNotChangeTrajectoryOwner)
+{
+  bot_navigation::ConflictOwnership owner;
+  EXPECT_TRUE(owner.choose(0.,true,true,.5,.75));
+  EXPECT_TRUE(owner.choose(.2,true,false,.5,.75));
+  EXPECT_TRUE(owner.choose(.45,true,true,.5,.75));
+  EXPECT_TRUE(owner.choose(.8,true,false,.5,.75));
+  EXPECT_FALSE(owner.choose(1.,true,false,.5,.75));
+}
+
+TEST(MotionRisk, WallClearanceOverridesActiveHoldImmediately)
+{
+  bot_navigation::ConflictOwnership owner;
+  EXPECT_TRUE(owner.choose(0.,true,true,.5,.75));
+  EXPECT_FALSE(owner.choose(.05,false,true,.5,.75));
+  EXPECT_FALSE(owner.choose(.1,true,true,.5,.75));
+  EXPECT_TRUE(owner.choose(.81,true,true,.5,.75));
+}
+
+TEST(MotionRisk, OptimizerFailureCannotImmediatelyReacquireControl)
+{
+  bot_navigation::ConflictOwnership owner;
+  EXPECT_TRUE(owner.choose(0.,true,true,.5,.75));
+  owner.release(.1,.75);
+  EXPECT_FALSE(owner.choose(.5,true,true,.5,.75));
+  EXPECT_TRUE(owner.choose(.86,true,true,.5,.75));
+}
+
 TEST(MotionRisk, ContinuousTrackingRequiresAUsefulNearbyRemainingPath)
 {
   EXPECT_TRUE(bot_navigation::continuousPathEligible(3., .1, false));

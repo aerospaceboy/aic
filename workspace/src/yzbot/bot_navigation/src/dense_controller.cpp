@@ -146,6 +146,17 @@ public:
     nav2_util::declare_parameter_if_not_declared(node_,name+".continuous_transit",
       rclcpp::ParameterValue(false));
     continuous_transit_=node_->get_parameter(name+".continuous_transit").as_bool();
+    nav2_util::declare_parameter_if_not_declared(node_,name+".require_nonholonomic",
+      rclcpp::ParameterValue(false));
+    nav2_util::declare_parameter_if_not_declared(node_,name+".dynamic_release_delay",
+      rclcpp::ParameterValue(.5));
+    nav2_util::declare_parameter_if_not_declared(node_,name+".dynamic_reentry_delay",
+      rclcpp::ParameterValue(.75));
+    nonholonomic_=node_->get_parameter(name+".require_nonholonomic").as_bool();
+    release_delay_=node_->get_parameter(name+".dynamic_release_delay").as_double();
+    reentry_delay_=node_->get_parameter(name+".dynamic_reentry_delay").as_double();
+    if(!std::isfinite(release_delay_+reentry_delay_) || release_delay_<0. ||
+      reentry_delay_<0.)throw std::invalid_argument("Invalid dynamic ownership delays");
     if(const char * mode=std::getenv("YZBOT_CONTINUOUS_MPPI")) {
       const std::string value(mode);
       if(value!="0" && value!="1")throw std::invalid_argument("YZBOT_CONTINUOUS_MPPI must be 0 or 1");
@@ -166,7 +177,9 @@ public:
   void activate()override{nominal_->activate();dynamic_->activate();status_->on_activate();}
   void deactivate()override{nominal_->deactivate();dynamic_->deactivate();status_->on_deactivate();}
   void setPlan(const nav_msgs::msg::Path & path)override {
-    path_=path;nominal_->setPlan(path);dynamic_plan_pending_=true;
+    path_=path;dynamic_plan_pending_=true;
+    if(active_)nominal_refresh_pending_=true;
+    else nominal_->setPlan(path);
   }
   void setSpeedLimit(const double & speed,const bool & percentage)override {
     nominal_->setSpeedLimit(speed,percentage);dynamic_->setSpeedLimit(speed,percentage);
@@ -195,12 +208,21 @@ public:
     }
     geometry_msgs::msg::TwistStamped baseline;
     std::exception_ptr nominal_error;
-    // RotationShim samples from its private path's beginning. While MPPI
-    // drives, that beginning can fall behind the vehicle; refresh it before
-    // evaluating the nominal alternative or returning control to it.
-    if(active_)nominal_->setPlan(remainingPath(path_,nearest));
-    try{baseline=nominal_->computeVelocityCommands(pose,velocity,checker);}
-    catch(...){nominal_error=std::current_exception();}
+    bool nominal_ready=false;
+    const auto current_nominal=[&]() {
+      if(nominal_ready)return;
+      nominal_ready=true;
+      try {
+        // Refresh exactly when returning ownership. Repeated setPlan calls
+        // during MPPI reset RotationShim's heading gate on every cycle.
+        if(nominal_refresh_pending_) {
+          nominal_->setPlan(remainingPath(path_,nearest));
+          nominal_refresh_pending_=false;
+        }
+        baseline=nominal_->computeVelocityCommands(pose,velocity,checker);
+      }catch(...){nominal_error=std::current_exception();}
+    };
+    if(!active_)current_nominal();
     const double preview_speed=std::max({.6,
       std::hypot(velocity.linear.x,velocity.linear.y),
       std::hypot(baseline.twist.linear.x,baseline.twist.linear.y)});
@@ -226,7 +248,6 @@ public:
       }
       if(intersects){conflict=true;ids.push_back(a.id);}
     }
-    if(conflict)last_conflict_=now;
     const bool open_space=tracks_.openSpace(now,active_);
     double remaining=0.;
     for(size_t i=nearest+1;i<path.size();++i) {
@@ -237,17 +258,35 @@ public:
     // Never disguise a nominal error or ordinary tracking as avoidance proof.
     const bool continuous=continuous_transit_ && !nominal_error &&
       continuousPathEligible(remaining,best,active_);
-    bool use_dynamic=open_space &&
-      (continuous || conflict || (active_ && now-last_conflict_<.3));
-    if(!use_dynamic && nominal_error)std::rethrow_exception(nominal_error);
+    bool use_dynamic=ownership_.choose(now,open_space,continuous || conflict,
+      release_delay_,reentry_delay_);
+    if(!use_dynamic) {
+      current_nominal();
+      if(nominal_error)std::rethrow_exception(nominal_error);
+    }
     if(use_dynamic && (!active_ || dynamic_plan_pending_)) {
       dynamic_->setPlan(remainingPath(path_,nearest));
       dynamic_plan_pending_=false;
     }
     std::string fallback_reason;
-    auto command=use_dynamic?dynamicWithFallback(
-      [&]{return dynamic_->computeVelocityCommands(pose,velocity,checker);},
-      baseline,nominal_error,use_dynamic,fallback_reason):baseline;
+    auto command=baseline;
+    if(use_dynamic) {
+      try {
+        command=dynamic_->computeVelocityCommands(pose,velocity,checker);
+        // The trajectory model must enforce the constraint; never clamp an
+        // unsafe holonomic trajectory into a different executable path.
+        if(nonholonomic_ && std::abs(command.twist.linear.y)>1.e-6)
+          throw std::runtime_error("Nonholonomic controller returned lateral motion");
+        nominal_refresh_pending_=true;
+      }catch(const std::exception & error) {
+        fallback_reason=error.what();
+        ownership_.release(now,reentry_delay_);
+        use_dynamic=false;
+        current_nominal();
+        if(nominal_error)std::rethrow_exception(nominal_error);
+        command=baseline;
+      }
+    }
     // Humble MPPI resets its constraints to base values after idle/failure.
     // Never let that reset silently lift a navigation stage's speed limit.
     const auto limit=speed_limit_.load();
@@ -261,11 +300,12 @@ public:
         {"frame_id",pose.header.frame_id}};
       j["open_space_gate"]=open_space;
       j["continuous_transit"]=continuous_transit_;
+      j["nonholonomic"]=nonholonomic_;
       j["remaining_path_m"]=remaining;
       const auto geometry=tracks_.staticGeometry(now);
       j["static_clearance_m"]=geometry.first;j["static_clearance_age"]=geometry.second;
       if(!fallback_reason.empty())j["dynamic_fallback"]=fallback_reason;
-      if(use_dynamic) {
+      if(use_dynamic && nominal_ready) {
         // Read-only comparison: never publish this command to the actuator.
         try {
           if(nominal_error)std::rethrow_exception(nominal_error);
@@ -284,8 +324,11 @@ private:
   SensorTracks tracks_;nav_msgs::msg::Path path_;
   rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::String>::SharedPtr status_;
   bool active_{false},dynamic_plan_pending_{true},continuous_transit_{false};
+  bool nonholonomic_{false},nominal_refresh_pending_{false};
+  ConflictOwnership ownership_;
+  double release_delay_{.5},reentry_delay_{.75};
   std::atomic<double> speed_limit_{0.};double nominal_max_{1.78};
-  double last_conflict_{-100.},last_status_{-100.};
+  double last_status_{-100.};
 };
 } // namespace bot_navigation
 
