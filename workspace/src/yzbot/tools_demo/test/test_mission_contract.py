@@ -161,19 +161,20 @@ def test_pick_place_exposes_scan_split_and_safe_release_operations():
     assert '"/competition/manipulation/state"' in source
     assert '"/cmd_vel"' in source
     assert "self.stop_base_motion()" in source
-    assert "release_pose = self.get_entity_pose" in source
-    assert "self.set_entity_pose(self.cube_name, release_pose)" in source
+    detach = source.split("def detach_cube", 1)[1].split("def wait_for_physical_landing", 1)[0]
+    assert "self.set_entity_pose(" not in detach
+    assert "def wait_for_physical_landing" in source
+    assert "self.set_entity_pose(self.cube_name, release_pose)" not in source
     assert 'request.get("release_world_pose")' in source
-    assert "release_pose.position.x = self.release_world_pose[0]" in source
-    assert "release_pose.orientation.w = 1.0" in source
-    assert "attempts = 3 if self.release_world_pose is not None else 1" in source
+    assert "release_pose.position.x = self.release_world_pose[0]" not in source
+    assert "world_slot_stabilized" not in source
+    assert "ground_anchor=false" in source
     assert "Loaded placement extension failed; retaining cube" in source
     assert "physical_slot_place_proof" in source
     assert "falling back to world-slot stabilization" not in source
-    assert "final_pose.orientation.w = 1.0" in source
-    assert "for _ in range(3):" in source
-    # World-slot placement now physically extends the loaded arm to the place
-    # pose (real arm motion) before the set_entity_pose final alignment.
+    assert "self.stabilize_placed_cube()" not in source
+    # The loaded arm reaches the release pose; actual gravity-driven landing
+    # is verified without writing the cube's world pose or orientation.
     assert "place_extend_loaded" in source
     assert "extended_arm_to_place_pose" in source
     assert "message is not previous_message" in source

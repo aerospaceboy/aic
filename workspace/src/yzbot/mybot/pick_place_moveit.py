@@ -1092,6 +1092,9 @@ class MoveItPickPlace(Node):
 
     def set_entity_pose(self, name: str, pose: Pose) -> bool:
         """Set a Gazebo model pose in the world frame with zero twist."""
+        if not self.prepare_scene_enabled:
+            self.get_logger().error(f"object_pose_write_refused:competition:{name}")
+            return False
         request = SetEntityState.Request()
         request.state = EntityState()
         request.state.name = name
@@ -2080,9 +2083,6 @@ class MoveItPickPlace(Node):
         """Release the pickup anchor after the closed gripper is verified."""
         if self.cube_name not in self.pick_stabilized_cubes:
             return True
-        held_pose = self.get_entity_pose(self.cube_name, "world")
-        if held_pose is None:
-            return False
         request = DetachLink.Request()
         request.model1_name = self.cube_name
         request.link1_name = "link"
@@ -2099,56 +2099,16 @@ class MoveItPickPlace(Node):
             )
             return False
         self.pick_stabilized_cubes.discard(self.cube_name)
-        # The fixed joint is removed on the next Gazebo physics update.
-        # Reassert the current world pose with zero twist across that
-        # boundary. The pose is re-read for every write: reasserting the pose
-        # captured before the detach teleports the cube if physics moved it in
-        # between, which shifts it inside the already closed fingers.
-        # Measured 2026-09-11 (AB3): the carry reference jumped 53 mm in z
-        # between `gripper=attached` and the next sample with the arm
-        # stationary, and the retracted wrist then failed the transport
-        # envelope, costing a cube switch.
-        for _ in range(2):
-            time.sleep(0.05)
-            current_pose = self.get_entity_pose(self.cube_name, "world")
-            if current_pose is None:
-                return False
-            if not self.set_entity_pose(self.cube_name, current_pose):
-                return False
-        held_pose = self.get_entity_pose(self.cube_name, "world")
+        # Let the physics update remove the ground joint. The checked gripper
+        # attachment must hold the cube; no position reassertion is permitted.
+        time.sleep(0.10)
         self.get_logger().info(
             f"pick_cube_stabilization_released:{self.cube_name}"
         )
         return True
 
-    def stabilize_placed_cube(self) -> bool:
-        """Fix a scored cube to the ground after its final slot is set."""
-        request = AttachLink.Request()
-        request.model1_name = self.cube_name
-        request.link1_name = "link"
-        request.model2_name = f"{self.cube_name}_anchor"
-        request.link2_name = "link"
-        response = self._wait_for_future(
-            self.attach_client.call_async(request),
-            timeout_sec=5.0,
-        )
-        if response is None or not response.success:
-            message = "no response" if response is None else response.message
-            self.get_logger().error(
-                f"Placed-cube stabilization failed: {message}"
-            )
-            return False
-        self.get_logger().info(f"placed_cube_stabilized:{self.cube_name}")
-        return True
-
     def detach_cube(self) -> bool:
         """Detach the selected cube from link6."""
-        # Preserve the constrained world pose and explicitly clear velocity
-        # after removing the fixed joint. The v2 cube inertias otherwise turn
-        # tiny constraint impulses into high-speed launches at release.
-        release_pose = self.get_entity_pose(self.cube_name, "world")
-        if release_pose is None:
-            return False
         request = DetachLink.Request()
         request.model1_name = "six_arm"
         request.link1_name = "link6"
@@ -2173,26 +2133,36 @@ class MoveItPickPlace(Node):
             self.get_logger().error(f"Detach failed: {message}")
             return False
         self.attached = False
-        if self.release_world_pose is not None:
-            release_pose.position.x = self.release_world_pose[0]
-            release_pose.position.y = self.release_world_pose[1]
-            release_pose.position.z = self.release_world_pose[2]
-            release_pose.orientation.x = 0.0
-            release_pose.orientation.y = 0.0
-            release_pose.orientation.z = 0.0
-            release_pose.orientation.w = 1.0
-        attempts = 3 if self.release_world_pose is not None else 1
-        for _ in range(attempts):
-            # LinkAttacher removes its Gazebo joint on the next physics
-            # update. Reassert the zero-twist target across that boundary.
-            time.sleep(0.08)
-            if not self.set_entity_pose(self.cube_name, release_pose):
-                self.get_logger().error(
-                    f"Could not stabilize released cube {self.cube_name}"
-                )
-                return False
+        # Opening precedes detach. Allow the queued joint removal to complete
+        # before moving the empty wrist; gravity determines the landing pose.
+        time.sleep(0.12)
         self.publish_gripper_state(f"released:{self.cube_name}")
         return True
+
+    def wait_for_physical_landing(self, timeout_sec=1.5) -> bool:
+        """Read-only proof of an actual settled delivery; never move the cube."""
+        deadline=time.monotonic()+timeout_sec
+        previous=None
+        while time.monotonic()<deadline:
+            pose=self.get_entity_pose(self.cube_name,"world")
+            if pose is None:return False
+            point=(pose.position.x,pose.position.y,pose.position.z)
+            error=math.hypot(point[0]-self.release_world_pose[0],
+                             point[1]-self.release_world_pose[1])
+            height=point[2]-self.release_world_pose[2]
+            if (all(math.isfinite(v) for v in point) and error<=.060
+                    and -.010<=height<=.015 and previous is not None
+                    and point_distance(previous,point)<=.003):
+                self.get_logger().info(
+                    f"physical_landing cube={self.cube_name} "
+                    f"xyz=({point[0]:.5f},{point[1]:.5f},{point[2]:.5f}) "
+                    f"slot_error={error:.5f} pose_writes=0 ground_anchor=false")
+                return True
+            previous=point
+            time.sleep(.08)
+        self.place_failure_reason="physical_landing_unproved"
+        self.get_logger().error("physical_landing_unproved: retaining actual cube pose")
+        return False
 
     def relative_cube_position(self) -> Optional[Tuple[float, float, float]]:
         """Return the cube center expressed in link6."""
@@ -2382,10 +2352,9 @@ class MoveItPickPlace(Node):
         attempts: int = 3,
     ) -> Optional[Tuple[float, float, float]]:
         """Recover when Gazebo creates a fixed joint at a bad anchor pose."""
-        original_pose = self.get_entity_pose(self.cube_name, "world")
-        if original_pose is None:
-            return None
         for attempt in range(attempts):
+            if self.validate_grasp_window() is None:
+                return None
             if self.attach_cube():
                 reference = self.confirm_attachment_constraint()
                 if (
@@ -2400,8 +2369,6 @@ class MoveItPickPlace(Node):
                         f"z={reference[2]:.5f}"
                     )
             if self.attached and not self.detach_cube():
-                return None
-            if not self.set_entity_pose(self.cube_name, original_pose):
                 return None
             self.get_logger().warn(
                 "attachment_anchor_retry "
@@ -3065,9 +3032,8 @@ class MoveItPickPlace(Node):
             self.publish_state(f"place_started:{self.cube_name}")
             direct_world_slot = self.release_world_pose is not None
             if direct_world_slot:
-                # The slot is applied only after opening and detaching. Keep
-                # the validated 0.28 m carry pose instead of sweeping a loaded
-                # arm through a random 2--7 s OMPL placement trajectory.
+                # Reach the world slot with the loaded arm. After opening,
+                # gravity determines the actual landing; there is no pose snap.
                 if not self.validate_transport_envelope():
                     if self.place_envelope_violation is None:
                         self.get_logger().error(
@@ -3225,42 +3191,10 @@ class MoveItPickPlace(Node):
                     )
                     return False
             if self.release_world_pose is not None:
-                # Resolve the ground joint after the cube joint.  Gazebo may
-                # apply both detach operations on later physics frames; doing
-                # this before the final pose hold prevents the old link6
-                # constraint from pulling the cube away when the base unlocks.
                 if not self.release_base():
                     return False
-                time.sleep(0.15)
-                final_pose = Pose()
-                final_pose.position.x = self.release_world_pose[0]
-                final_pose.position.y = self.release_world_pose[1]
-                final_pose.position.z = self.release_world_pose[2]
-                final_pose.orientation.w = 1.0
-                # LinkAttacher and contact resolution can complete several
-                # physics frames after the detach service replies.  Hold the
-                # exact slot pose long enough to cover that boundary and any
-                # residual fingertip impulse before mission truth is sampled.
-                # Measured world_slot_stabilized error stays 0.0000 after six
-                # samples on every costudio 4rC delivery (2026-09-13).
-                for _ in range(5):
-                    time.sleep(0.12)
-                    if not self.set_entity_pose(self.cube_name, final_pose):
-                        return False
-                if not self.stabilize_placed_cube():
+                if not self.wait_for_physical_landing():
                     return False
-                time.sleep(0.15)
-                stabilized_pose = self.get_entity_pose(
-                    self.cube_name, "world"
-                )
-                if stabilized_pose is not None:
-                    error = math.hypot(
-                        stabilized_pose.position.x - final_pose.position.x,
-                        stabilized_pose.position.y - final_pose.position.y,
-                    )
-                    self.get_logger().info(
-                        f"world_slot_stabilized error={error:.4f}"
-                    )
             if (
                 self.verify_placement_enabled
                 and not self.verify_placement()

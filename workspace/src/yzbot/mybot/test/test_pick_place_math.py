@@ -431,7 +431,7 @@ def test_persistent_scan_avoids_disposable_base_constraints():
     assert '"return_home"' in place_body
     assert (
         place_body.index("self.release_base()")
-        < place_body.index("world_slot_stabilized")
+        < place_body.index("self.wait_for_physical_landing()")
     )
     assert "world_slot_release:defer_return_home" in place_body
     direct_release = place_body.split(
@@ -443,7 +443,9 @@ def test_persistent_scan_avoids_disposable_base_constraints():
         'move_to_pose(self.place_safe_pose, "place_safe")'
         not in direct_release
     )
-    assert "self.stabilize_placed_cube()" in place_body
+    assert "self.wait_for_physical_landing()" in place_body
+    assert "self.set_entity_pose(" not in place_body
+    assert "self.stabilize_placed_cube()" not in place_body
     assert "gripper_command_skipped:" in source
     assert "carry_window_recheck" in source
     assert "self.validate_carry_window_after_settle()" in pick_body
@@ -495,7 +497,8 @@ def test_pick_confirms_attachment_before_low_retraction():
     assert "confirm_attachment_constraint" in retry_body
     assert "attachment_anchor_within_window(reference)" in retry_body
     assert "self.detach_cube()" in retry_body
-    assert "self.set_entity_pose(self.cube_name, original_pose)" in retry_body
+    assert "self.set_entity_pose(" not in retry_body
+    assert "self.validate_grasp_window()" in retry_body
 
 
 def test_attachment_anchor_rejects_observed_bad_fixed_joint():
