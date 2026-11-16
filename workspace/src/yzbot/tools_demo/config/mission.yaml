@@ -16,9 +16,10 @@ competition_mission_coordinator:
     # The archived profile predates the dense scene and is rejected by the
     # geometry fingerprint. Use geometric priors until this scene is measured.
     transport_timing_profile_file: ''
-    # Cost-only graph of the deployed static map: walls must not look like
-    # free straight chords. Nav2 and the real-time guards own actual motion.
-    transport_static_map_file: mapn3.yaml
+    # Optional cost-only map graph. Three measured failure-case replays did
+    # not establish a consistent time gain; keep it off in the default stack.
+    # Explicit research setting: mapn3.yaml (never a motion/safety planner).
+    transport_static_map_file: ''
     plan_topic: /competition/task/plan
     perception_topic: /competition/perception/targets
     navigation_goal_topic: /competition/navigation/goal
