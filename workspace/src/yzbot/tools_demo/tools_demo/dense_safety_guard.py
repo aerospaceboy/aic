@@ -5,9 +5,11 @@ from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from gazebo_msgs.msg import ModelStates
 from std_msgs.msg import String
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, Polygon, Point32
+from rclpy.qos import QoSProfile, DurabilityPolicy
 from tools_demo.transport_motion import dense_velocity_scale, dense_rotation_clear, dense_snapshot_valid
 from tools_demo.transport_scene import load_dense_scene
+from tools_demo.payload_envelope import navigation_footprint
 
 
 class DenseSafetyGuard(Node):
@@ -15,14 +17,20 @@ class DenseSafetyGuard(Node):
         super().__init__('competition_dense_safety_guard')
         self.robot=None;self.actors=[];self.stamp=None;self.payload=False
         self.command=None;self.command_time=None;self.received=None;self.last_diag=0.
+        self.attached=None;self.planar_valid=False
         self.names={a['name'] for a in load_dense_scene()['actors']}
         self.patrols={a['name']:a for a in load_dense_scene()['actors']}
         self.publisher=self.create_publisher(Twist,'/cmd_vel_safe',10)
         self.status=self.create_publisher(String,'/competition/dense_safety/state',10)
+        footprint_qos=QoSProfile(depth=1,durability=DurabilityPolicy.TRANSIENT_LOCAL)
+        self.footprint_pub=self.create_publisher(Polygon,'/local_costmap/footprint',footprint_qos)
+        self.last_footprint=None
         self.create_subscription(Odometry,'/odom',self.odom,20)
         self.create_subscription(ModelStates,'/gazebo/model_states',self.models,1)
         self.create_subscription(String,'/competition/dense_obstacles/state',self.obstacles,10)
-        self.create_subscription(String,'/competition/mission/state',self.mission,10)
+        self.create_subscription(String,'/competition/mission/state',self.mission,
+                                 QoSProfile(depth=10,durability=DurabilityPolicy.TRANSIENT_LOCAL))
+        self.create_subscription(String,'/competition/gripper/state',self.gripper,10)
         self.create_subscription(Twist,'/cmd_vel_dense_input',self.velocity,10)
         self.create_timer(.05,self.tick)
 
@@ -37,6 +45,9 @@ class DenseSafetyGuard(Node):
             self.robot=None
             return
         p=m.pose[m.name.index('six_arm')];q=p.orientation
+        roll=math.atan2(2*(q.w*q.x+q.y*q.z),1-2*(q.x*q.x+q.y*q.y))
+        pitch=math.asin(max(-1.,min(1.,2*(q.w*q.y-q.z*q.x))))
+        self.planar_valid=all(math.isfinite(v) for v in (roll,pitch,p.position.z)) and max(abs(roll),abs(pitch))<.30
         self.robot=(p.position.x,p.position.y,math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z)))
         self.world_pose_time=time.monotonic()
 
@@ -56,7 +67,15 @@ class DenseSafetyGuard(Node):
     def mission(self,m):
         try:d=json.loads(m.data)
         except ValueError:return
-        self.payload=d.get('state') in ('navigating_departure','navigating_destination','placing')
+        # Terminal mission states do not release a physically attached load.
+        if getattr(self,'attached',None) is None:
+            self.payload=d.get('state') in ('navigating_departure','navigating_destination','placing')
+
+    def gripper(self,m):
+        if m.data.startswith('attached:'):
+            self.attached=True;self.payload=True
+        elif m.data.startswith('released:'):
+            self.attached=False;self.payload=False
 
     def velocity(self,m):
         values=(m.linear.x,m.linear.y,m.linear.z,m.angular.x,m.angular.y,m.angular.z)
@@ -65,11 +84,17 @@ class DenseSafetyGuard(Node):
 
     def tick(self):
         now=time.monotonic();command=self.command
+        if hasattr(self,'footprint_pub') and (getattr(self,'last_footprint',None)!=self.payload
+                or now-getattr(self,'footprint_time',0)>1.):
+            self.footprint_pub.publish(Polygon(points=[Point32(x=float(x),y=float(y))
+                for x,y in navigation_footprint(self.payload)]))
+            self.last_footprint=self.payload
+            self.footprint_time=now
         if command is None or self.command_time is None or now-self.command_time>.35:
             self.publisher.publish(Twist())
             return
         stamp=self.get_clock().now().nanoseconds/1e9
-        fresh=(self.robot is not None and now-getattr(self,'world_pose_time',0)<.5 and self.received is not None
+        fresh=(getattr(self,'planar_valid',True) and self.robot is not None and now-getattr(self,'world_pose_time',0)<.5 and self.received is not None
                and now-self.received<.5 and self.stamp is not None and 0<=stamp-self.stamp<.5)
         actors=[dict(a,source_age=max(0.,stamp-a.get('stamp_sec',stamp))) for a in self.actors]
         fresh=fresh and all(0<=stamp-a.get('stamp_sec',stamp)<.5 for a in self.actors)
@@ -89,7 +114,7 @@ class DenseSafetyGuard(Node):
         self.publisher.publish(output)
         if now-self.last_diag>1.:
             self.last_diag=now
-            self.status.publish(String(data=json.dumps(dict(stamp=stamp,fresh=fresh,scale=scale,actors=len(self.actors),robot_frame='world',turning_clear=turning_clear))))
+            self.status.publish(String(data=json.dumps(dict(stamp=stamp,fresh=fresh,scale=scale,actors=len(self.actors),robot_frame='world',turning_clear=turning_clear,planar_valid=getattr(self,'planar_valid',False),payload=self.payload))))
 
 
 def main(args=None):
