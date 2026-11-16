@@ -31,7 +31,9 @@ def test_fusion_retains_original_map_radius_and_live_collision_sources(group):
     for name in ['robot_radius', 'plugins', 'obstacle_layer', 'static_layer', 'inflation_layer']:
         assert new[name] == old[name]
     assert new['prediction_layer']['enabled']
-    assert not new['prediction_layer']['timed_future_cost']
+    # Future positions are scored at arrival time by the dynamic critic;
+    # their all-times union must not block the ordinary spatial follower.
+    assert new['prediction_layer']['timed_future_cost']
 
 
 def test_collision_monitor_limits_are_unchanged_and_precision_adjustments_remain_bounded():

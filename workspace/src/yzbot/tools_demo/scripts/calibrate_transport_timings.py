@@ -95,6 +95,12 @@ def main():
         / 'competition_zones.yaml',
         'originbot_nav2.yaml': package.parent / 'bot_navigation' / 'param'
         / 'originbot_nav2.yaml',
+        'fusion_nav2.yaml': package.parent / 'bot_navigation' / 'config'
+        / 'fusion_nav2.yaml',
+        'dense_transport_scene.json': package.parent / 'bot_navigation' / 'config'
+        / 'dense_transport_scene.json',
+        'dense_scene_overrides.yaml': package.parent / 'bot_navigation' / 'config'
+        / 'dense_scene_overrides.yaml',
         'navigation_risk_zones.yaml': (
             package.parent / 'bot_navigation' / 'config')
         / 'navigation_risk_zones.yaml',

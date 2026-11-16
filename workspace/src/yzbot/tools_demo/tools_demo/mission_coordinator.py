@@ -2260,6 +2260,9 @@ class MissionCoordinator(Node):
                         "task_navigator.py": Path(__file__).with_name("task_navigator.py"),
                         "competition_zones.yaml": share / "config/competition_zones.yaml",
                         "originbot_nav2.yaml": share / "param/originbot_nav2.yaml",
+                        "fusion_nav2.yaml": share / "config/fusion_nav2.yaml",
+                        "dense_transport_scene.json": share / "config/dense_transport_scene.json",
+                        "dense_scene_overrides.yaml": share / "config/dense_scene_overrides.yaml",
                         "navigation_risk_zones.yaml": share / "config/navigation_risk_zones.yaml",
                         "mission.yaml": tools_share / "config/mission.yaml"})
                 except (OSError, ValueError) as exception:

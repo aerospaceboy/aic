@@ -901,7 +901,7 @@ local_costmap:
         enabled: true
         timeout: 0.5
         robot_egress_radius: 0.33
-        timed_future_cost: false
+        timed_future_cost: true
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
         cost_scaling_factor: 10.0
@@ -960,7 +960,7 @@ global_costmap:
         enabled: true
         timeout: 0.5
         robot_egress_radius: 0.33
-        timed_future_cost: false
+        timed_future_cost: true
       dynamic_layer:
         plugin: nav2_costmap_2d::ObstacleLayer
         enabled: true
