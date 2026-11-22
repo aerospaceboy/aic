@@ -19,16 +19,15 @@
         <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
         <PipelineSequence name="ReplanWhileFollowing">
         <RateController hz="1.0">
-          <StablePathRefresh path="{path}" candidate="{candidate_path}" interval="3.0" min_gain="1.5" min_fraction="0.12">
+          <Fallback>
             <ReactiveSequence>
               <Inverter><GlobalUpdatedGoal/></Inverter>
               <PathValidityGrace path="{path}" duration="0.8">
                 <IsPathValid path="{path}"/>
               </PathValidityGrace>
             </ReactiveSequence>
-            <ComputePathToPose goal="{goal}" path="{candidate_path}" planner_id="GridBased"/>
-              <IsPathValid path="{candidate_path}"/>
-            </StablePathRefresh>
+            <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+          </Fallback>
         </RateController>
         <FollowPath path="{path}" controller_id="FollowPath" goal_checker_id="general_goal_checker"/>
         </PipelineSequence>

@@ -69,3 +69,17 @@ def test_coherent_pursuit_preserves_geometry_and_bounded_path_search():
         if 'Nominal' in new[name]:
             assert actual['max_robot_pose_search_dist'] == 1.5
             assert actual['use_collision_detection']
+
+
+def test_transient_global_returns_expire_without_changing_local_collision_chain():
+    local = FUSED['local_costmap']['local_costmap']['ros__parameters']
+    assert not local['prediction_layer'].get('raw_snapshot', False)
+    assert local['obstacle_layer']['scan']['marking']
+    assert local['obstacle_layer']['scan']['clearing']
+    global_map = FUSED['global_costmap']['global_costmap']['ros__parameters']
+    layer = global_map['dynamic_layer']
+    assert layer['plugin'] == 'bot_navigation::PredictionLayer'
+    assert layer['raw_snapshot'] and layer['topic'] == '/competition/dynamic_obstacles'
+    assert 0. < layer['timeout'] <= .5
+    assert layer['robot_egress_radius'] == 0.
+    assert global_map['sweep_band_layer'] == BASE['global_costmap']['global_costmap']['ros__parameters']['sweep_band_layer']
