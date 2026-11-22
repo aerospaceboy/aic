@@ -809,6 +809,16 @@ class MissionCoordinator(Node):
         self.manipulation_transport_duration = self._positive_parameter(
             "manipulation_transport_duration"
         )
+        # One startup line makes the effective (post-override) manipulation
+        # timings visible in every launch log; the parameter files are applied
+        # last-wins, so this is the value the requests will actually carry.
+        self.get_logger().info(
+            "manipulation_timings "
+            f"cartesian={self.manipulation_cartesian_duration:.3f} "
+            f"transport={self.manipulation_transport_duration:.3f} "
+            f"pick_lift={self.manipulation_pick_lift_duration:.3f} "
+            f"gripper={self.manipulation_gripper_duration:.3f}"
+        )
         self.reachable_minimum_x = float(
             self.get_parameter("reachable_minimum_x").value
         )
