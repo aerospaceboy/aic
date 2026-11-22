@@ -127,19 +127,16 @@ def generate_launch_description():
         executable="mission_coordinator",
         name="competition_mission_coordinator",
         remappings=[("/cmd_vel", "/competition/cmd_vel_manipulation")],
-        # ROS 2 applies parameter files in the order they are given and the
-        # LAST value for a duplicate name wins (verified with rclpy), so the
-        # P1 overrides MUST come after mission.yaml. These are request-side
-        # durations only; grasp and place geometry, collision checks and every
-        # acceptance gate stay unchanged.
+        # P1 runtime tuning. A node-name-keyed parameter file takes
+        # precedence over a wildcard launch-dict file, so the overrides ship
+        # as their own file and are passed after mission.yaml. Only the fixed
+        # request-side durations change; grasp/place geometry, collision
+        # checks and every acceptance gate are untouched.
         parameters=[
             mission_parameters,
-            {
-                "manipulation_cartesian_duration": 0.50,
-                "manipulation_transport_duration": 1.00,
-                "manipulation_pick_lift_duration": 1.00,
-                "manipulation_gripper_duration": 0.30,
-            },
+            PathJoinSubstitution(
+                [share, "config", "mission_runtime_tuning.yaml"]
+            ),
             {"use_sim_time": True},
         ],
         output="screen",

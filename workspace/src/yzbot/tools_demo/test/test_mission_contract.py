@@ -917,22 +917,30 @@ def test_persistent_pick_place_defers_stow_for_overlap():
 
 def test_fixed_overhead_trims_are_bounded_and_keep_the_guards():
     """P1 shrinks only the fixed manipulation waits, with safety floors."""
-    source = (
+    launch = (
         REPOSITORY / "tools_demo" / "launch" / "mission.launch.py"
     ).read_text(encoding="utf-8")
+    assert "mission_runtime_tuning.yaml" in launch
+    tuning = (
+        REPOSITORY / "tools_demo" / "config" / "mission_runtime_tuning.yaml"
+    ).read_text(encoding="utf-8")
+    # Node-name-keyed: a wildcard file would be shadowed by mission.yaml.
+    assert "competition_mission_coordinator:" in tuning
+    assert "/**" not in tuning
     trims = {
-        '"manipulation_cartesian_duration": 0.50': 0.45,
-        '"manipulation_transport_duration": 1.00': 0.95,
-        '"manipulation_pick_lift_duration": 1.00': 0.95,
-        '"manipulation_gripper_duration": 0.30': 0.28,
-        '"base_constraint_settle": 0.10': 0.08,
-        '"pick_descend_duration": 0.50': 0.45,
+        "manipulation_cartesian_duration: 0.50": 0.45,
+        "manipulation_transport_duration: 1.00": 0.95,
+        "manipulation_pick_lift_duration: 1.00": 0.95,
+        "manipulation_gripper_duration: 0.30": 0.28,
+        "\"base_constraint_settle\": 0.10": 0.08,
+        "\"pick_descend_duration\": 0.50": 0.45,
     }
     for literal, floor in trims.items():
+        source = tuning if literal.startswith("manipulation_") else launch
         assert literal in source, literal
         value = float(literal.split(": ")[1])
         assert value >= floor
     # The persistent worker and every geometric guard stay in place.
-    assert '"persistent": True' in source
-    assert '"verify_placement": False' in source
-    assert '"defer_place_stow": True' in source
+    assert '"persistent": True' in launch
+    assert '"verify_placement": False' in launch
+    assert '"defer_place_stow": True' in launch

@@ -1,0 +1,13 @@
+# Runtime tuning overrides for the mission coordinator (P1).
+#
+# This file is passed AFTER config/mission.yaml in mission.launch.py. It uses
+# the same node-name key, because a node-name-keyed parameter file takes
+# precedence over a launch-dict wildcard file regardless of order. Only the
+# fixed request-side manipulation durations are trimmed; grasp and place
+# geometry, collision checks and every acceptance gate stay unchanged.
+competition_mission_coordinator:
+  ros__parameters:
+    manipulation_cartesian_duration: 0.50
+    manipulation_transport_duration: 1.00
+    manipulation_pick_lift_duration: 1.00
+    manipulation_gripper_duration: 0.30
