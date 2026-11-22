@@ -68,11 +68,11 @@ protected:
     refresh->addChild(valid.get());refresh->addChild(planner.get());refresh->addChild(candidate_valid.get());
     progress();
   }
-  void progress(const std::string & key="") {
+  void progress(const std::string & key="",bool tracking=true) {
     const auto geometry=bot_navigation::suffixGeometry(original,0.,0.);
     nlohmann::json j={{"path_key",key.empty()?bot_navigation::routeKey(original):key},
       {"remaining_m",geometry->length},{"heading",geometry->heading},{"x",0.},{"y",0.},
-      {"stamp",node->now().seconds()},{"tracking",true}};
+      {"stamp",node->now().seconds()},{"tracking",tracking}};
     std_msgs::msg::String msg;msg.data=j.dump();refresh->receiveProgress(msg);
   }
   void advance(double dt) {now+=dt;progress();}
@@ -171,4 +171,10 @@ TEST_F(StableRefreshTest, ChangedActivePathCancelsInFlightOptionalCandidate) {
   auto replaced=route({{0,0},{0,30},{20,0}},4);config.blackboard->set("path",replaced);
   EXPECT_EQ(refresh->executeTick(),BT::NodeStatus::SUCCESS);
   EXPECT_EQ(planner->cancels,1);EXPECT_EQ(current().header.stamp.sec,4);
+}
+
+TEST_F(StableRefreshTest, InitialHeadingRecoveryDoesNotHideAnEarlyShortRoute) {
+  refresh->executeTick();advance(3.);progress("",false);
+  EXPECT_EQ(refresh->executeTick(),BT::NodeStatus::SUCCESS);
+  EXPECT_EQ(planner->requests,1);EXPECT_EQ(current().header.stamp.sec,2);
 }

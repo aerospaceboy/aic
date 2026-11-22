@@ -129,7 +129,7 @@ BT::NodeStatus StablePathRefresh::tick() {
   }
   auto pose=[&]() {return tf_->lookupTransform(old_path.header.frame_id,frame,tf2::TimePointZero);};
   auto fresh=[&](double x,double y) {
-    if(!progress_ || progress_->key!=key || !progress_->tracking)return false;
+    if(!progress_ || progress_->key!=key)return false;
     const double age=node_->now().seconds()-progress_->stamp;
     return age>=-.05 && age<=.5 && now-progress_->received>=0. && now-progress_->received<=.5 &&
       std::hypot(progress_->x-x,progress_->y-y)<=.5;
@@ -144,7 +144,7 @@ BT::NodeStatus StablePathRefresh::tick() {
       try {
         const auto p=pose();
         if(!fresh(p.transform.translation.x,p.transform.translation.y) || progress_->geometry.length<6.) {
-          RCLCPP_INFO(node_->get_logger(),"path_refinement skipped reason=no_fresh_tracking_suffix_or_short_route");
+          RCLCPP_INFO(node_->get_logger(),"path_refinement skipped reason=no_fresh_suffix_or_short_route");
           return BT::NodeStatus::SUCCESS;
         }
       } catch(const tf2::TransformException &) {return BT::NodeStatus::SUCCESS;}
