@@ -9,7 +9,7 @@
           <Fallback>
             <ReactiveSequence>
               <Inverter><GlobalUpdatedGoal/></Inverter>
-              <PathValidityGrace path="{path}" duration="0.8">
+              <PathValidityGrace path="{path}" duration="1.8">
                 <IsPathValid path="{path}"/>
               </PathValidityGrace>
             </ReactiveSequence>

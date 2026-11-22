@@ -7,7 +7,7 @@
         <PipelineSequence name="CornerReplanWhileFollowing">
           <RateController hz="2.0">
             <Fallback>
-              <PathValidityGrace path="{path}" duration="0.8">
+              <PathValidityGrace path="{path}" duration="1.8">
                 <IsPathValid path="{path}"/>
               </PathValidityGrace>
               <ComputePathToPose goal="{goal}" path="{path}" planner_id="CornerExact"/>
