@@ -17,6 +17,7 @@
 #include <pluginlib/class_list_macros.hpp>
 #include <std_msgs/msg/string.hpp>
 #include "bot_navigation/pursuit_dynamics.hpp"
+#include "bot_navigation/route_geometry.hpp"
 
 namespace bot_navigation
 {
@@ -48,15 +49,16 @@ public:
     if (!std::isfinite(angular_accel_) || angular_accel_ <= 0 ||
       angular_accel_ > max_angular_accel_ || allow_reversing_ || !use_collision_detection_)
       throw std::invalid_argument("Coherent pursuit requires forward collision-checked dynamics");
+    progress_ = node->create_publisher<std_msgs::msg::String>("/competition/pursuit/progress",1);
     status_ = node->create_publisher<std_msgs::msg::String>("/competition/pursuit/state",10);
   }
   void activate() override {
-    RegulatedPurePursuitController::activate();status_->on_activate();heading_.reset();
+    RegulatedPurePursuitController::activate();status_->on_activate();progress_->on_activate();heading_.reset();
   }
   void deactivate() override {
-    status_->on_deactivate();RegulatedPurePursuitController::deactivate();
+    progress_->on_deactivate();status_->on_deactivate();RegulatedPurePursuitController::deactivate();
   }
-  void cleanup() override {status_.reset();RegulatedPurePursuitController::cleanup();}
+  void cleanup() override {progress_.reset();status_.reset();RegulatedPurePursuitController::cleanup();}
   void setPlan(const nav_msgs::msg::Path & path) override {
     std::lock_guard<std::mutex> lock(mutex_);
     // Replanning the same goal must not rearm entry alignment each cycle.
@@ -65,6 +67,7 @@ public:
       std::hypot(path.poses.back().pose.position.x-global_plan_.poses.back().pose.position.x,
                  path.poses.back().pose.position.y-global_plan_.poses.back().pose.position.y)>.10)
       heading_.reset();
+    source_key_=routeKey(path);
     RegulatedPurePursuitController::setPlan(path);
   }
   geometry_msgs::msg::TwistStamped computeVelocityCommands(
@@ -124,6 +127,15 @@ public:
         {"measured_yaw_rate",speed.angular.z},{"selected_command",{v,0.,w}}};
       j["pose_age"]=now-rclcpp::Time(pose.header.stamp,clock_->get_clock_type()).seconds();
       std_msgs::msg::String m;m.data=j.dump();status_->publish(m);
+      const auto geometry=suffixGeometry(global_plan_,robot_in_plan.pose.position.x,
+        robot_in_plan.pose.position.y);
+      if(geometry) {
+        nlohmann::json sample={{"stamp",now},{"path_key",source_key_},
+          {"remaining_m",geometry->length},{"heading",geometry->heading},
+          {"x",robot_in_plan.pose.position.x},{"y",robot_in_plan.pose.position.y},
+          {"tracking",!align && !reached}};
+        std_msgs::msg::String progress;progress.data=sample.dump();progress_->publish(progress);
+      }
       last_status_=now;last_align_=align;
     }
     return command;
@@ -131,7 +143,8 @@ public:
 private:
   HeadingRecovery heading_;
   double angular_accel_{4.},last_status_{-100.};bool acceleration_gate_{false},last_align_{false};
-  std::string name_;
+  std::string name_,source_key_;
+  rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::String>::SharedPtr progress_;
   rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::String>::SharedPtr status_;
 };
 }  // namespace bot_navigation

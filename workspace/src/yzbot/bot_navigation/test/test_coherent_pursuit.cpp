@@ -5,6 +5,10 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <thread>
+#include <nlohmann/json.hpp>
+#include "std_msgs/msg/string.hpp"
+#include "bot_navigation/route_geometry.hpp"
 #include "gtest/gtest.h"
 #include "nav2_core/controller.hpp"
 #include "nav2_controller/plugins/simple_goal_checker.hpp"
@@ -116,4 +120,23 @@ TEST_F(CoherentPursuitTest, BoundedYawAccelerationTracksSCurveWithoutAFullLoop) 
     max_error=std::max(max_error,error);
   }
   EXPECT_LT(steps*.05,15.);EXPECT_LT(std::hypot(x-5.,y),.16);EXPECT_LT(max_error,.35);
+}
+
+TEST_F(CoherentPursuitTest, ProgressReportsActualPrunedSuffixAndOriginalPlanIdentity) {
+  std::string received;
+  auto sub=node->create_subscription<std_msgs::msg::String>("/competition/pursuit/progress",1,
+    [&](std_msgs::msg::String::ConstSharedPtr msg) {received=msg->data;});
+  for(int i=0;i<40 && sub->get_publisher_count()==0;++i)
+    std::this_thread::sleep_for(std::chrono::milliseconds(25));
+  auto plan=path();controller->setPlan(plan);geometry_msgs::msg::Twist measured;
+  controller->computeVelocityCommands(pose(1.5,0.,0.),measured,checker.get());
+  for(int i=0;i<40 && received.empty();++i) {
+    rclcpp::spin_some(node->get_node_base_interface());
+    std::this_thread::sleep_for(std::chrono::milliseconds(25));
+  }
+  ASSERT_FALSE(received.empty());const auto j=nlohmann::json::parse(received);
+  EXPECT_EQ(j.at("path_key").get<std::string>(),bot_navigation::routeKey(plan));
+  EXPECT_NEAR(j.at("remaining_m").get<double>(),3.5,.06);
+  EXPECT_NEAR(j.at("heading").get<double>(),0.,1.e-6);
+  EXPECT_TRUE(j.at("tracking").get<bool>());
 }
