@@ -34,7 +34,8 @@ def test_s_passage_keeps_frozen_tree_except_tighter_arrival_checker():
     follow = corner.find('.//FollowPath')
     assert follow.attrib['goal_checker_id'] == 'central_goal_checker'
     follow.attrib['goal_checker_id'] = 'general_goal_checker'
-    assert ET.tostring(corner) == ET.tostring(normal)
+    from test_navigation_contract import _tracking_tree_contract
+    assert _tracking_tree_contract(corner) == _tracking_tree_contract(normal)
 
 
 def test_other_layout_and_west_dock_cannot_enter_east_s_passage():

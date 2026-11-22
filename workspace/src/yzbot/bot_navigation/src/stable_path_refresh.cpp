@@ -104,6 +104,9 @@ void StablePathRefresh::receiveProgress(const std_msgs::msg::String & message) {
 BT::PortsList StablePathRefresh::providedPorts() {
   return {BT::BidirectionalPort<nav_msgs::msg::Path>("path"),
     BT::InputPort<nav_msgs::msg::Path>("candidate"),
+    BT::InputPort<geometry_msgs::msg::PoseStamped>("goal"),
+    BT::InputPort<std::vector<geometry_msgs::msg::PoseStamped>>("goals"),
+    BT::InputPort<double>("goal_tolerance",.1,"Planner endpoint tolerance"),
     BT::InputPort<double>("interval",3.,"Optional refresh interval"),
     BT::InputPort<double>("min_gain",1.5,"Minimum shortening in metres"),
     BT::InputPort<double>("min_fraction",.12,"Minimum relative shortening"),
@@ -122,6 +125,17 @@ BT::NodeStatus StablePathRefresh::tick() {
   const double now=clock_();
   if(!std::isfinite(now) || (last_tick_ && now<*last_tick_)) {halt();return BT::NodeStatus::FAILURE;}
   last_tick_=now;
+  geometry_msgs::msg::PoseStamped requested_goal;
+  std::vector<geometry_msgs::msg::PoseStamped> requested_goals;
+  double endpoint_tolerance=.1;getInput("goal_tolerance",endpoint_tolerance);
+  if(!std::isfinite(endpoint_tolerance) || endpoint_tolerance<.05 || endpoint_tolerance>.6)
+    return BT::NodeStatus::FAILURE;
+  if(!getInput("goal",requested_goal)) {
+    if(getInput("goals",requested_goals) && !requested_goals.empty())requested_goal=requested_goals.back();
+    else {requested_goal=old_path.poses.back();requested_goal.header.frame_id=old_path.header.frame_id;}
+  }
+  nav_msgs::msg::Path target_identity;target_identity.header.frame_id=requested_goal.header.frame_id;
+  target_identity.poses={requested_goal};const auto target_key=routeKey(target_identity);
   const auto key=routeKey(old_path);
   if(path_key_!=key) {
     if(planning_) {resetChildren();planning_=false;}
@@ -151,7 +165,7 @@ BT::NodeStatus StablePathRefresh::tick() {
     }
     try {const auto p=pose();request_x_=p.transform.translation.x;request_y_=p.transform.translation.y;}
     catch(const tf2::TransformException &) {if(!mandatory_)return BT::NodeStatus::SUCCESS;}
-    requested_at_=now;planning_=true;
+    requested_target_key_=target_key;requested_at_=now;planning_=true;
   }
   if(!mandatory_ && now-requested_at_>1.) {
     haltChild(1);planning_=false;last_refresh_=now;
@@ -166,15 +180,20 @@ BT::NodeStatus StablePathRefresh::tick() {
     return mandatory_?BT::NodeStatus::FAILURE:BT::NodeStatus::SUCCESS;
   }
   if(mandatory_) {setOutput("path",candidate);path_key_=routeKey(candidate);return BT::NodeStatus::SUCCESS;}
-  const auto & a=old_path.poses.back().pose.position;
-  const auto & b=candidate.poses.back().pose.position;
-  if(old_path.header.frame_id!=candidate.header.frame_id || std::hypot(a.x-b.x,a.y-b.y)>.1)
+  const auto & target=requested_goal.pose.position;
+  const auto & end=candidate.poses.back().pose.position;
+  if(target_key!=requested_target_key_ || old_path.header.frame_id!=candidate.header.frame_id ||
+    requested_goal.header.frame_id!=candidate.header.frame_id ||
+    !std::isfinite(target.x+target.y) ||
+    std::hypot(target.x-end.x,target.y-end.y)>endpoint_tolerance) {
+    RCLCPP_INFO(node_->get_logger(),"path_refinement rejected reason=requested_goal_changed_or_endpoint_outside_planner_tolerance");
     return BT::NodeStatus::SUCCESS;
+  }
   try {
     const auto p=pose();const double x=p.transform.translation.x,y=p.transform.translation.y;
     const double pose_age=node_->now().seconds()-rclcpp::Time(p.header.stamp,node_->get_clock()->get_clock_type()).seconds();
     if(!fresh(x,y) || now-requested_at_>1. || std::hypot(x-request_x_,y-request_y_)>.5 ||
-      pose_age<-.05 || pose_age>.5) {
+      pose_age<-.15 || pose_age>.5) {
       RCLCPP_INFO(node_->get_logger(),
         "path_refinement rejected reason=stale_progress_or_candidate elapsed=%.3f moved=%.3f tf_age=%.3f progress_age=%.3f received_age=%.3f key_match=%d",
         now-requested_at_,std::hypot(x-request_x_,y-request_y_),pose_age,

@@ -178,3 +178,111 @@ TEST_F(StableRefreshTest, InitialHeadingRecoveryDoesNotHideAnEarlyShortRoute) {
   EXPECT_EQ(refresh->executeTick(),BT::NodeStatus::SUCCESS);
   EXPECT_EQ(planner->requests,1);EXPECT_EQ(current().header.stamp.sec,2);
 }
+
+#include "bot_navigation/initial_detour_wait.hpp"
+class InitialWaitTest : public StableRefreshTest
+{
+protected:
+  void SetUp() override {
+    StableRefreshTest::SetUp();
+    goal=route({{20,0}}).poses.back();goal.header.frame_id="map";config.blackboard->set("goal",goal);
+    config.input_ports["goal"]="{goal}";config.input_ports["max_wait"]="2.5";
+    initial=std::make_unique<bot_navigation::InitialDetourWait>("initial",config,[&](){return now;});
+    initial->addChild(planner.get());initial->addChild(candidate_valid.get());
+  }
+  geometry_msgs::msg::PoseStamped goal;
+  std::unique_ptr<bot_navigation::InitialDetourWait> initial;
+};
+TEST_F(InitialWaitTest, WaitsForAShortOpeningBeforeCommittingToTheDetour) {
+  plan_status=BT::NodeStatus::FAILURE;
+  EXPECT_EQ(initial->executeTick(),BT::NodeStatus::RUNNING);
+  EXPECT_EQ(current().header.stamp.sec,1);
+  now+=1.9;plan_status=BT::NodeStatus::SUCCESS;
+  EXPECT_EQ(initial->executeTick(),BT::NodeStatus::SUCCESS);
+  EXPECT_EQ(current().header.stamp.sec,2);EXPECT_EQ(planner->requests,2);
+}
+TEST_F(InitialWaitTest, DirectRouteStartsImmediatelyWithoutOptionalPlanning) {
+  config.blackboard->set("path",candidate);
+  EXPECT_EQ(initial->executeTick(),BT::NodeStatus::SUCCESS);EXPECT_EQ(planner->requests,0);
+}
+TEST_F(InitialWaitTest, WaitingBudgetDoesNotRenewAcrossSameGoalRecovery) {
+  plan_status=BT::NodeStatus::FAILURE;
+  EXPECT_EQ(initial->executeTick(),BT::NodeStatus::RUNNING);
+  now+=2.6;EXPECT_EQ(initial->executeTick(),BT::NodeStatus::SUCCESS);
+  initial->halt();now+=.1;EXPECT_EQ(initial->executeTick(),BT::NodeStatus::SUCCESS);
+  EXPECT_EQ(current().header.stamp.sec,1);EXPECT_EQ(planner->requests,1);
+}
+TEST_F(InitialWaitTest, CandidateMustPayForTimeAlreadySpentWaiting) {
+  plan_status=BT::NodeStatus::FAILURE;initial->executeTick();now+=2.4;
+  candidate=route({{0,0},{-1,0},{-1,4.1},{20,4.1},{20,0}},2);
+  plan_status=BT::NodeStatus::SUCCESS;
+  EXPECT_EQ(initial->executeTick(),BT::NodeStatus::RUNNING);
+  EXPECT_EQ(current().header.stamp.sec,1);
+}
+TEST_F(InitialWaitTest, CollisionCheckFailureNeverInstallsAShorterCandidate) {
+  candidate_validity=BT::NodeStatus::FAILURE;
+  EXPECT_EQ(initial->executeTick(),BT::NodeStatus::RUNNING);
+  EXPECT_EQ(current().header.stamp.sec,1);
+  now+=2.6;EXPECT_EQ(initial->executeTick(),BT::NodeStatus::SUCCESS);
+  EXPECT_EQ(current().header.stamp.sec,1);
+}
+TEST_F(InitialWaitTest, CancellationCannotInstallUnfinishedCandidate) {
+  plan_status=BT::NodeStatus::RUNNING;
+  EXPECT_EQ(initial->executeTick(),BT::NodeStatus::RUNNING);
+  initial->halt();EXPECT_EQ(planner->cancels,1);EXPECT_EQ(current().header.stamp.sec,1);
+  now+=3.;EXPECT_EQ(initial->executeTick(),BT::NodeStatus::SUCCESS);
+  EXPECT_EQ(planner->requests,1);
+}
+TEST_F(InitialWaitTest, PluginFactoryPlacesTheBoundedOpportunityBeforeFollowing) {
+  BT::BehaviorTreeFactory factory;factory.registerFromPlugin(PATH_GRACE_PLUGIN);
+  int followed=0,requested=0;config.blackboard->set("path",candidate);
+  factory.registerSimpleAction("Probe",[&](BT::TreeNode &){++requested;return BT::NodeStatus::FAILURE;});
+  factory.registerSimpleCondition("Valid",[](BT::TreeNode &){return BT::NodeStatus::SUCCESS;});
+  factory.registerSimpleAction("Follower",[&](BT::TreeNode &){++followed;return BT::NodeStatus::SUCCESS;});
+  auto tree=factory.createTreeFromText("<root main_tree_to_execute=\"Main\"><BehaviorTree ID=\"Main\"><Sequence>"
+    "<InitialDetourWait path=\"{path}\" candidate=\"{candidate}\" goal=\"{goal}\"><Probe/><Valid/>"
+    "</InitialDetourWait><Follower/></Sequence></BehaviorTree></root>",config.blackboard);
+  EXPECT_EQ(tree.tickRoot(),BT::NodeStatus::SUCCESS);EXPECT_EQ(followed,1);EXPECT_EQ(requested,0);
+}
+class RequestedGoalTest : public StableRefreshTest
+{
+protected:
+  void SetUp() override {
+    StableRefreshTest::SetUp();goal=route({{20,0}}).poses.back();goal.header.frame_id="map";config.blackboard->set("goal",goal);
+    config.input_ports["goal"]="{goal}";config.input_ports["goal_tolerance"]="0.55";
+    refresh=std::make_unique<bot_navigation::StablePathRefresh>("refresh",config,[&](){return now;});
+    refresh->addChild(valid.get());refresh->addChild(planner.get());refresh->addChild(candidate_valid.get());progress();
+  }
+  geometry_msgs::msg::PoseStamped goal;
+};
+TEST_F(RequestedGoalTest, ApproximateEndpointStillBelongsToTheSameRequestedGoal) {
+  candidate=route({{0,0},{20.4,0}},2);refresh->executeTick();advance(3.);
+  EXPECT_EQ(refresh->executeTick(),BT::NodeStatus::SUCCESS);
+  EXPECT_EQ(current().header.stamp.sec,2);
+}
+TEST_F(RequestedGoalTest, ChangedRequestCannotBorrowThePreviousRequestsTolerance) {
+  refresh->executeTick();advance(3.);plan_status=BT::NodeStatus::RUNNING;
+  EXPECT_EQ(refresh->executeTick(),BT::NodeStatus::RUNNING);
+  goal.pose.position.x=20.3;config.blackboard->set("goal",goal);advance(.02);plan_status=BT::NodeStatus::SUCCESS;
+  EXPECT_EQ(refresh->executeTick(),BT::NodeStatus::SUCCESS);
+  EXPECT_EQ(current().header.stamp.sec,1);
+}
+TEST_F(RequestedGoalTest, PlannerToleranceIsStillBounded) {
+  candidate=route({{0,0},{20.7,0}},2);refresh->executeTick();advance(3.);
+  EXPECT_EQ(refresh->executeTick(),BT::NodeStatus::SUCCESS);
+  EXPECT_EQ(current().header.stamp.sec,1);
+}
+TEST_F(StableRefreshTest, OdometryPredictionTimestampDoesNotHideAValidCandidate) {
+  tf->clear();geometry_msgs::msg::TransformStamped t;t.header.frame_id="map";t.child_frame_id="base_footprint";
+  t.header.stamp=node->now()+rclcpp::Duration::from_seconds(.08);t.transform.rotation.w=1.;
+  ASSERT_TRUE(tf->setTransform(t,"native",false));
+  refresh->executeTick();advance(3.);EXPECT_EQ(refresh->executeTick(),BT::NodeStatus::SUCCESS);
+  EXPECT_EQ(current().header.stamp.sec,2);
+}
+TEST_F(StableRefreshTest, ExcessiveFutureTransformStillCannotInstallCandidate) {
+  tf->clear();geometry_msgs::msg::TransformStamped t;t.header.frame_id="map";t.child_frame_id="base_footprint";
+  t.header.stamp=node->now()+rclcpp::Duration::from_seconds(.3);t.transform.rotation.w=1.;
+  ASSERT_TRUE(tf->setTransform(t,"native",false));
+  refresh->executeTick();advance(3.);EXPECT_EQ(refresh->executeTick(),BT::NodeStatus::SUCCESS);
+  EXPECT_EQ(current().header.stamp.sec,1);
+}

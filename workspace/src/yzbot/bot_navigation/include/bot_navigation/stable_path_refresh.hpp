@@ -42,7 +42,7 @@ private:
   rclcpp::CallbackGroup::SharedPtr group_;
   rclcpp::executors::SingleThreadedExecutor executor_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
-  std::string path_key_;
+  std::string path_key_,requested_target_key_;
   std::optional<double> last_refresh_,last_tick_;
   bool planning_{false},mandatory_{false};
   double requested_at_{0.},request_x_{0.},request_y_{0.};

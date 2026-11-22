@@ -531,7 +531,7 @@ def test_static_path_keeps_frozen_refresh_and_dynamic_prediction_stays_separate(
 
     assert '<RateController hz="1.0">' in recovery
     assert "<PipelineSequence" in recovery
-    assert recovery.count("<ComputePathToPose") == 2
+    assert recovery.count("<ComputePathToPose") == 3
     assert recovery.count("<FollowPath") == 1
     assert '<PipelineSequence name="ReplanWhileFollowing">' in recovery
     assert '<IsPathValid path="{path}"/>' in recovery
@@ -1604,7 +1604,7 @@ def test_valid_path_keeps_rotation_shim_alignment_stable():
     ).read_text(encoding="utf-8")
 
     assert '<RateController hz="1.0">' in behavior_tree
-    assert behavior_tree.count("<ComputePathToPose") == 2
+    assert behavior_tree.count("<ComputePathToPose") == 3
     assert behavior_tree.count("<FollowPath") == 1
     assert (
         'plugin: "nav2_rotation_shim_controller::RotationShimController"'
@@ -3754,3 +3754,31 @@ def test_central_failure_path_backs_off_before_aborting():
     assert "abs(latest_y - CENTRAL_MOVER_GATE_WEST.y) > 1.2" in helper
     assert "not -1.5 <= latest_x <= 2.0" in helper
     assert "begin_reverse(topic)" in helper
+
+
+def _tracking_tree_contract(root):
+    """Compare recovery/tracking while checking the bounded initial gate separately."""
+    sequence = root.find('.//Sequence[@name="InitialPlanThenTrackValidity"]')
+    assert sequence is not None
+    gate = sequence.find('InitialDetourWait')
+    if gate is not None:
+        assert list(sequence).index(gate) == 1
+        assert sequence[0].tag == 'ComputePathToPose'
+        assert sequence[2].tag == 'PipelineSequence'
+        assert 0. < float(gate.attrib['max_wait']) <= 2.5
+        assert gate.attrib['path'] == '{path}' and gate.attrib['goal'] == '{goal}'
+        assert gate[0].attrib['path'] == '{initial_candidate}'
+        assert gate[1].tag == 'IsPathValid'
+        assert gate[1].attrib['path'] == '{initial_candidate}'
+        assert gate.find('.//FollowPath') is None
+        sequence.remove(gate)
+    # The ordinary planner permits approximate endpoints; exact corridor
+    # planners keep their original zero planning tolerance. Goal checkers,
+    # actual path validation, recovery and continuous following still match.
+    for node in root.findall('.//StablePathRefresh'):
+        tolerance = float(node.attrib.pop('goal_tolerance', '.1'))
+        assert .05 <= tolerance <= .55
+        assert node.attrib.get('goal') == '{goal}'
+    def canonical(node):
+        return node.tag, tuple(sorted(node.attrib.items())), tuple(canonical(c) for c in node)
+    return canonical(root)

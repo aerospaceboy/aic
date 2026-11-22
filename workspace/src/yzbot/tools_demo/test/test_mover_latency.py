@@ -114,7 +114,8 @@ def test_recorded_early_arrival_cannot_advance_into_patrol_admission():
     for compute in wait.findall('.//ComputePathToPose'):
         assert compute.attrib['planner_id'] == 'CorridorWaitExact'
         compute.attrib['planner_id'] = 'GridBased'
-    assert ET.tostring(wait) == ET.tostring(normal)
+    from test_navigation_contract import _tracking_tree_contract
+    assert _tracking_tree_contract(wait) == _tracking_tree_contract(normal)
 
 
 def test_recorded_quantized_wait_arrival_still_cannot_advance():
