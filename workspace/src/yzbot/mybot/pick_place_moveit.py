@@ -2716,6 +2716,21 @@ class MoveItPickPlace(Node):
             or abs(height - self.pick_pose[2]) > PICK_HEIGHT_CORRECTION_LIMIT
             or height >= min(tool.position.z, self.pick_safe_pose[2]) - 0.010
         ):
+            try:
+                self.get_logger().warn(
+                    "pickup_height_rejected "
+                    f"cube={getattr(self, 'cube_name', '?')} "
+                    f"cube_z={cube_z:.5f} "
+                    f"correct_pick_z={height:.5f} "
+                    f"planned_pick_z={self.pick_pose[2]:.5f} "
+                    f"delta={height - self.pick_pose[2]:.5f} "
+                    f"tool_z={tool.position.z:.5f} "
+                    f"safe_z={self.pick_safe_pose[2]:.5f} "
+                    f"relative=({relative[0]:.5f},{relative[1]:.5f},"
+                    f"{relative[2]:.5f})")
+            except (AttributeError, TypeError):
+                # Light-weight route harnesses do not build a logger.
+                pass
             self.approach_rejected_reason = "pickup_height_out_of_bounds"
             return False
         pick = (self.pick_pose[0], self.pick_pose[1], height)

@@ -116,6 +116,34 @@ def _default_cube_order_policy_file() -> str:
 # Cube centre height in base_link (tray-supported world z=0.13 minus the
 # 0.1034 m base_link offset).
 CUBE_SLOT_BASE_Z = 0.0266
+
+
+def pickup_plan_height(detected_z, cube_name, logger=None):
+    """Return the shelf-top height used for the pick plan.
+
+    The wrist detector's median depth occasionally lands on the cube's front
+    face and reports the cube centre (~0.011 m) instead of the top face
+    (~0.0266 m). Every cube rests on the same shelf height, so the plan uses
+    the validated nominal top; the pick node still re-derives the exact grasp
+    height from the live physical pose and rejects any target more than
+    50 mm away. The deviation is logged so the detector's low-z mode stays
+    visible without changing behaviour.
+    """
+    try:
+        value = float(detected_z)
+    except (TypeError, ValueError):
+        value = math.nan
+    if not math.isfinite(value):
+        if logger is not None:
+            logger.warn(
+                f"pickup_height_normalized cube={cube_name} "
+                "detected_z=nan planned_z=%.5f", CUBE_SLOT_BASE_Z)
+        return CUBE_SLOT_BASE_Z
+    if abs(value - CUBE_SLOT_BASE_Z) > 0.006 and logger is not None:
+        logger.warn(
+            f"pickup_height_normalized cube={cube_name} "
+            f"detected_z={value:.5f} planned_z={CUBE_SLOT_BASE_Z:.5f}")
+    return CUBE_SLOT_BASE_Z
 # A refused placement whose slot and measured base pose have not changed is
 # deterministic: the same request reaches the same rejection. v15 proved it
 # (two identical `Slot outside checked placement workspace` refusals 0.065 s
@@ -2758,7 +2786,9 @@ class MissionCoordinator(Node):
                         "x": float(position["x"])
                         + self.pick_tool_offset[0],
                         "y": centred_y + self.pick_tool_offset[1],
-                        "z": float(position["z"])
+                        "z": pickup_plan_height(
+                            position["z"], job.cube_name,
+                            self.get_logger())
                         + self.pick_tool_offset[2],
                     }
             else:
@@ -2770,7 +2800,9 @@ class MissionCoordinator(Node):
                 target = {
                     "x": float(position["x"]) + self.pick_tool_offset[0],
                     "y": centred_y + self.pick_tool_offset[1],
-                    "z": float(position["z"]) + self.pick_tool_offset[2],
+                    "z": pickup_plan_height(
+                        position["z"], job.cube_name, self.get_logger())
+                    + self.pick_tool_offset[2],
                 }
             # Lateral centring only moves the base in Y, so the cube's X in
             # the robot frame is unchanged. The old +0.045 m forward

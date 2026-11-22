@@ -94,8 +94,33 @@ def test_camera_target_cannot_be_replaced_by_a_nearby_slot_in_required_mode(requ
     assert target['x'] == pytest.approx((.354 if required else .380) + .010)
     assert target['y'] == pytest.approx((.014 if required else .010) + .001)
     if required:
-        assert target['z'] == pytest.approx(.026 + .025)
+        # The pick plan uses the validated shelf-top height, not the raw
+        # detector z (whose low mode reports the cube centre).
+        assert target['z'] == pytest.approx(.0266 + .025)
     node._center_target_laterally.assert_not_called()
+
+
+def test_low_wrist_height_is_normalized_to_the_shelf_top():
+    """The detector sometimes reports the cube centre instead of its top."""
+    from tools_demo.mission_coordinator import pickup_plan_height
+
+    logger = Mock()
+    assert pickup_plan_height(.01141, 'blue_cube_3', logger) == pytest.approx(.0266)
+    assert pickup_plan_height(.0261, 'blue_cube_3', logger) == pytest.approx(.0266)
+    assert pickup_plan_height(None, 'blue_cube_3', logger) == pytest.approx(.0266)
+    # The low-z mode must stay visible in the log.
+    assert logger.warn.call_count == 2
+
+
+def test_pick_height_rejection_logs_the_measured_values():
+    """A future outlier must be diagnosable without a debugger."""
+    from pathlib import Path as _Path
+    source = (_Path(__file__).resolve().parents[2] / 'mybot'
+              / 'pick_place_moveit.py').read_text(encoding='utf-8')
+    assert 'pickup_height_rejected' in source
+    for field in ('cube_z=', 'correct_pick_z=', 'planned_pick_z=',
+                  'delta=', 'tool_z=', 'safe_z='):
+        assert field in source
 
 
 def test_grasp_oriented_scan_keeps_the_cube_inside_the_wrist_camera_view():
