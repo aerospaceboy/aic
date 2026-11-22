@@ -7,6 +7,18 @@ default_acceleration_scaling_factor: 0.1
 
 # Specific joint properties can be changed with the keys [max_position, min_position, max_velocity, max_acceleration]
 # Joint limits can be turned off with [has_velocity_limits, has_acceleration_limits]
+#
+# Arm joints were capped at 1.0 rad/s with no acceleration limit declared,
+# so the time-optimal trajectory generator fell back to its 1 rad/s^2
+# default. Every joint-space move was therefore acceleration-limited: the
+# empty-arm stow->scan move at each pickup measured 2.95 s for ~2 rad of
+# travel, about 15 s of the mission waiting for the wrist camera to arrive.
+# The arm carries no cube during that move. Raising the joint velocity and
+# acceleration limits shortens it without touching the Cartesian
+# grasp/place timing, which stays on its validated fixed durations. Keep the
+# same velocity in mybot_description/urdf/arm.xacro so the Gazebo joint
+# model and MoveIt agree. finger_joint1 is unchanged: gripper timing is part
+# of the grasp contract.
 joint_limits:
   finger_joint1:
     has_velocity_limits: true
@@ -15,31 +27,31 @@ joint_limits:
     max_acceleration: 0
   joint1:
     has_velocity_limits: true
-    max_velocity: 1.0
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 6.0
   joint2:
     has_velocity_limits: true
-    max_velocity: 1.0
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 6.0
   joint3:
     has_velocity_limits: true
-    max_velocity: 1.0
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 6.0
   joint4:
     has_velocity_limits: true
-    max_velocity: 1.0
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 6.0
   joint5:
     has_velocity_limits: true
-    max_velocity: 1.0
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 6.0
   joint6:
     has_velocity_limits: true
-    max_velocity: 1.0
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 6.0
