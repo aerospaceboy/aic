@@ -9,14 +9,15 @@
         <RemovePassedGoals input_goals="{goals}" output_goals="{goals}"
                            radius="0.20" robot_base_frame="base_footprint"/>
         <RateController hz="2.0">
-            <Fallback>
+            <StablePathRefresh path="{path}" candidate="{candidate_path}" interval="1.0" min_gain="1.5" min_fraction="0.12">
               <!-- Keep a valid path through broad turns; only changed
                    occupancy requires replanning the unvisited suffix. -->
-              <PathValidityGrace path="{path}" duration="1.8">
+              <PathValidityGrace path="{path}" duration="0.8">
                 <IsPathValid path="{path}"/>
               </PathValidityGrace>
-              <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="CornerExact"/>
-            </Fallback>
+              <ComputePathThroughPoses goals="{goals}" path="{candidate_path}" planner_id="CornerExact"/>
+              <IsPathValid path="{candidate_path}"/>
+            </StablePathRefresh>
         </RateController>
         <FollowPath path="{path}" controller_id="CornerFlowA" goal_checker_id="central_goal_checker"/>
       </PipelineSequence>

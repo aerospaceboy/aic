@@ -175,7 +175,11 @@ BT::NodeStatus StablePathRefresh::tick() {
     const double pose_age=node_->now().seconds()-rclcpp::Time(p.header.stamp,node_->get_clock()->get_clock_type()).seconds();
     if(!fresh(x,y) || now-requested_at_>1. || std::hypot(x-request_x_,y-request_y_)>.5 ||
       pose_age<-.05 || pose_age>.5) {
-      RCLCPP_INFO(node_->get_logger(),"path_refinement rejected reason=stale_progress_or_candidate");
+      RCLCPP_INFO(node_->get_logger(),
+        "path_refinement rejected reason=stale_progress_or_candidate elapsed=%.3f moved=%.3f tf_age=%.3f progress_age=%.3f received_age=%.3f key_match=%d",
+        now-requested_at_,std::hypot(x-request_x_,y-request_y_),pose_age,
+        progress_?node_->now().seconds()-progress_->stamp:-1.,
+        progress_?now-progress_->received:-1.,progress_ && progress_->key==key);
       return BT::NodeStatus::SUCCESS;
     }
     const auto next=remainingGeometry(candidate,x,y);
