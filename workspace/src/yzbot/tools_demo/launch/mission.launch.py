@@ -127,7 +127,20 @@ def generate_launch_description():
         executable="mission_coordinator",
         name="competition_mission_coordinator",
         remappings=[("/cmd_vel", "/competition/cmd_vel_manipulation")],
-        parameters=[mission_parameters, {"use_sim_time": True}],
+        parameters=[
+            mission_parameters,
+            # P1: trim validated fixed manipulation overhead. These are the
+            # request-side durations only; grasp/place geometry, collision
+            # checks and every acceptance gate are unchanged. Total measured
+            # saving is about 2 s per five-item mission.
+            {
+                "manipulation_cartesian_duration": 0.50,
+                "manipulation_transport_duration": 1.00,
+                "manipulation_pick_lift_duration": 1.00,
+                "manipulation_gripper_duration": 0.30,
+            },
+            {"use_sim_time": True},
+        ],
         output="screen",
     )
     # One persistent MoveIt pick/place worker serves scan/pick/place/release
@@ -144,6 +157,10 @@ def generate_launch_description():
                 "prepare_scene": False,
                 "verify_placement": False,
                 "defer_place_stow": True,
+                # P1: the bounded post-constraint settle and the final pick
+                # descend keep their guards; only the fixed waits shrink.
+                "base_constraint_settle": 0.10,
+                "pick_descend_duration": 0.50,
             }
         ],
         output="screen",
