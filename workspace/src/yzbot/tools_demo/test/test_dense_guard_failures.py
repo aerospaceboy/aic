@@ -53,9 +53,13 @@ def test_nonfinite_optimizer_output_is_replaced_by_complete_zero():
         command.linear.x = 1.
         command.linear.y = value
         command.angular.z = 1.2
-        guard = SimpleNamespace(command=None, command_time=None)
+        sent=[]
+        guard = SimpleNamespace(command=None, command_time=None,robot=None,actors=[],payload=False,
+            last_diag=time.monotonic(),publisher=SimpleNamespace(publish=sent.append),
+            get_clock=lambda:SimpleNamespace(now=lambda:SimpleNamespace(nanoseconds=1_000_000_000)))
         DenseSafetyGuard.velocity(guard, command)
         assert guard.command == Twist()
+        assert sent[-1] == Twist()
 
 
 def test_load_sensitive_rotation_reserve_blocks_spin_but_allows_open_space():
@@ -108,3 +112,39 @@ def test_complete_unique_finite_snapshot_is_required():
         elif defect == 'speed': data['actors'][0]['vx'] = 5.
         else: data['actors'][0]['success'] = False
         assert not dense_snapshot_valid(data, {'one', 'two'}), defect
+
+
+def event_guard():
+    sent=[];now=time.monotonic()
+    guard=SimpleNamespace(command=None,command_time=None,robot=(0.,0.,0.),world_pose_time=now,
+        actors=[],payload=False,received=now,stamp=1.,last_diag=now,
+        get_clock=lambda:SimpleNamespace(now=lambda:SimpleNamespace(nanoseconds=1_000_000_000)),
+        publisher=SimpleNamespace(publish=sent.append))
+    return guard,sent
+
+
+def test_event_driven_command_still_runs_complete_arc_scaling(monkeypatch):
+    monkeypatch.setattr('tools_demo.dense_safety_guard.dense_velocity_scale',lambda *args:.3)
+    guard,sent=event_guard();command=Twist();command.linear.x=1.;command.angular.z=.6
+    DenseSafetyGuard.velocity(guard,command)
+    assert sent[-1].linear.x==pytest.approx(.3)
+    assert sent[-1].angular.z==pytest.approx(.18)
+
+
+def test_new_stop_is_evaluated_immediately_even_after_a_recent_output():
+    guard,sent=event_guard();command=Twist();command.linear.x=.4
+    DenseSafetyGuard.velocity(guard,command)
+    DenseSafetyGuard.velocity(guard,Twist())
+    assert len(sent)==2 and sent[-1]==Twist()
+
+
+def test_event_output_does_not_disable_command_expiry_watchdog(monkeypatch):
+    guard,sent=event_guard();command=Twist();command.linear.x=.4
+    DenseSafetyGuard.velocity(guard,command)
+    last=guard.last_evaluation
+    monkeypatch.setattr('tools_demo.dense_safety_guard.time.monotonic',lambda:last+.02)
+    DenseSafetyGuard.watchdog_tick(guard)
+    assert len(sent)==1
+    monkeypatch.setattr('tools_demo.dense_safety_guard.time.monotonic',lambda:last+.4)
+    DenseSafetyGuard.watchdog_tick(guard)
+    assert sent[-1]==Twist()

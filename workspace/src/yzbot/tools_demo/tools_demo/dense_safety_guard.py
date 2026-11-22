@@ -20,7 +20,7 @@ class DenseSafetyGuard(Node):
         self.attached=None;self.planar_valid=False
         self.names={a['name'] for a in load_dense_scene()['actors']}
         self.patrols={a['name']:a for a in load_dense_scene()['actors']}
-        self.publisher=self.create_publisher(Twist,'/cmd_vel_safe',10)
+        self.publisher=self.create_publisher(Twist,'/cmd_vel_safe',1)
         self.status=self.create_publisher(String,'/competition/dense_safety/state',10)
         footprint_qos=QoSProfile(depth=1,durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.footprint_pub=self.create_publisher(Polygon,'/local_costmap/footprint',footprint_qos)
@@ -31,8 +31,8 @@ class DenseSafetyGuard(Node):
         self.create_subscription(String,'/competition/mission/state',self.mission,
                                  QoSProfile(depth=10,durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.create_subscription(String,'/competition/gripper/state',self.gripper,10)
-        self.create_subscription(Twist,'/cmd_vel_dense_input',self.velocity,10)
-        self.create_timer(.05,self.tick)
+        self.create_subscription(Twist,'/cmd_vel_dense_input',self.velocity,1)
+        self.create_timer(.05,self.watchdog_tick)
 
     def odom(self,m):
         # Encoder odometry can drift after contact. Actor coordinates in this
@@ -81,9 +81,18 @@ class DenseSafetyGuard(Node):
         values=(m.linear.x,m.linear.y,m.linear.z,m.angular.x,m.angular.y,m.angular.z)
         self.command=m if all(math.isfinite(v) for v in values) else Twist()
         self.command_time=time.monotonic()
+        # Check the complete original safety envelope on EVERY new command,
+        # including zero. A second timer phase need not delay braking.
+        DenseSafetyGuard.tick(self)
+
+    def watchdog_tick(self):
+        if time.monotonic()-getattr(self,'last_evaluation',0.)>=.04:
+            DenseSafetyGuard.tick(self)
 
     def tick(self):
-        now=time.monotonic();command=self.command
+        now=time.monotonic()
+        self.last_evaluation=now
+        command=self.command
         if hasattr(self,'footprint_pub') and (getattr(self,'last_footprint',None)!=self.payload
                 or now-getattr(self,'footprint_time',0)>1.):
             self.footprint_pub.publish(Polygon(points=[Point32(x=float(x),y=float(y))

@@ -101,3 +101,39 @@ def test_arm_stop_overrides_all_motion_sources():
                return_value=10.1):
         VelocitySelector.tick(node)
     assert node.publisher.publish.call_args.args[0].linear.x == 0.0
+
+
+def test_new_nav_and_zero_are_forwarded_before_the_next_watchdog_tick():
+    node=harness(False)
+    with patch('tools_demo.velocity_selector.time.monotonic',return_value=10.1):
+        VelocitySelector.nav_callback(node,node.nav_message)
+        assert node.publisher.publish.call_args.args[0].linear.x==.8
+        VelocitySelector.nav_callback(node,Twist())
+        assert node.publisher.publish.call_args.args[0]==Twist()
+    assert node.publisher.publish.call_count==2
+
+
+def test_non_owner_callback_does_not_replay_a_cached_command():
+    node=harness(True)
+    with patch('tools_demo.velocity_selector.time.monotonic',return_value=10.1):
+        VelocitySelector.nav_callback(node,node.nav_message)
+    node.publisher.publish.assert_not_called()
+
+
+def test_watchdog_still_expires_input_after_event_driven_output():
+    node=harness(False)
+    with patch('tools_demo.velocity_selector.time.monotonic',return_value=10.1):
+        VelocitySelector.nav_callback(node,node.nav_message)
+    with patch('tools_demo.velocity_selector.time.monotonic',return_value=10.12):
+        VelocitySelector.watchdog_tick(node)
+    assert node.publisher.publish.call_count==1
+    with patch('tools_demo.velocity_selector.time.monotonic',return_value=10.5):
+        VelocitySelector.watchdog_tick(node)
+    assert node.publisher.publish.call_args.args[0]==Twist()
+
+
+def test_arm_stop_is_forwarded_immediately_without_waiting_for_timer():
+    node=harness(False)
+    with patch('tools_demo.velocity_selector.time.monotonic',return_value=10.1):
+        VelocitySelector.arm_callback(node,Twist())
+    assert node.publisher.publish.call_args.args[0]==Twist()

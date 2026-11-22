@@ -98,13 +98,13 @@ class SafetyLimiter(Node):
         self.publisher = self.create_publisher(
             Twist,
             str(self.get_parameter("cmd_vel_out").value),
-            10,
+            1,
         )
         self.create_subscription(
             Twist,
             str(self.get_parameter("cmd_vel_in").value),
             self.cmd_vel_callback,
-            10,
+            1,
         )
         self.create_subscription(
             Bool,

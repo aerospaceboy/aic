@@ -14,6 +14,7 @@ class VelocitySelector(Node):
 
     def __init__(self):
         super().__init__("competition_velocity_selector")
+        self.last_output_time = 0.0
         self.direct = False
         self.changed_at = time.monotonic()
         self.nav_message = None
@@ -22,22 +23,22 @@ class VelocitySelector(Node):
         self.manip_message = self.arm_message = None
         self.manip_stamp = self.arm_stamp = 0.0
         self.publisher = self.create_publisher(
-            Twist, "/competition/cmd_vel_selected", 10)
+            Twist, "/competition/cmd_vel_selected", 1)
         self.create_subscription(
-            Twist, "/cmd_vel_nav", self.nav_callback, 10)
+            Twist, "/cmd_vel_nav", self.nav_callback, 1)
         self.create_subscription(
-            Twist, "/competition/cmd_vel_direct", self.direct_callback, 10)
+            Twist, "/competition/cmd_vel_direct", self.direct_callback, 1)
         self.create_subscription(
             Twist, "/competition/cmd_vel_manipulation",
-            self.manip_callback, 10)
+            self.manip_callback, 1)
         self.create_subscription(
-            Twist, "/competition/cmd_vel_arm_stop", self.arm_callback, 10)
+            Twist, "/competition/cmd_vel_arm_stop", self.arm_callback, 1)
         qos = QoSProfile(
             depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.create_subscription(
             Bool, "/competition/navigation/direct_control",
             self.mode_callback, qos)
-        self.create_timer(0.05, self.tick)
+        self.create_timer(0.05, self.watchdog_tick)
 
     def mode_callback(self, message):
         """Switch owner without replaying its cached previous command."""
@@ -46,32 +47,50 @@ class VelocitySelector(Node):
             self.direct = value
             self.changed_at = time.monotonic()
             self.publisher.publish(Twist())
+            self.last_output_time = self.changed_at
 
     def nav_callback(self, message):
         """Store the latest navigation command."""
         self.nav_message = message
         self.nav_stamp = time.monotonic()
+        if not self.direct:
+            VelocitySelector.tick(self)
 
     def direct_callback(self, message):
         """Store the latest direct command."""
         self.direct_message = message
         self.direct_stamp = time.monotonic()
+        if self.direct:
+            VelocitySelector.tick(self)
 
     def manip_callback(self, message):
         """Receive short-lived task-coordinator base adjustments."""
         self.manip_message = message
         self.manip_stamp = time.monotonic()
+        VelocitySelector.tick(self)
 
     def arm_callback(self, message):
         """Receive the arm worker's explicit stop pulses."""
         self.arm_message = message
         self.arm_stamp = time.monotonic()
+        VelocitySelector.tick(self)
+
+    def watchdog_tick(self):
+        """Keep lease expiry active without duplicate fresh heartbeats."""
+        if time.monotonic() - getattr(self, "last_output_time", 0.0) >= .04:
+            VelocitySelector.tick(self)
 
     def tick(self):
-        """Publish only fresh commands from the selected owner, else stop."""
+        """Forward new commands immediately; keep the 20 Hz lease watchdog.
+
+        A new zero must not wait behind another 50 ms sample-and-hold. The
+        timer avoids duplicate heartbeats when a source already drives at
+        20 Hz, but never throttles a newly received command or stop.
+        """
         stamp = self.direct_stamp if self.direct else self.nav_stamp
         command = self.direct_message if self.direct else self.nav_message
         now = time.monotonic()
+        self.last_output_time = now
         if command is None or stamp < self.changed_at or now - stamp > 0.35:
             command = Twist()
         # Arm stop pulses have priority; task adjustments precede Nav2.
