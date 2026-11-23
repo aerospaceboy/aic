@@ -11,3 +11,18 @@ competition_mission_coordinator:
     manipulation_transport_duration: 1.00
     manipulation_pick_lift_duration: 1.00
     manipulation_gripper_duration: 0.30
+
+
+# P1 low-risk speed bundle (2026-11-23 experiment). Config-only: alignment
+# turns and dock/egress speeds are raised, every tolerance that guards
+# grasp/place geometry is unchanged. Validated by a 3-case x 2-round A/B
+# before any full-matrix run.
+competition_task_navigator:
+  ros__parameters:
+    alignment_max_angular_speed: 1.00
+    alignment_yaw_tolerance: 0.09
+    dock_max_speed_zone: 0.38
+    dock_max_speed_pickup: 0.24
+    dock_max_speed_departure: 0.31
+    departure_backoff_speed: 0.28
+    zone_egress_max_speed: 0.38
