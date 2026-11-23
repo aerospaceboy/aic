@@ -3585,9 +3585,24 @@ class TaskNavigator(Node):
         points = command_sweep(pose, values, horizon=.45)
         cubes = getattr(self, 'terminal_cubes', [])
         cubes_ok = all(ground_cubes_clear(p, cubes) for p in points)
+        static_grid = getattr(self, 'static_map', None)
         static_ok = static_footprint_line_clear(
-            getattr(self, 'static_map', None), pose[:2], points[-1][:2],
-            radius=.38)
+            static_grid, pose[:2], points[-1][:2], radius=.38)
+        forward_first = False
+        if not static_ok and phase == 'translation':
+            # Lateral-first trimming can put the .38 m body tube on the zone
+            # wall beside the dock. Advancing first opens that corner; the
+            # slot trim then runs closer in, where the same tube is clear.
+            alt_values, alt_phase = terminal_command(
+                pose, self.dock_pose, lateral_first=False)
+            alt_points = command_sweep(pose, alt_values, horizon=.45)
+            alt_static = static_footprint_line_clear(
+                static_grid, pose[:2], alt_points[-1][:2], radius=.38)
+            alt_cubes = all(ground_cubes_clear(p, cubes) for p in alt_points)
+            if alt_phase != 'arrived' and alt_static and alt_cubes:
+                values, phase, points = alt_values, alt_phase, alt_points
+                cubes_ok, static_ok = alt_cubes, alt_static
+                forward_first = True
         safe = fresh and cubes_ok and static_ok
         if not safe:
             if getattr(self, 'terminal_hold_start_ns', None) is None:
@@ -3609,7 +3624,7 @@ class TaskNavigator(Node):
                     f'fresh={fresh} phase={phase} '
                     f'odom_age={odom_age} cloud_age={cloud_age} '
                     f'cubes_ok={cubes_ok} cubes={len(cubes)} '
-                    f'static_ok={static_ok} '
+                    f'static_ok={static_ok} forward_first={forward_first} '
                     f'pose=({pose[0]:.3f},{pose[1]:.3f},{pose[2]:.3f}) '
                     f'dock=({dock.x:.3f},{dock.y:.3f},{dock.yaw:.3f})')
             return

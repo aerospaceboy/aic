@@ -3796,3 +3796,6 @@ def test_delivery_terminal_hold_reports_the_blocking_guard():
         assert field in terminal
     assert "delivery_terminal_resume" in terminal
     assert "held_sec=" in terminal
+    # A static-blocked lateral trim must try the forward-first variant.
+    assert "lateral_first=False" in terminal
+    assert "forward_first=" in terminal
