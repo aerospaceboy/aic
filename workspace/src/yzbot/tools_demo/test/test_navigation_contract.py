@@ -3782,3 +3782,17 @@ def _tracking_tree_contract(root):
     def canonical(node):
         return node.tag, tuple(sorted(node.attrib.items())), tuple(canonical(c) for c in node)
     return canonical(root)
+
+
+def test_delivery_terminal_hold_reports_the_blocking_guard():
+    """The guarded dock hold must name the failed check and its timing."""
+    source = (
+        REPOSITORY / "tools_demo" / "tools_demo" / "task_navigator.py"
+    ).read_text(encoding="utf-8")
+    terminal = source.split("def _delivery_terminal_step", 1)[1].split(
+        "def _send_next_goal", 1
+    )[0]
+    for field in ("cubes_ok=", "static_ok=", "odom_age=", "cloud_age="):
+        assert field in terminal
+    assert "delivery_terminal_resume" in terminal
+    assert "held_sec=" in terminal
