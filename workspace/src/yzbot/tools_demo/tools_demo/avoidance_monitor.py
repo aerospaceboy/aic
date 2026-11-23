@@ -73,7 +73,9 @@ class AvoidanceMonitor(Node):
         # 0.28 m chassis + 0.18 m actor + 0.10 m clear air enforces the
         # competition's strict centre-distance requirement (>0.56 m).
         self.declare_parameter("safety_margin", 0.10)
-        self.declare_parameter("expected_obstacle_count", 2)
+        # Fallback baseline is the 4 original actors; the deployment dense
+        # scene overrides this to 17 via dense_scene_overrides.yaml.
+        self.declare_parameter("expected_obstacle_count", 4)
         self.declare_parameter("encounter_distance", 1.50)
         self.declare_parameter("publish_rate_hz", 5.0)
 

@@ -2,6 +2,13 @@
 
 正式比赛继续使用项目根目录的 `bash 启动本版本.sh`。它会启动比赛后端和 CoStudio 客户端。
 
+验证与计时必须在部署默认的 dense 场景（**17 个移动障碍物 = 4 个原有 + 13 个分布式**）下进行：
+
+- 启动前不要设置 `YZBOT_DENSE_SCENE=0`；该开关只用于 4 障碍物回退回归；
+- 每轮就绪后先核对 `ros2 param get /competition_avoidance_monitor expected_obstacle_count` 为 17、`ros2 topic list | grep /competition/obstacles/` 为 17 个话题，并确认启动日志有 `dense_scene actors=13 static_world_unchanged=true`；
+- 13 个分布式障碍在收到题目计划后才开始巡逻；确认“都在移动”应在任务开始后检查 telemetry 的 `dense.observed_count`/`dense.actors` 或 `/competition/obstacles/transport_mover_*`；
+- 4 障碍物场景的计时、避障与路线稳定性结论不能作为 17 障碍物场景的验收依据。
+
 批量调试使用独立入口，启动同一真实模型、视觉、导航、机械臂、安全链和 coBridge 服务，不自动打开 CoStudio 客户端：
 
 ```bash

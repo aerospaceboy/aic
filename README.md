@@ -7,6 +7,7 @@
 - Ubuntu 22.04，x86_64，ROS 2 Humble，Gazebo Classic 11。
 - 图形桌面用于 Gazebo、RViz 和 CoStudio；首次安装依赖及云模型调用需要联网。
 - 当前模型为 `qwen3.8-flash`，thinking 关闭，实际调用以每题解析证据为准；原 Max 配置保留在用户私有配置中。API Key 保存在当前用户的 `~/.config/yzbot/llm.env`，不能放进源码或提交包。
+- 部署场景默认开启 dense 分布式障碍：世界文件内 4 个原有移动障碍物，加运行时由 `competition_dense_actors` 生成的 13 个 `transport_mover_01..13`，合计 **17 个移动障碍物**（`expected_obstacle_count: 17`）。`YZBOT_DENSE_SCENE=0` 只保留为 4 障碍物回退回归模式，不作为验收场景。
 - 本项目是源码工程，不是可引导的系统镜像。应复制到 Linux 持久化文件系统，不能直接在 NTFS/exFAT 中构建符号链接工作区。
 
 ## 目录

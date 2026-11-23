@@ -1,4 +1,10 @@
-"""Synchronize consumers after adopting the confirmed complex world."""
+"""Synchronize consumers after adopting the confirmed complex world.
+
+Legacy fallback-layout helper: it only rewrites the 4-obstacle base config for
+YZBOT_DENSE_SCENE=0 regression runs. The deployment dense scene is configured by
+bot_navigation/config/dense_scene_overrides.yaml + dense_transport_scene.json and
+is the default (17 moving obstacles).
+"""
 
 from pathlib import Path
 import json

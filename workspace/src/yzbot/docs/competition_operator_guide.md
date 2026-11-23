@@ -24,6 +24,18 @@ CLEAN_ONLY=True bash workspace/src/yzbot/tools_demo/scripts/clean_launch.sh
 
 API Key 位于用户私有目录，不应出现在源码、提交 ZIP、截图或视频中。发布包不包含 Key，目标机器需单独配置。
 
+## 移动障碍物（部署默认 17 个）
+
+部署与验收默认开启 dense 分布式障碍（`YZBOT_DENSE_SCENE` 默认 `1`，由 `tools_demo/transport_scene.py` 的 `dense_enabled()` 读取）：
+
+- 世界文件 `mybot_description/worlds/offic_room.world` 内的 4 个原有障碍：`competition_moving_obstacle_1/2`（橙色圆柱）与 `crossing_cart_1/2`（紫色横穿小车）；
+- 运行时由 `competition_dense_actors` 通过 `/spawn_entity` 逐个生成 13 个分布式障碍 `transport_mover_01..13`，参数在 `bot_navigation/config/dense_transport_scene.json`（`new_actor_count: 13`、`original_actor_count: 4`）；它们不在 world 文件里，SDF 的 `<static>true</static>` 只表示不参与动力学，位置由插件每帧写入；
+- 分布式障碍由 Gazebo 插件 `libdense_patrol.so` 在 `WorldUpdateBegin` 中写位姿，按 A↔B 三角波往返（0.28–0.36 m/s），遇到机器人或物块会反向退让；收到 `/competition/task/plan` 后才开始巡逻；
+- dense 模式把 `bot_navigation/config/dense_scene_overrides.yaml` 合并进 `competition_avoidance_monitor` / `competition_dynamic_obstacles`，其中 `expected_obstacle_count: 17`；`competition_zones.yaml` 里的 `expected_obstacle_count: 4` 只是回退基准值，不要删除；
+- 启动日志会打印 `dense_scene actors=13 static_world_unchanged=true`。运行期核对：`ros2 param get /competition_avoidance_monitor expected_obstacle_count` 应为 17，`ros2 topic list | grep /competition/obstacles/` 应有 17 个话题。
+
+验收必须在默认 dense 场景下进行，不得设置 `YZBOT_DENSE_SCENE=0` 关闭分布式障碍来通过测试；该开关只用于 4 障碍物回退回归。
+
 ## 出生通道参数
 
 两个圆柱障碍物的参数位于 `bot_navigation/config/competition_zones.yaml`。它们持续往返运动，任务开始时对齐初始相位；不得通过停止障碍物或更改避障计数制造通过结果。

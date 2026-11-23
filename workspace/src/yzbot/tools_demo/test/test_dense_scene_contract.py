@@ -123,3 +123,32 @@ def test_time_indexed_predictions_replace_only_future_spatial_union():
         future_bound = (2*model['SensorTimeCritic']['collision_cost'] + 20)*model['model_dt']*model['time_steps']
         hard = model['CostCritic']['collision_cost']*model['CostCritic']['cost_weight']/254/model['time_steps']
         assert hard > 2*future_bound
+
+
+def test_dense_scene_is_the_deployment_default():
+    """Deployment runs the 17-obstacle dense scene unless explicitly disabled."""
+    import os
+
+    from tools_demo.transport_scene import dense_enabled
+
+    previous = os.environ.pop('YZBOT_DENSE_SCENE', None)
+    try:
+        assert dense_enabled() is True
+        os.environ['YZBOT_DENSE_SCENE'] = '0'
+        assert dense_enabled() is False
+    finally:
+        if previous is None:
+            os.environ.pop('YZBOT_DENSE_SCENE', None)
+        else:
+            os.environ['YZBOT_DENSE_SCENE'] = previous
+
+
+def test_fallback_base_keeps_four_and_dense_overrides_to_seventeen():
+    """4 is only the YZBOT_DENSE_SCENE=0 fallback, never the deployment count."""
+    config = ROOT / 'bot_navigation/config'
+    base = yaml.safe_load((config / 'competition_zones.yaml').read_text())
+    base_monitor = base['competition_avoidance_monitor']['ros__parameters']
+    assert base_monitor['expected_obstacle_count'] == 4
+    override = yaml.safe_load((config / 'dense_scene_overrides.yaml').read_text())
+    dense_monitor = override['competition_avoidance_monitor']['ros__parameters']
+    assert dense_monitor['expected_obstacle_count'] == 17
