@@ -64,6 +64,10 @@ def test_coherent_pursuit_preserves_geometry_and_bounded_path_search():
         allowed = {'plugin'}
         if 'Nominal' in new[name]:
             allowed.add('max_robot_pose_search_dist')
+            # Dense deployment runs a higher cruise cap (2.0 m/s) than the
+            # fallback profile; geometry, lookahead and collision settings
+            # must stay identical.
+            allowed.add('desired_linear_vel')
         assert {k: v for k, v in actual.items() if k not in allowed} == {
             k: v for k, v in old[name].items() if k not in allowed}
         if 'Nominal' in new[name]:
