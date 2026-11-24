@@ -3782,3 +3782,17 @@ def _tracking_tree_contract(root):
     def canonical(node):
         return node.tag, tuple(sorted(node.attrib.items())), tuple(canonical(c) for c in node)
     return canonical(root)
+
+
+def test_freshness_tolerates_small_negative_header_age():
+    """Gazebo header stamps a few ms ahead of the node clock are fresh."""
+    from tools_demo.task_navigator import (FRESH_STAMP_TOLERANCE_NS,
+                                          stamp_is_fresh)
+    now = 1_000_000_000
+    assert stamp_is_fresh(now, now + 5_000_000, 250_000_000)
+    assert stamp_is_fresh(now, now - 250_000_000, 250_000_000)
+    assert not stamp_is_fresh(now, now - 250_000_001, 250_000_000)
+    assert not stamp_is_fresh(
+        now, now + FRESH_STAMP_TOLERANCE_NS + 1, 250_000_000)
+    assert not stamp_is_fresh(now, None, 250_000_000)
+    assert not stamp_is_fresh(None, now, 250_000_000)

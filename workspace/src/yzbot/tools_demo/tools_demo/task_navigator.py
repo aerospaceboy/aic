@@ -309,6 +309,23 @@ def line_clear(
     return worst is not None and not unknown and worst <= maximum_cost
 
 
+FRESH_STAMP_TOLERANCE_NS = 50_000_000
+
+
+def stamp_is_fresh(now_ns, stamp_ns, window_ns) -> bool:
+    """True when a header stamp is inside its freshness window.
+
+    Gazebo/ROS timestamp quantization can put a header stamp a few
+    milliseconds ahead of the node clock. Treating that as stale produced
+    spurious 0.1 s delivery holds in the 2026-11-23 validation, so a small
+    negative age is allowed while the upper bound stays strict.
+    """
+    if now_ns is None or stamp_ns is None:
+        return False
+    age = now_ns - stamp_ns
+    return -FRESH_STAMP_TOLERANCE_NS <= age <= window_ns
+
+
 def static_footprint_line_clear(grid, start, end, radius=.58) -> bool:
     """Check the complete body, tracking and clearance tube on the raw map."""
     if grid is None:
@@ -3560,8 +3577,8 @@ class TaskNavigator(Node):
                        ('latest_odom_received_ns', 'terminal_cubes_stamp'))
         vx, vy = (getattr(self, key, None) for key in ('latest_vx', 'latest_vy'))
         if (odom is None or cloud is None or vx is None or vy is None
-                or not 0 <= now - odom <= 250_000_000
-                or not 0 <= now - cloud <= 1_500_000_000
+                or not stamp_is_fresh(now, odom, 250_000_000)
+                or not stamp_is_fresh(now, cloud, 1_500_000_000)
                 or not math.isfinite(vx + vy) or math.hypot(vx, vy) > .20):
             return False
         points, trim = terminal_route(pose, dock)
@@ -3579,8 +3596,8 @@ class TaskNavigator(Node):
         command = Twist()
         odom = getattr(self, 'latest_odom_received_ns', None)
         cloud = getattr(self, 'terminal_cubes_stamp', None)
-        fresh = (odom is not None and 0 <= now_ns - odom <= 250_000_000
-                 and cloud is not None and 0 <= now_ns - cloud <= 1_500_000_000)
+        fresh = (stamp_is_fresh(now_ns, odom, 250_000_000)
+                 and stamp_is_fresh(now_ns, cloud, 1_500_000_000))
         values, phase = terminal_command(pose, self.dock_pose)
         points = command_sweep(pose, values, horizon=.45)
         cubes = getattr(self, 'terminal_cubes', [])
@@ -6036,7 +6053,8 @@ class TaskNavigator(Node):
                 odom_stamp = getattr(self, "latest_odom_received_ns", None)
                 encounter_verified = (
                     odom_stamp is not None
-                    and 0 <= now - odom_stamp * 1e-9 <= .50
+                    and stamp_is_fresh(
+                        int(round(now * 1e9)), odom_stamp, 500_000_000)
                     and math.hypot(self.latest_x - float(payload["x"]),
                                    self.latest_y - float(payload["y"])) <= 1.30)
             verified = (
