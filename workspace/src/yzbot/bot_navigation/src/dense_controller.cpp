@@ -356,7 +356,7 @@ private:
   bool dynamic_enabled_{true};
   ConflictOwnership ownership_;
   double release_delay_{.5},reentry_delay_{.75};
-  std::atomic<double> speed_limit_{0.};double nominal_max_{1.78};
+  std::atomic<double> speed_limit_{0.};double nominal_max_{2.00};
   double last_status_{-100.};
 };
 } // namespace bot_navigation

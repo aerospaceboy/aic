@@ -180,7 +180,7 @@ controller_server:
         forward_sampling_distance: 0.5
         simulate_ahead_time: 1.0
         debug_trajectory_details: false
-        desired_linear_vel: 1.78
+        desired_linear_vel: 2.00
         lookahead_dist: 0.7
         min_lookahead_dist: 0.6
         max_lookahead_dist: 1.2
@@ -241,7 +241,7 @@ controller_server:
         vx_std: 0.35
         vy_std: 0.0
         wz_std: 0.8
-        vx_max: 1.78
+        vx_max: 2.00
         vx_min: -0.1
         vy_max: 0.0
         wz_max: 2.4
