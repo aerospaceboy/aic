@@ -16,7 +16,8 @@ def delivery_entry(dock, backoff=.65):
 
 
 def terminal_command(pose, dock, maximum_speed=.40,
-                     heading_tolerance=.045, arrival_tolerance=.025):
+                     heading_tolerance=.045, arrival_tolerance=.025,
+                     lateral_first=True):
     """Align outside, trim the slot line, then advance with constant heading.
 
     A holonomic base need not curve or reverse its heading to remove a
@@ -39,7 +40,10 @@ def terminal_command(pose, dock, maximum_speed=.40,
     # After entering, retain small lateral feedback without changing heading.
     forward = max(-.20, min(maximum_speed, 1.8 * along))
     lateral = max(-.20, min(.20, 2.0 * across))
-    if abs(across) > .02 and along > .30:
+    if lateral_first and abs(across) > .02 and along > .30:
+        # Trimming beside a zone wall can put the .38 m body tube against the
+        # static clearance bound and stall the dock. The caller may ask for a
+        # forward-first variant that keeps advancing to open the corner first.
         forward = 0.
     vx = forward * math.cos(error) - lateral * math.sin(error)
     vy = forward * math.sin(error) + lateral * math.cos(error)

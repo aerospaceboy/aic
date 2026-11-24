@@ -78,6 +78,32 @@ def test_heading_and_lateral_trim_do_not_advance_toward_occupied_pad():
     assert command[0] == 0. and command[1] > 0.
 
 
+def test_forward_first_terminal_command_opens_a_wall_corner():
+    """Beside a zone wall, advancing before the lateral trim must be possible."""
+    dock = ZonePose('C', 2.9, -11.940, 0.)
+    pose = (2.306, -11.819, 0.015)
+    lateral, _ = terminal_command(pose, dock)
+    assert abs(lateral[0]) < 0.01  # default keeps the lateral-first trim
+    forward, phase = terminal_command(pose, dock, lateral_first=False)
+    assert phase == 'translation'
+    assert forward[0] > 0.05
+
+
+def test_forward_first_dock_recovers_the_blocked_c_zone_corner(official_map):
+    """The 2026-11-23 C-zone hold: lateral trim grazed the wall, advancing cleared it."""
+    dock = ZonePose('C', 2.9, -11.940, 0.)
+    pose = (2.306, -11.819, 0.015)
+    lateral, _ = terminal_command(pose, dock)
+    lateral_sweep = command_sweep(pose, lateral, .45)
+    assert not static_footprint_line_clear(
+        official_map, pose[:2], lateral_sweep[-1][:2], .38)
+    forward, phase = terminal_command(pose, dock, lateral_first=False)
+    forward_sweep = command_sweep(pose, forward, .45)
+    assert phase == 'translation'
+    assert static_footprint_line_clear(
+        official_map, pose[:2], forward_sweep[-1][:2], .38)
+
+
 @pytest.mark.parametrize('zone', ['A', 'B', 'C'])
 @pytest.mark.parametrize('arrived', [False, True])
 def test_delivery_recovery_uses_escape_motion_and_restores_route(zone, arrived, monkeypatch):
