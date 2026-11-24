@@ -3179,7 +3179,7 @@ class MoveItPickPlace(Node):
                     physical_place,
                     "place_extend_loaded",
                     avoid_collisions=True,
-                    duration_sec=1.6,
+                    duration_sec=1.45,
                     via=approach,
                 ):
                     self.get_logger().error(
@@ -3230,7 +3230,7 @@ class MoveItPickPlace(Node):
                 self.place_safe_pose,
                 "place_lift",
                 avoid_collisions=True,
-                duration_sec=0.85,
+                duration_sec=0.76,
             )
             if not lifted:
                 self.get_logger().warn(

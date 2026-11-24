@@ -19,13 +19,13 @@ competition_mission_coordinator:
 # before any full-matrix run.
 competition_task_navigator:
   ros__parameters:
-    alignment_max_angular_speed: 1.35
+    alignment_max_angular_speed: 1.55
     alignment_yaw_tolerance: 0.09
-    dock_max_speed_zone: 0.45
-    dock_max_speed_pickup: 0.30
-    dock_max_speed_departure: 0.36
+    dock_max_speed_zone: 0.55
+    dock_max_speed_pickup: 0.36
+    dock_max_speed_departure: 0.42
     departure_backoff_speed: 0.30
     zone_egress_max_speed: 0.45
-    nav_handoff_max_speed: 0.52
+    nav_handoff_max_speed: 0.60
     stage_corner_speed_limit: 0.90
     stage_approach_speed_scale: 1.18
