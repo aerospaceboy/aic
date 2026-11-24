@@ -3796,3 +3796,13 @@ def test_freshness_tolerates_small_negative_header_age():
         now, now + FRESH_STAMP_TOLERANCE_NS + 1, 250_000_000)
     assert not stamp_is_fresh(now, None, 250_000_000)
     assert not stamp_is_fresh(None, now, 250_000_000)
+
+
+def test_stage_speed_limits_are_parameterized():
+    """Corner reserve and approach caps must be tunable without code edits."""
+    source = (
+        REPOSITORY / "tools_demo" / "tools_demo" / "task_navigator.py"
+    ).read_text(encoding="utf-8")
+    assert 'self.declare_parameter("stage_corner_speed_limit", 0.75)' in source
+    assert 'self.declare_parameter("stage_approach_speed_scale", 1.0)' in source
+    assert "min(1.78, approach_limits.get(stage, 0.0) * approach_scale)" in source

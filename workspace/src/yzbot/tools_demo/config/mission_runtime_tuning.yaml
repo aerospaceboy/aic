@@ -27,3 +27,5 @@ competition_task_navigator:
     departure_backoff_speed: 0.30
     zone_egress_max_speed: 0.45
     nav_handoff_max_speed: 0.52
+    stage_corner_speed_limit: 0.85
+    stage_approach_speed_scale: 1.10

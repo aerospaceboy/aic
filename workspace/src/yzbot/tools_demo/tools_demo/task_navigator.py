@@ -683,6 +683,12 @@ class TaskNavigator(Node):
         # controller to finish decelerating, bounded by a grace window so
         # a leg that never slows still hands off.
         self.declare_parameter("nav_handoff_max_speed", 0.45)
+        # Stage-limit tuning: the corner reserve and non-corner approach caps
+        # were fixed literals (0.75 / 1.5). Expose them so the speed bundle can
+        # be measured without another code change; defaults keep the proven
+        # 2026-11 values.
+        self.declare_parameter("stage_corner_speed_limit", 0.75)
+        self.declare_parameter("stage_approach_speed_scale", 1.0)
         self.declare_parameter("nav_handoff_speed_grace_sec", 2.0)
         self.declare_parameter("alignment_yaw_tolerance", 0.08)
         # Stop tolerance for the PRE-navigation in-place turn only. That turn
@@ -1137,6 +1143,20 @@ class TaskNavigator(Node):
         self.nav_handoff_max_speed = float(
             self.get_parameter("nav_handoff_max_speed").value
         )
+        self.stage_corner_speed_limit = float(
+            self.get_parameter("stage_corner_speed_limit").value
+        )
+        self.stage_approach_speed_scale = float(
+            self.get_parameter("stage_approach_speed_scale").value
+        )
+        if not 0.1 <= self.stage_corner_speed_limit <= 1.2:
+            raise ValueError(
+                "stage_corner_speed_limit must be within [0.1, 1.2]"
+            )
+        if not 0.5 <= self.stage_approach_speed_scale <= 1.5:
+            raise ValueError(
+                "stage_approach_speed_scale must be within [0.5, 1.5]"
+            )
         self.nav_handoff_speed_grace_ns = int(
             float(self.get_parameter("nav_handoff_speed_grace_sec").value)
             * 1_000_000_000
@@ -3897,10 +3917,15 @@ class TaskNavigator(Node):
         # 4/5 each, while a standalone 4rA_1bC passed at 281.5 s). The cap
         # only shortens the turn stages; every turn, tolerance and clearance
         # is unchanged.
+        corner_limit = getattr(self, 'stage_corner_speed_limit', 0.75)
+        approach_scale = getattr(self, 'stage_approach_speed_scale', 1.0)
         message.speed_limit = (
-            0.75 if corner else approach_limits.get(stage, 0.0))
+            corner_limit if corner
+            else min(1.78, approach_limits.get(stage, 0.0) * approach_scale))
         if stage is not None and stage.startswith('FLOW_'):
-            message.speed_limit = .75 if stage.startswith('FLOW_A_') else 1.2
+            message.speed_limit = (
+                corner_limit if stage.startswith('FLOW_A_')
+                else min(1.78, 1.2 * approach_scale))
         publisher.publish(message)
         self.get_logger().info(
             f"nav_stage_speed_limit limit={message.speed_limit:.2f} "
