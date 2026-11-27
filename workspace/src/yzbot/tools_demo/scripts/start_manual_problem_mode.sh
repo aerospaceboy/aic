@@ -9,23 +9,19 @@ exec 9>"$lock_file"
 if ! flock -n 9; then
     # An interrupted previous start can leave the detached ROS 2 daemon
     # holding fd 9, which is not a real concurrent start. Reclaim the lock
-    # only when every holder is that daemon; everything else keeps the
-    # safety refusal. 2026-11-27: rounds 3-24 all failed startup with
+    # only when the holder is that daemon; everything else keeps the safety
+    # refusal. 2026-11-27: rounds 3-24 all failed startup with
     # "手动 CoStudio 模式正在启动" after one interrupted run.
-    holders=$(fuser "$lock_file" 2>/dev/null || true)
-    reclaim=true
-    for pid in $holders; do
-        holder_cmd=$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true)
-        case "$holder_cmd" in
-            *ros2cli.daemon.daemonize*) ;;
-            *) reclaim=false ;;
-        esac
-    done
-    if [[ -n "$holders" && "$reclaim" == true ]]; then
-        echo "回收被 ros2 daemon 持有的启动锁（上一次启动被中断）" >&2
-        for pid in $holders; do
+    reclaimed=false
+    for pid in $(pgrep -f "ros2cli.daemon.daemonize" 2>/dev/null || true); do
+        held=$(readlink "/proc/$pid/fd/9" 2>/dev/null || true)
+        if [[ "$held" == "$lock_file" ]]; then
+            echo "回收被 ros2 daemon 持有的启动锁（上一次启动被中断）" >&2
             kill -9 "$pid" 2>/dev/null || true
-        done
+            reclaimed=true
+        fi
+    done
+    if [[ "$reclaimed" == true ]]; then
         sleep 1
     fi
 fi

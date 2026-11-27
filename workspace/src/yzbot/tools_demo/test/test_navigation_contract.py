@@ -3830,7 +3830,8 @@ def test_manual_start_recovers_a_stale_ros2_daemon_lock():
     source = (
         REPOSITORY / "tools_demo" / "scripts" / "start_manual_problem_mode.sh"
     ).read_text(encoding="utf-8")
-    assert "ros2cli.daemon.daemonize" in source
+    assert 'pgrep -f "ros2cli.daemon.daemonize"' in source
+    assert 'readlink "/proc/$pid/fd/9"' in source
     assert "回收被 ros2 daemon 持有的启动锁" in source
     # The refusal must remain for genuine concurrent starts.
     assert "手动 CoStudio 模式正在启动；请等待现有启动完成。" in source
