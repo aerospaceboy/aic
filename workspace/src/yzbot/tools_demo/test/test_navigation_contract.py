@@ -3823,3 +3823,14 @@ def test_delivery_terminal_hold_reports_the_blocking_guard():
     # A static-blocked lateral trim must try the forward-first variant.
     assert "lateral_first=False" in terminal
     assert "forward_first=" in terminal
+
+
+def test_manual_start_recovers_a_stale_ros2_daemon_lock():
+    """An interrupted start must not block every later round on the lock."""
+    source = (
+        REPOSITORY / "tools_demo" / "scripts" / "start_manual_problem_mode.sh"
+    ).read_text(encoding="utf-8")
+    assert "ros2cli.daemon.daemonize" in source
+    assert "回收被 ros2 daemon 持有的启动锁" in source
+    # The refusal must remain for genuine concurrent starts.
+    assert "手动 CoStudio 模式正在启动；请等待现有启动完成。" in source
