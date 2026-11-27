@@ -112,13 +112,15 @@ PROBLEM_CHUNK_TTL_SEC = 30.0
 
 
 def llm_error_is_retryable(exception: Exception) -> bool:
-    """Only answer-quality failures are worth resampling.
+    """Answer-quality and transient transport failures are worth resampling.
 
-    Transport, auth, config and budget failures would repeat unchanged, so they
-    fail immediately (the client keeps its own bounded 429/5xx retries).
+    A short network timeout/connection blip used to reject the whole round
+    before the mission started (2026-11-27: DashScope connect timeout after
+    ~4 s). Resample those within the same bounded phase budget; auth, config,
+    budget and retryable-HTTP failures stay client-side only.
     """
     if isinstance(exception, LlmClientError):
-        return exception.kind == "protocol"
+        return exception.kind in ("protocol", "timeout", "connection", "busy")
     return True
 
 

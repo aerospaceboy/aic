@@ -2666,6 +2666,15 @@ class MoveItPickPlace(Node):
         ):
             self.approach_rejected_reason = "safe_alignment_unverified"
             return False
+        # The corrective branch re-measures the live cube pose after the
+        # lateral move; emit the same pre-descend evidence as the aligned
+        # branch so the perception gate can see this pick was verified from
+        # a fresh perception target (2026-11-27: blue_cube_4 completed the
+        # corrective path and the gate lost its evidence).
+        self.get_logger().info(
+            f"approach_verified stage={label}_aligned {provenance} "
+            f"relative=({aligned[0]:.5f},{aligned[1]:.5f},"
+            f"{aligned[2]:.5f})")
         self.pick_pose = corrected_pick
         self.pick_safe_pose = corrected_safe
         self.transport_pose = corrected_transport

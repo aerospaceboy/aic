@@ -225,12 +225,29 @@ def test_resample_changes_prompt_and_temperature():
     assert harness.llm_client.complete.call_args.kwargs["budget_sec"] == 12.0
 
 
-def test_only_protocol_failures_are_resampled():
+def test_protocol_and_transient_transport_failures_are_resampled():
     assert llm_error_is_retryable(
         LlmClientError("truncated", kind="protocol")) is True
-    for kind in ("connection", "timeout", "auth", "config", "budget", "http"):
+    for kind in ("timeout", "connection", "busy"):
+        assert llm_error_is_retryable(
+            LlmClientError(kind, kind=kind)) is True
+    for kind in ("auth", "config", "budget", "http"):
         assert llm_error_is_retryable(
             LlmClientError(kind, kind=kind)) is False
+
+
+def test_transport_timeout_is_resampled_within_the_phase_budget():
+    """A short network timeout must not reject the whole competition round."""
+    harness = Harness()
+    harness.llm_validate_attempts = 3
+    harness.request_llm_problem.side_effect = [
+        LlmClientError("llm request timed out", kind="timeout"),
+        GOOD,
+    ]
+    harness.submit()
+    assert harness.publish_plan.call_count == 1
+    assert harness.publish_plan.call_args.args[0].source == "llm"
+    assert harness.request_llm_problem.call_count == 2
 
 
 def test_truncated_completion_is_resampled():
