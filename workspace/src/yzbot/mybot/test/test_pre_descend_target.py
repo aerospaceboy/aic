@@ -122,6 +122,12 @@ def test_bounded_offset_is_recomputed_at_the_current_pose():
     assert arm.pick_pose[1] > 0.0
     assert arm.pick_safe_pose[:2] == arm.pick_pose[:2]
     assert arm.messages("pick_target_refined")
+    # The corrective branch must leave the same pre-descend perception
+    # evidence as the already-aligned branch (2026-11-27 gate loss).
+    verified = arm.messages("approach_verified")
+    assert verified
+    assert "pick_descend_aligned" in verified[0]
+    assert "source=slot_fallback" in verified[0]
 
 
 def test_correction_without_retract_room_is_refused():

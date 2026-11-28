@@ -4,7 +4,27 @@ set -eo pipefail
 
 # A second manual start would tear down the first round halfway through its
 # launch and leave CoStudio attached to a changing ROS graph.
-exec 9>"${TMPDIR:-/tmp}/yzbot_manual_problem_mode.lock"
+lock_file="${TMPDIR:-/tmp}/yzbot_manual_problem_mode.lock"
+exec 9>"$lock_file"
+if ! flock -n 9; then
+    # An interrupted previous start can leave the detached ROS 2 daemon
+    # holding fd 9, which is not a real concurrent start. Reclaim the lock
+    # only when the holder is that daemon; everything else keeps the safety
+    # refusal. 2026-11-27: rounds 3-24 all failed startup with
+    # "手动 CoStudio 模式正在启动" after one interrupted run.
+    reclaimed=false
+    for pid in $(pgrep -f "ros2cli.daemon.daemonize" 2>/dev/null || true); do
+        held=$(readlink "/proc/$pid/fd/9" 2>/dev/null || true)
+        if [[ "$held" == "$lock_file" ]]; then
+            echo "回收被 ros2 daemon 持有的启动锁（上一次启动被中断）" >&2
+            kill -9 "$pid" 2>/dev/null || true
+            reclaimed=true
+        fi
+    done
+    if [[ "$reclaimed" == true ]]; then
+        sleep 1
+    fi
+fi
 if ! flock -n 9; then
     echo "手动 CoStudio 模式正在启动；请等待现有启动完成。" >&2
     exit 1

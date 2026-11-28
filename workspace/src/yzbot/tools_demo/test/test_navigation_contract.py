@@ -3823,3 +3823,25 @@ def test_delivery_terminal_hold_reports_the_blocking_guard():
     # A static-blocked lateral trim must try the forward-first variant.
     assert "lateral_first=False" in terminal
     assert "forward_first=" in terminal
+
+
+def test_manual_start_recovers_a_stale_ros2_daemon_lock():
+    """An interrupted start must not block every later round on the lock."""
+    source = (
+        REPOSITORY / "tools_demo" / "scripts" / "start_manual_problem_mode.sh"
+    ).read_text(encoding="utf-8")
+    assert 'pgrep -f "ros2cli.daemon.daemonize"' in source
+    assert 'readlink "/proc/$pid/fd/9"' in source
+    assert "回收被 ros2 daemon 持有的启动锁" in source
+    # The refusal must remain for genuine concurrent starts.
+    assert "手动 CoStudio 模式正在启动；请等待现有启动完成。" in source
+
+
+def test_llm_transport_resamples_back_off_before_retrying():
+    """A short network outage must not burn every resample back-to-back."""
+    source = (
+        REPOSITORY / "tools_demo" / "tools_demo" / "task_parser_node.py"
+    ).read_text(encoding="utf-8")
+    assert 'self.declare_parameter("llm_retry_backoff_sec", 1.0)' in source
+    assert "_is_transport_llm_error(exception)" in source
+    assert "time.sleep(backoff)" in source

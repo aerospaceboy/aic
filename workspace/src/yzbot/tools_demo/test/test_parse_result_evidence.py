@@ -46,6 +46,7 @@ class ParserHarness:
     publish_parse_result = TaskParserNode.publish_parse_result
 
     def __init__(self, enabled=True, required=True):
+        self.llm_retry_backoff_sec = 0.0
         self.use_llm = enabled
         self.require_llm = required
         self.model = "test-model"
@@ -121,7 +122,10 @@ def test_failed_click_id_cannot_publish_after_transport_replay():
     harness.request_llm_problem.side_effect = None
     harness.submit("failed-click")
     assert harness.parse_result_publisher.last_json() == failed
-    assert harness.request_llm_problem.call_count == 1
+    # Transient transport failures are resampled up to llm_validate_attempts;
+    # the click-replay guard must still suppress the follow-up submission.
+    attempts = max(1, int(getattr(harness, "llm_validate_attempts", 3)))
+    assert harness.request_llm_problem.call_count == attempts
     assert harness.plan_publisher.messages == []
 
 
@@ -136,7 +140,8 @@ def test_old_failed_id_stays_inert_after_another_click_succeeds():
     published = harness.parse_result_publisher.last_json()
     harness.submit("old-failed-click")
     assert harness.parse_result_publisher.last_json() == published
-    assert harness.request_llm_problem.call_count == 2
+    attempts = max(1, int(getattr(harness, "llm_validate_attempts", 3)))
+    assert harness.request_llm_problem.call_count == attempts + 1
     assert len(harness.plan_publisher.messages) == 1
 
 
