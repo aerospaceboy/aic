@@ -32,6 +32,7 @@ class Harness:
 
     def __init__(self, required=True, enabled=True):
         self.require_llm = required
+        self.llm_retry_backoff_sec = 0.0
         self.model = "test-model"
         self.parse_result_publisher = Mock()
         self.use_llm = enabled

@@ -111,6 +111,12 @@ PROBLEM_RETRY_PROMPT = """上一次输出未通过校验，请重新独立求解
 PROBLEM_CHUNK_TTL_SEC = 30.0
 
 
+def _is_transport_llm_error(exception: Exception) -> bool:
+    """True for transport failures that benefit from a short backoff."""
+    return isinstance(exception, LlmClientError) and exception.kind in (
+        "timeout", "connection", "busy")
+
+
 def llm_error_is_retryable(exception: Exception) -> bool:
     """Answer-quality and transient transport failures are worth resampling.
 
@@ -156,6 +162,10 @@ class TaskParserNode(Node):
         # reproducibility are unchanged; a resample needs some diversity or a
         # deterministic wrong answer would simply be repeated.
         self.declare_parameter("llm_retry_temperature", 0.3)
+        # Transport resamples wait briefly so a short network outage can
+        # recover instead of burning every attempt back-to-back (2026-11-27/28:
+        # dashscope timeouts of 4 s rejected 3 rounds).
+        self.declare_parameter("llm_retry_backoff_sec", 1.0)
         self.declare_parameter(
             "question_topic",
             "/competition/task/question",
@@ -199,6 +209,11 @@ class TaskParserNode(Node):
         self.llm_retry_temperature = float(
             self.get_parameter("llm_retry_temperature").value
         )
+        self.llm_retry_backoff_sec = float(
+            self.get_parameter("llm_retry_backoff_sec").value
+        )
+        if not 0.0 <= self.llm_retry_backoff_sec <= 5.0:
+            raise ValueError("llm_retry_backoff_sec must be within [0, 5]")
         self.solve_budget_sec = float(
             self.get_parameter("solve_budget_sec").value
         )
@@ -569,6 +584,15 @@ class TaskParserNode(Node):
                             f"{attempt}/{attempts} rejected: {exception}; "
                             "resampling"
                         )
+                        if _is_transport_llm_error(exception):
+                            remaining = deadline - time.monotonic()
+                            backoff = min(
+                                float(getattr(
+                                    self, "llm_retry_backoff_sec", 1.0)),
+                                max(0.0, remaining - 1.0),
+                            )
+                            if backoff > 0.0:
+                                time.sleep(backoff)
                         continue
                     break
                 self.publish_llm_status(

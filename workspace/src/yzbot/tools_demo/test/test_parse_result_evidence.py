@@ -46,6 +46,7 @@ class ParserHarness:
     publish_parse_result = TaskParserNode.publish_parse_result
 
     def __init__(self, enabled=True, required=True):
+        self.llm_retry_backoff_sec = 0.0
         self.use_llm = enabled
         self.require_llm = required
         self.model = "test-model"
