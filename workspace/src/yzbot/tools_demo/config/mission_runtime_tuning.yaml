@@ -8,8 +8,8 @@
 competition_mission_coordinator:
   ros__parameters:
     manipulation_cartesian_duration: 0.50
-    manipulation_transport_duration: 1.00
-    manipulation_pick_lift_duration: 1.00
+    manipulation_transport_duration: 0.95
+    manipulation_pick_lift_duration: 0.98
     manipulation_gripper_duration: 0.30
 
 

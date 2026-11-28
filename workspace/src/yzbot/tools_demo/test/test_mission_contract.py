@@ -929,8 +929,8 @@ def test_fixed_overhead_trims_are_bounded_and_keep_the_guards():
     assert "/**" not in tuning
     trims = {
         "manipulation_cartesian_duration: 0.50": 0.45,
-        "manipulation_transport_duration: 1.00": 0.95,
-        "manipulation_pick_lift_duration: 1.00": 0.95,
+        "manipulation_transport_duration: 0.95": 0.95,
+        "manipulation_pick_lift_duration: 0.98": 0.95,
         "manipulation_gripper_duration: 0.30": 0.28,
         "\"base_constraint_settle\": 0.10": 0.08,
         "\"pick_descend_duration\": 0.50": 0.45,
